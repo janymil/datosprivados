@@ -1,0 +1,26 @@
+{
+  "name": "privadope",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cumplimiento de la Ley 29733 para MYPE peruanas",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.4.3",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "playwright": "^1.64.1",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3"
+  }
+}

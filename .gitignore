@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.pnpm-store/
+shots/
+.env*
+!.env.example
+.DS_Store
+tsconfig.tsbuildinfo
+debug.log
