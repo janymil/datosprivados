@@ -1,4 +1,5 @@
 import type { ArcoRequest, Company, DataBank, DocumentRow, Incident } from "./db";
+import { limaToday } from "./format";
 
 export type ComplianceItem = {
   label: string;
@@ -7,16 +8,28 @@ export type ComplianceItem = {
   ok: boolean;
   href?: string;
   cta?: string;
-  nextStep?: string;
+};
+
+export type ComplianceAlert = {
+  tone: "danger" | "warn";
+  message: string;
+  href: string;
+  cta: string;
 };
 
 export type Compliance = {
   score: number;
   level: "al_dia" | "en_progreso" | "en_riesgo";
   label: string;
+  /** Pasos de configuración en el orden en que conviene hacerlos. */
   items: ComplianceItem[];
+  /** Obligaciones recurrentes que hoy requieren atención (ARCO, incidentes). */
+  alerts: ComplianceAlert[];
   pending: number;
 };
+
+/** Puntos que se descuentan por cada tipo de obligación recurrente incumplida. */
+const ALERT_PENALTY = 15;
 
 export function computeCompliance(input: {
   company: Company;
@@ -26,115 +39,151 @@ export function computeCompliance(input: {
   documents: DocumentRow[];
 }): Compliance {
   const { company, banks, requests, incidents, documents } = input;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = limaToday();
 
-  const profileComplete = Boolean(
-    company.ruc && company.sector && company.address && company.phone && company.name
-  );
+  const profileComplete = Boolean(company.name && company.ruc && company.address && company.phone && company.email);
   const registered = banks.filter((b) => b.status === "registrado").length;
-  const policy = documents.find((d) => d.kind === "politica");
-  const security = documents.find((d) => d.kind === "seguridad");
-  const openRequests = requests.filter((r) => r.status === "nuevo" || r.status === "en_proceso");
-  const overdue = openRequests.filter((r) => r.due_at < today);
-  const unNotified = incidents.filter(
-    (i) => i.status !== "cerrado" && !i.notified_at && new Date(i.due_at) < new Date()
-  );
+  const allRegistered = banks.length > 0 && registered === banks.length;
+  const doc = (kind: DocumentRow["kind"]) => documents.find((d) => d.kind === kind);
+  const policy = doc("politica");
+  const lastBankChange = banks.reduce((latest, b) => (b.updated_at > latest ? b.updated_at : latest), "");
+  const policyOutdated = Boolean(policy && lastBankChange && lastBankChange > policy.updated_at);
+  const policyOk = Boolean(policy?.published) && !policyOutdated;
 
   const items: ComplianceItem[] = [
     {
-      label: "Perfil de la empresa",
+      label: "Completa los datos de tu empresa",
       detail: profileComplete
-        ? "RUC, sector y datos de contacto completos."
-        : "Completa RUC, sector, dirección y teléfono.",
+        ? "Razón social, RUC, dirección y contacto listos para tus documentos."
+        : "Tu dirección legal, teléfono y correo deben figurar en tu Política de Privacidad.",
       weight: 10,
       ok: profileComplete,
       href: "/app/empresa",
-      cta: "Completar perfil",
-      nextStep: "Completa el perfil de tu empresa",
+      cta: "Completar datos",
     },
     {
-      label: "Bancos de datos registrados",
-      detail:
-        registered >= 2
-          ? `${registered} bancos con código SIPDP.`
-          : "Registra al menos tus bancos de clientes y colaboradores.",
-      weight: 25,
-      ok: registered >= 2,
-      href: "/app/bancos",
-      cta: "Ver bancos",
-      nextStep: "Registra tus bancos de datos en el SIPDP",
-    },
-    {
-      label: "Política de privacidad publicada",
-      detail: policy?.published
-        ? "Publicada y enlazada en tu web."
-        : "Genera y publica tu política de privacidad.",
-      weight: 20,
-      ok: Boolean(policy?.published),
-      href: "/app/documentos",
-      cta: "Generar política",
-      nextStep: "Publica tu política de privacidad",
-    },
-    {
-      label: "Canal ARCO disponible",
-      detail: "Formulario público activo para titulares de datos.",
-      weight: 10,
-      ok: true,
-      href: `/solicitud/${company.slug}`,
-      cta: "Ver formulario",
-    },
-    {
-      label: "Solicitudes ARCO al día",
-      detail: overdue.length
-        ? `${overdue.length} ${overdue.length === 1 ? "solicitud pasó" : "solicitudes pasaron"} el plazo de 20 días hábiles.`
-        : openRequests.length
-          ? `${openRequests.length} ${openRequests.length === 1 ? "solicitud abierta" : "solicitudes abiertas"} dentro de plazo.`
-          : "Sin solicitudes abiertas.",
+      label: "Declara tus bancos de datos",
+      detail: banks.length
+        ? `${banks.length} ${banks.length === 1 ? "lista declarada" : "listas declaradas"} (clientes, trabajadores, etc.).`
+        : "Indica qué listas de personas manejas: clientes, trabajadores, cámaras, etc.",
       weight: 15,
-      ok: overdue.length === 0,
-      href: "/app/arco",
-      cta: "Revisar ARCO",
-      nextStep: "Ponte al día con las solicitudes ARCO",
+      ok: banks.length > 0,
+      href: "/app/bancos",
+      cta: "Declarar listas",
     },
     {
-      label: "Incidentes notificados a tiempo",
-      detail: unNotified.length
-        ? `${unNotified.length} ${unNotified.length === 1 ? "incidente superó" : "incidentes superaron"} las 48 horas sin notificar.`
-        : "Sin incidentes fuera de plazo.",
-      weight: 10,
-      ok: unNotified.length === 0,
-      href: "/app/incidentes",
-      cta: "Ver incidentes",
-      nextStep: "Notifica el incidente pendiente",
+      label: "Inscríbelos gratis en el SIPDP",
+      detail: allRegistered
+        ? `${registered} de ${banks.length} inscritos con código oficial.`
+        : `${registered} de ${banks.length} inscritos. Te damos la ficha lista para copiar en el portal del Estado; es gratis y de aprobación automática.`,
+      weight: 25,
+      ok: allRegistered,
+      href: "/app/bancos",
+      cta: "Inscribir",
     },
     {
-      label: "Documento de seguridad",
-      detail: security ? "Documento base generado." : "Genera el documento de seguridad base.",
+      label: "Publica tu Política de Privacidad",
+      detail: policyOutdated
+        ? "Cambiaste tus bancos de datos después de generar la política: actualízala y vuelve a publicarla."
+        : policy?.published
+          ? "Publicada con enlace para tu web, Instagram o WhatsApp."
+          : "Revisa el borrador y publícalo para obtener tu enlace público.",
+      weight: 20,
+      ok: policyOk,
+      href: "/app/documentos",
+      cta: policyOutdated ? "Actualizar política" : "Revisar y publicar",
+    },
+    {
+      label: "Usa textos de consentimiento",
+      detail: doc("consentimiento")
+        ? "Textos listos para formularios, WhatsApp y correos."
+        : "Frases para pedir permiso antes de enviar publicidad.",
       weight: 10,
-      ok: Boolean(security),
+      ok: Boolean(doc("consentimiento")),
+      href: "/app/documentos?tab=consentimiento",
+      cta: "Generar textos",
+    },
+    {
+      label: "Genera tu Documento de Seguridad",
+      detail: doc("seguridad")
+        ? "Manual interno de medidas de seguridad generado."
+        : "Manual interno con tus medidas de seguridad. No se publica; se guarda firmado por si te fiscalizan.",
+      weight: 10,
+      ok: Boolean(doc("seguridad")),
       href: "/app/documentos?tab=seguridad",
       cta: "Generar documento",
-      nextStep: "Genera tu documento de seguridad",
+    },
+    {
+      label: "Firma compromisos de confidencialidad",
+      detail: doc("clausulas")
+        ? "Formatos de confidencialidad, encargo a proveedores y cartel de cámaras listos."
+        : "Formatos para que firmen tus trabajadores y proveedores (art. 17 de la Ley 29733).",
+      weight: 10,
+      ok: Boolean(doc("clausulas")),
+      href: "/app/documentos?tab=clausulas",
+      cta: "Generar formatos",
     },
   ];
 
-  const score = items.reduce((acc, item) => acc + (item.ok ? item.weight : 0), 0);
-  const level: Compliance["level"] = score >= 80 ? "al_dia" : score >= 50 ? "en_progreso" : "en_riesgo";
-  const label =
-    level === "al_dia" ? "Al día" : level === "en_progreso" ? "En progreso" : "En riesgo";
+  const openRequests = requests.filter((r) => r.status === "nuevo" || r.status === "en_proceso");
+  const overdue = openRequests.filter((r) => r.due_at < today);
+  const lateIncidents = incidents.filter(
+    (i) => i.status !== "cerrado" && !i.notified_at && new Date(i.due_at) < new Date()
+  );
+  const activeIncidents = incidents.filter((i) => i.status !== "cerrado" && !lateIncidents.includes(i));
+
+  const alerts: ComplianceAlert[] = [];
+  if (overdue.length) {
+    alerts.push({
+      tone: "danger",
+      message: `${overdue.length} ${overdue.length === 1 ? "solicitud ARCO venció" : "solicitudes ARCO vencieron"} sin respuesta. Responder fuera de plazo es una infracción.`,
+      href: "/app/arco",
+      cta: "Responder ahora",
+    });
+  } else if (openRequests.length) {
+    alerts.push({
+      tone: "warn",
+      message: `${openRequests.length} ${openRequests.length === 1 ? "solicitud ARCO espera" : "solicitudes ARCO esperan"} respuesta dentro del plazo legal.`,
+      href: "/app/arco",
+      cta: "Ver solicitudes",
+    });
+  }
+  if (lateIncidents.length) {
+    alerts.push({
+      tone: "danger",
+      message: `${lateIncidents.length} ${lateIncidents.length === 1 ? "incidente superó" : "incidentes superaron"} las 48 horas sin notificación registrada.`,
+      href: "/app/incidentes",
+      cta: "Ver incidentes",
+    });
+  } else if (activeIncidents.length) {
+    alerts.push({
+      tone: "warn",
+      message: `${activeIncidents.length} ${activeIncidents.length === 1 ? "incidente abierto" : "incidentes abiertos"}: evalúa si debes notificar a la ANPD.`,
+      href: "/app/incidentes",
+      cta: "Ver incidentes",
+    });
+  }
+
+  const setupScore = items.reduce((acc, item) => acc + (item.ok ? item.weight : 0), 0);
+  const failing = alerts.filter((a) => a.tone === "danger").length;
+  const score = Math.max(0, setupScore - failing * ALERT_PENALTY);
+  const level: Compliance["level"] =
+    failing > 0 || score < 50 ? "en_riesgo" : score >= 90 ? "al_dia" : "en_progreso";
+  const label = level === "al_dia" ? "Al día" : level === "en_progreso" ? "En progreso" : "En riesgo";
 
   return {
     score,
     level,
     label,
     items,
+    alerts,
     pending: items.filter((i) => !i.ok).length,
   };
 }
 
 export function dueTone(dueAt: string, status: string): "ok" | "warn" | "danger" | "muted" {
   if (status === "respondido" || status === "cerrado") return "muted";
-  const today = new Date().toISOString().slice(0, 10);
+  const today = limaToday();
   if (dueAt < today) return "danger";
   const days = Math.ceil((new Date(`${dueAt}T23:59:59-05:00`).getTime() - Date.now()) / 86_400_000);
   if (days <= 5) return "danger";

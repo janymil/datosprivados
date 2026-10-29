@@ -15,8 +15,8 @@ export default async function EditBankPage({ params }: { params: Promise<{ id: s
   if (!bank) notFound();
 
   return (
-    <div className="max-w-[760px] space-y-7">
-      <nav className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-soft" aria-label="Ruta">
+    <div className="max-w-[820px] space-y-7">
+      <nav className="font-mono text-[12px] uppercase tracking-[0.1em] text-ink-soft" aria-label="Ruta">
         <Link href="/app/bancos" className="hover:text-ink">
           Bancos de datos
         </Link>
@@ -29,13 +29,12 @@ export default async function EditBankPage({ params }: { params: Promise<{ id: s
       </nav>
 
       <PageHeader
-        eyebrow="Actualizar declaración"
         title="Editar banco de datos"
         description="Los cambios afectan la ficha SIPDP y los documentos que generes a partir de ahora."
       />
 
       <div className="card p-6 md:p-8">
-        <BankForm bank={bank} action={saveBankAction} />
+        <BankForm bank={bank} companyPlan={company.plan} action={saveBankAction} />
       </div>
     </div>
   );

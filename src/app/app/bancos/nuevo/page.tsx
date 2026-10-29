@@ -3,15 +3,16 @@ import { requireSession } from "@/lib/auth";
 import { saveBankAction } from "@/app/actions/company";
 import { BankForm } from "@/components/bank-form";
 import { PageHeader } from "@/components/ui";
+import { Term } from "@/components/help";
 
 export const metadata = { title: "Nuevo banco de datos" };
 
 export default async function NewBankPage() {
-  await requireSession();
+  const { company } = await requireSession();
 
   return (
-    <div className="max-w-[760px] space-y-7">
-      <nav className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-soft" aria-label="Ruta">
+    <div className="max-w-[820px] space-y-7">
+      <nav className="font-mono text-[12px] uppercase tracking-[0.1em] text-ink-soft" aria-label="Ruta">
         <Link href="/app/bancos" className="hover:text-ink">
           Bancos de datos
         </Link>
@@ -20,13 +21,20 @@ export default async function NewBankPage() {
       </nav>
 
       <PageHeader
-        eyebrow="Paso 1 de 2"
-        title="Declara un banco de datos"
-        description="No necesitas el lenguaje legal exacto: describe con claridad qué datos tienes y para qué los usas. Luego podrás generar la ficha para el SIPDP."
+        title={
+          <>
+            Declara un <Term k="banco">banco de datos</Term>
+          </>
+        }
+        description={
+          <>
+            Elige una plantilla y ajusta lo que no aplique. Después te damos la ficha lista para el <Term k="sipdp">SIPDP</Term>.
+          </>
+        }
       />
 
       <div className="card p-6 md:p-8">
-        <BankForm action={saveBankAction} />
+        <BankForm companyPlan={company.plan} action={saveBankAction} />
       </div>
     </div>
   );

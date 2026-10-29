@@ -48,6 +48,8 @@ body {
   background-color: var(--paper);
   color: var(--ink);
   font-family: var(--font-archivo), system-ui, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -65,7 +67,7 @@ body {
 @layer components {
   .container-page {
     width: 100%;
-    max-width: 1180px;
+    max-width: 1200px;
     margin-inline: auto;
     padding-inline: 1.25rem;
   }
@@ -78,8 +80,9 @@ body {
 
   .label-mono {
     font-family: var(--font-plex), monospace;
-    font-size: 0.6875rem;
-    letter-spacing: 0.16em;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--ink-soft);
   }
@@ -90,10 +93,10 @@ body {
     justify-content: center;
     gap: 0.5rem;
     border: 1px solid var(--ink);
-    padding: 0.7rem 1.1rem;
-    font-size: 0.875rem;
+    padding: 0.8rem 1.25rem;
+    font-size: 1rem;
     font-weight: 500;
-    line-height: 1.1;
+    line-height: 1.15;
     border-radius: 2px;
     transition:
       background-color 160ms ease,
@@ -140,8 +143,8 @@ body {
   }
 
   .btn-sm {
-    padding: 0.45rem 0.7rem;
-    font-size: 0.75rem;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.875rem;
   }
 
   .card {
@@ -155,8 +158,8 @@ body {
     background: #fffdf8;
     border: 1px solid var(--line-strong);
     border-radius: 2px;
-    padding: 0.6rem 0.7rem;
-    font-size: 0.875rem;
+    padding: 0.7rem 0.85rem;
+    font-size: 1rem;
     color: var(--ink);
   }
 
@@ -173,34 +176,35 @@ body {
   .field-label {
     display: block;
     font-family: var(--font-plex), monospace;
-    font-size: 0.6875rem;
-    letter-spacing: 0.1em;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--ink-soft);
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.45rem;
   }
 
   .table-base {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.875rem;
+    font-size: 0.96875rem;
   }
 
   .table-base th {
     text-align: left;
     font-family: var(--font-plex), monospace;
-    font-size: 0.625rem;
-    letter-spacing: 0.12em;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--ink-soft);
-    font-weight: 400;
-    padding: 0.6rem 0.75rem;
+    padding: 0.75rem 0.85rem;
     border-bottom: 1px solid var(--line);
     white-space: nowrap;
   }
 
   .table-base td {
-    padding: 0.8rem 0.75rem;
+    padding: 0.95rem 0.85rem;
     border-bottom: 1px solid var(--line);
     vertical-align: middle;
   }
@@ -236,6 +240,17 @@ body {
 .dot-field {
   background-image: radial-gradient(rgba(23, 25, 30, 0.14) 1px, transparent 1px);
   background-size: 18px 18px;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 @keyframes rise {

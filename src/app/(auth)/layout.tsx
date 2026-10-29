@@ -8,31 +8,31 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="pointer-events-none absolute inset-0 opacity-[0.13] dot-field" />
         <Link href="/" className="relative inline-flex w-fit" aria-label="PrivadoPE, inicio">
           <span className="inline-flex items-baseline">
-            <span className="font-display text-[1.4rem] leading-none tracking-[-0.03em] text-paper">
+            <span className="font-display text-[1.6rem] leading-none tracking-[-0.03em] text-paper">
               Privado
             </span>
-            <span className="font-display text-[1.4rem] italic leading-none tracking-[-0.05em] text-[#e2574c]">
+            <span className="font-display text-[1.6rem] italic leading-none tracking-[-0.05em] text-[#e2574c]">
               PE
             </span>
-            <span className="mb-[4px] ml-[3px] inline-block h-[5px] w-[5px] rounded-full bg-[#e2574c]" />
+            <span className="mb-[4px] ml-[3px] inline-block h-[6px] w-[6px] rounded-full bg-[#e2574c]" />
           </span>
         </Link>
 
-        <div className="relative max-w-[36ch]">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-paper/40">
+        <div className="relative max-w-[38ch]">
+          <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-paper/50">
             Expediente de cumplimiento
           </p>
-          <p className="mt-6 font-display text-[2.4rem] leading-[1.04] tracking-[-0.03em]">
+          <p className="mt-6 font-display text-[2.6rem] leading-[1.06] tracking-[-0.03em]">
             La diferencia entre tener datos y tener <em className="text-[#e2574c]">un problema</em> es
             saber dónde están.
           </p>
-          <div className="mt-8 space-y-3 border-t border-paper/15 pt-6">
+          <div className="mt-8 space-y-3.5 border-t border-paper/15 pt-6">
             {[
               "Inventario de bancos de datos",
               "Plazos ARCO de 20 días hábiles",
               "Incidentes con reloj de 48 horas",
             ].map((item) => (
-              <p key={item} className="flex items-center gap-3 text-[13px] text-paper/70">
+              <p key={item} className="flex items-center gap-3 text-[15.5px] text-paper/80">
                 <span className="h-px w-5 bg-[#e2574c]" />
                 {item}
               </p>
@@ -40,7 +40,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
 
-        <p className="relative font-mono text-[10px] uppercase tracking-[0.12em] text-paper/35">
+        <p className="relative font-mono text-[12px] uppercase tracking-[0.12em] text-paper/45">
           Lima, Perú · Ley 29733
         </p>
       </aside>
@@ -50,12 +50,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <Link href="/" aria-label="PrivadoPE, inicio">
             <Logo />
           </Link>
-          <Link href="/" className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-soft">
+          <Link href="/" className="font-mono text-[12.5px] uppercase tracking-[0.1em] text-ink-soft">
             Volver
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-center px-5 py-10">
-          <div className="w-full max-w-[420px]">{children}</div>
+          <div className="w-full max-w-[460px]">{children}</div>
         </div>
       </main>
     </div>

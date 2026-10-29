@@ -2,10 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getDb, newId, nowIso } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
-import { listBanks, logActivity } from "@/lib/data";
-import { buildConsentTexts, buildPrivacyPolicy, buildSecurityDocument } from "@/lib/documents";
+import { listBanks, logActivity, upsertDocument } from "@/lib/data";
+import {
+  buildConsentTexts,
+  buildInternalClauses,
+  buildPrivacyPolicy,
+  buildSecurityDocument,
+} from "@/lib/documents";
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -15,6 +20,7 @@ const TITLES: Record<string, string> = {
   politica: "Política de Privacidad",
   consentimiento: "Textos de consentimiento",
   seguridad: "Documento de Seguridad",
+  clausulas: "Contratos, Confidencialidad y Cartel CCTV",
 };
 
 export async function generateDocumentAction(formData: FormData) {
@@ -28,34 +34,21 @@ export async function generateDocumentAction(formData: FormData) {
       ? buildPrivacyPolicy(company, banks)
       : kind === "consentimiento"
         ? buildConsentTexts(company)
-        : buildSecurityDocument(company, banks);
+        : kind === "seguridad"
+          ? buildSecurityDocument(company, banks)
+          : buildInternalClauses(company);
 
-  const db = getDb();
-  const existing = db
-    .prepare("SELECT id, version FROM documents WHERE company_id = ? AND kind = ? ORDER BY version DESC LIMIT 1")
-    .get(company.id, kind) as { id: string; version: number } | undefined;
+  const version = upsertDocument(company.id, kind, TITLES[kind], content);
 
-  if (existing) {
-    db.prepare("UPDATE documents SET content = ?, version = ?, updated_at = ? WHERE id = ?").run(
-      content,
-      existing.version + 1,
-      nowIso(),
-      existing.id
-    );
-  } else {
-    db.prepare(
-      "INSERT INTO documents (id, company_id, kind, title, content, version, published, updated_at) VALUES (?, ?, ?, ?, ?, 1, 0, ?)"
-    ).run(newId(), company.id, kind, TITLES[kind], content, nowIso());
-  }
-
-  logActivity(company.id, "documento", `Generaste «${TITLES[kind]}» (v${(existing?.version ?? 0) + 1}).`);
+  logActivity(company.id, "documento", `Generaste «${TITLES[kind]}» (v${version}).`);
   revalidatePath("/app", "layout");
   redirect(`/app/documentos?tab=${kind}&ok=1`);
 }
 
 export async function togglePublishAction(formData: FormData) {
   const { company } = await requireSession();
-  const kind = text(formData, "kind");
+  // Solo la Política de Privacidad tiene enlace público.
+  const kind = "politica";
   const publish = text(formData, "publish") === "1";
   getDb()
     .prepare("UPDATE documents SET published = ? WHERE company_id = ? AND kind = ?")

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getDb, type Activity, type ArcoRequest, type Company, type DataBank, type DocumentRow, type Incident } from "./db";
+import { limaToday } from "./format";
 
 function all<T>(sql: string, ...params: Array<string | number | null>): T[] {
   return getDb().prepare(sql).all(...params) as unknown as T[];
@@ -97,14 +98,41 @@ export function logActivity(companyId: string, kind: string, message: string) {
     .run(crypto.randomUUID(), companyId, kind, message, new Date().toISOString());
 }
 
-export function nextTicketNumber(companyId: string): string {
-  const year = new Date().getFullYear();
-  const row = one<{ n: number }>(
-    "SELECT COUNT(*) AS n FROM arco_requests WHERE company_id = ? AND ticket LIKE ?",
+/** Guarda una nueva versión del documento y devuelve el número de versión. */
+export function upsertDocument(companyId: string, kind: string, title: string, content: string): number {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const existing = one<{ id: string; version: number }>(
+    "SELECT id, version FROM documents WHERE company_id = ? AND kind = ? ORDER BY version DESC LIMIT 1",
     companyId,
-    `ARCO-${year}-%`
+    kind
   );
-  return `ARCO-${year}-${String((row?.n ?? 0) + 1).padStart(4, "0")}`;
+  if (existing) {
+    db.prepare("UPDATE documents SET content = ?, version = ?, updated_at = ? WHERE id = ?").run(
+      content,
+      existing.version + 1,
+      now,
+      existing.id
+    );
+    return existing.version + 1;
+  }
+  db.prepare(
+    "INSERT INTO documents (id, company_id, kind, title, content, version, published, updated_at) VALUES (?, ?, ?, ?, ?, 1, 0, ?)"
+  ).run(crypto.randomUUID(), companyId, kind, title, content, now);
+  return 1;
+}
+
+export function nextTicketNumber(companyId: string): string {
+  const year = limaToday().slice(0, 4);
+  const prefix = `ARCO-${year}-`;
+  // MAX del correlativo (no COUNT), para no repetir tickets si hay huecos.
+  const row = one<{ n: number | null }>(
+    "SELECT MAX(CAST(substr(ticket, ?) AS INTEGER)) AS n FROM arco_requests WHERE company_id = ? AND ticket LIKE ?",
+    prefix.length + 1,
+    companyId,
+    `${prefix}%`
+  );
+  return `${prefix}${String((row?.n ?? 0) + 1).padStart(4, "0")}`;
 }
 
 export type CompanyStats = {
@@ -117,7 +145,7 @@ export type CompanyStats = {
 };
 
 export function getStats(companyId: string): CompanyStats {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = limaToday();
   return {
     banks: one<{ n: number }>("SELECT COUNT(*) AS n FROM data_banks WHERE company_id = ?", companyId)?.n ?? 0,
     banksRegistered:

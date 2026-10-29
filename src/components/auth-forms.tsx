@@ -12,7 +12,7 @@ function ErrorBox({ message }: { message?: string }) {
   return (
     <p
       role="alert"
-      className="border-l-2 border-crimson bg-crimson/[0.05] px-3 py-2 text-[12.5px] leading-snug text-crimson"
+      className="border-l-3 border-crimson bg-crimson/[0.05] px-4 py-3 text-[14.5px] leading-snug text-crimson"
     >
       {message}
     </p>
@@ -23,7 +23,7 @@ export function LoginForm() {
   const [state, formAction, pending] = useActionState(loginAction, initial);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="space-y-5">
       <ErrorBox message={state.error} />
 
       <Field label="Correo electrónico">
@@ -54,17 +54,17 @@ export function LoginForm() {
 
       <div className="flex items-center gap-3 pt-1">
         <span className="h-px flex-1 bg-line" />
-        <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-ink-soft">o</span>
+        <span className="font-mono text-[12px] uppercase tracking-[0.14em] text-ink-soft">o</span>
         <span className="h-px flex-1 bg-line" />
       </div>
 
-      <Link href="/demo" className="btn btn-ghost w-full">
+      <Link href="/demo" prefetch={false} className="btn btn-ghost w-full">
         Entrar a la demo con datos de ejemplo
       </Link>
 
-      <p className="pt-2 text-[12.5px] text-ink-soft">
+      <p className="pt-2 text-[14.5px] text-ink-soft">
         ¿Aún no tienes cuenta?{" "}
-        <Link href="/registro" className="link-underline text-ink">
+        <Link href="/registro" className="link-underline font-medium text-ink">
           Crear una cuenta
         </Link>
       </p>
@@ -72,22 +72,11 @@ export function LoginForm() {
   );
 }
 
-const SECTORS = [
-  "Comercio electrónico",
-  "Servicios profesionales",
-  "Salud y bienestar",
-  "Educación",
-  "Alimentos y bebidas",
-  "Inmobiliaria",
-  "Turismo",
-  "Otros",
-];
-
 export function SignupForm({ plan }: { plan: string }) {
   const [state, formAction, pending] = useActionState(signupAction, initial);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="space-y-5">
       <ErrorBox message={state.error} />
       <input type="hidden" name="plan" value={plan} />
 
@@ -95,28 +84,17 @@ export function SignupForm({ plan }: { plan: string }) {
         <input name="company" required className="input" placeholder="Casa Verde Perú S.A.C." />
       </Field>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="RUC">
-          <input
-            name="ruc"
-            required
-            inputMode="numeric"
-            pattern="\d{11}"
-            maxLength={11}
-            className="input"
-            placeholder="20604567891"
-          />
-        </Field>
-        <Field label="Sector">
-          <select name="sector" className="input" defaultValue="Comercio electrónico">
-            {SECTORS.map((sector) => (
-              <option key={sector} value={sector}>
-                {sector}
-              </option>
-            ))}
-          </select>
-        </Field>
-      </div>
+      <Field label="RUC" hint="11 dígitos. Sirve tanto RUC 10 (persona natural con negocio) como RUC 20.">
+        <input
+          name="ruc"
+          required
+          inputMode="numeric"
+          pattern="\d{11}"
+          maxLength={11}
+          className="input"
+          placeholder="20604567891"
+        />
+      </Field>
 
       <Field label="Tu nombre">
         <input name="name" required className="input" placeholder="Lucía Rojas" />
@@ -149,14 +127,14 @@ export function SignupForm({ plan }: { plan: string }) {
         {pending ? "Creando cuenta…" : `Crear cuenta ${plan === "pro" ? "Pro" : "Básica"}`}
       </button>
 
-      <p className="text-[11.5px] leading-relaxed text-ink-soft">
+      <p className="text-[13.5px] leading-relaxed text-ink-soft">
         Al crear tu cuenta aceptas los términos del servicio y la política de privacidad de PrivadoPE.
         Empiezas con 14 días de prueba; no pedimos tarjeta.
       </p>
 
-      <p className="text-[12.5px] text-ink-soft">
+      <p className="text-[14.5px] text-ink-soft">
         ¿Ya tienes cuenta?{" "}
-        <Link href="/login" className="link-underline text-ink">
+        <Link href="/login" className="link-underline font-medium text-ink">
           Iniciar sesión
         </Link>
       </p>

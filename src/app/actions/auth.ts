@@ -35,7 +35,6 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
 export async function signupAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const companyName = text(formData, "company");
   const ruc = text(formData, "ruc");
-  const sector = text(formData, "sector");
   const ownerName = text(formData, "name");
   const email = text(formData, "email").toLowerCase();
   const password = text(formData, "password");
@@ -62,8 +61,8 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
 
   db.prepare(
     `INSERT INTO companies (id, name, ruc, sector, slug, email, phone, address, plan, dpo_name, dpo_email, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, '', '', 'basico', ?, ?, ?)`
-  ).run(companyId, companyName, ruc, sector || "Otros", slug, email, ownerName, email, now);
+     VALUES (?, ?, ?, '', ?, ?, '', '', 'basico', ?, ?, ?)`
+  ).run(companyId, companyName, ruc, slug, email, ownerName, email, now);
 
   db.prepare(
     `INSERT INTO users (id, company_id, name, email, password_hash, role, created_at)
@@ -75,7 +74,7 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
   ).run(newId(), companyId, "Creaste tu cuenta en PrivadoPE.", now);
 
   await signIn(email, password);
-  redirect("/app?bienvenida=1");
+  redirect("/bienvenida");
 }
 
 export async function logoutAction() {

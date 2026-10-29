@@ -6,20 +6,40 @@ import { getDb, newId, nowIso } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
 import { logActivity } from "@/lib/data";
 
-function text(formData: FormData, key: string) {
-  return String(formData.get(key) ?? "").trim();
+const SEVERITIES = ["leve", "moderado", "grave"] as const;
+const ACTIONS = ["notificar", "cerrar", "analisis", "guardar"] as const;
+const MAX_PEOPLE = 100_000_000;
+
+/** Texto recortado y limitado a `max` caracteres. */
+function text(formData: FormData, key: string, max = 4000) {
+  return String(formData.get(key) ?? "").trim().slice(0, max);
+}
+
+function severity(formData: FormData, fallback = "moderado") {
+  const value = text(formData, "severity", 20);
+  return (SEVERITIES as readonly string[]).includes(value) ? value : fallback;
+}
+
+function people(formData: FormData) {
+  const n = Math.floor(Number(text(formData, "affected_people", 12)));
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(n, MAX_PEOPLE);
 }
 
 export async function createIncidentAction(formData: FormData) {
   const { company } = await requireSession();
-  const title = text(formData, "title");
+  const title = text(formData, "title", 200);
   if (!title) redirect("/app/incidentes/nuevo?error=1");
 
-  const detectedRaw = text(formData, "detected_at");
-  const detected = detectedRaw
-    ? new Date(`${detectedRaw}:00-05:00`)
-    : new Date();
-  if (Number.isNaN(detected.getTime())) redirect("/app/incidentes/nuevo?error=fecha");
+  const detectedRaw = text(formData, "detected_at", 20);
+  if (detectedRaw && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(detectedRaw)) {
+    redirect("/app/incidentes/nuevo?error=fecha");
+  }
+  const detected = detectedRaw ? new Date(`${detectedRaw}:00-05:00`) : new Date();
+  // Fecha inválida o en el futuro (con 5 min de tolerancia).
+  if (Number.isNaN(detected.getTime()) || detected.getTime() > Date.now() + 5 * 60_000) {
+    redirect("/app/incidentes/nuevo?error=fecha");
+  }
 
   const due = new Date(detected.getTime() + 48 * 3_600_000);
   const id = newId();
@@ -34,11 +54,11 @@ export async function createIncidentAction(formData: FormData) {
       company.id,
       title,
       text(formData, "description"),
-      text(formData, "severity") || "moderado",
+      severity(formData),
       detected.toISOString(),
       due.toISOString(),
-      Number(text(formData, "affected_people")) || 0,
-      text(formData, "data_categories"),
+      people(formData),
+      text(formData, "data_categories", 500),
       text(formData, "measures"),
       nowIso()
     );
@@ -50,13 +70,14 @@ export async function createIncidentAction(formData: FormData) {
 
 export async function updateIncidentAction(formData: FormData) {
   const { company } = await requireSession();
-  const id = text(formData, "id");
-  const action = text(formData, "action");
+  const id = text(formData, "id", 64);
+  const action = text(formData, "action", 20);
+  if (!id || !(ACTIONS as readonly string[]).includes(action)) redirect("/app/incidentes");
   const db = getDb();
 
   const incident = db
-    .prepare("SELECT title FROM incidents WHERE id = ? AND company_id = ?")
-    .get(id, company.id) as { title: string } | undefined;
+    .prepare("SELECT title, severity, status FROM incidents WHERE id = ? AND company_id = ?")
+    .get(id, company.id) as { title: string; severity: string; status: string } | undefined;
   if (!incident) redirect("/app/incidentes");
 
   if (action === "notificar") {
@@ -76,14 +97,15 @@ export async function updateIncidentAction(formData: FormData) {
       company.id
     );
     logActivity(company.id, "incidente", `Marcaste el incidente «${incident.title}» en análisis.`);
-  } else if (action === "guardar") {
+  } else if (action === "guardar" && incident.status !== "cerrado") {
     db.prepare(
-      "UPDATE incidents SET description = ?, measures = ?, affected_people = ?, data_categories = ? WHERE id = ? AND company_id = ?"
+      "UPDATE incidents SET description = ?, measures = ?, affected_people = ?, data_categories = ?, severity = ? WHERE id = ? AND company_id = ?"
     ).run(
       text(formData, "description"),
       text(formData, "measures"),
-      Number(text(formData, "affected_people")) || 0,
-      text(formData, "data_categories"),
+      people(formData),
+      text(formData, "data_categories", 500),
+      severity(formData, incident.severity),
       id,
       company.id
     );

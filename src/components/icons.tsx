@@ -107,6 +107,29 @@ export function BuildingIcon({ className }: IconProps) {
   );
 }
 
+export function SparklesIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={`${base} ${className ?? ""}`} aria-hidden="true">
+      <path
+        d="M12 2.8 14.2 8.8 20.2 11 14.2 13.2 12 19.2 9.8 13.2 3.8 11 9.8 8.8 12 2.8Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <path d="M19 3.5v3M20.5 5h-3M5 17.5v2.5M6.25 18.75h-2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function LockIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={`${base} ${className ?? ""}`} aria-hidden="true">
+      <rect x="5" y="10.5" width="14" height="10.5" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={`inline-flex items-baseline ${className ?? ""}`}>
@@ -118,3 +141,4 @@ export function Logo({ className }: { className?: string }) {
     </span>
   );
 }
+

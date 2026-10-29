@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { addBusinessDays, getDb, newId, nowIso } from "@/lib/db";
+import { addBusinessDays, arcoLegalBusinessDays, getDb, newId, nowIso } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
 import { getCompanyBySlug, logActivity, nextTicketNumber } from "@/lib/data";
 
@@ -19,10 +19,19 @@ export async function createArcoRequestAction(formData: FormData) {
   const company = getCompanyBySlug(slug);
   if (!company) redirect("/");
 
-  const name = text(formData, "requester_name");
-  const description = text(formData, "description");
+  const name = text(formData, "requester_name").slice(0, 200);
+  const description = text(formData, "description").slice(0, 5000);
   const type = text(formData, "type");
-  if (!name || !description || !["acceso", "rectificacion", "cancelacion", "oposicion"].includes(type)) {
+  const email = text(formData, "email").slice(0, 200);
+  const phone = text(formData, "phone").slice(0, 40);
+  // Campo trampa invisible: los bots lo completan, las personas no.
+  if (text(formData, "website")) redirect(`/solicitud/${slug}`);
+  if (
+    !name ||
+    !description ||
+    (!email && !phone) ||
+    !["acceso", "rectificacion", "cancelacion", "oposicion"].includes(type)
+  ) {
     redirect(`/solicitud/${slug}?error=1`);
   }
 
@@ -30,7 +39,7 @@ export async function createArcoRequestAction(formData: FormData) {
   const id = newId();
   const received = todayLima();
   const ticket = nextTicketNumber(company.id);
-  const due = addBusinessDays(received, 20);
+  const due = addBusinessDays(received, arcoLegalBusinessDays(type));
 
   db.prepare(
     `INSERT INTO arco_requests (id, company_id, ticket, type, channel, requester_name, doc_number, email, phone, description, status, received_at, due_at, created_at)
@@ -40,11 +49,11 @@ export async function createArcoRequestAction(formData: FormData) {
     company.id,
     ticket,
     type,
-    text(formData, "channel") || "web",
+    "web",
     name,
-    text(formData, "doc_number"),
-    text(formData, "email"),
-    text(formData, "phone"),
+    text(formData, "doc_number").slice(0, 30),
+    email,
+    phone,
     description,
     received,
     due,
@@ -56,35 +65,79 @@ export async function createArcoRequestAction(formData: FormData) {
   redirect(`/solicitud/${slug}?ok=${ticket}`);
 }
 
+const ARCO_TYPES = ["acceso", "rectificacion", "cancelacion", "oposicion"];
+const MANUAL_CHANNELS = ["whatsapp", "telefono", "correo", "presencial", "carta"];
+
+/** Registra una solicitud que llegó fuera del formulario web (WhatsApp, teléfono, etc.). */
+export async function createManualArcoRequestAction(formData: FormData) {
+  const { company } = await requireSession();
+
+  const type = text(formData, "type");
+  const channel = text(formData, "channel");
+  const name = text(formData, "requester_name").slice(0, 200);
+  const docNumber = text(formData, "doc_number").slice(0, 30);
+  const email = text(formData, "email").slice(0, 200);
+  const phone = text(formData, "phone").slice(0, 40);
+  const description = text(formData, "description").slice(0, 5000);
+  const receivedRaw = text(formData, "received_at");
+  const today = todayLima();
+  const received = /^\d{4}-\d{2}-\d{2}$/.test(receivedRaw) ? receivedRaw : "";
+
+  if (!ARCO_TYPES.includes(type) || !MANUAL_CHANNELS.includes(channel) || !name || !description) {
+    redirect("/app/arco?error=campos#registrar");
+  }
+  if (!email && !phone) redirect("/app/arco?error=contacto#registrar");
+  if (!received || Number.isNaN(Date.parse(`${received}T12:00:00-05:00`))) {
+    redirect("/app/arco?error=fecha#registrar");
+  }
+  if (received > today) redirect("/app/arco?error=futura#registrar");
+
+  const id = newId();
+  const ticket = nextTicketNumber(company.id);
+  const due = addBusinessDays(received, arcoLegalBusinessDays(type));
+
+  getDb()
+    .prepare(
+      `INSERT INTO arco_requests (id, company_id, ticket, type, channel, requester_name, doc_number, email, phone, description, status, received_at, due_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'nuevo', ?, ?, ?)`
+    )
+    .run(id, company.id, ticket, type, channel, name, docNumber, email, phone, description, received, due, nowIso());
+
+  logActivity(company.id, "arco", `Registraste una solicitud ARCO recibida por ${channel}: ${ticket} (${type}).`);
+  revalidatePath("/app", "layout");
+  redirect(`/app/arco/${id}`);
+}
+
 export async function respondArcoAction(formData: FormData) {
   const { company } = await requireSession();
   const id = text(formData, "id");
   const response = text(formData, "response");
-  const status = text(formData, "status") || "respondido";
+  const requested = text(formData, "status");
   const db = getDb();
 
   const request = db
-    .prepare("SELECT ticket FROM arco_requests WHERE id = ? AND company_id = ?")
-    .get(id, company.id) as { ticket: string } | undefined;
+    .prepare("SELECT ticket, status, due_at FROM arco_requests WHERE id = ? AND company_id = ?")
+    .get(id, company.id) as { ticket: string; status: string; due_at: string } | undefined;
   if (!request) redirect("/app/arco");
 
+  // Una solicitud ya respondida no vuelve a borrador: se conserva la fecha de
+  // respuesta original como evidencia.
+  const status = request.status === "respondido" || requested !== "en_proceso" ? "respondido" : "en_proceso";
   db.prepare(
-    `UPDATE arco_requests SET response = ?, status = ?, responded_at = ?
+    `UPDATE arco_requests SET response = ?, status = ?,
+       responded_at = CASE WHEN ? = 'respondido' THEN COALESCE(responded_at, ?) ELSE NULL END
      WHERE id = ? AND company_id = ?`
-  ).run(
-    response,
-    status,
-    status === "respondido" ? nowIso() : null,
-    id,
-    company.id
-  );
+  ).run(response, status, status, nowIso(), id, company.id);
 
+  const late = todayLima() > request.due_at;
   logActivity(
     company.id,
     "arco",
-    status === "respondido"
-      ? `Respondiste la solicitud ${request.ticket} dentro del plazo.`
-      : `Actualizaste la solicitud ${request.ticket} a «${status.replace("_", " ")}».`
+    request.status === "respondido"
+      ? `Editaste la respuesta de la solicitud ${request.ticket}.`
+      : status === "respondido"
+        ? `Respondiste la solicitud ${request.ticket}${late ? " fuera del plazo legal" : " dentro del plazo"}.`
+        : `Guardaste un borrador de respuesta para ${request.ticket}.`
   );
   revalidatePath("/app", "layout");
   redirect(`/app/arco/${id}?ok=1`);

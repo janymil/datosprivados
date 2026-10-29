@@ -48,7 +48,7 @@ export function formatDateTime(value: string | null | undefined) {
 }
 
 export function daysLeftLabel(dueAt: string) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = limaToday();
   const diff = Math.round(
     (new Date(`${dueAt}T12:00:00-05:00`).getTime() - new Date(`${today}T12:00:00-05:00`).getTime()) /
       86_400_000

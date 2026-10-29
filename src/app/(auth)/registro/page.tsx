@@ -17,10 +17,10 @@ export default async function RegisterPage({
   return (
     <div>
       <p className="label-mono">14 días gratis · sin tarjeta</p>
-      <h1 className="mt-3 font-display text-[2.2rem] leading-[1.05] tracking-[-0.03em]">
+      <h1 className="mt-3 font-display text-[2.5rem] leading-[1.05] tracking-[-0.03em]">
         Abre tu expediente.
       </h1>
-      <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+      <p className="mt-2.5 text-[16px] leading-relaxed text-ink-soft">
         Cinco minutos para registrar tu empresa. El resto lo guía la plataforma.
       </p>
 

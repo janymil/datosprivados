@@ -6,6 +6,8 @@ import { updateIncidentAction } from "@/app/actions/incidents";
 import { formatDateTime, hoursLeft } from "@/lib/format";
 import { Countdown } from "@/components/countdown";
 import { CopyButton } from "@/components/copy-button";
+import { IncidentAiPanel } from "@/components/incident-ai-panel";
+import { SubmitButton } from "@/components/submit-button";
 import { Field, PageHeader, StatusPill } from "@/components/ui";
 
 export const metadata = { title: "Incidente" };
@@ -15,6 +17,12 @@ const STATUS: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "
   en_analisis: { label: "En análisis", tone: "warn" },
   notificado: { label: "Notificado a la ANPD", tone: "info" },
   cerrado: { label: "Cerrado", tone: "ok" },
+};
+
+const SEVERITY: Record<string, string> = {
+  leve: "Leve",
+  moderado: "Moderado",
+  grave: "Grave",
 };
 
 export default async function IncidentDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -27,43 +35,63 @@ export default async function IncidentDetailPage({ params }: { params: Promise<{
   const left = hoursLeft(incident.due_at);
   const expired = left.expired;
   const closed = incident.status === "cerrado";
+  const notifiedLate =
+    !!incident.notified_at && new Date(incident.notified_at) > new Date(incident.due_at);
 
-  const draft = `NOTIFICACIÓN DE INCIDENTE DE SEGURIDAD DE DATOS PERSONALES
-Autoridad Nacional de Protección de Datos Personales (ANPD)
+  const draft = `REPORTE DE INCIDENTE DE SEGURIDAD DE DATOS PERSONALES (PLAZO 48 HORAS)
+Dirigido a: Autoridad Nacional de Protección de Datos Personales (ANPD - MINJUSDH)
+Base legal: Ley N.° 29733 y Reglamento aprobado por Decreto Supremo N.° 016-2024-JUS (art. 34)
+(Si el incidente ocurrió en el entorno digital, notificar también al Centro Nacional de Seguridad Digital - CNSD, art. 34.5)
 
-1. RESPONSABLE DEL TRATAMIENTO
-${company.name} — RUC ${company.ruc}
-Domicilio: ${company.address || "por completar"}
-Contacto: ${company.dpo_name || "por designar"} · ${company.dpo_email || company.email}
+1. IDENTIFICACIÓN DEL RESPONSABLE DEL TRATAMIENTO
+Razón Social / Nombre: ${company.name}
+RUC N.°: ${company.ruc}
+Domicilio legal: ${company.address || "[por completar]"}
+Oficial de Datos Personales / Contacto de Privacidad: ${company.dpo_name || "[por completar]"}
+Correo electrónico y teléfono de contacto: ${company.dpo_email || company.email} / ${company.phone || "[por completar]"}
 
-2. FECHA Y HORA DE DETECCIÓN
-${formatDateTime(incident.detected_at)} (hora de Lima)
+2. CRONOLOGÍA DEL INCIDENTE
+- Fecha y hora de detección: ${formatDateTime(incident.detected_at)} (Hora de Lima, UTC-5)
+- Fecha y hora límite (48 h): ${formatDateTime(incident.due_at)}
+- Fecha de emisión de este reporte: ${new Date().toLocaleDateString("es-PE", { timeZone: "America/Lima" })}
+- Motivo de la demora (solo si se notifica después de 48 h): [Explicar las razones o indicar "No aplica"]
 
-3. DESCRIPCIÓN DEL INCIDENTE
-${incident.title}
-${incident.description || "Por completar."}
+3. NATURALEZA Y DESCRIPCIÓN DEL INCIDENTE
+Título del evento: ${incident.title}
+Nivel de gravedad estimado: ${(SEVERITY[incident.severity] ?? incident.severity).toUpperCase()}
+Descripción de los hechos y sistemas involucrados:
+${incident.description || "[Por completar]"}
 
-4. CATEGORÍAS DE DATOS AFECTADOS
-${incident.data_categories || "Por completar."}
+4. CATEGORÍAS DE DATOS PERSONALES Y TITULARES AFECTADOS
+- Categorías de datos involucrados: ${incident.data_categories || "[Por completar]"}
+- Número estimado de personas afectadas: ${incident.affected_people || "[Por determinar]"}
 
-5. NÚMERO ESTIMADO DE TITULARES AFECTADOS
-${incident.affected_people || "Por determinar"}
+5. POSIBLES CONSECUENCIAS PARA LOS TITULARES
+[Describir los posibles perjuicios para los titulares]
 
-6. MEDIDAS ADOPTADAS
-${incident.measures || "Por completar."}
+6. MEDIDAS DE CONTENCIÓN Y CORRECCIÓN ADOPTADAS
+${incident.measures || "[Por completar]"}
 
-7. EVALUACIÓN DE RIESGO
-[Explicar si existe riesgo para los derechos y libertades de los titulares y por qué.]
-
-8. MEDIDAS DE CONTENCIÓN Y CORRECCIÓN PREVISTAS
-[Detallar acciones, responsables y plazos.]
-
-Fecha de esta notificación: ${new Date().toLocaleDateString("es-PE", { timeZone: "America/Lima" })}
+7. COMUNICACIÓN A LOS TITULARES AFECTADOS (ART. 34.3 Y 34.4, DS N.° 016-2024-JUS)
+- [SÍ: se informó / informará en lenguaje claro dentro de las 48 h / NO: no hubo afectación y el incidente fue superado por completo]
 `;
+
+  const rows: [string, string][] = [
+    ["Gravedad", SEVERITY[incident.severity] ?? incident.severity],
+    ["Personas afectadas", incident.affected_people ? String(incident.affected_people) : "Por determinar"],
+    ["Datos comprometidos", incident.data_categories || "—"],
+    ["Medidas adoptadas", incident.measures || "—"],
+    [
+      "Notificado a la ANPD",
+      incident.notified_at
+        ? `${formatDateTime(incident.notified_at)}${notifiedLate ? " (fuera de plazo)" : ""}`
+        : "No",
+    ],
+  ];
 
   return (
     <div className="space-y-7">
-      <nav className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-soft" aria-label="Ruta">
+      <nav className="font-mono text-xs uppercase tracking-[0.08em] text-ink-soft" aria-label="Ruta">
         <Link href="/app/incidentes" className="hover:text-ink">
           Incidentes
         </Link>
@@ -78,161 +106,185 @@ Fecha de esta notificación: ${new Date().toLocaleDateString("es-PE", { timeZone
         actions={<StatusPill tone={status.tone}>{status.label}</StatusPill>}
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-        <div className="space-y-6">
-          <section className="card p-6">
-            <h2 className="font-display text-xl tracking-[-0.02em]">Datos del incidente</h2>
-            <dl className="mt-4 divide-y divide-line border-t border-line">
-              {[
-                ["Gravedad", incident.severity],
-                ["Personas afectadas", String(incident.affected_people || 0)],
-                ["Categorías de datos", incident.data_categories || "—"],
-                ["Medidas adoptadas", incident.measures || "—"],
-                ["Notificado a la ANPD", incident.notified_at ? formatDateTime(incident.notified_at) : "No"],
-                ["Cierre", incident.status === "cerrado" ? "Registrado" : "Pendiente"],
-              ].map(([label, value]) => (
-                <div key={label} className="grid gap-1 py-3 sm:grid-cols-[190px_1fr] sm:gap-4">
-                  <dt className="font-mono text-[9px] uppercase tracking-[0.1em] text-ink-soft">{label}</dt>
-                  <dd className="text-[12.5px] capitalize leading-relaxed">{value}</dd>
+      <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr] lg:grid-rows-[auto_1fr]">
+        {/* En móvil, el reloj y la acción principal van primero; el criterio, al final. */}
+        <div className="order-2 min-w-0 space-y-6 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+          <section className="group card p-6 md:p-7">
+            <h2 className="font-display text-2xl tracking-[-0.02em]">Datos del incidente</h2>
+            <dl className="mt-4 divide-y divide-line border-t border-line group-has-[details[open]]:hidden">
+              {rows.map(([label, value]) => (
+                <div key={label} className="grid gap-1.5 py-3.5 sm:grid-cols-[200px_1fr] sm:gap-4">
+                  <dt className="font-mono text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">{label}</dt>
+                  <dd className="whitespace-pre-line text-[15.5px] leading-relaxed">{value}</dd>
                 </div>
               ))}
             </dl>
-          </section>
 
-          <section className="card p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="font-display text-xl tracking-[-0.02em]">Borrador de notificación ANPD</h2>
-                <p className="mt-1 max-w-[52ch] text-[12px] leading-relaxed text-ink-soft">
-                  Completa los campos entre corchetes en el portal de la ANPD. Guarda la constancia de
-                  envío.
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <CopyButton text={draft} label="Copiar borrador" />
-                <Link href="/app/incidentes" className="btn btn-ghost btn-sm">
-                  Volver
-                </Link>
-              </div>
-            </div>
-            <pre className="mt-4 max-h-[360px] overflow-auto whitespace-pre-wrap border border-line bg-paper p-4 font-mono text-[11px] leading-relaxed text-ink-soft">
-              {draft}
-            </pre>
-          </section>
-
-          {!closed && (
-            <section className="card p-6">
-              <h2 className="font-display text-xl tracking-[-0.02em]">Actualizar expediente</h2>
-              <form action={updateIncidentAction} className="mt-4 space-y-4">
-                <input type="hidden" name="id" value={incident.id} />
-                <input type="hidden" name="action" value="guardar" />
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Personas afectadas">
+            {!closed && (
+              <details className="mt-4">
+                <summary className="btn btn-ghost btn-sm cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                  <span className="group-has-[details[open]]:hidden">Editar datos</span>
+                  <span className="hidden group-has-[details[open]]:inline">Cancelar edición</span>
+                </summary>
+                <form action={updateIncidentAction} className="mt-4 space-y-4">
+                  <input type="hidden" name="id" value={incident.id} />
+                  <input type="hidden" name="action" value="guardar" />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Gravedad">
+                      <select name="severity" defaultValue={incident.severity} className="input">
+                        <option value="leve">Leve</option>
+                        <option value="moderado">Moderado</option>
+                        <option value="grave">Grave</option>
+                      </select>
+                    </Field>
+                    <Field label="Personas afectadas">
+                      <input
+                        type="number"
+                        name="affected_people"
+                        min={0}
+                        max={100000000}
+                        inputMode="numeric"
+                        defaultValue={incident.affected_people}
+                        className="input"
+                      />
+                    </Field>
+                  </div>
+                  <Field label="Datos comprometidos">
                     <input
-                      type="number"
-                      name="affected_people"
-                      min={0}
-                      defaultValue={incident.affected_people}
+                      name="data_categories"
+                      maxLength={500}
+                      defaultValue={incident.data_categories}
                       className="input"
                     />
                   </Field>
-                  <Field label="Categorías de datos">
-                    <input name="data_categories" defaultValue={incident.data_categories} className="input" />
+                  <Field label="Medidas adoptadas">
+                    <textarea
+                      name="measures"
+                      rows={3}
+                      maxLength={4000}
+                      defaultValue={incident.measures}
+                      className="input resize-y"
+                    />
                   </Field>
-                </div>
-                <Field label="Medidas adoptadas">
-                  <textarea name="measures" rows={3} defaultValue={incident.measures} className="input resize-y" />
-                </Field>
-                <Field label="Descripción">
-                  <textarea name="description" rows={3} defaultValue={incident.description} className="input resize-y" />
-                </Field>
-                <div className="flex justify-end">
-                  <button type="submit" className="btn btn-primary btn-sm">
-                    Guardar cambios
-                  </button>
-                </div>
-              </form>
-            </section>
-          )}
+                  <Field label="Descripción">
+                    <textarea
+                      name="description"
+                      rows={3}
+                      maxLength={4000}
+                      defaultValue={incident.description}
+                      className="input resize-y"
+                    />
+                  </Field>
+                  <div className="flex justify-end">
+                    <SubmitButton pendingLabel="Guardando…" className="btn btn-primary btn-sm">
+                      Guardar cambios
+                    </SubmitButton>
+                  </div>
+                </form>
+              </details>
+            )}
+          </section>
+
+          <IncidentAiPanel incidentId={incident.id} companyPlan={company.plan} />
+
+          <section className="card p-6 md:p-7">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="font-display text-2xl tracking-[-0.02em]">Borrador para la ANPD</h2>
+                <p className="mt-1.5 max-w-[54ch] text-sm leading-relaxed text-ink-soft">
+                  Completa lo que está entre [corchetes] y guarda la constancia de envío.
+                </p>
+              </div>
+              <CopyButton text={draft} label="Copiar borrador" />
+            </div>
+            <pre className="mt-4 max-h-[380px] overflow-auto whitespace-pre-wrap border border-line bg-paper p-5 font-mono text-xs leading-relaxed text-ink">
+              {draft}
+            </pre>
+          </section>
         </div>
 
-        <div className="space-y-5">
+        <div className="order-1 lg:col-start-2 lg:row-start-1">
           <section
-            className={`border p-5 ${
+            className={`border p-6 ${
               closed ? "border-line bg-paper-2" : expired ? "border-crimson/50 bg-crimson/[0.04]" : "border-ochre/50 bg-ochre/[0.04]"
             }`}
           >
-            <p className="label-mono">Reloj de 48 horas</p>
+            <p className="label-mono">Plazo de 48 horas</p>
             {closed ? (
-              <>
-                <p className="mt-2 font-display text-2xl tracking-[-0.02em]">Incidente cerrado</p>
-                <p className="mt-2 text-[12px] leading-relaxed text-ink-soft">
-                  Documento archivado. Revisa las lecciones aprendidas con tu equipo.
-                </p>
-              </>
+              <p className="mt-2 font-display text-2xl tracking-[-0.02em]">Incidente cerrado</p>
             ) : incident.notified_at ? (
               <>
-                <p className="mt-2 font-display text-2xl tracking-[-0.02em] text-sage">Notificado</p>
-                <p className="mt-2 text-[12px] text-ink-soft">{formatDateTime(incident.notified_at)}</p>
+                <p className={`mt-2 font-display text-2xl tracking-[-0.02em] ${notifiedLate ? "text-crimson" : "text-sage"}`}>
+                  {notifiedLate ? "Notificado fuera de plazo" : "Notificado a tiempo"}
+                </p>
+                <p className="mt-2 text-sm text-ink-soft">{formatDateTime(incident.notified_at)}</p>
               </>
             ) : (
               <>
-                <p className={`mt-2 font-display text-[2rem] leading-none tracking-[-0.03em] ${expired ? "text-crimson" : ""}`}>
+                <p className={`mt-2 font-display text-[2.2rem] leading-none tracking-[-0.03em] ${expired ? "text-crimson" : ""}`}>
                   <Countdown
                     dueAt={incident.due_at}
                     initialLabel={expired ? `Vencido hace ${left.hours} h` : `${left.hours} h ${left.minutes} min`}
                   />
                 </p>
-                <p className="mt-2 text-[12px] text-ink-soft">
-                  Vence el {formatDateTime(incident.due_at)}. Si no hay riesgo para los titulares,
-                  documenta la decisión de no notificar.
+                <p className="mt-2 text-sm text-ink-soft">
+                  {expired
+                    ? "Si notificas ahora, explica el motivo de la demora."
+                    : `Vence el ${formatDateTime(incident.due_at)}.`}
                 </p>
               </>
             )}
-          </section>
 
-          {!closed && (
-            <section className="card p-5">
-              <p className="label-mono">Acciones</p>
-              <div className="mt-3 space-y-2">
+            {!closed && (
+              <div className="mt-5 space-y-2.5 border-t border-line pt-4">
                 {!incident.notified_at && (
                   <form action={updateIncidentAction}>
                     <input type="hidden" name="id" value={incident.id} />
                     <input type="hidden" name="action" value="notificar" />
-                    <button type="submit" className="btn btn-primary btn-sm w-full">
+                    <SubmitButton pendingLabel="Guardando…" className="btn btn-primary btn-sm w-full">
                       Marcar como notificado
-                    </button>
+                    </SubmitButton>
                   </form>
                 )}
                 {incident.status === "abierto" && (
                   <form action={updateIncidentAction}>
                     <input type="hidden" name="id" value={incident.id} />
                     <input type="hidden" name="action" value="analisis" />
-                    <button type="submit" className="btn btn-ghost btn-sm w-full">
+                    <SubmitButton pendingLabel="Guardando…" className="btn btn-ghost btn-sm w-full">
                       Pasar a análisis
-                    </button>
+                    </SubmitButton>
                   </form>
                 )}
                 <form action={updateIncidentAction}>
                   <input type="hidden" name="id" value={incident.id} />
                   <input type="hidden" name="action" value="cerrar" />
-                  <button type="submit" className="btn btn-ghost btn-sm w-full">
+                  <SubmitButton pendingLabel="Cerrando…" className="btn btn-ghost btn-sm w-full">
                     Cerrar incidente
-                  </button>
+                  </SubmitButton>
                 </form>
+                <p className="text-xs leading-relaxed text-ink-soft">
+                  Cerrar no borra el registro: queda como evidencia.
+                </p>
               </div>
-              <p className="mt-3 border-t border-line pt-3 text-[11px] leading-relaxed text-ink-soft">
-                Cerrar no elimina el registro: queda como evidencia de que actuaste.
-              </p>
-            </section>
-          )}
+            )}
+          </section>
+        </div>
 
-          <section className="border border-line bg-paper p-5">
-            <p className="label-mono">Criterio de notificación</p>
-            <p className="mt-2 text-[12px] leading-relaxed text-ink-soft">
-              Notifica a la ANPD cuando el incidente afecte datos personales y pueda generar un riesgo
-              para los derechos de los titulares. Ante la duda, documenta el análisis y consulta con tu
-              abogado.
+        <div className="order-3 lg:col-start-2 lg:row-start-2 lg:self-start">
+          <section className="border border-line bg-paper p-6">
+            <p className="label-mono">¿Debo notificar a la ANPD?</p>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+              Sí, en máximo 48 h, si el incidente (art. 34.1):
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed">
+              <li>expone grandes volúmenes de datos,</li>
+              <li>puede afectar a muchas personas,</li>
+              <li>involucra datos sensibles, o</li>
+              <li>causa un daño evidente a sus derechos.</li>
+            </ul>
+            <p className="mt-3 border-t border-line pt-3 text-sm leading-relaxed text-ink-soft">
+              Aplica aunque ya lo hayas resuelto. Si fue digital, avisa también al CNSD. Si afecta a
+              personas, infórmales en 48 h. Y regístralo siempre (art. 35).
             </p>
           </section>
         </div>

@@ -21,8 +21,8 @@ export default async function PublicPolicyPage({ params }: { params: Promise<{ s
             <Logo />
           </Link>
           <div className="flex items-center gap-3">
-            <Link href={`/solicitud/${slug}`} className="hidden font-mono text-[9px] uppercase tracking-[0.12em] text-ink-soft hover:text-crimson sm:block">
-              Ejercer derechos ARCO
+            <Link href={`/solicitud/${slug}`} className="hidden font-mono text-xs font-medium uppercase tracking-[0.1em] text-ink-soft hover:text-crimson sm:block">
+              Ejercer derechos ARCO ↗
             </Link>
             <PrintButton label="Descargar PDF" />
           </div>
@@ -30,14 +30,14 @@ export default async function PublicPolicyPage({ params }: { params: Promise<{ s
       </header>
 
       <main className="container-page py-10 md:py-16">
-        <article className="print-page mx-auto max-w-[760px]">
+        <article className="print-page mx-auto max-w-[800px]">
           <p className="label-mono">{company.name} · RUC {company.ruc}</p>
           <h1 className="mt-3 font-display text-[2.4rem] leading-[1.03] tracking-[-0.03em] md:text-[3rem]">
             Política de Privacidad
           </h1>
-          <p className="mt-3 text-[12px] text-ink-soft">
+          <p className="mt-3 text-sm text-ink-soft">
             Versión {doc.version} · actualizada el{" "}
-            {new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "long", year: "numeric" }).format(
+            {new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "long", year: "numeric", timeZone: "America/Lima" }).format(
               new Date(doc.updated_at)
             )}
           </p>
@@ -47,7 +47,7 @@ export default async function PublicPolicyPage({ params }: { params: Promise<{ s
           </div>
 
           <div className="mt-10 flex flex-col gap-3 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
-            <p className="max-w-[50ch] text-[11px] leading-relaxed text-ink-soft">
+            <p className="max-w-[52ch] text-sm leading-relaxed text-ink-soft">
               ¿Tienes preguntas sobre tus datos? Escríbenos a{" "}
               <a href={`mailto:${company.dpo_email || company.email}`} className="link-underline text-ink">
                 {company.dpo_email || company.email}
@@ -55,17 +55,17 @@ export default async function PublicPolicyPage({ params }: { params: Promise<{ s
               .
             </p>
             <Link href={`/solicitud/${slug}`} className="btn btn-primary btn-sm no-print">
-              Solicitud ARCO
+              Ver, corregir o borrar mis datos
             </Link>
           </div>
         </article>
       </main>
 
       <footer className="border-t border-line">
-        <div className="container-page flex flex-col gap-2 py-6 text-[11px] text-ink-soft sm:flex-row sm:justify-between">
+        <div className="container-page flex flex-col gap-2 py-6 text-xs text-ink-soft sm:flex-row sm:justify-between">
           <p>© 2026 {company.name}.</p>
-          <p className="font-mono uppercase tracking-[0.1em]">
-            Política generada con PrivadoPE · borrador sujeto a revisión legal
+          <p className="font-mono uppercase tracking-[0.08em]">
+            Política generada con PrivadoPE
           </p>
         </div>
       </footer>

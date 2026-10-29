@@ -2,7 +2,12 @@ import { DatabaseSync } from "node:sqlite";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { buildConsentTexts, buildPrivacyPolicy, buildSecurityDocument } from "./documents";
+import {
+  buildConsentTexts,
+  buildInternalClauses,
+  buildPrivacyPolicy,
+  buildSecurityDocument,
+} from "./documents";
 
 /**
  * Capa de datos del MVP.
@@ -24,6 +29,8 @@ export type Company = {
   plan: "basico" | "pro";
   dpo_name: string;
   dpo_email: string;
+  /** Fecha en que terminó el onboarding; null mientras no lo complete. */
+  onboarded_at: string | null;
   created_at: string;
 };
 
@@ -93,7 +100,7 @@ export type Incident = {
 export type DocumentRow = {
   id: string;
   company_id: string;
-  kind: "politica" | "consentimiento" | "seguridad";
+  kind: "politica" | "consentimiento" | "seguridad" | "clausulas";
   title: string;
   content: string;
   version: number;
@@ -227,17 +234,44 @@ function initSchema(db: DatabaseSync) {
   `);
 }
 
+/**
+ * Migraciones incrementales. Se ejecutan también sobre una conexión ya
+ * cacheada en `globalThis` (en `next dev` la conexión sobrevive a los recargos
+ * en caliente y `initSchema` no vuelve a correr).
+ */
+const SCHEMA_VERSION = 2;
+
+function migrate(db: DatabaseSync) {
+  const companyColumns = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
+  if (!companyColumns.some((column) => column.name === "onboarded_at")) {
+    db.exec("ALTER TABLE companies ADD COLUMN onboarded_at TEXT");
+    // Las empresas que ya existían antes del onboarding no deben volver a pasarlo.
+    db.exec("UPDATE companies SET onboarded_at = created_at");
+  }
+}
+
 declare global {
   // eslint-disable-next-line no-var
   var __privadopeDb: DatabaseSync | undefined;
+  // eslint-disable-next-line no-var
+  var __privadopeSchemaVersion: number | undefined;
 }
 
 export function getDb(): DatabaseSync {
-  if (globalThis.__privadopeDb) return globalThis.__privadopeDb;
+  if (globalThis.__privadopeDb) {
+    if (globalThis.__privadopeSchemaVersion !== SCHEMA_VERSION) {
+      migrate(globalThis.__privadopeDb);
+      seedIfEmpty(globalThis.__privadopeDb);
+      globalThis.__privadopeSchemaVersion = SCHEMA_VERSION;
+    }
+    return globalThis.__privadopeDb;
+  }
 
   fs.mkdirSync(DATA_DIR, { recursive: true });
   const db = new DatabaseSync(DB_PATH);
   initSchema(db);
+  migrate(db);
+  globalThis.__privadopeSchemaVersion = SCHEMA_VERSION;
   seedIfEmpty(db);
   globalThis.__privadopeDb = db;
   return db;
@@ -257,19 +291,51 @@ export function newId(): string {
 
 function seedIfEmpty(db: DatabaseSync) {
   const row = db.prepare("SELECT COUNT(*) AS n FROM companies").get() as { n: number };
-  if (row.n > 0) return;
+  if (row.n > 0) {
+    const demoCompany = db
+      .prepare("SELECT * FROM companies WHERE id = 'casa-verde'")
+      .get() as unknown as Company | undefined;
+    if (demoCompany) {
+      const demoBanks = db
+        .prepare("SELECT * FROM data_banks WHERE company_id = 'casa-verde'")
+        .all() as unknown as DataBank[];
+      db.prepare("UPDATE documents SET content = ? WHERE id = 'doc-politica'").run(
+        buildPrivacyPolicy(demoCompany, demoBanks)
+      );
+      db.prepare("UPDATE documents SET content = ? WHERE id = 'doc-consentimiento'").run(
+        buildConsentTexts(demoCompany)
+      );
+      db.prepare("UPDATE documents SET content = ? WHERE id = 'doc-seguridad'").run(
+        buildSecurityDocument(demoCompany, demoBanks)
+      );
+      const hasClausulas = db
+        .prepare("SELECT id FROM documents WHERE id = 'doc-clausulas'")
+        .get() as { id: string } | undefined;
+      if (hasClausulas) {
+        db.prepare("UPDATE documents SET content = ? WHERE id = 'doc-clausulas'").run(
+          buildInternalClauses(demoCompany)
+        );
+      } else {
+        db.prepare(
+          `INSERT INTO documents (id, company_id, kind, title, content, version, published, updated_at)
+           VALUES ('doc-clausulas', 'casa-verde', 'clausulas', 'Contratos, Confidencialidad y Cartel CCTV', ?, 1, 0, ?)`
+        ).run(buildInternalClauses(demoCompany), nowIso());
+      }
+    }
+    return;
+  }
 
   const companyId = "casa-verde";
   const createdAt = nowIso();
 
   db.prepare(
-    `INSERT INTO companies (id, name, ruc, sector, slug, email, phone, address, plan, dpo_name, dpo_email, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO companies (id, name, ruc, sector, slug, email, phone, address, plan, dpo_name, dpo_email, onboarded_at, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     companyId,
     "Casa Verde Perú S.A.C.",
     "20604567891",
-    "Comercio electrónico",
+    "Tienda online / e-commerce",
     "casa-verde",
     "hola@casaverde.pe",
     "+51 987 654 321",
@@ -277,6 +343,7 @@ function seedIfEmpty(db: DatabaseSync) {
     "pro",
     "Lucía Rojas",
     "privacidad@casaverde.pe",
+    createdAt,
     createdAt
   );
 
@@ -392,7 +459,7 @@ function seedIfEmpty(db: DatabaseSync) {
   ];
 
   for (const a of arco) {
-    const due = addBusinessDays(a[8], 20);
+    const due = addBusinessDays(a[8], arcoLegalBusinessDays(a[2]));
     db.prepare(
       `INSERT INTO arco_requests (id, company_id, ticket, type, channel, requester_name, doc_number, email, description, status, received_at, due_at, responded_at, response, created_at)
        VALUES (?, ?, ?, ?, 'web', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -466,6 +533,7 @@ function seedIfEmpty(db: DatabaseSync) {
     ["doc-politica", "politica", "Política de Privacidad", buildPrivacyPolicy(seedCompany, seedBanks), 1],
     ["doc-consentimiento", "consentimiento", "Textos de consentimiento", buildConsentTexts(seedCompany), 0],
     ["doc-seguridad", "seguridad", "Documento de Seguridad", buildSecurityDocument(seedCompany, seedBanks), 0],
+    ["doc-clausulas", "clausulas", "Contratos, Confidencialidad y Cartel CCTV", buildInternalClauses(seedCompany), 0],
   ];
 
   for (const [docId, kind, title, content, published] of seedDocs) {
@@ -503,6 +571,15 @@ export function verifyPassword(password: string, stored: string): boolean {
   const expected = Buffer.from(hash, "hex");
   if (candidate.length !== expected.length) return false;
   return crypto.timingSafeEqual(candidate, expected);
+}
+
+/**
+ * Plazos legales en días hábiles según el Reglamento de la Ley 29733 (DS 016-2024-JUS):
+ * - Derecho de Acceso: 20 días hábiles
+ * - Derechos de Rectificación, Cancelación y Oposición: 10 días hábiles
+ */
+export function arcoLegalBusinessDays(type: string): number {
+  return type === "acceso" ? 20 : 10;
 }
 
 /**

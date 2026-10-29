@@ -53,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="es-PE"
       data-scroll-behavior="smooth"
+      suppressHydrationWarning
       className={`${archivo.variable} ${fraunces.variable} ${plex.variable}`}
     >
       <body>{children}</body>

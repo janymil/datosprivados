@@ -24,7 +24,7 @@ export default function NotFound() {
           <Link href="/" className="btn btn-primary">
             Volver al inicio
           </Link>
-          <Link href="/demo" className="btn btn-ghost">
+          <Link href="/demo" prefetch={false} className="btn btn-ghost">
             Abrir la demo
           </Link>
         </div>

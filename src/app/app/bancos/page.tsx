@@ -4,6 +4,7 @@ import { listBanks } from "@/lib/data";
 import { formatDate } from "@/lib/format";
 import { EmptyState, PageHeader, StatusPill } from "@/components/ui";
 import { ArrowRightIcon } from "@/components/icons";
+import { GuideBox, Term } from "@/components/help";
 
 export const metadata = { title: "Bancos de datos" };
 
@@ -15,36 +16,70 @@ export default async function BanksPage() {
   return (
     <div className="space-y-7">
       <PageHeader
-        eyebrow="Expediente · Inventario"
-        title="Bancos de datos"
-        description="Declara cada conjunto de datos personales que tratas. Con esta información generamos tu política y preparamos el registro en el SIPDP."
+        title={
+          <>
+            Tus <Term k="banco">Bancos de datos</Term>
+          </>
+        }
+        description={
+          <>
+            «Banco de datos» no es un banco financiero: significa cualquier <strong>lista o archivo con datos de personas</strong> que tiene tu negocio (tu Excel de clientes, contactos de WhatsApp, planilla de trabajadores, proveedores o cámaras de seguridad).
+          </>
+        }
         actions={
           <>
-            <Link href="/app/documentos" className="btn btn-ghost btn-sm">
-              Generar documentos
-            </Link>
             <Link href="/app/bancos/nuevo" className="btn btn-primary btn-sm">
-              Nuevo banco
+              + Nuevo banco (con plantillas)
             </Link>
+          </>
+        }
+      />
+
+      <GuideBox
+        title="¿Qué es un Banco de Datos, por qué debo inscribirlo y cuánto cuesta?"
+        defaultOpen={banks.length === 0}
+        what={
+          <>
+            Cada grupo de personas del que guardas información es un <Term k="banco">banco de datos</Term>. Por ejemplo: <strong>1) Clientes</strong>, <strong>2) Trabajadores</strong> y <strong>3) Proveedores</strong> son 3 bancos distintos.
+          </>
+        }
+        why={
+          <>
+            La <Term k="ley29733">Ley 29733</Term> exige inscribir cada banco en el Registro Nacional (<Term k="rnpdp">RNPDP</Term>) de la <Term k="anpd">ANPD</Term>. Según el nuevo reglamento <Term k="ds016">DS 016-2024-JUS</Term>, <strong>el trámite en el Estado es 100 % gratuito (S/ 0)</strong> y virtual.
+          </>
+        }
+        how={
+          <>
+            <strong>1)</strong> Haz clic en «Nuevo banco» y elige una plantilla lista.{" "}
+            <strong>2)</strong> Abre su «Ficha SIPDP» y cópiala en{" "}
+            <a
+              href="https://sipdp.minjus.gob.pe/"
+              target="_blank"
+              rel="noreferrer"
+              className="link-underline font-medium"
+            >
+              sipdp.minjus.gob.pe
+            </a>
+            . <strong>3)</strong> Anota aquí el código que te den.
           </>
         }
       />
 
       <div className="flex flex-col gap-3 border border-line bg-paper-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-baseline gap-3">
-          <span className="font-display text-2xl leading-none">{registered}</span>
-          <span className="text-[13px] text-ink-soft">
-            de {banks.length} bancos con código SIPDP guardado
+          <span className="font-display text-3xl leading-none">{registered}</span>
+          <span className="text-base text-ink-soft">
+            de {banks.length} bancos inscritos con código oficial del <Term k="sipdp">SIPDP</Term>
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="h-[5px] w-40 bg-line">
+          <div className="h-[6px] w-44 bg-line">
             <div
               className="h-full bg-sage"
               style={{ width: `${banks.length ? (registered / banks.length) * 100 : 0}%` }}
             />
           </div>
-          <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-ink-soft">
+          <span className="font-mono text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">
             {banks.length ? Math.round((registered / banks.length) * 100) : 0}%
           </span>
         </div>
@@ -52,9 +87,9 @@ export default async function BanksPage() {
 
       {banks.length === 0 ? (
         <EmptyState
-          title="Aún no declaras bancos de datos"
-          description="Empieza por los tres básicos: clientes, colaboradores y proveedores. Puedes ajustar la finalidad y los plazos después."
-          action={{ href: "/app/bancos/nuevo", label: "Declarar el primero" }}
+          title="Aún no has declarado tus listas (bancos de datos)"
+          description="No tienes que redactar nada desde cero: tenemos plantillas listas con 1 clic para Clientes, Trabajadores en planilla, Marketing por WhatsApp, Proveedores, Cámaras y Pacientes."
+          action={{ href: "/app/bancos/nuevo", label: "Declarar el primero con plantilla" }}
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
@@ -62,48 +97,38 @@ export default async function BanksPage() {
             <Link
               key={bank.id}
               href={`/app/bancos/${bank.id}`}
-              className="group card flex flex-col justify-between p-5 transition-colors hover:border-line-strong"
+              className="group card flex flex-col justify-between p-6 transition-colors hover:border-line-strong"
             >
               <div>
                 <div className="flex items-start justify-between gap-3">
-                  <h2 className="font-display text-[1.3rem] leading-tight tracking-[-0.02em] group-hover:text-crimson">
+                  <h2 className="font-display text-[1.45rem] leading-tight tracking-[-0.02em] group-hover:text-crimson">
                     {bank.name}
                   </h2>
                   <StatusPill tone={bank.status === "registrado" ? "ok" : "neutral"}>
-                    {bank.status === "registrado" ? "Registrado" : "Borrador"}
+                    {bank.status === "registrado" ? "Inscrito en SIPDP" : "Borrador (falta inscribir)"}
                   </StatusPill>
                 </div>
-                <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-ink-soft">
+                <p className="mt-2.5 line-clamp-2 text-[15.5px] leading-relaxed text-ink-soft">
                   {bank.purpose || "Sin finalidad declarada."}
                 </p>
-                <p className="mt-3 line-clamp-1 text-[11.5px] text-ink-soft/80">
+                <p className="mt-3 line-clamp-1 text-sm text-ink-soft/90">
+                  <strong className="font-mono text-xs uppercase tracking-wider text-ink-soft">Datos: </strong>
                   {bank.data_categories || "Sin categorías de datos."}
                 </p>
               </div>
 
-              <div className="mt-5 flex items-center justify-between border-t border-line pt-3">
-                <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-ink-soft">
+              <div className="mt-5 flex items-center justify-between border-t border-line pt-3.5">
+                <span className="font-mono text-xs uppercase tracking-[0.06em] text-ink-soft">
                   {bank.status === "registrado"
                     ? `${bank.sipdp_code} · ${formatDate(bank.registered_at, "short")}`
-                    : "Sin código SIPDP"}
+                    : "Haz clic para ver la Ficha SIPDP y registrar"}
                 </span>
-                <ArrowRightIcon className="h-3.5 w-3.5 text-ink-soft transition-transform group-hover:translate-x-0.5 group-hover:text-crimson" />
+                <ArrowRightIcon className="h-4 w-4 text-ink-soft transition-transform group-hover:translate-x-0.5 group-hover:text-crimson" />
               </div>
             </Link>
           ))}
         </div>
       )}
-
-      <div className="border-l-2 border-line-strong bg-paper-2 px-5 py-4">
-        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-soft">
-          Sobre el registro SIPDP
-        </p>
-        <p className="mt-1 max-w-[80ch] text-[13px] leading-relaxed text-ink">
-          El registro se realiza en la plataforma de la ANPD. PrivadoPE te entrega la ficha con todos
-          los campos y guarda el código y la fecha que obtengas. Si un banco cambia de finalidad,
-          actualízalo aquí y vuelve a declararlo.
-        </p>
-      </div>
     </div>
   );
 }
