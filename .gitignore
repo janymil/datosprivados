@@ -8,8 +8,12 @@ data/
 *.db-shm
 .pnpm-store/
 shots/
+Videos/
 .env*
 !.env.example
 .DS_Store
 tsconfig.tsbuildinfo
 debug.log
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
