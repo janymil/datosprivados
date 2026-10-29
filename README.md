@@ -93,6 +93,27 @@ Viernes Santo, calculados a partir de Pascua). Los feriados regionales y las sus
 - Datos en SQLite local; producción requiere Postgres, respaldos y cifrado gestionado.
 - Los documentos son borradores: falta revisión legal y textos de términos del servicio.
 
+## Video promocional
+
+El master vive en `Videos/datosprivados.mp4` (ignorado por git por peso). Los archivos que sirve la
+landing están en `public/video/`:
+
+| Archivo | Formato | Peso |
+| --- | --- | --- |
+| `datosprivados.webm` | VP9 + Opus, 720×1280 | ~5.6 MB |
+| `datosprivados.mp4` | H.264 Main + AAC, 720×1280, faststart | ~8.4 MB |
+| `datosprivados-poster.jpg` | frame de portada | ~70 KB |
+
+El componente [`PromoVideo`](src/components/promo-video.tsx) está en la sección `#video` de la
+landing. Reproduce en silencio al entrar en pantalla, permite activar audio y respeta
+`prefers-reduced-motion` y `saveData`. El navegador elige WebM; los navegadores antiguos caen al MP4.
+
+Regenerar desde el master:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/encode-video.ps1
+```
+
 ## Scripts
 
 ```bash
