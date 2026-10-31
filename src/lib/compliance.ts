@@ -1,5 +1,9 @@
-import type { ArcoRequest, Company, DataBank, DocumentRow, Incident } from "./db";
+import type { ArcoRequest, Company, DataBank, DocumentRow, EvidenceRow, Incident, Provider } from "./db";
+import { isAbroad } from "./provider-catalog";
+import { isSensitiveBank, odpDeadline, sectorLegalProfile } from "./sector-legal";
 import { limaToday } from "./format";
+import { requiresAnpdNotification } from "./incident-criteria";
+import { STALE_REASON_LABELS, documentFreshness } from "./document-freshness";
 
 export type ComplianceItem = {
   label: string;
@@ -26,6 +30,10 @@ export type Compliance = {
   /** Obligaciones recurrentes que hoy requieren atención (ARCO, incidentes). */
   alerts: ComplianceAlert[];
   pending: number;
+  /** Puntos ganados con los pasos de configuración, antes de descontar alertas. */
+  setupScore: number;
+  /** Puntos descontados por obligaciones recurrentes vencidas (ARCO, incidentes). */
+  penalty: number;
 };
 
 /** Puntos que se descuentan por cada tipo de obligación recurrente incumplida. */
@@ -37,8 +45,12 @@ export function computeCompliance(input: {
   requests: ArcoRequest[];
   incidents: Incident[];
   documents: DocumentRow[];
+  providers?: Provider[];
+  evidence?: EvidenceRow[];
 }): Compliance {
   const { company, banks, requests, incidents, documents } = input;
+  const providers = input.providers ?? [];
+  const evidence = input.evidence ?? [];
   const today = limaToday();
 
   const profileComplete = Boolean(company.name && company.ruc && company.address && company.phone && company.email);
@@ -46,9 +58,11 @@ export function computeCompliance(input: {
   const allRegistered = banks.length > 0 && registered === banks.length;
   const doc = (kind: DocumentRow["kind"]) => documents.find((d) => d.kind === kind);
   const policy = doc("politica");
-  const lastBankChange = banks.reduce((latest, b) => (b.updated_at > latest ? b.updated_at : latest), "");
-  const policyOutdated = Boolean(policy && lastBankChange && lastBankChange > policy.updated_at);
+  const policyFreshness = policy ? documentFreshness(policy, company, banks, providers) : undefined;
+  const policyOutdated = Boolean(policyFreshness?.stale);
   const policyOk = Boolean(policy?.published) && !policyOutdated;
+
+  const abroadProviders = providers.filter((provider) => isAbroad(provider.country));
 
   const items: ComplianceItem[] = [
     {
@@ -76,21 +90,33 @@ export function computeCompliance(input: {
       detail: allRegistered
         ? `${registered} de ${banks.length} inscritos con código oficial.`
         : `${registered} de ${banks.length} inscritos. Te damos la ficha lista para copiar en el portal del Estado; es gratis y de aprobación automática.`,
-      weight: 25,
+      weight: 20,
       ok: allRegistered,
       href: "/app/bancos",
       cta: "Inscribir",
     },
     {
+      label: "Declara las herramientas que usas",
+      detail: company.tools_declared_at
+        ? providers.length
+          ? `${providers.length} ${providers.length === 1 ? "herramienta declarada" : "herramientas declaradas"}; ${abroadProviders.length} ${abroadProviders.length === 1 ? "trata" : "tratan"} datos fuera del Perú.`
+          : "Declaraste que no usas herramientas externas."
+        : "Web, correo, WhatsApp, pagos, publicidad, nube: indica dónde se guardan los datos para que tus documentos y tus transferencias sean correctos.",
+      weight: 10,
+      ok: Boolean(company.tools_declared_at),
+      href: "/app/herramientas",
+      cta: "Declarar herramientas",
+    },
+    {
       label: "Publica tu Política de Privacidad",
       detail: policyOutdated
-        ? "Cambiaste tus bancos de datos después de generar la política: actualízala y vuelve a publicarla."
+        ? `Tu política quedó desactualizada (${policyFreshness!.reasons.map((r) => STALE_REASON_LABELS[r].toLowerCase()).join("; ")}): actualízala; seguirá publicada.`
         : policy?.published
           ? "Publicada con enlace para tu web, Instagram o WhatsApp."
           : "Revisa el borrador y publícalo para obtener tu enlace público.",
-      weight: 20,
+      weight: 15,
       ok: policyOk,
-      href: "/app/documentos",
+      href: "/app/documentos?tab=politica",
       cta: policyOutdated ? "Actualizar política" : "Revisar y publicar",
     },
     {
@@ -127,8 +153,14 @@ export function computeCompliance(input: {
 
   const openRequests = requests.filter((r) => r.status === "nuevo" || r.status === "en_proceso");
   const overdue = openRequests.filter((r) => r.due_at < today);
+  // Solo corre el plazo de 48 h si el incidente cumple algún criterio del
+  // art. 34.1; el resto se documenta (art. 35) pero no genera vencimiento.
   const lateIncidents = incidents.filter(
-    (i) => i.status !== "cerrado" && !i.notified_at && new Date(i.due_at) < new Date()
+    (i) =>
+      i.status !== "cerrado" &&
+      requiresAnpdNotification(i.criteria) &&
+      !i.notified_at &&
+      new Date(i.due_at) < new Date()
   );
   const activeIncidents = incidents.filter((i) => i.status !== "cerrado" && !lateIncidents.includes(i));
 
@@ -164,9 +196,79 @@ export function computeCompliance(input: {
     });
   }
 
+  // Avisos que no restan puntos pero sí piden acción: coherencia de transferencias,
+  // contratos, actualización de la ficha SIPDP, ODP y evidencias periódicas.
+  const pendingTransfers = abroadProviders.filter(
+    (provider) => provider.transfer_status === "pendiente" || provider.dpa_status === "pendiente"
+  );
+  if (pendingTransfers.length) {
+    alerts.push({
+      tone: "warn",
+      message: `${pendingTransfers.length} ${pendingTransfers.length === 1 ? "herramienta trata" : "herramientas tratan"} datos fuera del Perú (o en un país por verificar) y falta el contrato de encargo o la comunicación a la ANPD (art. 20 y 21.2).`,
+      href: "/app/herramientas",
+      cta: "Ver herramientas",
+    });
+  }
+  const banksSayNoTransfer = banks.filter((bank) => bank.transfers !== "si");
+  if (abroadProviders.length && banksSayNoTransfer.length) {
+    alerts.push({
+      tone: "warn",
+      message: `Declaraste herramientas en el exterior, pero ${banksSayNoTransfer.length} ${banksSayNoTransfer.length === 1 ? "banco dice" : "bancos dicen"} «sin transferencia internacional». Revisa que coincidan.`,
+      href: "/app/bancos",
+      cta: "Revisar bancos",
+    });
+  }
+  const registeredBanks = banks.filter((bank) => bank.status === "registrado" && bank.registered_at);
+  if (registeredBanks.length) {
+    const lastRegistration = registeredBanks.reduce((latest, bank) => (bank.registered_at! > latest ? bank.registered_at! : latest), "");
+    const day = (value: string) => value.slice(0, 10);
+    const changedAfter =
+      registeredBanks.some((bank) => day(bank.updated_at) > day(bank.registered_at!)) ||
+      providers.some((provider) => day(provider.updated_at) > day(lastRegistration));
+    if (changedAfter) {
+      alerts.push({
+        tone: "warn",
+        message: "Cambiaste bancos o herramientas después de inscribirlos en el SIPDP. La inscripción debe mantenerse actualizada (art. 44): actualiza la ficha.",
+        href: "/app/bancos",
+        cta: "Actualizar fichas",
+      });
+    }
+  }
+  const sensitiveActivity = sectorLegalProfile(company).sensitive || banks.some(isSensitiveBank);
+  const odp = odpDeadline(company);
+  if (odp && sensitiveActivity) {
+    const daysLeft = Math.ceil((new Date(`${odp.from}T00:00:00-05:00`).getTime() - Date.now()) / 86_400_000);
+    if (daysLeft <= 120) {
+      alerts.push({
+        tone: "warn",
+        message:
+          daysLeft <= 0
+            ? "El Oficial de Datos Personales ya es obligatorio para tu empresa: designa a una persona, publica su contacto y comunícalo a la ANPD dentro de 15 días (art. 37)."
+            : `El Oficial de Datos Personales será obligatorio para tu empresa en ${daysLeft} días (${odp.from}). Prepara la designación (art. 37).`,
+        href: "/app/documentos?tab=clausulas",
+        cta: "Ver acta de designación",
+      });
+    }
+  }
+  if (doc("seguridad")) {
+    const sixMonthsAgo = new Date(Date.now() - 183 * 86_400_000).toISOString().slice(0, 10);
+    const lastReview = evidence.filter((e) => e.type === "revision_accesos").map((e) => e.occurred_on).sort().pop();
+    if (!lastReview || lastReview < sixMonthsAgo) {
+      alerts.push({
+        tone: "warn",
+        message: lastReview
+          ? "Pasaron más de seis meses desde tu última revisión de accesos. El Reglamento pide verificar privilegios como mínimo cada semestre (art. 46.1.c)."
+          : "Aún no registraste ninguna revisión de accesos. Debe hacerse como mínimo cada seis meses y dejar constancia (art. 46.1.c).",
+        href: "/app/evidencias",
+        cta: "Registrar revisión",
+      });
+    }
+  }
+
   const setupScore = items.reduce((acc, item) => acc + (item.ok ? item.weight : 0), 0);
   const failing = alerts.filter((a) => a.tone === "danger").length;
-  const score = Math.max(0, setupScore - failing * ALERT_PENALTY);
+  const penalty = Math.min(setupScore, failing * ALERT_PENALTY);
+  const score = setupScore - penalty;
   const level: Compliance["level"] =
     failing > 0 || score < 50 ? "en_riesgo" : score >= 90 ? "al_dia" : "en_progreso";
   const label = level === "al_dia" ? "Al día" : level === "en_progreso" ? "En progreso" : "En riesgo";
@@ -178,6 +280,8 @@ export function computeCompliance(input: {
     items,
     alerts,
     pending: items.filter((i) => !i.ok).length,
+    setupScore,
+    penalty,
   };
 }
 

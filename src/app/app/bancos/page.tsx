@@ -5,25 +5,71 @@ import { formatDate } from "@/lib/format";
 import { EmptyState, PageHeader, StatusPill } from "@/components/ui";
 import { ArrowRightIcon } from "@/components/icons";
 import { GuideBox, Term } from "@/components/help";
+import { findSectorByLabel } from "@/lib/sectors";
+import { getBankPreset } from "@/lib/bank-presets";
 
 export const metadata = { title: "Bancos de datos" };
+
+/**
+ * Compara el nombre que el usuario le puso a su banco con el nombre de la
+ * plantilla del rubro. No pretende ser exacto: basta con que compartan una
+ * palabra significativa ("clientes", "seguridad", "facturación") para no
+ * mostrarlo como faltante después de haberlo renombrado.
+ */
+const STOPWORDS = new Set([
+  "para",
+  "online",
+  "ecommerce",
+  "digital",
+  "datos",
+  "segun",
+  "otros",
+  "otras",
+]);
+
+function bankWords(value: string): string[] {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length >= 4 && !STOPWORDS.has(word));
+}
+
+function sameBankName(declared: string, preset: string): boolean {
+  const declaredWords = bankWords(declared);
+  const presetWords = bankWords(preset);
+  if (declaredWords.length === 0 || presetWords.length === 0) return false;
+  return declaredWords.some((word) => presetWords.includes(word));
+}
 
 export default async function BanksPage() {
   const { company } = await requireSession();
   const banks = listBanks(company.id);
   const registered = banks.filter((bank) => bank.status === "registrado").length;
 
+  // Cobertura esperada para el rubro: sirve para que nadie olvide un banco entero
+  // (el caso típico: una plataforma sin banco de facturación o de logs).
+  const sector = findSectorByLabel(company.sector);
+  const suggestedNames = (sector?.banks ?? [])
+    .map((id) => getBankPreset(id)?.name)
+    .filter((name): name is string => Boolean(name));
+  const coverageMissing = suggestedNames.filter(
+    (name) => !banks.some((bank) => sameBankName(bank.name, name))
+  );
+  const coverageTotal = suggestedNames.length;
+
   return (
     <div className="space-y-7">
       <PageHeader
         title={
           <>
-            Tus <Term k="banco">Bancos de datos</Term>
+            Tus <Term k="banco">bancos de datos</Term> <span className="text-ink-soft">(tus listas)</span>
           </>
         }
         description={
           <>
-            «Banco de datos» no es un banco financiero: significa cualquier <strong>lista o archivo con datos de personas</strong> que tiene tu negocio (tu Excel de clientes, contactos de WhatsApp, planilla de trabajadores, proveedores o cámaras de seguridad).
+            Cada lista de personas que guardas: clientes, trabajadores, proveedores, cámaras. No es un banco financiero.
           </>
         }
         actions={
@@ -84,6 +130,22 @@ export default async function BanksPage() {
           </span>
         </div>
       </div>
+
+      {coverageMissing.length > 0 && (
+        <div className="border-l-3 border-crimson bg-paper-2 px-5 py-4">
+          <p className="text-[15px] leading-relaxed">
+            <strong>Tu rubro suele tener {coverageTotal} bancos y tienes {banks.length}.</strong> Te faltarían:{" "}
+            <span className="text-ink-soft">{coverageMissing.join(", ")}</span>.
+          </p>
+          <p className="mt-1.5 text-sm text-ink-soft">
+            No es una obligación automática: declara solo los que realmente tratas. Si alguno aplica,{" "}
+            <Link href="/app/bancos/nuevo" className="link-underline font-medium text-ink">
+              créalo con su plantilla
+            </Link>{" "}
+            y quedará en tu política de privacidad.
+          </p>
+        </div>
+      )}
 
       {banks.length === 0 ? (
         <EmptyState

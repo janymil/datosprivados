@@ -1,6 +1,8 @@
+import { listProviders } from "@/lib/data";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
+import { isCompanyActive } from "@/lib/billing";
 import { Logo } from "@/components/icons";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
 
@@ -12,6 +14,7 @@ export default async function WelcomePage({
   searchParams: Promise<{ rehacer?: string }>;
 }) {
   const { company, user } = await requireSession();
+  if (!isCompanyActive(company)) redirect("/pago");
   const { rehacer } = await searchParams;
   if (company.onboarded_at && !rehacer) redirect("/app");
 
@@ -26,7 +29,7 @@ export default async function WelcomePage({
         )}
       </header>
       <main className="mx-auto w-full max-w-[720px] px-5 py-10 md:py-14">
-        <p className="label-mono">Bienvenida · 2 minutos</p>
+        <p className="label-mono">Bienvenida · 3 minutos</p>
         <div className="mt-5">
           <OnboardingWizard
             companyName={company.name}
@@ -36,7 +39,16 @@ export default async function WelcomePage({
               phone: company.phone,
               dpoName: company.dpo_name || user.name,
               dpoEmail: company.dpo_email || company.email,
+              website: company.website,
+              salesBand: company.sales_band,
+              complaintsUrl: company.complaints_url,
             }}
+            initialTools={listProviders(company.id).map((provider) => ({
+              category: provider.category,
+              name: provider.name,
+              country: provider.country,
+              custom: Boolean(provider.is_custom),
+            }))}
           />
         </div>
       </main>

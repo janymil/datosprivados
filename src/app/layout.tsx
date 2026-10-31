@@ -23,13 +23,13 @@ const plex = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://privadope.pe"),
+  metadataBase: new URL("https://datosprivados.pe"),
   title: {
-    default: "PrivadoPE — Cumplimiento de la Ley 29733 para MYPE peruanas",
-    template: "%s · PrivadoPE",
+    default: "DatosPrivados — Ley 29733 para MYPE, consultorios y profesionales del Perú",
+    template: "%s · DatosPrivados",
   },
   description:
-    "Registra tus bancos de datos, atiende solicitudes ARCO y documenta incidentes. Cumplimiento de protección de datos personales en Perú, desde S/ 19 al mes.",
+    "Registra tus bancos de datos, publica tu política, atiende solicitudes ARCO y documenta incidentes. Cumplimiento de la Ley 29733 para MYPE, consultorios y profesionales en Perú.",
   keywords: [
     "Ley 29733",
     "protección de datos personales Perú",
@@ -37,12 +37,14 @@ export const metadata: Metadata = {
     "bancos de datos",
     "ARCO",
     "MYPE",
+    "consultorio",
+    "clínica",
     "compliance",
   ],
   openGraph: {
-    title: "PrivadoPE — La Ley 29733, en orden",
+    title: "DatosPrivados — La Ley 29733, en orden",
     description:
-      "El panel de cumplimiento para MYPE peruanas: bancos de datos, ARCO, incidentes y documentos.",
+      "El panel de cumplimiento para MYPE, consultorios y profesionales del Perú: bancos de datos, ARCO, incidentes y documentos.",
     locale: "es_PE",
     type: "website",
   },

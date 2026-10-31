@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
-import { listActivity, listBanks, listDocuments, listIncidents, listRequests } from "@/lib/data";
+import { listActivity, listBanks, listDocuments, listIncidents, listRequests, listProviders, listEvidence } from "@/lib/data";
 import { computeCompliance, dueTone } from "@/lib/compliance";
 import { appUrl } from "@/lib/documents";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -27,7 +27,15 @@ export default async function DashboardPage({
   const documents = listDocuments(company.id);
   const activity = listActivity(company.id, 5);
 
-  const compliance = computeCompliance({ company, banks, requests, incidents, documents });
+  const compliance = computeCompliance({
+    company,
+    banks,
+    requests,
+    incidents,
+    documents,
+    providers: listProviders(company.id),
+    evidence: listEvidence(company.id),
+  });
   const openRequests = requests
     .filter((r) => r.status === "nuevo" || r.status === "en_proceso")
     .sort((a, b) => a.due_at.localeCompare(b.due_at));
@@ -102,9 +110,15 @@ export default async function DashboardPage({
               >
                 {compliance.label}
               </StatusPill>
-              <p className="mt-2 max-w-[22ch] text-sm leading-snug text-ink-soft">
+              <p className="mt-2 max-w-[24ch] text-sm leading-snug text-ink-soft">
                 {done} de {compliance.items.length} pasos completados
               </p>
+              {compliance.penalty > 0 && (
+                <p className="mt-1.5 max-w-[24ch] text-sm leading-snug text-crimson">
+                  {compliance.setupScore} puntos por tus pasos − {compliance.penalty} por plazos vencidos (ver
+                  alerta arriba).
+                </p>
+              )}
             </div>
           </div>
 
@@ -170,6 +184,9 @@ export default async function DashboardPage({
                 <div className="min-w-0">
                   <p className="text-base font-medium">{link.label}</p>
                   <p className="text-sm leading-snug text-ink-soft">{link.hint}</p>
+                  {link.active && (
+                    <p className="mt-1 break-all font-mono text-xs text-ink">{link.url.replace(/^https?:\/\//, "")}</p>
+                  )}
                 </div>
                 {link.active ? (
                   <div className="flex shrink-0 items-center gap-2">
@@ -179,7 +196,7 @@ export default async function DashboardPage({
                     </Link>
                   </div>
                 ) : (
-                  <Link href="/app/documentos" className="btn btn-ghost btn-sm shrink-0">
+                  <Link href="/app/documentos?tab=politica" className="btn btn-ghost btn-sm shrink-0">
                     Publicar
                   </Link>
                 )}

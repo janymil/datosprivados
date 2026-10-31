@@ -6,7 +6,7 @@ export default function NotFound() {
     <main className="flex min-h-screen flex-col">
       <header className="border-b border-line">
         <div className="container-page flex h-16 items-center">
-          <Link href="/" aria-label="PrivadoPE">
+          <Link href="/" aria-label="DatosPrivados">
             <Logo />
           </Link>
         </div>

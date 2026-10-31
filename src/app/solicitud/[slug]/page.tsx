@@ -4,6 +4,7 @@ import { createArcoRequestAction } from "@/app/actions/arco";
 import { getPolicyBySlug, getCompanyBySlug, listRequests } from "@/lib/data";
 import { Logo } from "@/components/icons";
 import { Field } from "@/components/ui";
+import { companyIdentityLine } from "@/lib/documents";
 
 export const metadata = { title: "Solicitud de derechos ARCO" };
 
@@ -33,7 +34,7 @@ export default async function PublicRequestPage({
     <div className="min-h-screen">
       <header className="border-b border-line bg-paper-2">
         <div className="container-page flex h-16 items-center justify-between">
-          <Link href="/" aria-label="PrivadoPE">
+          <Link href="/" aria-label="DatosPrivados">
             <Logo />
           </Link>
           <span className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">
@@ -44,7 +45,7 @@ export default async function PublicRequestPage({
 
       <main className="container-page grid gap-10 py-10 md:py-16 lg:grid-cols-[0.88fr_1.12fr]">
         <div>
-          <p className="label-mono">{company.name} · RUC {company.ruc}</p>
+          <p className="label-mono">{companyIdentityLine(company)}</p>
           <h1 className="mt-3 font-display text-[2.3rem] leading-[1.03] tracking-[-0.03em] md:text-[2.85rem]">
             Ejerce tus derechos sobre tus datos personales.
           </h1>
@@ -111,7 +112,7 @@ export default async function PublicRequestPage({
                   Enviar otra solicitud
                 </Link>
                 <Link href="/" className="btn btn-primary btn-sm">
-                  Conocer PrivadoPE
+                  Conocer DatosPrivados
                 </Link>
               </div>
             </div>
@@ -182,7 +183,7 @@ export default async function PublicRequestPage({
               </button>
 
               <p className="text-center font-mono text-xs uppercase tracking-[0.08em] text-ink-soft">
-                Canal de atención gestionado con PrivadoPE · Ley 29733
+                Canal de atención gestionado con DatosPrivados · Ley 29733
               </p>
             </form>
           )}

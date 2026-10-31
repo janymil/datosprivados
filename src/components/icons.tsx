@@ -59,6 +59,25 @@ export function DatabaseIcon({ className }: IconProps) {
   );
 }
 
+export function PlugIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={`${base} ${className ?? ""}`} aria-hidden="true">
+      <path d="M9 3v5M15 3v5M6.5 8h11v3.2a5.5 5.5 0 0 1-11 0V8Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M12 16.7V21" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function ClipboardIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={`${base} ${className ?? ""}`} aria-hidden="true">
+      <path d="M8 4.5H6.2v16.7h11.6V4.5H16" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M8.5 3h7v3.2h-7V3Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="m9.2 13 2 2 3.8-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function SettingsIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={`${base} ${className ?? ""}`} aria-hidden="true">
@@ -133,9 +152,9 @@ export function LockIcon({ className }: IconProps) {
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={`inline-flex items-baseline ${className ?? ""}`}>
-      <span className="font-display text-[1.35rem] leading-none tracking-[-0.03em]">Privado</span>
-      <span className="font-display text-[1.35rem] italic leading-none tracking-[-0.05em] text-crimson">
-        PE
+      <span className="font-display text-[1.3rem] leading-none tracking-[-0.03em]">Datos</span>
+      <span className="font-display text-[1.3rem] italic leading-none tracking-[-0.05em] text-crimson">
+        Privados
       </span>
       <span className="mb-[4px] ml-[3px] inline-block h-[5px] w-[5px] rounded-full bg-crimson" aria-hidden="true" />
     </span>

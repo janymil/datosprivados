@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { DEMO_EMAIL, getSession } from "@/lib/auth";
 import { LoginForm } from "@/components/auth-forms";
 
 export const metadata = { title: "Entrar" };
 
 export default async function LoginPage() {
   const session = await getSession();
-  if (session) redirect("/app");
+  const isDemo = session?.user.email === DEMO_EMAIL;
+  if (session && !isDemo) redirect("/app");
 
   return (
     <div>
@@ -19,6 +20,16 @@ export default async function LoginPage() {
         Gestiona tus bancos de datos, solicitudes y documentos desde un solo lugar.
       </p>
 
+      {isDemo && (
+        <p className="mt-5 border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-[15px] leading-relaxed">
+          Estás viendo la demo de Casa Verde. Para entrar con tu cuenta, primero{" "}
+          <Link href="/demo/salir?to=login" className="link-underline font-medium text-ink">
+            sal de la demo
+          </Link>
+          . También puedes iniciar sesión aquí y la demo se cerrará sola.
+        </p>
+      )}
+
       <div className="mt-8">
         <LoginForm />
       </div>
@@ -26,7 +37,7 @@ export default async function LoginPage() {
       <div className="mt-8 border-t border-line pt-5">
         <p className="font-mono text-[12px] uppercase tracking-[0.1em] text-ink-soft">Cuenta de prueba</p>
         <p className="mt-1.5 text-[14.5px] text-ink-soft">
-          demo@privadope.pe · demo1234 —{" "}
+          demo@datosprivados.pe · demo1234 —{" "}
           <Link href="/demo" prefetch={false} className="link-underline font-medium text-ink">
             abrir sin contraseña
           </Link>

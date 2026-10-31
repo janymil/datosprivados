@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { getBank } from "@/lib/data";
 import { formatDate } from "@/lib/format";
-import { legalBasisLabel } from "@/lib/documents";
+import { companyShortId } from "@/lib/documents";
+import { bankSheetRows, bankSheetText } from "@/lib/bank-sheet";
+import { CopyButton } from "@/components/copy-button";
 import { PrintButton } from "@/components/print-button";
 
 export const metadata = { title: "Ficha SIPDP" };
@@ -14,21 +16,7 @@ export default async function BankSheetPage({ params }: { params: Promise<{ id: 
   const bank = getBank(company.id, id);
   if (!bank) notFound();
 
-  const rows: Array<[string, string]> = [
-    ["1. Denominación del banco de datos", bank.name],
-    ["2. Finalidad y usos previstos", bank.purpose || "—"],
-    ["3. Categorías de datos personales", bank.data_categories || "—"],
-    ["4. Base legal del tratamiento", legalBasisLabel(bank.legal_basis)],
-    ["5. Plazo de conservación", bank.retention || "—"],
-    ["6. Destinatarios / encargados externos", bank.recipients || "—"],
-    [
-      "7. Flujo transfronterizo (transferencia internacional)",
-      bank.transfers === "si" ? "Sí (alojamiento o servicios en nube fuera del Perú)" : "No (solo en territorio peruano)",
-    ],
-    ["8. Canal de obtención de los datos", bank.channel || "—"],
-    ["9. Código de inscripción RNPDP / SIPDP", bank.sipdp_code || "Pendiente de inscripción"],
-    ["10. Fecha de inscripción", bank.registered_at ? formatDate(bank.registered_at) : "Pendiente"],
-  ];
+  const rows = bankSheetRows(bank);
 
   return (
     <div className="space-y-6">
@@ -39,7 +27,11 @@ export default async function BankSheetPage({ params }: { params: Promise<{ id: 
         >
           ← Volver al banco de datos
         </Link>
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="inline-flex items-center gap-1.5 border border-sage/45 bg-sage/[0.08] px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.08em] text-sage">
+            ✓ Ficha lista
+          </span>
+          <CopyButton text={bankSheetText(company, bank)} label="Copiar ficha" />
           <a
             href="https://sipdp.minjus.gob.pe/"
             target="_blank"
@@ -68,15 +60,15 @@ export default async function BankSheetPage({ params }: { params: Promise<{ id: 
           <div className="shrink-0 text-right">
             <p className="font-mono text-xs uppercase tracking-[0.1em] text-[#52565e]">Responsable</p>
             <p className="mt-1 max-w-[230px] font-display text-lg leading-tight">{company.name}</p>
-            <p className="mt-1 font-mono text-xs">RUC {company.ruc}</p>
+            <p className="mt-1 font-mono text-xs">{companyShortId(company)}</p>
           </div>
         </header>
 
         <dl className="mt-6 divide-y divide-[#d9cfbc]">
-          {rows.map(([label, value]) => (
-            <div key={label} className="grid gap-1.5 py-3.5 sm:grid-cols-[250px_1fr] sm:gap-6">
-              <dt className="font-mono text-xs font-medium uppercase tracking-[0.08em] text-[#52565e]">{label}</dt>
-              <dd className="text-[15.5px] leading-relaxed">{value}</dd>
+          {rows.map((row) => (
+            <div key={row.label} className="grid gap-1.5 py-3.5 sm:grid-cols-[250px_1fr] sm:gap-6">
+              <dt className="font-mono text-xs font-medium uppercase tracking-[0.08em] text-[#52565e]">{row.label}</dt>
+              <dd className="text-[15.5px] leading-relaxed">{row.value}</dd>
             </div>
           ))}
         </dl>
@@ -97,14 +89,14 @@ export default async function BankSheetPage({ params }: { params: Promise<{ id: 
               <strong>3.</strong> Selecciona «Inscripción de Banco de Datos Personales» (trámite gratuito, S/ 0) y copia los campos de esta ficha técnica.
             </li>
             <li>
-              <strong>4.</strong> Descarga la Constancia de Inscripción que emite el sistema y guarda el código asignado dentro de PrivadoPE.
+              <strong>4.</strong> Descarga la Constancia de Inscripción que emite el sistema y guarda el código asignado dentro de DatosPrivados.
             </li>
           </ol>
         </section>
 
         <footer className="mt-8 flex items-end justify-between gap-6 border-t border-[#d9cfbc] pt-4">
           <div className="text-xs leading-relaxed text-[#52565e]">
-            <p>Generado con PrivadoPE el {formatDate(new Date().toISOString(), "long")}.</p>
+            <p>Generado con DatosPrivados el {formatDate(new Date().toISOString(), "long")}.</p>
             <p>Hoja de trabajo interna; la inscripción oficial se acredita con la constancia emitida por la ANPD.</p>
           </div>
           <div className="shrink-0 border border-[#b0241c] px-3.5 py-2 text-center font-mono text-xs font-semibold uppercase tracking-[0.12em] text-[#b0241c]">

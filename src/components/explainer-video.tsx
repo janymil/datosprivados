@@ -29,7 +29,7 @@ const SLIDES: Slide[] = [
     title: "Inscribir tus «Bancos de Datos» (¡No es un banco de plata!)",
     subtitle: "Un «Banco de datos» es simplemente cualquier lista de personas que guarda tu negocio.",
     caption:
-      "Casi toda MYPE tiene al menos 3 listas: 1) Clientes, 2) Trabajadores y 3) Proveedores (o cámaras de seguridad). Debes declararlas gratis (S/ 0) en el portal SIPDP de la ANPD.",
+      "Muchas MYPE tienen al menos 3 listas: 1) Clientes, 2) Trabajadores y 3) Proveedores (o cámaras de seguridad). Debes declararlas gratis (S/ 0) en el portal SIPDP de la ANPD.",
     speech: "¡Ah! Mi Excel de clientes y mi carpeta de planilla son mis «bancos de datos».",
     badge: "Trámite 100 % gratuito en SIPDP",
   },
@@ -60,8 +60,8 @@ const SLIDES: Slide[] = [
     subtitle: "¿Qué pasa si te roban la laptop, hackean tu cuenta o filtras correos por error?",
     caption:
       "El nuevo reglamento (DS 016-2024-JUS) exige tener un Documento de Seguridad interno y, si ocurre una filtración grave de datos, notificar a la ANPD en máximo 48 horas.",
-    speech: "Con todo en orden en PrivadoPE, en 30 minutos quedo protegido contra multas.",
-    badge: "Evita multas de 0.5 a 100 UIT",
+    speech: "Con mi expediente en orden, puedo demostrar que cumplo si me fiscalizan.",
+    badge: "Multas de 0.5 a 100 UIT",
   },
 ];
 
@@ -245,7 +245,7 @@ function SketchIllustration({ scene }: { scene: number }) {
 
             <rect x="20" y="196" width="215" height="32" rx="2" fill="#3f6b52" fillOpacity="0.14" stroke="#3f6b52" strokeWidth="1.5" />
             <text x="127" y="216" textAnchor="middle" fontSize="10.5" fontFamily="monospace" fontWeight="bold" fill="#3f6b52">
-              Enlace listo: privadope.pe/p/tu-empresa
+              Enlace listo: datosprivados.pe/p/tu-empresa
             </text>
           </g>
 
@@ -360,7 +360,7 @@ function SketchIllustration({ scene }: { scene: number }) {
             <rect x="0" y="0" width="284" height="240" rx="4" fill="#fffdf8" stroke="#3f6b52" strokeWidth="2.5" />
             <rect x="0" y="0" width="284" height="40" fill="#3f6b52" />
             <text x="142" y="25" textAnchor="middle" fontSize="11.5" fontFamily="monospace" fontWeight="bold" fill="#fbf7ee">
-              TU ESCUDO EN PRIVADOPE (30 MIN)
+              TU ESCUDO EN DATOSPRIVADOS (30 MIN)
             </text>
 
             {[
@@ -472,7 +472,7 @@ export function ExplainerVideo() {
 
       {/* Main visual stage */}
       <div className="grid lg:grid-cols-[1.22fr_0.78fr]">
-        <div className="relative border-b border-line bg-[#fbf7ee] p-3 sm:p-5 lg:border-b-0 lg:border-r">
+        <div className="relative min-w-0 border-b border-line bg-[#fbf7ee] p-3 sm:p-5 lg:border-b-0 lg:border-r">
           <div className="aspect-[2/1] w-full overflow-hidden">
             <SketchIllustration scene={slide.id} />
           </div>
@@ -487,7 +487,7 @@ export function ExplainerVideo() {
         </div>
 
         {/* Story explanation panel */}
-        <div className="flex flex-col justify-between p-6 md:p-7">
+        <div className="flex min-w-0 flex-col justify-between p-6 md:p-7">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-mono text-xs font-bold uppercase tracking-[0.12em] text-crimson">

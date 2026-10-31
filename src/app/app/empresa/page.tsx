@@ -5,6 +5,7 @@ import { updateCompanyAction } from "@/app/actions/company";
 import { Field, PageHeader } from "@/components/ui";
 import { GuideBox, Term } from "@/components/help";
 import { SECTORS, SECTOR_GROUPS, findSectorByLabel } from "@/lib/sectors";
+import { SALES_BANDS } from "@/lib/sector-legal";
 import { SubmitButton } from "@/components/submit-button";
 import { CopyButton } from "@/components/copy-button";
 import { appUrl } from "@/lib/documents";
@@ -38,12 +39,16 @@ export default async function CompanyPage({
         title="¿Por qué son importantes estos datos y qué es el Oficial de Datos Personales (ODP)?"
         what={
           <>
-            Aquí defines la identidad legal de tu negocio (RUC 10 o RUC 20) y el correo donde recibirás consultas de privacidad o pedidos <Term k="arco">ARCO</Term>.
+            Aquí defines la identidad legal de tu negocio: razón social, RUC y domicilio, más el correo
+            donde recibirás consultas de privacidad o pedidos <Term k="arco">ARCO</Term>.
           </>
         }
         why={
           <>
-            La <Term k="ley29733">Ley 29733</Term> exige que toda persona sepa exactamente quién guarda sus datos (Razón social, RUC y dirección) y a qué correo escribir para ejercer sus derechos.
+            La <Term k="ley29733">Ley 29733</Term> exige que toda persona sepa exactamente quién guarda
+            sus datos (razón social, RUC y dirección) y a qué correo escribir para ejercer sus derechos.
+            DatosPrivados trabaja solo con empresas constituidas en el Perú: el SIPDP exige RUC peruano
+            para inscribir bancos de datos.
           </>
         }
         how={
@@ -64,22 +69,24 @@ export default async function CompanyPage({
         <form action={updateCompanyAction} className="card p-6 md:p-8">
           <div className="grid gap-5 sm:grid-cols-2">
             <Field
-              label="Razón social o Nombre comercial (RUC 10 / 20)"
+              label="Razón social o Nombre comercial"
               className="sm:col-span-2"
-              hint="Tal como figura en tu Ficha RUC de SUNAT."
+              hint="Tal como figura en tu Ficha RUC."
             >
               <input name="name" defaultValue={company.name} required className="input" />
             </Field>
 
-            <Field label="Número de RUC (11 dígitos)">
+            <Field
+              label="Número de RUC (11 dígitos)"
+              hint="Solo empresas o personas con negocio constituidas en el Perú; el SIPDP exige RUC peruano."
+            >
               <input
                 name="ruc"
                 defaultValue={company.ruc}
-                required
                 inputMode="numeric"
-                pattern="\d{11}"
                 maxLength={11}
                 className="input"
+                placeholder="20601234567"
               />
             </Field>
 
@@ -118,6 +125,37 @@ export default async function CompanyPage({
                 defaultValue={company.address}
                 className="input"
                 placeholder="Av. La Mar 1234, Miraflores, Lima"
+              />
+            </Field>
+
+            <Field label="Sitio web o tienda online" hint="Déjalo vacío si no tienes.">
+              <input name="website" defaultValue={company.website} className="input" placeholder="https://mitienda.pe" />
+            </Field>
+
+            <Field
+              label="Ventas anuales aproximadas"
+              hint="Define desde cuándo te exigen el Oficial de Datos Personales, si tu actividad lo hace obligatorio."
+            >
+              <select name="sales_band" defaultValue={company.sales_band} className="input">
+                <option value="">Prefiero no indicarlo</option>
+                {SALES_BANDS.map((band) => (
+                  <option key={band.id} value={band.id}>
+                    {band.label} — {band.hint}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field
+              label="Enlace de tu Libro de Reclamaciones virtual"
+              className="sm:col-span-2"
+              hint="Si usas librodigital.pe u otro servicio, pega aquí tu enlace: lo ponemos en tus Términos y en el aviso del Libro."
+            >
+              <input
+                name="complaints_url"
+                defaultValue={company.complaints_url}
+                className="input"
+                placeholder="https://librodigital.pe/tu-negocio"
               />
             </Field>
 

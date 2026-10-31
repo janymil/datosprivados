@@ -60,7 +60,7 @@ export const GLOSSARY: Record<GlossaryKey, GlossaryEntry> = {
     plain:
       "Es la página web oficial del Ministerio de Justicia donde inscribes por internet tus bancos de datos. El trámite es 100 % virtual, gratuito (S/ 0) y de aprobación automática.",
     example:
-      "En PrivadoPE armas tu ficha lista y luego copias y pegas esos datos en el portal SIPDP para recibir tu código oficial.",
+      "En DatosPrivados armas tu ficha lista y luego copias y pegas esos datos en el portal SIPDP para recibir tu código oficial.",
   },
   rnpdp: {
     term: "RNPDP",

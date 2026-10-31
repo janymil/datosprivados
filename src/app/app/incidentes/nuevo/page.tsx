@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { createIncidentAction } from "@/app/actions/incidents";
 import { limaDateTimeLocal } from "@/lib/format";
+import { INCIDENT_CRITERIA } from "@/lib/incident-criteria";
 import { Field, PageHeader } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 
@@ -99,6 +100,47 @@ export default async function NewIncidentPage({
             />
           </Field>
         </div>
+
+        <Field
+          label="A quiénes alcanzó"
+          hint="Opcional. Ayuda a demostrar el alcance: correos, teléfonos o el grupo afectado."
+        >
+          <input
+            name="affected_sample"
+            maxLength={500}
+            className="input"
+            placeholder="Ej. 500 clientes de la campaña de julio — ana@…, luis@…, rosa@… (visibles)"
+          />
+        </Field>
+
+        <fieldset className="border-t border-line pt-5">
+          <legend className="field-label">¿Cumple algún criterio de aviso obligatorio? (art. 34.1)</legend>
+          <p className="mt-1 text-[13.5px] leading-snug text-ink-soft">
+            Marca los que apliquen. Con uno basta para avisar a la ANPD en 48 horas; si no marcas
+            ninguno, el incidente igual queda documentado (art. 35).
+          </p>
+          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+            {INCIDENT_CRITERIA.map((criterion) => (
+              <label
+                key={criterion.id}
+                className="flex cursor-pointer items-start gap-2.5 border border-line bg-paper px-3.5 py-3 text-[15px] leading-snug transition-colors hover:border-line-strong"
+              >
+                <input
+                  type="checkbox"
+                  name="criteria"
+                  value={criterion.id}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-[#b0241c]"
+                />
+                <span>
+                  <span className="font-medium">{criterion.label}</span>
+                  <span className="mt-0.5 block text-[13px] leading-snug text-ink-soft">
+                    {criterion.hint}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
         <Field label="Datos comprometidos">
           <input

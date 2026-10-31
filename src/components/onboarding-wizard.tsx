@@ -6,9 +6,11 @@ import { completeOnboardingAction } from "@/app/actions/onboarding";
 import { BANK_PRESETS, type BankPresetId } from "@/lib/bank-presets";
 import { SECTORS, SECTOR_GROUPS, type Sector } from "@/lib/sectors";
 import { Field } from "@/components/ui";
+import { ToolsPicker, type PickedTool } from "@/components/tools-picker";
+import { SALES_BANDS, SECTOR_FAMILY, sectorLegalProfileById } from "@/lib/sector-legal";
 import { CheckIcon } from "@/components/icons";
 
-const STEPS = ["Tu negocio", "Datos que manejas", "Contacto"];
+const STEPS = ["Tu negocio", "Datos que manejas", "Herramientas", "Contacto"];
 
 function normalize(value: string) {
   return value
@@ -34,9 +36,20 @@ function SubmitButton() {
 export function OnboardingWizard({
   companyName,
   initial,
+  initialTools = [],
 }: {
   companyName: string;
-  initial: { sector: string; address: string; phone: string; dpoName: string; dpoEmail: string };
+  initialTools?: PickedTool[];
+  initial: {
+    sector: string;
+    address: string;
+    phone: string;
+    dpoName: string;
+    dpoEmail: string;
+    website?: string;
+    salesBand?: string;
+    complaintsUrl?: string;
+  };
 }) {
   const [step, setStep] = useState(0);
   const [query, setQuery] = useState("");
@@ -65,6 +78,8 @@ export function OnboardingWizard({
     });
   }
 
+  const sectorFamily = (sector ? SECTOR_FAMILY[sector.id] : undefined) ?? "comercio";
+  const sectorWeb = sector ? sectorLegalProfileById(sector.id).web : false;
   const suggested = suggestedBanks(sector);
   const orderedPresets = [
     ...BANK_PRESETS.filter((preset) => suggested.has(preset.id)),
@@ -78,7 +93,7 @@ export function OnboardingWizard({
         <input key={id} type="hidden" name="banks" value={id} />
       ))}
 
-      <ol className="grid grid-cols-3 gap-2" aria-label="Progreso">
+      <ol className="grid grid-cols-4 gap-2" aria-label="Progreso">
         {STEPS.map((label, index) => (
           <li key={label}>
             <span className={`block h-1.5 rounded-full ${index <= step ? "bg-crimson" : "bg-line-strong"}`} />
@@ -115,6 +130,13 @@ export function OnboardingWizard({
           placeholder="Busca tu rubro: bodega, dentista, gimnasio, colegio…"
           aria-label="Buscar rubro"
         />
+
+        {sector && (
+          <p className="border-l-3 border-sage bg-sage/[0.08] px-4 py-3 text-[15px] leading-relaxed">
+            Plantilla elegida: <strong>{sector.label}</strong>. Puedes cambiarla abajo; las listas y el
+            aviso de datos sensibles se adaptan a tu rubro.
+          </p>
+        )}
 
         <div className="max-h-[46vh] space-y-5 overflow-y-auto border border-line bg-paper-2 p-4">
           {matches.length === 0 && (
@@ -229,8 +251,38 @@ export function OnboardingWizard({
         </div>
       </section>
 
-      {/* Paso 3: contacto */}
+      {/* Paso 3: herramientas */}
       <section hidden={step !== 2} className="space-y-5">
+        <div>
+          <h1 className="font-display text-[2rem] leading-tight tracking-[-0.02em]">
+            ¿Qué herramientas usas con los datos de tus clientes?
+          </h1>
+          <p className="mt-2 text-[15.5px] leading-relaxed text-ink-soft">
+            Web, correo, WhatsApp, pagos, publicidad, nube… Marca las que usas y dinos en qué país guardan los datos. Si una
+            herramienta guarda datos fuera del Perú, la ley exige informarlo y firmar un contrato con ella. Si no está en
+            la lista, escríbela.
+          </p>
+        </div>
+
+        <ToolsPicker
+          key={sectorFamily}
+          family={sectorFamily}
+          initial={initialTools}
+          initialWeb={sectorWeb || Boolean(initial.website)}
+        />
+
+        <div className="flex items-center justify-between gap-3">
+          <button type="button" className="btn btn-ghost" onClick={() => setStep(1)}>
+            Atrás
+          </button>
+          <button type="button" className="btn btn-primary" onClick={() => setStep(3)}>
+            Continuar
+          </button>
+        </div>
+      </section>
+
+      {/* Paso 4: contacto */}
+      <section hidden={step !== 3} className="space-y-5">
         <div>
           <h1 className="font-display text-[2rem] leading-tight tracking-[-0.02em]">Último paso: tus datos de contacto</h1>
           <p className="mt-2 text-[15.5px] leading-relaxed text-ink-soft">
@@ -240,10 +292,10 @@ export function OnboardingWizard({
         </div>
 
         <Field label="Dirección legal" hint="La de tu Ficha RUC.">
-          <input name="address" required={step === 2} defaultValue={initial.address} className="input" placeholder="Av. La Mar 1234, Miraflores, Lima" />
+          <input name="address" required={step === 3} defaultValue={initial.address} className="input" placeholder="Av. La Mar 1234, Miraflores, Lima" />
         </Field>
         <Field label="Teléfono o WhatsApp del negocio">
-          <input name="phone" required={step === 2} defaultValue={initial.phone} className="input" placeholder="+51 987 654 321" />
+          <input name="phone" required={step === 3} defaultValue={initial.phone} className="input" placeholder="+51 987 654 321" />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Responsable de privacidad" hint="Puede ser el dueño o administrador.">
@@ -254,6 +306,33 @@ export function OnboardingWizard({
           </Field>
         </div>
 
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Sitio web o tienda online" hint="Déjalo vacío si no tienes.">
+            <input name="website" defaultValue={initial.website ?? ""} className="input" placeholder="https://mitienda.pe" />
+          </Field>
+          <Field label="Ventas anuales aproximadas" hint="Define desde cuándo te exigen designar un Oficial de Datos Personales.">
+            <select name="sales_band" defaultValue={initial.salesBand ?? ""} className="input">
+              <option value="">Prefiero no indicarlo</option>
+              {SALES_BANDS.map((band) => (
+                <option key={band.id} value={band.id}>
+                  {band.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+        <Field
+          label="Enlace de tu Libro de Reclamaciones virtual (opcional)"
+          hint="Si ya usas librodigital.pe u otro, pégalo aquí; lo pondremos en tus documentos."
+        >
+          <input
+            name="complaints_url"
+            defaultValue={initial.complaintsUrl ?? ""}
+            className="input"
+            placeholder="https://librodigital.pe/tu-negocio"
+          />
+        </Field>
+
         <div className="border-l-3 border-sage bg-sage/[0.08] px-4 py-3 text-[15px] leading-relaxed">
           Al terminar crearemos <strong>{banks.size} {banks.size === 1 ? "banco de datos" : "bancos de datos"} en borrador</strong>,
           tu <strong>Política de Privacidad</strong> y tus <strong>textos de consentimiento</strong>. Podrás revisarlos y
@@ -261,7 +340,7 @@ export function OnboardingWizard({
         </div>
 
         <div className="flex items-center justify-between gap-3">
-          <button type="button" className="btn btn-ghost" onClick={() => setStep(1)}>
+          <button type="button" className="btn btn-ghost" onClick={() => setStep(2)}>
             Atrás
           </button>
           <SubmitButton />

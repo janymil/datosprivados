@@ -15,7 +15,14 @@ export type BankPresetId =
   | "pacientes"
   | "alumnos"
   | "huespedes"
-  | "socios";
+  | "socios"
+  | "visitantes"
+  | "creditos"
+  // Plataformas digitales, apps y SaaS: los cuatro bancos que casi nunca se declaran.
+  | "usuarios_plataforma"
+  | "facturacion"
+  | "registros_seguridad"
+  | "terceros_invitados";
 
 export type BankPreset = {
   id: BankPresetId;
@@ -201,6 +208,109 @@ export const BANK_PRESETS: BankPreset[] = [
     retention: "Mientras la membresía esté vigente y hasta 5 años adicionales por obligación tributaria (SUNAT).",
     transfers: "si",
     recipients: "Software de gestión de membresías, pasarela de pagos y estudio contable externo.",
+  },
+  {
+    id: "visitantes",
+    badge: "Visitantes y control de acceso",
+    question: "¿Registras a las personas que visitan tu local, edificio o planta?",
+    example: "Cuaderno o sistema de visitas en portería, recepción de oficinas, condominios o plantas.",
+    name: "Visitantes y control de acceso",
+    purpose:
+      "Controlar el ingreso de visitas y proveedores a las instalaciones, y mantener un registro para la seguridad de las personas y los bienes.",
+    data_categories: "Nombres y apellidos, número de documento, empresa o unidad visitada, hora de ingreso y salida, y placa del vehículo.",
+    legal_basis: "consentimiento",
+    channel: "Presencial",
+    retention: "Entre 30 y 90 días; luego se destruyen las hojas o se borran los registros.",
+    transfers: "no",
+    recipients: "Personal de seguridad y administración del local; autoridades solo ante requerimiento legal.",
+  },
+  {
+    id: "creditos",
+    badge: "Créditos y debida diligencia",
+    question: "¿Evalúas créditos, cambias dinero o haces operaciones que exigen conocer al cliente?",
+    example: "Solicitudes de préstamo, contratos de crédito, casa de cambio, remesas, operaciones sujetas a la UIF-Perú.",
+    sensitive: true,
+    name: "Solicitantes, deudores y debida diligencia",
+    purpose:
+      "Evaluar solicitudes, otorgar y cobrar créditos u operaciones financieras, conocer al cliente y cumplir las obligaciones de prevención de lavado de activos y financiamiento del terrorismo.",
+    data_categories:
+      "Nombres y apellidos, DNI/CE, domicilio, ocupación, ingresos económicos, historial de pagos, referencias, origen de fondos y datos de operaciones.",
+    legal_basis: "obligacion_legal",
+    channel: "Presencial",
+    retention: "10 años desde la operación si eres sujeto obligado ante la UIF-Perú (verifica); solicitudes rechazadas, máximo 2 años.",
+    transfers: "no",
+    recipients: "Centrales de riesgo (con autorización), UIF-Perú y SBS cuando corresponda, estudio contable y entidades bancarias.",
+  },
+  {
+    id: "usuarios_plataforma",
+    badge: "Usuarios de la plataforma",
+    question: "¿La gente crea una cuenta en tu app, web o plataforma?",
+    example: "Registro con correo o Google, foto de perfil, idioma, preferencias y actividad dentro de la app.",
+    name: "Usuarios y cuentas de la plataforma",
+    purpose:
+      "Creación y administración de cuentas, autenticación, personalización de la experiencia, soporte, comunicaciones operativas del servicio y control de planes contratados.",
+    data_categories:
+      "Nombres y apellidos, correo electrónico, teléfono, foto de perfil, idioma, zona horaria, plan contratado, preferencias, identificador de inicio de sesión y registros de uso de la plataforma.",
+    legal_basis: "ejecucion_contrato",
+    channel: "Web/app",
+    retention:
+      "Mientras la cuenta esté activa y hasta 5 años después de su cierre, por obligaciones legales y defensa ante reclamaciones.",
+    transfers: "si",
+    recipients:
+      "Proveedor de autenticación, base de datos gestionada en la nube, servicio de correo transaccional y mesa de soporte (indica el nombre y el país de cada uno).",
+  },
+  {
+    id: "facturacion",
+    badge: "Pagos y suscripciones",
+    question: "¿Cobras suscripciones, planes o pagos en línea?",
+    example: "Cobros mensuales con tarjeta, renovaciones automáticas, contracargos y facturas.",
+    name: "Facturación, pagos y suscripciones",
+    purpose:
+      "Cobro de planes y renovaciones, reintentos por pago rechazado, emisión de comprobantes o constancias, gestión de contracargos y conciliación contable.",
+    data_categories:
+      "Nombre y correo del titular, identificador de cliente en la pasarela, historial y estado de pagos, moneda, importes y últimos cuatro dígitos de la tarjeta (el número completo lo conserva únicamente la pasarela de pagos).",
+    legal_basis: "ejecucion_contrato",
+    channel: "Web/app",
+    retention: "5 años desde el último cobro (obligaciones tributarias y contables).",
+    transfers: "si",
+    recipients:
+      "Pasarela de pagos internacional, pasarela local para soles (por ejemplo, Culqi, Niubiz o Mercado Pago) y estudio contable.",
+  },
+  {
+    id: "registros_seguridad",
+    badge: "Logs y seguridad",
+    question: "¿Guardas registros técnicos (IP, errores, accesos)?",
+    example: "Logs del servidor, dirección IP, intentos de inicio de sesión, errores de la app.",
+    name: "Registros de seguridad y analítica",
+    purpose:
+      "Prevención de fraude y abuso, seguridad e integridad del servicio, diagnóstico de errores, medición agregada de uso y control de costos de proveedores.",
+    data_categories:
+      "Dirección IP, identificador de agente de usuario (navegador y sistema operativo), rutas y fechas de acceso, eventos de error, país y ciudad derivados de la IP, y métricas de uso por cuenta.",
+    // Los registros de interacción con datos personales son una obligación del art. 46.3 del DS 016-2024-JUS.
+    legal_basis: "obligacion_legal",
+    channel: "Web/app",
+    retention:
+      "30 días para registros técnicos y de errores; mínimo 2 años para los registros de acceso exigidos por el art. 46.3 del Reglamento.",
+    transfers: "si",
+    recipients:
+      "Proveedor de CDN y cortafuegos, base de datos gestionada, herramientas internas de monitoreo y, solo con consentimiento, analítica web.",
+  },
+  {
+    id: "terceros_invitados",
+    badge: "Terceros invitados",
+    question: "¿Tus usuarios invitan a otras personas o comparten datos con ellas?",
+    example: "Invitaciones por correo a un amigo, familia o equipo para una meta o función compartida.",
+    name: "Contactos de terceros e invitaciones",
+    purpose:
+      "Enviar la invitación solicitada por un usuario, gestionar las funciones compartidas y prevenir el uso abusivo de las invitaciones.",
+    data_categories:
+      "Dirección de correo electrónico de una persona que todavía no es usuaria, nombre de quien invita, fecha y estado de la invitación.",
+    legal_basis: "consentimiento",
+    channel: "Web/app",
+    retention:
+      "90 días si la invitación no se acepta; mientras la función compartida esté activa si la persona acepta.",
+    transfers: "si",
+    recipients: "Servicio de correo transaccional.",
   },
 ];
 

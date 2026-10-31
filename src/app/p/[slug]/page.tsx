@@ -4,6 +4,7 @@ import { getPolicyBySlug } from "@/lib/data";
 import { DocBody } from "@/components/doc-body";
 import { PrintButton } from "@/components/print-button";
 import { Logo } from "@/components/icons";
+import { companyIdentityLine } from "@/lib/documents";
 
 export const metadata = { title: "Política de Privacidad" };
 
@@ -17,7 +18,7 @@ export default async function PublicPolicyPage({ params }: { params: Promise<{ s
     <div className="min-h-screen">
       <header className="border-b border-line bg-paper-2">
         <div className="container-page flex h-16 items-center justify-between gap-4">
-          <Link href="/" aria-label="PrivadoPE">
+          <Link href="/" aria-label="DatosPrivados">
             <Logo />
           </Link>
           <div className="flex items-center gap-3">
@@ -31,7 +32,7 @@ export default async function PublicPolicyPage({ params }: { params: Promise<{ s
 
       <main className="container-page py-10 md:py-16">
         <article className="print-page mx-auto max-w-[800px]">
-          <p className="label-mono">{company.name} · RUC {company.ruc}</p>
+          <p className="label-mono">{companyIdentityLine(company)}</p>
           <h1 className="mt-3 font-display text-[2.4rem] leading-[1.03] tracking-[-0.03em] md:text-[3rem]">
             Política de Privacidad
           </h1>
@@ -65,7 +66,7 @@ export default async function PublicPolicyPage({ params }: { params: Promise<{ s
         <div className="container-page flex flex-col gap-2 py-6 text-xs text-ink-soft sm:flex-row sm:justify-between">
           <p>© 2026 {company.name}.</p>
           <p className="font-mono uppercase tracking-[0.08em]">
-            Política generada con PrivadoPE
+            Política generada con DatosPrivados
           </p>
         </div>
       </footer>

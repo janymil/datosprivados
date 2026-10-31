@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { getDb, hashPassword, newId, nowIso } from "@/lib/db";
 import { destroySession, signIn } from "@/lib/auth";
+import { findSectorById } from "@/lib/sectors";
+import { isBillingTerm } from "@/lib/plans";
 
 export type AuthState = { error?: string };
 
@@ -38,6 +40,11 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
   const ownerName = text(formData, "name");
   const email = text(formData, "email").toLowerCase();
   const password = text(formData, "password");
+  const plan = text(formData, "plan") === "pro" ? "pro" : "basico";
+  const rawTerm = text(formData, "term");
+  const term = isBillingTerm(rawTerm) ? rawTerm : "monthly";
+  const sectorId = text(formData, "sector");
+  const sector = sectorId ? findSectorById(sectorId)?.label ?? "" : "";
 
   if (!companyName || !ownerName || !email || !password) {
     return { error: "Completa todos los campos obligatorios." };
@@ -60,9 +67,9 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
   if (taken) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
 
   db.prepare(
-    `INSERT INTO companies (id, name, ruc, sector, slug, email, phone, address, plan, dpo_name, dpo_email, created_at)
-     VALUES (?, ?, ?, '', ?, ?, '', '', 'basico', ?, ?, ?)`
-  ).run(companyId, companyName, ruc, slug, email, ownerName, email, now);
+    `INSERT INTO companies (id, name, ruc, sector, slug, email, phone, address, plan, billing_term, billing_status, dpo_name, dpo_email, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, '', '', ?, ?, 'pending', ?, ?, ?)`
+  ).run(companyId, companyName, ruc, sector, slug, email, plan, term, ownerName, email, now);
 
   db.prepare(
     `INSERT INTO users (id, company_id, name, email, password_hash, role, created_at)
@@ -71,10 +78,15 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
 
   db.prepare(
     "INSERT INTO activity (id, company_id, kind, message, created_at) VALUES (?, ?, 'cuenta', ?, ?)"
-  ).run(newId(), companyId, "Creaste tu cuenta en PrivadoPE.", now);
+  ).run(
+    newId(),
+    companyId,
+    "Creaste tu cuenta. El plan queda pendiente hasta confirmar el pago del primer mes.",
+    now
+  );
 
   await signIn(email, password);
-  redirect("/bienvenida");
+  redirect(`/pago?plan=${plan}&term=${term}`);
 }
 
 export async function logoutAction() {

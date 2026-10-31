@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { listIncidents } from "@/lib/data";
-import { formatDateTime, hoursLeft } from "@/lib/format";
+import { formatDateTime, hoursClock } from "@/lib/format";
+import { criteriaLabels, requiresAnpdNotification } from "@/lib/incident-criteria";
 import { EmptyState, PageHeader, StatusPill } from "@/components/ui";
 import { Countdown } from "@/components/countdown";
 import { GuideBox, Term } from "@/components/help";
@@ -77,7 +78,8 @@ export default async function IncidentsPage() {
           {incidents.map((incident) => {
             const severity = SEVERITY[incident.severity] ?? SEVERITY.moderado;
             const status = STATUS[incident.status] ?? STATUS.abierto;
-            const left = hoursLeft(incident.due_at);
+            const mustNotify = requiresAnpdNotification(incident.criteria);
+            const reasons = criteriaLabels(incident.criteria);
             return (
               <Link
                 key={incident.id}
@@ -101,11 +103,31 @@ export default async function IncidentsPage() {
                     {incident.description && (
                       <p className="mt-1.5 line-clamp-1 text-[15.5px] text-ink-soft">{incident.description}</p>
                     )}
+                    <div className="mt-2.5 flex flex-wrap gap-1.5">
+                      {reasons.length > 0 ? (
+                        reasons.map((reason) => (
+                          <span
+                            key={reason}
+                            className="border border-crimson/35 bg-crimson/[0.06] px-2 py-0.5 font-mono text-[11px] uppercase tracking-[0.04em] text-crimson"
+                          >
+                            {reason}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="border border-line bg-paper-2 px-2 py-0.5 font-mono text-[11px] uppercase tracking-[0.04em] text-ink-soft">
+                          Se documenta (art. 35)
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="shrink-0 border-t border-line pt-3.5 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0 sm:text-right">
                     <p className="font-mono text-xs uppercase tracking-[0.08em] text-ink-soft">
-                      {incident.status === "cerrado" ? "Estado del caso" : "Plazo 48 h ANPD"}
+                      {incident.status === "cerrado"
+                        ? "Estado del caso"
+                        : mustNotify
+                          ? "Plazo 48 h ANPD"
+                          : "Sin aviso obligatorio"}
                     </p>
                     <p className="mt-1 font-mono text-sm font-medium">
                       {incident.status === "cerrado" ? (
@@ -116,11 +138,10 @@ export default async function IncidentsPage() {
                         ) : (
                           <span className="text-crimson">Notificado fuera de plazo</span>
                         )
+                      ) : mustNotify ? (
+                        <Countdown dueAt={incident.due_at} initialLabel={hoursClock(incident.due_at)} />
                       ) : (
-                        <Countdown
-                          dueAt={incident.due_at}
-                          initialLabel={left.expired ? `Plazo vencido hace ${left.hours} h` : `${left.hours} h ${left.minutes} min restantes`}
-                        />
+                        <span className="text-ink-soft">Solo documentar</span>
                       )}
                     </p>
                     <p className="mt-1 font-mono text-xs uppercase tracking-[0.06em] text-ink-soft">

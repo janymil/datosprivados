@@ -227,7 +227,7 @@ export function AiChatAssistant({
         <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-ink-soft">
           <span className="flex items-center gap-1.5">
             <ShieldIcon className="h-3.5 w-3.5 text-sage" />
-            Tus datos y los de tus clientes se mantienen 100 % privados y confidenciales.
+            Tus datos identificables se anonimizan antes de enviarse al modelo.
           </span>
           {companyPlan === "basico" && (
             <Link

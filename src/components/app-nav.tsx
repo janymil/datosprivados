@@ -6,9 +6,11 @@ import { usePathname } from "next/navigation";
 import {
   AlertIcon,
   BuildingIcon,
+  ClipboardIcon,
   DatabaseIcon,
   FileIcon,
   InboxIcon,
+  PlugIcon,
   SettingsIcon,
   ShieldIcon,
   SparklesIcon,
@@ -17,7 +19,9 @@ import {
 const ITEMS = [
   { href: "/app", label: "Mi plan", icon: ShieldIcon, group: "" },
   { href: "/app/bancos", label: "Bancos de datos", icon: DatabaseIcon, group: "Configurar" },
+  { href: "/app/herramientas", label: "Herramientas", icon: PlugIcon, group: "Configurar" },
   { href: "/app/documentos", label: "Documentos", icon: FileIcon, group: "Configurar" },
+  { href: "/app/evidencias", label: "Evidencias", icon: ClipboardIcon, group: "Atender" },
   { href: "/app/arco", label: "Solicitudes ARCO", icon: InboxIcon, group: "Atender" },
   { href: "/app/incidentes", label: "Incidentes", icon: AlertIcon, group: "Atender" },
   { href: "/app/asistente", label: "Asistente legal", icon: SparklesIcon, group: "Ayuda" },
@@ -32,6 +36,8 @@ const MOBILE_LABEL: Record<string, string> = {
   "/app/arco": "ARCO",
   "/app/incidentes": "Incidentes",
   "/app/documentos": "Docs",
+  "/app/herramientas": "Herramientas",
+  "/app/evidencias": "Evidencias",
   "/app/empresa": "Empresa",
   "/app/ajustes": "Ajustes",
 };

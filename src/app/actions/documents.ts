@@ -2,47 +2,57 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getDb } from "@/lib/db";
+import { getDb, nowIso } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
-import { listBanks, logActivity, upsertDocument } from "@/lib/data";
-import {
-  buildConsentTexts,
-  buildInternalClauses,
-  buildPrivacyPolicy,
-  buildSecurityDocument,
-} from "@/lib/documents";
+import { generateAndSaveDocument, listBanks, listDocuments, listProviders, logActivity } from "@/lib/data";
+import { documentTitle, isDocumentKind } from "@/lib/document-catalog";
+import { documentFreshness } from "@/lib/document-freshness";
+import { SECURITY_CHECKS, isSecurityCheckId } from "@/lib/security-checks";
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
-const TITLES: Record<string, string> = {
-  politica: "Política de Privacidad",
-  consentimiento: "Textos de consentimiento",
-  seguridad: "Documento de Seguridad",
-  clausulas: "Contratos, Confidencialidad y Cartel CCTV",
-};
-
 export async function generateDocumentAction(formData: FormData) {
   const { company } = await requireSession();
   const kind = text(formData, "kind");
-  if (!TITLES[kind]) redirect("/app/documentos");
+  if (!isDocumentKind(kind)) redirect("/app/documentos");
 
   const banks = listBanks(company.id);
-  const content =
-    kind === "politica"
-      ? buildPrivacyPolicy(company, banks)
-      : kind === "consentimiento"
-        ? buildConsentTexts(company)
-        : kind === "seguridad"
-          ? buildSecurityDocument(company, banks)
-          : buildInternalClauses(company);
+  const title = documentTitle(kind);
+  const version = generateAndSaveDocument(company, banks, kind);
 
-  const version = upsertDocument(company.id, kind, TITLES[kind], content);
-
-  logActivity(company.id, "documento", `Generaste «${TITLES[kind]}» (v${version}).`);
+  logActivity(company.id, "documento", `Generaste «${title}» (v${version}).`);
   revalidatePath("/app", "layout");
   redirect(`/app/documentos?tab=${kind}&ok=1`);
+}
+
+/**
+ * Regenera de una vez todos los documentos ya creados que quedaron
+ * desactualizados (plantilla nueva o cambios en empresa, rubro o bancos).
+ * No crea documentos que la empresa nunca generó y conserva el estado de
+ * publicación de la política.
+ */
+export async function regenerateOutdatedAction() {
+  const { company } = await requireSession();
+  const banks = listBanks(company.id);
+  const providers = listProviders(company.id);
+  const outdated = listDocuments(company.id).filter((doc) => documentFreshness(doc, company, banks, providers).stale);
+
+  for (const doc of outdated) {
+    if (!isDocumentKind(doc.kind)) continue;
+    generateAndSaveDocument(company, banks, doc.kind);
+  }
+
+  if (outdated.length) {
+    logActivity(
+      company.id,
+      "documento",
+      `Actualizaste ${outdated.length} ${outdated.length === 1 ? "documento desactualizado" : "documentos desactualizados"}.`
+    );
+  }
+  revalidatePath("/app", "layout");
+  redirect(`/app/documentos?regen=${outdated.length}`);
 }
 
 export async function togglePublishAction(formData: FormData) {
@@ -60,4 +70,36 @@ export async function togglePublishAction(formData: FormData) {
   );
   revalidatePath("/app", "layout");
   redirect(`/app/documentos?tab=${kind}`);
+}
+
+/**
+ * Marca o desmarca una medida del Documento de Seguridad ya implementada en el
+ * negocio. La ANPD no pide solo el texto: pide evidencia de que la medida opera.
+ */
+export async function toggleSecurityCheckAction(formData: FormData) {
+  const { company } = await requireSession();
+  const item = text(formData, "item");
+  if (!isSecurityCheckId(item)) redirect("/app/documentos?tab=seguridad");
+
+  const db = getDb();
+  const existing = db
+    .prepare("SELECT item FROM security_checks WHERE company_id = ? AND item = ?")
+    .get(company.id, item) as { item: string } | undefined;
+
+  if (existing) {
+    db.prepare("DELETE FROM security_checks WHERE company_id = ? AND item = ?").run(company.id, item);
+    const label = SECURITY_CHECKS.find((check) => check.id === item)?.label ?? item;
+    logActivity(company.id, "documento", `Marcaste como pendiente la medida «${label}».`);
+  } else {
+    db.prepare("INSERT INTO security_checks (company_id, item, done_at) VALUES (?, ?, ?)").run(
+      company.id,
+      item,
+      nowIso()
+    );
+    const label = SECURITY_CHECKS.find((check) => check.id === item)?.label ?? item;
+    logActivity(company.id, "documento", `Registraste la medida «${label}» como implementada.`);
+  }
+
+  revalidatePath("/app", "layout");
+  redirect("/app/documentos?tab=seguridad");
 }

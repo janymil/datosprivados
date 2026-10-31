@@ -3,7 +3,13 @@ import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { getIncident } from "@/lib/data";
 import { updateIncidentAction } from "@/app/actions/incidents";
-import { formatDateTime, hoursLeft } from "@/lib/format";
+import { formatDateTime, hoursClock, hoursLeft } from "@/lib/format";
+import {
+  INCIDENT_CRITERIA,
+  criteriaLabels,
+  parseCriteria,
+  requiresAnpdNotification,
+} from "@/lib/incident-criteria";
 import { Countdown } from "@/components/countdown";
 import { CopyButton } from "@/components/copy-button";
 import { IncidentAiPanel } from "@/components/incident-ai-panel";
@@ -32,11 +38,13 @@ export default async function IncidentDetailPage({ params }: { params: Promise<{
   if (!incident) notFound();
 
   const status = STATUS[incident.status] ?? STATUS.abierto;
-  const left = hoursLeft(incident.due_at);
-  const expired = left.expired;
+  const expired = hoursLeft(incident.due_at).expired;
   const closed = incident.status === "cerrado";
   const notifiedLate =
     !!incident.notified_at && new Date(incident.notified_at) > new Date(incident.due_at);
+  const selectedCriteria = parseCriteria(incident.criteria);
+  const mustNotify = requiresAnpdNotification(incident.criteria);
+  const criteriaText = criteriaLabels(incident.criteria).join(", ") || "Ninguno";
 
   const draft = `REPORTE DE INCIDENTE DE SEGURIDAD DE DATOS PERSONALES (PLAZO 48 HORAS)
 Dirigido a: Autoridad Nacional de Protección de Datos Personales (ANPD - MINJUSDH)
@@ -45,7 +53,7 @@ Base legal: Ley N.° 29733 y Reglamento aprobado por Decreto Supremo N.° 016-20
 
 1. IDENTIFICACIÓN DEL RESPONSABLE DEL TRATAMIENTO
 Razón Social / Nombre: ${company.name}
-RUC N.°: ${company.ruc}
+${company.entity_type === "extranjera" ? `Sociedad constituida en: ${company.country || "[por completar]"}\nRepresentante en el Perú: ${company.representative_name || "[por designar]"}` : `RUC N.°: ${company.ruc}`}
 Domicilio legal: ${company.address || "[por completar]"}
 Oficial de Datos Personales / Contacto de Privacidad: ${company.dpo_name || "[por completar]"}
 Correo electrónico y teléfono de contacto: ${company.dpo_email || company.email} / ${company.phone || "[por completar]"}
@@ -65,6 +73,8 @@ ${incident.description || "[Por completar]"}
 4. CATEGORÍAS DE DATOS PERSONALES Y TITULARES AFECTADOS
 - Categorías de datos involucrados: ${incident.data_categories || "[Por completar]"}
 - Número estimado de personas afectadas: ${incident.affected_people || "[Por determinar]"}
+- Titulares / identificadores afectados: ${incident.affected_sample || "[Por precisar]"}
+- Criterios del art. 34.1 que se cumplen: ${criteriaText}
 
 5. POSIBLES CONSECUENCIAS PARA LOS TITULARES
 [Describir los posibles perjuicios para los titulares]
@@ -79,6 +89,8 @@ ${incident.measures || "[Por completar]"}
   const rows: [string, string][] = [
     ["Gravedad", SEVERITY[incident.severity] ?? incident.severity],
     ["Personas afectadas", incident.affected_people ? String(incident.affected_people) : "Por determinar"],
+    ["A quiénes alcanzó", incident.affected_sample || "—"],
+    ["Criterios art. 34.1", criteriaText],
     ["Datos comprometidos", incident.data_categories || "—"],
     ["Medidas adoptadas", incident.measures || "—"],
     [
@@ -120,6 +132,32 @@ ${incident.measures || "[Por completar]"}
               ))}
             </dl>
 
+            <div className="mt-4 border-t border-line pt-4 group-has-[details[open]]:hidden">
+              <p className="label-mono">Criterios del art. 34.1</p>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {INCIDENT_CRITERIA.map((criterion) => {
+                  const active = selectedCriteria.includes(criterion.id);
+                  return (
+                    <span
+                      key={criterion.id}
+                      className={`inline-flex items-center gap-1.5 border px-3 py-1.5 text-sm font-medium ${
+                        active
+                          ? "border-crimson/50 bg-crimson/[0.08] text-crimson"
+                          : "border-line bg-paper-2 text-ink-soft/70"
+                      }`}
+                    >
+                      {active ? "✓" : "—"} {criterion.label}
+                    </span>
+                  );
+                })}
+              </div>
+              <p className="mt-2.5 text-sm leading-relaxed text-ink-soft">
+                {mustNotify
+                  ? "Cumple al menos un criterio: el aviso a la ANPD es obligatorio dentro de 48 horas y también se informa a los afectados (art. 34.3)."
+                  : "No cumple ningún criterio: no hay aviso obligatorio a la ANPD, pero el incidente se documenta igual (art. 35)."}
+              </p>
+            </div>
+
             {!closed && (
               <details className="mt-4">
                 <summary className="btn btn-ghost btn-sm cursor-pointer list-none [&::-webkit-details-marker]:hidden">
@@ -157,6 +195,37 @@ ${incident.measures || "[Por completar]"}
                       className="input"
                     />
                   </Field>
+                  <Field
+                    label="A quiénes alcanzó"
+                    hint="Correos, teléfonos o el grupo afectado. Queda en el reporte como evidencia."
+                  >
+                    <input
+                      name="affected_sample"
+                      maxLength={500}
+                      defaultValue={incident.affected_sample}
+                      className="input"
+                    />
+                  </Field>
+                  <fieldset>
+                    <legend className="field-label">Criterios del art. 34.1</legend>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      {INCIDENT_CRITERIA.map((criterion) => (
+                        <label
+                          key={criterion.id}
+                          className="flex cursor-pointer items-start gap-2 border border-line bg-paper px-3 py-2 text-sm leading-snug"
+                        >
+                          <input
+                            type="checkbox"
+                            name="criteria"
+                            value={criterion.id}
+                            defaultChecked={selectedCriteria.includes(criterion.id)}
+                            className="mt-0.5 h-4 w-4 shrink-0 accent-[#b0241c]"
+                          />
+                          <span>{criterion.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
                   <Field label="Medidas adoptadas">
                     <textarea
                       name="measures"
@@ -206,10 +275,14 @@ ${incident.measures || "[Por completar]"}
         <div className="order-1 lg:col-start-2 lg:row-start-1">
           <section
             className={`border p-6 ${
-              closed ? "border-line bg-paper-2" : expired ? "border-crimson/50 bg-crimson/[0.04]" : "border-ochre/50 bg-ochre/[0.04]"
+              closed || !mustNotify
+                ? "border-line bg-paper-2"
+                : expired
+                  ? "border-crimson/50 bg-crimson/[0.04]"
+                  : "border-ochre/50 bg-ochre/[0.04]"
             }`}
           >
-            <p className="label-mono">Plazo de 48 horas</p>
+            <p className="label-mono">{mustNotify ? "Plazo de 48 horas" : "Registro del incidente"}</p>
             {closed ? (
               <p className="mt-2 font-display text-2xl tracking-[-0.02em]">Incidente cerrado</p>
             ) : incident.notified_at ? (
@@ -219,18 +292,23 @@ ${incident.measures || "[Por completar]"}
                 </p>
                 <p className="mt-2 text-sm text-ink-soft">{formatDateTime(incident.notified_at)}</p>
               </>
-            ) : (
+            ) : mustNotify ? (
               <>
                 <p className={`mt-2 font-display text-[2.2rem] leading-none tracking-[-0.03em] ${expired ? "text-crimson" : ""}`}>
-                  <Countdown
-                    dueAt={incident.due_at}
-                    initialLabel={expired ? `Vencido hace ${left.hours} h` : `${left.hours} h ${left.minutes} min`}
-                  />
+                  <Countdown dueAt={incident.due_at} initialLabel={hoursClock(incident.due_at)} />
                 </p>
                 <p className="mt-2 text-sm text-ink-soft">
                   {expired
                     ? "Si notificas ahora, explica el motivo de la demora."
                     : `Vence el ${formatDateTime(incident.due_at)}.`}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="mt-2 font-display text-2xl tracking-[-0.02em]">Solo documentar</p>
+                <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                  No marcaste criterios del art. 34.1, así que no hay aviso obligatorio a la ANPD.
+                  Deja registradas las medidas adoptadas: todo incidente se documenta (art. 35).
                 </p>
               </>
             )}
@@ -242,7 +320,7 @@ ${incident.measures || "[Por completar]"}
                     <input type="hidden" name="id" value={incident.id} />
                     <input type="hidden" name="action" value="notificar" />
                     <SubmitButton pendingLabel="Guardando…" className="btn btn-primary btn-sm w-full">
-                      Marcar como notificado
+                      {mustNotify ? "Marcar como notificado" : "Marcar como notificado (voluntario)"}
                     </SubmitButton>
                   </form>
                 )}

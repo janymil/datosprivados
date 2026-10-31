@@ -1,17 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth";
-import { getDb } from "@/lib/db";
-import {
-  getIncident,
-  getRequest,
-  listBanks,
-  listDocuments,
-  listIncidents,
-  listRequests,
-  logActivity,
-} from "@/lib/data";
+import { getIncident, getRequest, listBanks, listDocuments, listIncidents, listRequests, listProviders, listEvidence } from "@/lib/data";
 import { computeCompliance } from "@/lib/compliance";
 import {
   analyzeAndDraftArcoWithAi,
@@ -37,7 +27,15 @@ export async function askAiAssistantAction(
   const requests = listRequests(company.id);
   const incidents = listIncidents(company.id);
   const documents = listDocuments(company.id);
-  const compliance = computeCompliance({ company, banks, requests, incidents, documents });
+  const compliance = computeCompliance({
+    company,
+    banks,
+    requests,
+    incidents,
+    documents,
+    providers: listProviders(company.id),
+    evidence: listEvidence(company.id),
+  });
 
   return runAnonymizedLegalChat({
     company,
@@ -137,16 +135,3 @@ export async function runBusinessDocumentAdvisorAction(
   return { ok: true, data };
 }
 
-export async function switchCompanyPlanAction(formData: FormData) {
-  const { company } = await requireSession();
-  const nextPlan = String(formData.get("plan") ?? "") === "basico" ? "basico" : "pro";
-  getDb()
-    .prepare("UPDATE companies SET plan = ? WHERE id = ?")
-    .run(nextPlan, company.id);
-  logActivity(
-    company.id,
-    "empresa",
-    `Cambiaste tu suscripción al Plan ${nextPlan === "pro" ? "Pro" : "Básico"}.`
-  );
-  revalidatePath("/app", "layout");
-}

@@ -4,9 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, newId, nowIso, type Company } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
-import { getDocument, listBanks, logActivity, upsertDocument } from "@/lib/data";
+import { generateAndSaveDocument, getDocument, listBanks, logActivity, syncProviders } from "@/lib/data";
+import { cleanUrl, parseToolsInput, salesBandOrEmpty } from "@/lib/provider-input";
 import { getBankPreset, type BankPreset } from "@/lib/bank-presets";
-import { buildConsentTexts, buildPrivacyPolicy } from "@/lib/documents";
 import { findSectorByLabel } from "@/lib/sectors";
 
 function text(formData: FormData, key: string) {
@@ -25,7 +25,8 @@ export async function completeOnboardingAction(formData: FormData) {
     .filter((preset): preset is BankPreset => Boolean(preset));
 
   db.prepare(
-    `UPDATE companies SET sector = ?, address = ?, phone = ?, dpo_name = ?, dpo_email = ?, onboarded_at = ?
+    `UPDATE companies SET sector = ?, address = ?, phone = ?, dpo_name = ?, dpo_email = ?, onboarded_at = ?,
+     website = ?, sales_band = ?, complaints_url = ?
      WHERE id = ?`
   ).run(
     sector,
@@ -34,8 +35,14 @@ export async function completeOnboardingAction(formData: FormData) {
     text(formData, "dpo_name") || user.name,
     text(formData, "dpo_email") || company.email,
     now,
+    cleanUrl(text(formData, "website")),
+    salesBandOrEmpty(text(formData, "sales_band")),
+    cleanUrl(text(formData, "complaints_url")),
     company.id
   );
+
+  // Herramientas declaradas en el onboarding (lista vacía = «no uso ninguna»).
+  syncProviders(company.id, parseToolsInput(text(formData, "tools")));
 
   const existingNames = new Set(listBanks(company.id).map((bank) => bank.name));
   const insertBank = db.prepare(
@@ -65,10 +72,10 @@ export async function completeOnboardingAction(formData: FormData) {
   // Solo se crean si no existen: repetir el onboarding no debe reemplazar (ni
   // republicar) documentos que el usuario ya revisó.
   if (!getDocument(company.id, "politica")) {
-    upsertDocument(company.id, "politica", "Política de Privacidad", buildPrivacyPolicy(updated, listBanks(company.id)));
+    generateAndSaveDocument(updated, listBanks(company.id), "politica");
   }
   if (!getDocument(company.id, "consentimiento")) {
-    upsertDocument(company.id, "consentimiento", "Textos de consentimiento", buildConsentTexts(updated));
+    generateAndSaveDocument(updated, listBanks(company.id), "consentimiento");
   }
 
   logActivity(

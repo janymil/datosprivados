@@ -65,6 +65,16 @@ export function hoursLeft(dueAt: string) {
   return { expired: ms < 0, hours, minutes };
 }
 
+/**
+ * Mismo reloj que pinta `Countdown` en el cliente (HH:MM:SS), calculado en el
+ * servidor para que la primera pintura no salte.
+ */
+export function hoursClock(dueAt: string) {
+  const total = Math.floor(Math.abs(new Date(dueAt).getTime() - Date.now()) / 1000);
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${pad(Math.floor(total / 3600))}:${pad(Math.floor((total % 3600) / 60))}:${pad(total % 60)}`;
+}
+
 export function initials(name: string) {
   return name
     .split(" ")

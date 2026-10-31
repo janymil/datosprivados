@@ -4,10 +4,12 @@ export function DownloadButton({
   text,
   filename,
   label = "Descargar",
+  className = "",
 }: {
   text: string;
   filename: string;
   label?: string;
+  className?: string;
 }) {
   function download() {
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
@@ -22,7 +24,7 @@ export function DownloadButton({
   }
 
   return (
-    <button type="button" onClick={download} className="btn btn-ghost btn-sm">
+    <button type="button" onClick={download} className={`btn btn-ghost btn-sm ${className}`}>
       {label}
     </button>
   );

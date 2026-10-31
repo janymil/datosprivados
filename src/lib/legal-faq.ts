@@ -3,6 +3,7 @@ import "server-only";
 import type { ArcoRequest, Company, DataBank, Incident } from "./db";
 import { getBankPreset } from "./bank-presets";
 import { detectSector, findSectorByLabel, type Sector } from "./sectors";
+import { FAMILIES, SECTOR_FAMILY } from "./sector-legal";
 
 /**
  * Modo básico del asistente (sin modelo de lenguaje conectado). Reconoce la
@@ -70,6 +71,7 @@ function requirementsFor(sector: Sector, own: boolean): string {
   const hasMarketing = sector.banks.includes("marketing");
   const hasCameras = sector.banks.includes("camaras");
   const sensitive = presets.some((preset) => preset.sensitive && preset.id !== "trabajadores");
+  const legal = FAMILIES[SECTOR_FAMILY[sector.id] ?? "comercio"];
 
   return `### ${own ? "Para tu rubro" : "Para un negocio de"} «${sector.label}»
 
@@ -81,7 +83,9 @@ ${presets.map((preset) => `- **${preset.name}**: ${preset.example}${preset.id ==
 2. **Textos de consentimiento**: ${hasMarketing ? "necesarios porque se suele enviar publicidad" : "solo si envía publicidad"}${sensitive ? "; además, **autorización por escrito** para los datos sensibles" : ""}.
 3. **Documento de Seguridad**: siempre (interno, no se publica).
 4. **Confidencialidad y encargo**: para trabajadores y proveedores con acceso a datos${hasCameras ? "; y el **cartel de videovigilancia**" : ""}.
-${sector.note ? `\n**Ojo:** ${sector.note}\n` : ""}
+5. **Procedimiento de derechos ARCO**: para responder en 8, 10 y 20 días hábiles.
+6. **Aviso para trabajadores**: ${legal.staffHeavy ? "tu rubro suele tener bastante personal, así que es esencial" : "si tienes trabajadores, practicantes o recibes CVs"}.
+${legal.consumer ? "7. **Libro de Reclamaciones**: atiendes consumidores finales, es obligatorio.\n" : ""}${legal.terms === "plataforma" ? "8. **Términos y condiciones y política de cookies**: tu servicio es digital.\n" : ""}${legal.minors ? "9. **Consentimiento de padres o tutores**: tratas datos de menores (de 14 a 17 pueden consentir por sí mismos; menores de 14, no).\n" : ""}${legal.imageUse ? "10. **Autorización de uso de imagen** si publicas fotos o videos de personas.\n" : ""}${sector.note ? `\n**Ojo:** ${sector.note}\n` : ""}
 Cada caso real puede variar: declara solo las listas que de verdad tengas.`;
 }
 

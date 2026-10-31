@@ -182,6 +182,27 @@ export default async function ArcoDetailPage({
             </dl>
           </section>
 
+          <section className="border border-line bg-paper p-6">
+            <p className="label-mono">Si no respondes a tiempo</p>
+            <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+              Atender tarde o no atender es una infracción que la ANPD sanciona con multa:
+            </p>
+            <dl className="mt-3 divide-y divide-line border-y border-line text-sm">
+              <div className="flex items-baseline justify-between gap-3 py-2.5">
+                <dt className="text-ink-soft">Responder tarde (leve)</dt>
+                <dd className="font-mono font-medium text-crimson">desde S/ 2,750</dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-3 py-2.5">
+                <dt className="text-ink-soft">No responder (grave)</dt>
+                <dd className="font-mono font-medium text-crimson">más de 5 UIT</dd>
+              </div>
+            </dl>
+            <p className="mt-3 text-xs leading-relaxed text-ink-soft">
+              0,5 UIT ≈ S/ 2,750, con la UIT referencial de S/ 5,500. El DS 016-2024-JUS (arts. 132.7 y
+              133.1) califica la demora como infracción leve y el silencio como grave.
+            </p>
+          </section>
+
           {(request.type === "cancelacion" || request.type === "oposicion") && (
             <section className="border border-line bg-paper p-6">
               <p className="label-mono">¿Y si el dato está en una boleta o factura?</p>

@@ -8,6 +8,9 @@ import { getDb, verifyPassword, type Company, type User } from "./db";
 const COOKIE = "pdp_session";
 const MAX_AGE = 60 * 60 * 24 * 30;
 
+/** Cuenta de demostración que crea /demo; se usa para ofrecer una salida clara. */
+export const DEMO_EMAIL = "demo@datosprivados.pe";
+
 export type SessionContext = {
   user: Pick<User, "id" | "name" | "email" | "role">;
   company: Company;

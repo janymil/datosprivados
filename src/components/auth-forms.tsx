@@ -72,19 +72,29 @@ export function LoginForm() {
   );
 }
 
-export function SignupForm({ plan }: { plan: string }) {
+export function SignupForm({
+  plan,
+  term,
+  sector,
+}: {
+  plan: string;
+  term?: string;
+  sector?: string;
+}) {
   const [state, formAction, pending] = useActionState(signupAction, initial);
 
   return (
     <form action={formAction} className="space-y-5">
       <ErrorBox message={state.error} />
       <input type="hidden" name="plan" value={plan} />
+      <input type="hidden" name="term" value={term ?? "monthly"} />
+      {sector && <input type="hidden" name="sector" value={sector} />}
 
       <Field label="Nombre de la empresa">
         <input name="company" required className="input" placeholder="Casa Verde Perú S.A.C." />
       </Field>
 
-      <Field label="RUC" hint="11 dígitos. Sirve tanto RUC 10 (persona natural con negocio) como RUC 20.">
+      <Field label="RUC" hint="11 dígitos. Solo empresas o personas con negocio constituidas en el Perú.">
         <input
           name="ruc"
           required
@@ -128,8 +138,7 @@ export function SignupForm({ plan }: { plan: string }) {
       </button>
 
       <p className="text-[13.5px] leading-relaxed text-ink-soft">
-        Al crear tu cuenta aceptas los términos del servicio y la política de privacidad de PrivadoPE.
-        Empiezas con 14 días de prueba; no pedimos tarjeta.
+        Al crear tu cuenta podrás armar tu expediente y elegir el plan que necesites.
       </p>
 
       <p className="text-[14.5px] text-ink-soft">

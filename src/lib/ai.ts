@@ -14,6 +14,7 @@ import { answerWithoutLlm } from "./legal-faq";
 import { BANK_PRESETS, getBankPreset } from "./bank-presets";
 import { detectSector } from "./sectors";
 import { legalBasisLabel } from "./documents";
+import { criteriaLabels, parseCriteria } from "./incident-criteria";
 import { limaToday } from "./format";
 
 export const AI_MODEL_ID = activeModelId();
@@ -107,17 +108,17 @@ Bancos de datos: ${input.banks.length} (${registeredBanks} inscritos): ${input.b
 Solicitudes ARCO abiertas: ${openRequests.map((r) => `${r.ticket} ${r.type} vence ${r.due_at}`).join("; ") || "ninguna"}
 Incidentes abiertos: ${openIncidents.length}`;
 
-  const systemPrompt = `Eres el asistente legal de PrivadoPE. Ayudas a micro y pequeñas empresas del Perú a cumplir la Ley N.° 29733 y su Reglamento (DS N.° 016-2024-JUS). Respondes en español, en lenguaje simple.
+  const systemPrompt = `Eres el asistente legal de DatosPrivados. Ayudas a micro y pequeñas empresas del Perú a cumplir la Ley N.° 29733 y su Reglamento (DS N.° 016-2024-JUS). Respondes en español, en lenguaje simple.
 
 CÓMO RESPONDER:
 - Responde exactamente lo que se pregunta. Si el usuario describe un tipo de negocio («soy una empresa SaaS», «tengo un gimnasio») o pregunta en general, responde para ESE caso. No asumas que se refiere a su propia empresa ni recites su expediente.
 - Usa los DATOS DE LA CUENTA solo si pregunta por su propia situación («¿qué me falta?», «¿cómo voy?») o si es claramente relevante.
 - Sé breve: hasta ~200 palabras, listas cortas, sin introducciones ni despedidas. Solo extiéndete si pide un borrador o documento.
 - Formato: títulos con ###, listas con guiones y **negritas**. No uses tablas.
-- Si la pregunta no tiene relación con protección de datos o con PrivadoPE, dilo en una frase y ofrece ayuda con el tema.
+- Si la pregunta no tiene relación con protección de datos o con DatosPrivados, dilo en una frase y ofrece ayuda con el tema.
 - Si piden un borrador, redáctalo completo y listo para usar.
 - No inventes artículos, plazos ni montos. Si la norma no lo dice o no estás seguro, dilo y sugiere consultar a un abogado.
-- Si es útil, indica en qué sección de PrivadoPE se hace: Mi plan, Bancos de datos (plantillas y ficha SIPDP), Documentos (política, consentimientos, documento de seguridad, confidencialidad/encargo/cartel de cámaras), Solicitudes ARCO, Incidentes, Empresa.
+- Si es útil, indica en qué sección de DatosPrivados se hace: Mi plan, Bancos de datos (plantillas y ficha SIPDP), Documentos (política, consentimientos, documento de seguridad, confidencialidad/encargo/cartel de cámaras), Solicitudes ARCO, Incidentes, Empresa.
 - Los datos identificables están reemplazados por marcadores como {{EMPRESA_NOMBRE}} o {{TITULAR_NOMBRE}}. Si los usas, cópialos exactos.
 
 TIPOS DE BANCOS DE DATOS HABITUALES:
@@ -203,7 +204,7 @@ export async function analyzeAndDraftArcoWithAi(input: {
   const matchesDeclaredType = detectedRight === input.request.type;
   const effectiveDays = Math.min(arcoLegalBusinessDays(input.request.type), arcoLegalBusinessDays(detectedRight));
 
-  const systemPrompt = `Eres el Copiloto ARCO de PrivadoPE .
+  const systemPrompt = `Eres el Copiloto ARCO de DatosPrivados .
 Redacta una respuesta legal impecable conforme al art. 69 del DS N.° 016-2024-JUS y la Ley N.° 29733.
 Mantén intactos los marcadores {{TITULAR_NOMBRE}}, {{TITULAR_DNI}}, {{EMPRESA_NOMBRE}}, {{EMPRESA_RUC}}, {{ODP_NOMBRE}} y {{ODP_EMAIL}}.`;
 
@@ -563,7 +564,12 @@ export async function evaluateIncidentWithAi(input: {
   const sensitive = ["salud", "medic", "clinic", "biometr", "huella", "rostro", "ingreso", "sindic", "religi", "sexual"].some((t) => q.includes(t));
   const financial = ["tarjeta", "banc", "financ", "cuenta", "contraseña", "clave", "password"].some((t) => q.includes(t));
   const largeScale = input.incident.affected_people >= 50;
-  const hasHighRisk = input.incident.severity === "grave" || sensitive || financial || largeScale;
+  // Los criterios que el negocio marcó al registrar el incidente mandan: si
+  // marcó alguno, la notificación es obligatoria aunque la IA no lo deduzca.
+  const declaredCriteria = criteriaLabels(input.incident.criteria);
+  const hasDeclaredCriteria = parseCriteria(input.incident.criteria).length > 0;
+  const hasHighRisk =
+    hasDeclaredCriteria || input.incident.severity === "grave" || sensitive || financial || largeScale;
 
   const requiresAnpdNotification = hasHighRisk;
   const requiresCnsdNotification = hasHighRisk && isDigital;
@@ -576,7 +582,7 @@ export async function evaluateIncidentWithAi(input: {
   ].filter(Boolean).join("; ");
 
   const riskAssessmentSummary = requiresAnpdNotification
-    ? `Riesgo ${input.incident.severity.toUpperCase()} detectado (${input.incident.affected_people} titulares afectados). Conforme al DS N.° 016-2024-JUS, DEBES notificar a la ANPD dentro de las 48 horas desde la detección${requiresCnsdNotification ? " y remitir copia al Centro Nacional de Seguridad Digital (CNSD) por tratarse de un incidente en el entorno digital" : ""}.`
+    ? `Riesgo ${input.incident.severity.toUpperCase()} detectado (${input.incident.affected_people} titulares afectados).${hasDeclaredCriteria ? ` Criterios del art. 34.1 marcados por el negocio: ${declaredCriteria.join(", ")}.` : ""} Conforme al DS N.° 016-2024-JUS, DEBES notificar a la ANPD dentro de las 48 horas desde la detección${requiresCnsdNotification ? " y remitir copia al Centro Nacional de Seguridad Digital (CNSD) por tratarse de un incidente en el entorno digital" : ""}.`
     : `Según lo registrado, no parece cumplir los supuestos de notificación obligatoria del art. 34.1 (datos sensibles, gran número de personas o perjuicio evidente). Revísalo: si hay dudas, notifica. En cualquier caso, documenta el incidente (art. 35).`;
 
   const immediateChecklist = [
@@ -607,6 +613,8 @@ III. DESCRIPCIÓN TÉCNICA DEL EVENTO Y DATOS COMPROMETIDOS
 - Incidente: ${input.incident.title}
 - Severidad evaluada: ${input.incident.severity.toUpperCase()}
 - Titulares potencialmente afectados: ${input.incident.affected_people} personas
+- Titulares / identificadores identificados: ${input.incident.affected_sample || "[Por precisar]"}
+- Criterios del art. 34.1 que se cumplen: ${declaredCriteria.join(", ") || "Ninguno declarado"}
 - Categorías de datos involucrados: ${input.incident.data_categories || "Datos de contacto e identificación"}
 - Detalle de los hechos: ${deAnonymizeText(sanitizedDesc, vault)}
 
@@ -741,7 +749,8 @@ async function auditTextByRules(input: {
   const verdict: AuditedTextResult["verdict"] =
     score >= 85 ? "cumple" : score >= 55 ? "observado" : "riesgo_multa";
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://privadope.pe";
+  const configuredUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const appUrl = configuredUrl ? configuredUrl.replace(/\/+$/, "") : "https://datosprivados.pe";
   const policyUrl = `${appUrl}/p/${input.company.slug}`;
   const arcoUrl = `${appUrl}/solicitud/${input.company.slug}`;
   const contact = input.company.dpo_email || input.company.email;

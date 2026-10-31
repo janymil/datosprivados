@@ -1,5 +1,5 @@
 import { requireSession } from "@/lib/auth";
-import { listBanks, listDocuments, listIncidents, listRequests } from "@/lib/data";
+import { listBanks, listDocuments, listIncidents, listRequests, listProviders, listEvidence } from "@/lib/data";
 import { computeCompliance } from "@/lib/compliance";
 import { AiChatAssistant } from "@/components/ai-chat-assistant";
 import { aiMode } from "@/lib/ai";
@@ -14,7 +14,15 @@ export default async function AiAssistantPage() {
   const requests = listRequests(company.id);
   const incidents = listIncidents(company.id);
   const documents = listDocuments(company.id);
-  const compliance = computeCompliance({ company, banks, requests, incidents, documents });
+  const compliance = computeCompliance({
+    company,
+    banks,
+    requests,
+    incidents,
+    documents,
+    providers: listProviders(company.id),
+    evidence: listEvidence(company.id),
+  });
 
   const isPro = company.plan === "pro";
 

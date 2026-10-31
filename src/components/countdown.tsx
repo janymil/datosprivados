@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from "react";
 
+/** Reloj de cuenta regresiva en formato HH:MM:SS (48:00:00 → 47:59:58). */
 function format(dueAt: string) {
   const ms = new Date(dueAt).getTime() - Date.now();
   const expired = ms < 0;
   const total = Math.floor(Math.abs(ms) / 1000);
+  const pad = (value: number) => String(value).padStart(2, "0");
   const hours = Math.floor(total / 3600);
   const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
   return {
     expired,
-    label: expired
-      ? `Plazo vencido hace ${hours} h ${minutes} min`
-      : `${hours} h ${String(minutes).padStart(2, "0")} min restantes`,
+    label: `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`,
     urgent: !expired && hours < 12,
   };
 }
@@ -23,15 +24,15 @@ export function Countdown({ dueAt, initialLabel }: { dueAt: string; initialLabel
   useEffect(() => {
     const tick = () => setState(format(dueAt));
     tick();
-    const id = setInterval(tick, 30_000);
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [dueAt]);
 
   return (
     <span
-      className={
+      className={`tabular-nums ${
         state.expired ? "text-crimson" : state.urgent ? "text-ochre" : "text-ink"
-      }
+      }`}
     >
       {state.label}
     </span>

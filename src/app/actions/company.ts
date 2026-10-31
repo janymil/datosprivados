@@ -6,6 +6,7 @@ import { getDb, newId, nowIso } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
 import { logActivity } from "@/lib/data";
 import { limaToday } from "@/lib/format";
+import { cleanUrl, salesBandOrEmpty } from "@/lib/provider-input";
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -113,20 +114,32 @@ export async function reopenBankAction(formData: FormData) {
 
 export async function updateCompanyAction(formData: FormData) {
   const { company } = await requireSession();
+  // Perú únicamente: el SIPDP exige una empresa peruana con RUC. Los campos
+  // heredados de sociedad extranjera se limpian al guardar.
+  const entityType = "peruana";
   getDb()
     .prepare(
-      `UPDATE companies SET name = ?, ruc = ?, sector = ?, email = ?, phone = ?, address = ?, dpo_name = ?, dpo_email = ?
+      `UPDATE companies SET name = ?, ruc = ?, sector = ?, email = ?, phone = ?, address = ?, dpo_name = ?, dpo_email = ?,
+       entity_type = ?, country = ?, representative_name = ?, representative_address = ?,
+       website = ?, complaints_url = ?, sales_band = ?
        WHERE id = ?`
     )
     .run(
       text(formData, "name") || company.name,
-      text(formData, "ruc") || company.ruc,
+      text(formData, "ruc"),
       text(formData, "sector") || company.sector,
       text(formData, "email") || company.email,
       text(formData, "phone"),
       text(formData, "address"),
       text(formData, "dpo_name"),
       text(formData, "dpo_email"),
+      entityType,
+      "Perú",
+      "",
+      "",
+      cleanUrl(text(formData, "website")),
+      cleanUrl(text(formData, "complaints_url")),
+      salesBandOrEmpty(text(formData, "sales_band")),
       company.id
     );
   logActivity(company.id, "empresa", "Actualizaste los datos de tu empresa.");
