@@ -99,6 +99,8 @@ export async function updateIncidentAction(formData: FormData) {
     .prepare("SELECT title, severity, status FROM incidents WHERE id = ? AND company_id = ?")
     .get(id, company.id) as { title: string; severity: string; status: string } | undefined;
   if (!incident) redirect("/app/incidentes");
+  // Un incidente cerrado es parte del expediente: ninguna acción lo modifica.
+  if (incident.status === "cerrado") redirect(`/app/incidentes/${id}`);
 
   if (action === "notificar") {
     db.prepare(
@@ -117,7 +119,7 @@ export async function updateIncidentAction(formData: FormData) {
       company.id
     );
     logActivity(company.id, "incidente", `Marcaste el incidente «${incident.title}» en análisis.`);
-  } else if (action === "guardar" && incident.status !== "cerrado") {
+  } else if (action === "guardar") {
     db.prepare(
       "UPDATE incidents SET description = ?, measures = ?, affected_people = ?, affected_sample = ?, criteria = ?, data_categories = ?, severity = ? WHERE id = ? AND company_id = ?"
     ).run(
