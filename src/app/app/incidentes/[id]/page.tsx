@@ -12,6 +12,7 @@ import {
 } from "@/lib/incident-criteria";
 import { Countdown } from "@/components/countdown";
 import { CopyButton } from "@/components/copy-button";
+import { demoPreview, isDemoCompany } from "@/lib/demo";
 import { IncidentAiPanel } from "@/components/incident-ai-panel";
 import { SubmitButton } from "@/components/submit-button";
 import { Field, PageHeader, StatusPill } from "@/components/ui";
@@ -264,10 +265,10 @@ ${incident.measures || "[Por completar]"}
                   Completa lo que está entre [corchetes] y guarda la constancia de envío.
                 </p>
               </div>
-              <CopyButton text={draft} label="Copiar borrador" />
+              <CopyButton text={isDemoCompany(company) ? "" : draft} label="Copiar borrador" locked={isDemoCompany(company)} />
             </div>
             <pre className="mt-4 max-h-[380px] overflow-auto whitespace-pre-wrap border border-line bg-paper p-5 font-mono text-xs leading-relaxed text-ink">
-              {draft}
+              {isDemoCompany(company) ? demoPreview(draft) : draft}
             </pre>
           </section>
         </div>

@@ -116,7 +116,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             {isDemo && (
               <div className="no-print mb-6 flex flex-col gap-2 border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                 <p>
-                  <strong>Estás en la demo de Casa Verde.</strong> Los datos son de ejemplo.
+                  <strong>Estás en la demo de Casa Verde.</strong> Datos de ejemplo, solo lectura: los documentos se muestran en vista previa.
                 </p>
                 <div className="flex flex-wrap items-center gap-4 font-mono text-xs uppercase tracking-[0.08em]">
                   <Link href="/demo/salir?to=registro" className="font-semibold text-crimson hover:underline">

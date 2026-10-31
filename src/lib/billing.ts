@@ -13,15 +13,22 @@ import {
 } from "./plans";
 
 /**
- * Estado de la suscripción mensual de MercadoPago.
+ * Estado de la suscripción mensual o anual de MercadoPago.
  *
  * Regla de acceso:
  * - demo: siempre activo.
  * - active con paid_until futuro (o null, cuentas legacy): activo.
  * - pending / expired / active con paid_until vencido: debe suscribirse.
  *
- * La suscripción (preapproval) es la fuente de cobro; los pagos mensuales
- * (subscription_authorized_payment) extienden el período.
+ * Campos de la suscripción:
+ * - subscription_id: la suscripción autorizada que cobra hoy.
+ * - pending_subscription_id (+ pending_plan / pending_term): un cambio de plan
+ *   creado en MercadoPago que todavía no está autorizado. Hasta que se autoriza,
+ *   el plan y el acceso actuales no cambian.
+ *
+ * Marcadores de `last_payment_id`:
+ * - `auth-<id>`: la suscripción <id> recibió el periodo inicial al autorizarse y
+ *   su primer cobro no debe volver a extenderlo.
  */
 
 export type PaymentStatus = "pending" | "approved" | "rejected" | "cancelled";
@@ -93,15 +100,30 @@ export function getPaymentsForCompany(companyId: string, limit = 8) {
     .all(companyId, limit) as unknown as PaymentRow[];
 }
 
+export function getCompanyById(companyId: string) {
+  return getDb().prepare("SELECT * FROM companies WHERE id = ?").get(companyId) as unknown as
+    | Company
+    | undefined;
+}
+
+/** Empresa cuya suscripción actual o pendiente tiene este identificador. */
 export function getCompanyBySubscriptionId(subscriptionId: string) {
   return getDb()
-    .prepare("SELECT * FROM companies WHERE subscription_id = ?")
-    .get(subscriptionId) as unknown as Company | undefined;
+    .prepare("SELECT * FROM companies WHERE subscription_id = ? OR pending_subscription_id = ?")
+    .get(subscriptionId, subscriptionId) as unknown as Company | undefined;
+}
+
+function hasApprovedPayments(subscriptionId: string) {
+  return Boolean(
+    getDb()
+      .prepare("SELECT 1 FROM payments WHERE subscription_id = ? AND status = 'approved' LIMIT 1")
+      .get(subscriptionId)
+  );
 }
 
 /**
- * La suscripción fue creada pero todavía no está autorizada.
- * En una cuenta activa (cambio de plan) no le quitamos el acceso actual.
+ * Se creó una suscripción nueva en MercadoPago y espera autorización.
+ * Si la cuenta ya tiene un plan activo, ese plan sigue vigente.
  */
 export function setSubscriptionPending(
   companyId: string,
@@ -110,17 +132,15 @@ export function setSubscriptionPending(
   term: BillingTerm
 ) {
   const db = getDb();
-  const company = db.prepare("SELECT * FROM companies WHERE id = ?").get(companyId) as unknown as
-    | Company
-    | undefined;
+  const company = getCompanyById(companyId);
   if (!company) return;
 
-  const keepActive = isCompanyActive(company);
+  const keepActive = isCompanyActive(company) ? 1 : 0;
   db.prepare(
-    `UPDATE companies SET subscription_id = ?, subscription_status = 'pending', plan = ?,
-       billing_term = ?, billing_status = CASE WHEN ? = 1 THEN billing_status ELSE 'pending' END
+    `UPDATE companies SET pending_subscription_id = ?, pending_plan = ?, pending_term = ?,
+       billing_status = CASE WHEN ? = 1 THEN billing_status ELSE 'pending' END
      WHERE id = ?`
-  ).run(subscriptionId, plan, term, keepActive ? 1 : 0, companyId);
+  ).run(subscriptionId, plan, term, keepActive, companyId);
 
   logActivity(
     companyId,
@@ -129,62 +149,87 @@ export function setSubscriptionPending(
   );
 }
 
+/** Descarta un cambio de plan que no se autorizó (abandonado o cancelado). */
+export function clearPendingSubscription(companyId: string) {
+  getDb()
+    .prepare(
+      "UPDATE companies SET pending_subscription_id = NULL, pending_plan = NULL, pending_term = NULL WHERE id = ?"
+    )
+    .run(companyId);
+}
+
+export type ActivationResult = {
+  paidUntil: string;
+  /** Suscripción anterior que debe cancelarse en MercadoPago tras el cambio de plan. */
+  replacedSubscriptionId: string | null;
+};
+
 /**
- * La suscripción quedó autorizada. Si la cuenta todavía no tiene un período
- * pagado, otorgamos el primer mes. Los cobros siguientes extienden el período.
+ * La suscripción quedó autorizada (primera vez o tras una pausa). Si es la
+ * suscripción pendiente, reemplaza a la anterior.
+ *
+ * El periodo inicial se concede solo una vez por suscripción y solo si no hay
+ * pagos aprobados de esa suscripción: re-autorizar una suscripción vencida no
+ * regala un mes.
  */
 export function activateSubscription(input: {
   companyId: string;
   subscriptionId: string;
-  plan?: PlanId;
-  term?: BillingTerm;
-}) {
+  plan: PlanId;
+  term: BillingTerm;
+}): ActivationResult | null {
   const db = getDb();
-  const company = db.prepare("SELECT * FROM companies WHERE id = ?").get(input.companyId) as unknown as
-    | Company
-    | undefined;
+  const company = getCompanyById(input.companyId);
   if (!company) return null;
 
-  const term = input.term ?? companyTerm(company);
-  const paidAt = new Date();
-  const paidUntil =
-    company.paid_until && new Date(company.paid_until).getTime() > paidAt.getTime()
-      ? company.paid_until
-      : addDays(paidAt, termDays(term)).toISOString();
-  // Sentinel para que el primer cobro mensual no duplique el período que ya
-  // otorgamos al autorizar la suscripción. Si ya hay un pago real, se conserva.
-  const lastPaymentId =
-    company.last_payment_id && !company.last_payment_id.startsWith("auth-")
-      ? company.last_payment_id
-      : `auth-${input.subscriptionId}`;
+  const isPending = company.pending_subscription_id === input.subscriptionId;
+  const replaced =
+    isPending && company.subscription_id && company.subscription_id !== input.subscriptionId
+      ? company.subscription_id
+      : null;
+
+  const now = new Date();
+  const periodFuture = Boolean(company.paid_until && new Date(company.paid_until).getTime() > now.getTime());
+  const alreadyGranted = company.last_payment_id === `auth-${input.subscriptionId}`;
+  const grant = !alreadyGranted && !periodFuture && !hasApprovedPayments(input.subscriptionId);
+
+  const paidUntil = grant ? addDays(now, termDays(input.term)).toISOString() : (company.paid_until ?? now.toISOString());
+  const lastPaymentId = grant ? `auth-${input.subscriptionId}` : company.last_payment_id;
 
   db.prepare(
     `UPDATE companies SET subscription_id = ?, subscription_status = 'authorized',
-       billing_status = 'active', paid_until = ?, plan = ?, billing_term = ?, last_payment_id = ?
+       billing_status = 'active', paid_until = ?, plan = ?, billing_term = ?, last_payment_id = ?,
+       pending_subscription_id = CASE WHEN ? = 1 THEN NULL ELSE pending_subscription_id END,
+       pending_plan = CASE WHEN ? = 1 THEN NULL ELSE pending_plan END,
+       pending_term = CASE WHEN ? = 1 THEN NULL ELSE pending_term END
      WHERE id = ?`
   ).run(
     input.subscriptionId,
     paidUntil,
-    input.plan ?? company.plan,
-    term,
+    input.plan,
+    input.term,
     lastPaymentId,
+    isPending ? 1 : 0,
+    isPending ? 1 : 0,
+    isPending ? 1 : 0,
     input.companyId
   );
 
   logActivity(
     input.companyId,
     "pago",
-    `Suscripción ${term === "yearly" ? "anual" : "mensual"} autorizada. Tu plan está activo hasta el ${new Date(
+    `Suscripción ${input.term === "yearly" ? "anual" : "mensual"} autorizada. Tu plan está activo hasta el ${new Date(
       paidUntil
     ).toLocaleDateString("es-PE", { timeZone: "America/Lima" })}.`
   );
 
-  return { paidUntil };
+  return { paidUntil, replacedSubscriptionId: replaced };
 }
 
 /**
- * Cada cobro mensual aprobado extiende 30 días desde el final del período
- * actual (o desde la fecha del cobro si ya venció).
+ * Cada cobro mensual aprobado extiende el periodo desde el final del periodo
+ * actual (o desde la fecha del cobro si ya venció). Solo cobros de la
+ * suscripción vigente; un cobro de otra suscripción se ignora.
  */
 export function recordSubscriptionCharge(input: {
   companyId: string;
@@ -195,20 +240,18 @@ export function recordSubscriptionCharge(input: {
   raw?: string;
 }) {
   const db = getDb();
-  const company = db.prepare("SELECT * FROM companies WHERE id = ?").get(input.companyId) as unknown as
-    | Company
-    | undefined;
+  const company = getCompanyById(input.companyId);
   if (!company) return null;
+  if (company.subscription_id !== input.subscriptionId) return { paidUntil: company.paid_until, ignored: true };
 
-  const alreadyRecorded = db
-    .prepare("SELECT id FROM payments WHERE payment_id = ?")
-    .get(input.paymentId);
+  const alreadyRecorded = db.prepare("SELECT id FROM payments WHERE payment_id = ?").get(input.paymentId);
   if (alreadyRecorded) {
     return { paidUntil: company.paid_until, already: true };
   }
 
   const term = companyTerm(company);
   const paidAt = input.paidAt ? new Date(input.paidAt) : new Date();
+  // El primer cobro tras la autorización ya quedó cubierto por el periodo inicial.
   const firstAfterAuthorization = company.last_payment_id === `auth-${input.subscriptionId}`;
   const paidUntil = firstAfterAuthorization
     ? company.paid_until && new Date(company.paid_until).getTime() > paidAt.getTime()
@@ -219,9 +262,9 @@ export function recordSubscriptionCharge(input: {
 
   db.prepare(
     `UPDATE companies SET billing_status = 'active', paid_until = ?, last_payment_id = ?,
-       subscription_id = ?, subscription_status = 'authorized', plan = ?, billing_term = ?
+       subscription_status = 'authorized', plan = ?, billing_term = ?
      WHERE id = ?`
-  ).run(paidUntil, input.paymentId, input.subscriptionId, plan, term, input.companyId);
+  ).run(paidUntil, input.paymentId, plan, term, input.companyId);
 
   db.prepare(
     `INSERT INTO payments
@@ -253,10 +296,25 @@ export function recordSubscriptionCharge(input: {
   return { paidUntil };
 }
 
+/**
+ * Cambia el estado de una suscripción. Un evento de una suscripción anterior
+ * (ya reemplazada) no afecta a la cuenta.
+ */
 export function markSubscriptionStatus(
   companyId: string,
+  subscriptionId: string,
   status: "authorized" | "paused" | "cancelled"
 ) {
+  const company = getCompanyById(companyId);
+  if (!company) return;
+
+  if (company.pending_subscription_id === subscriptionId && status === "cancelled") {
+    clearPendingSubscription(companyId);
+    logActivity(companyId, "pago", "El cambio de plan no se completó; tu plan actual sigue vigente.");
+    return;
+  }
+  if (company.subscription_id !== subscriptionId) return;
+
   getDb()
     .prepare("UPDATE companies SET subscription_status = ? WHERE id = ?")
     .run(status, companyId);
@@ -275,7 +333,8 @@ export function activateDevPlan(companyId: string, plan: PlanId, term: BillingTe
   getDb()
     .prepare(
       `UPDATE companies SET plan = ?, billing_term = ?, billing_status = 'active', paid_until = ?,
-         last_payment_id = ?, subscription_id = NULL, subscription_status = 'dev'
+         last_payment_id = ?, subscription_id = NULL, subscription_status = 'dev',
+         pending_subscription_id = NULL, pending_plan = NULL, pending_term = NULL
        WHERE id = ?`
     )
     .run(plan, term, paidUntil, `dev-${newId()}`, companyId);

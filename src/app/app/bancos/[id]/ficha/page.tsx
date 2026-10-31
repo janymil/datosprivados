@@ -7,6 +7,7 @@ import { companyShortId } from "@/lib/documents";
 import { bankSheetRows, bankSheetText } from "@/lib/bank-sheet";
 import { CopyButton } from "@/components/copy-button";
 import { PrintButton } from "@/components/print-button";
+import { isDemoCompany } from "@/lib/demo";
 
 export const metadata = { title: "Ficha SIPDP" };
 
@@ -31,7 +32,7 @@ export default async function BankSheetPage({ params }: { params: Promise<{ id: 
           <span className="inline-flex items-center gap-1.5 border border-sage/45 bg-sage/[0.08] px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.08em] text-sage">
             ✓ Ficha lista
           </span>
-          <CopyButton text={bankSheetText(company, bank)} label="Copiar ficha" />
+          <CopyButton text={isDemoCompany(company) ? "" : bankSheetText(company, bank)} label="Copiar ficha" locked={isDemoCompany(company)} />
           <a
             href="https://sipdp.minjus.gob.pe/"
             target="_blank"
@@ -40,7 +41,7 @@ export default async function BankSheetPage({ params }: { params: Promise<{ id: 
           >
             Abrir portal SIPDP (MINJUSDH) ↗
           </a>
-          <PrintButton label="Imprimir / Guardar PDF" />
+          <PrintButton label="Imprimir / Guardar PDF" locked={isDemoCompany(company)} />
         </div>
       </div>
 

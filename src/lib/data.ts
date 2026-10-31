@@ -50,6 +50,11 @@ export function listRequests(companyId: string): ArcoRequest[] {
   );
 }
 
+/** Comprueba que un ticket pertenece a la empresa, sin cargar sus solicitudes. */
+export function hasRequestTicket(companyId: string, ticket: string): boolean {
+  return Boolean(one("SELECT 1 FROM arco_requests WHERE company_id = ? AND ticket = ?", companyId, ticket));
+}
+
 export function getRequest(companyId: string, id: string): ArcoRequest | undefined {
   return one<ArcoRequest>(
     "SELECT * FROM arco_requests WHERE id = ? AND company_id = ?",

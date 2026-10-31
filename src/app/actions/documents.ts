@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, nowIso } from "@/lib/db";
-import { requireSession } from "@/lib/auth";
+import { requireActiveSession } from "@/lib/auth";
 import { generateAndSaveDocument, listBanks, listDocuments, listProviders, logActivity } from "@/lib/data";
 import { documentTitle, isDocumentKind } from "@/lib/document-catalog";
 import { documentFreshness } from "@/lib/document-freshness";
@@ -14,7 +14,7 @@ function text(formData: FormData, key: string) {
 }
 
 export async function generateDocumentAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   const kind = text(formData, "kind");
   if (!isDocumentKind(kind)) redirect("/app/documentos");
 
@@ -34,7 +34,7 @@ export async function generateDocumentAction(formData: FormData) {
  * publicación de la política.
  */
 export async function regenerateOutdatedAction() {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   const banks = listBanks(company.id);
   const providers = listProviders(company.id);
   const outdated = listDocuments(company.id).filter((doc) => documentFreshness(doc, company, banks, providers).stale);
@@ -56,7 +56,7 @@ export async function regenerateOutdatedAction() {
 }
 
 export async function togglePublishAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   // Solo la Política de Privacidad tiene enlace público.
   const kind = "politica";
   const publish = text(formData, "publish") === "1";
@@ -77,7 +77,7 @@ export async function togglePublishAction(formData: FormData) {
  * negocio. La ANPD no pide solo el texto: pide evidencia de que la medida opera.
  */
 export async function toggleSecurityCheckAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   const item = text(formData, "item");
   if (!isSecurityCheckId(item)) redirect("/app/documentos?tab=seguridad");
 

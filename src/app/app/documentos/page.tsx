@@ -22,6 +22,7 @@ import { SECURITY_CHECKS } from "@/lib/security-checks";
 import { ArrowRightIcon, CheckIcon } from "@/components/icons";
 import { DocBody } from "@/components/doc-body";
 import { CopyButton } from "@/components/copy-button";
+import { demoPreview, isDemoCompany } from "@/lib/demo";
 import { DownloadButton } from "@/components/download-button";
 import { ConsentAiAuditor } from "@/components/consent-ai-auditor";
 import { BusinessDocumentAdvisor } from "@/components/business-doc-advisor";
@@ -62,7 +63,10 @@ export default async function DocumentsPage({
   const meta = documentTab(active)!;
   const banks = listBanks(company.id);
   const fit = documentFit(active, company, banks);
-  const doc = getDocument(company.id, active);
+  const storedDoc = getDocument(company.id, active);
+  // En la demo el texto se recorta en el servidor: el documento completo no llega al navegador.
+  const demo = isDemoCompany(company);
+  const doc = storedDoc && demo ? { ...storedDoc, content: demoPreview(storedDoc.content) } : storedDoc;
   const freshness = doc ? documentFreshness(doc, company, banks, listProviders(company.id)) : undefined;
   const status = documentStatus(meta, doc, freshness);
   const canPublish = meta.shareable === true;
@@ -145,8 +149,8 @@ export default async function DocumentsPage({
                 </SubmitButton>
               </form>
             )}
-            <CopyButton text={doc.content} label="Copiar texto" />
-            <DownloadButton text={doc.content} filename={`${active}-${company.slug}.txt`} />
+            <CopyButton text={doc.content} label="Copiar texto" locked={demo} />
+            <DownloadButton text={doc.content} filename={`${active}-${company.slug}.txt`} locked={demo} />
             <form action={generateDocumentAction}>
               <input type="hidden" name="kind" value={active} />
               <SubmitButton pendingLabel="Actualizando…" className="btn btn-ghost btn-sm">

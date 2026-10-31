@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireSession } from "@/lib/auth";
+import { requireActiveSession } from "@/lib/auth";
 import {
   addEvidence,
   deleteEvidence,
@@ -20,7 +20,7 @@ function text(formData: FormData, key: string) {
 
 /** Guarda la lista de herramientas completa que envía el selector. */
 export async function saveToolsAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   const tools = parseToolsInput(text(formData, "tools"));
   syncProviders(company.id, tools);
   const abroad = tools.filter((tool) => tool.country !== "Perú").length;
@@ -35,7 +35,7 @@ export async function saveToolsAction(formData: FormData) {
 
 /** Marca el estado del contrato de encargo y de la comunicación a la ANPD de una herramienta. */
 export async function updateProviderAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   updateProviderStatus(company.id, text(formData, "id"), {
     dpa_status: text(formData, "dpa_status"),
     transfer_status: text(formData, "transfer_status"),
@@ -48,7 +48,7 @@ export async function updateProviderAction(formData: FormData) {
 const EVIDENCE_TYPES: EvidenceType[] = ["consentimiento", "capacitacion", "revision_accesos", "prueba_respaldo", "purga"];
 
 export async function addEvidenceAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   const type = text(formData, "type") as EvidenceType;
   if (!EVIDENCE_TYPES.includes(type)) redirect("/app/evidencias");
   const date = text(formData, "occurred_on");
@@ -64,7 +64,7 @@ export async function addEvidenceAction(formData: FormData) {
 }
 
 export async function deleteEvidenceAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   deleteEvidence(company.id, text(formData, "id"));
   revalidatePath("/app", "layout");
   redirect(`/app/evidencias?type=${text(formData, "type")}`);

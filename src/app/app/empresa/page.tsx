@@ -16,10 +16,18 @@ export const metadata = { title: "Empresa" };
 export default async function CompanyPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
   const { company } = await requireSession();
-  const { ok } = await searchParams;
+  const { ok, error } = await searchParams;
+  const rucErrors: Record<string, string> = {
+    ruc_formato: "Revisa tu RUC: son 11 dígitos válidos según SUNAT.",
+    ruc_en_uso: "Ya existe una cuenta activa para ese RUC. Escríbenos a hola@datosprivados.pe.",
+    ruc_no_existe: "No encontramos ese RUC en la SUNAT. Revísalo e inténtalo de nuevo.",
+    ruc_inactivo: "Ese RUC no figura como ACTIVO en la SUNAT, por lo que no podemos usarlo.",
+    ruc_no_disponible: "No pudimos verificar el RUC con la SUNAT en este momento. Inténtalo de nuevo en unos minutos.",
+  };
+  const rucError = error ? rucErrors[error] : undefined;
   const documents = listDocuments(company.id);
   const policy = documents.find((doc) => doc.kind === "politica");
 
@@ -58,6 +66,11 @@ export default async function CompanyPage({
         }
       />
 
+      {rucError && (
+        <p className="mb-6 border-l-3 border-crimson bg-crimson/[0.06] px-4 py-3 text-sm text-crimson" role="alert">
+          {rucError}
+        </p>
+      )}
       {ok && (
         <Toast
           message="Datos guardados. Actualiza tus documentos si cambiaste algo."
@@ -71,7 +84,7 @@ export default async function CompanyPage({
             <Field
               label="Razón social o Nombre comercial"
               className="sm:col-span-2"
-              hint="Tal como figura en tu Ficha RUC."
+              hint="Se precarga con la razón social de la SUNAT. Puedes editarla; eres responsable de que figure tal como en tu Ficha RUC."
             >
               <input name="name" defaultValue={company.name} required className="input" />
             </Field>

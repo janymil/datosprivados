@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Fraunces, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
+import { siteUrl } from "@/lib/site";
 
 const archivo = Archivo({
   subsets: ["latin"],
@@ -23,7 +24,7 @@ const plex = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://datosprivados.pe"),
+  metadataBase: new URL(siteUrl()),
   title: {
     default: "DatosPrivados — Ley 29733 para MYPE, consultorios y profesionales del Perú",
     template: "%s · DatosPrivados",

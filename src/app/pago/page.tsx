@@ -70,7 +70,7 @@ export default async function PagoPage({
       </h1>
       <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-ink-soft">
         {active
-          ? "Al cambiar de plan cancelamos la suscripción anterior y creamos una nueva. Mantienes el acceso hasta que se confirme el cambio."
+          ? "Tu plan actual sigue activo hasta que MercadoPago autorice el nuevo. Recién entonces se cancela el anterior."
           : "Tu cuenta ya está creada. Para entrar al panel y empezar tu expediente, activa tu suscripción mensual o anual con MercadoPago."}
       </p>
 

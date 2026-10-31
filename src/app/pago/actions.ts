@@ -7,6 +7,7 @@ import { requireSession } from "@/lib/auth";
 import {
   activateDevPlan,
   canBypassPayment,
+  clearPendingSubscription,
   isCompanyActive,
   markSubscriptionStatus,
   setSubscriptionPending,
@@ -18,27 +19,28 @@ import {
   type SubscriptionCheckout,
 } from "@/lib/mercadopago";
 import { isBillingTerm, isPlanId, planName, planPrice, type BillingTerm } from "@/lib/plans";
+import { siteUrl } from "@/lib/site";
+import { isDemoCompany } from "@/lib/demo";
 
+/** URL de retorno de MercadoPago. En desarrollo sin NEXT_PUBLIC_APP_URL usa el host local. */
 async function requestBaseUrl() {
-  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (configured) return configured.replace(/\/+$/, "");
-
+  if (process.env.NEXT_PUBLIC_APP_URL?.trim() || process.env.NODE_ENV === "production") return siteUrl();
   const requestHeaders = await headers();
-  const host =
-    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "localhost:3000";
-  const proto =
-    requestHeaders.get("x-forwarded-proto") ??
-    (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https");
-  return `${proto}://${host}`;
+  const host = requestHeaders.get("host") ?? "localhost:3000";
+  return `http://${host}`;
 }
 
 /**
- * Crea una suscripción mensual (preapproval) y redirige a MercadoPago.
- * Si la cuenta ya está activa y el usuario cambia de plan, primero cancelamos
- * la suscripción anterior para no cobrar dos veces.
+ * Crea una suscripción mensual o anual y redirige a MercadoPago.
+ *
+ * Un cambio de plan con cuenta activa no toca el plan actual: la suscripción
+ * nueva queda pendiente y el webhook la activa cuando MercadoPago la autoriza.
+ * La anterior se cancela entonces, nunca antes, para no perder el cobro si el
+ * usuario abandona el pago.
  */
 export async function startSubscriptionAction(formData: FormData) {
   const { company, user } = await requireSession();
+  if (isDemoCompany(company)) redirect("/app?demo=lectura");
   const change = String(formData.get("change") ?? "") === "1";
   if (isCompanyActive(company) && !change) redirect("/app");
 
@@ -51,15 +53,8 @@ export async function startSubscriptionAction(formData: FormData) {
     redirect("/pago?error=config");
   }
 
-  if (company.subscription_id && company.subscription_status !== "cancelled") {
-    try {
-      await cancelPreapproval(company.subscription_id);
-      markSubscriptionStatus(company.id, "cancelled");
-    } catch (error) {
-      console.error("[mercadopago] No se pudo cancelar la suscripción anterior:", error);
-      redirect("/pago?error=cancel");
-    }
-  }
+  // Un intento anterior que quedó sin autorizar se reemplaza por este.
+  const abandonedPending = company.pending_subscription_id;
 
   let checkout: SubscriptionCheckout | undefined;
   try {
@@ -71,18 +66,26 @@ export async function startSubscriptionAction(formData: FormData) {
       term,
       baseUrl: await requestBaseUrl(),
     });
-    setSubscriptionPending(company.id, checkout.id, plan, term);
   } catch (error) {
     console.error("[mercadopago] No se pudo crear la suscripción:", error);
     redirect("/pago?error=mp");
   }
 
   if (!checkout) redirect("/pago?error=mp");
+
+  setSubscriptionPending(company.id, checkout.id, plan, term);
+  if (abandonedPending && abandonedPending !== checkout.id) {
+    await cancelPreapproval(abandonedPending).catch((error) => {
+      console.error("[mercadopago] No se pudo cancelar el intento anterior:", error);
+    });
+  }
+
   redirect(checkout.initPoint);
 }
 
 export async function activateDevAction(formData: FormData) {
   const { company } = await requireSession();
+  if (isDemoCompany(company)) redirect("/app?demo=lectura");
   if (!canBypassPayment()) redirect("/pago?error=dev");
 
   const rawPlan = String(formData.get("plan") ?? company.plan);
@@ -94,22 +97,26 @@ export async function activateDevAction(formData: FormData) {
   redirect(company.onboarded_at ? "/app" : "/bienvenida");
 }
 
+/** Cancela la suscripción vigente y, si hay uno, el cambio de plan pendiente. */
 export async function cancelSubscriptionAction() {
   const { company } = await requireSession();
-  if (!company.subscription_id) {
+  if (isDemoCompany(company)) redirect("/app?demo=lectura");
+  if (!company.subscription_id && !company.pending_subscription_id) {
     redirect("/app/ajustes?error=cancel");
   }
 
   if (isMercadoPagoConfigured()) {
     try {
-      await cancelPreapproval(company.subscription_id);
+      if (company.subscription_id) await cancelPreapproval(company.subscription_id);
+      if (company.pending_subscription_id) await cancelPreapproval(company.pending_subscription_id);
     } catch (error) {
       console.error("[mercadopago] No se pudo cancelar la suscripción:", error);
       redirect("/app/ajustes?error=cancel");
     }
   }
 
-  markSubscriptionStatus(company.id, "cancelled");
+  if (company.subscription_id) markSubscriptionStatus(company.id, company.subscription_id, "cancelled");
+  if (company.pending_subscription_id) clearPendingSubscription(company.id);
   revalidatePath("/app/ajustes");
   redirect("/app/ajustes?ok=cancel");
 }

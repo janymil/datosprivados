@@ -16,6 +16,7 @@ import { detectSector } from "./sectors";
 import { legalBasisLabel } from "./documents";
 import { criteriaLabels, parseCriteria } from "./incident-criteria";
 import { limaToday } from "./format";
+import { siteUrl } from "./site";
 
 export const AI_MODEL_ID = activeModelId();
 
@@ -749,8 +750,7 @@ async function auditTextByRules(input: {
   const verdict: AuditedTextResult["verdict"] =
     score >= 85 ? "cumple" : score >= 55 ? "observado" : "riesgo_multa";
 
-  const configuredUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  const appUrl = configuredUrl ? configuredUrl.replace(/\/+$/, "") : "https://datosprivados.pe";
+  const appUrl = siteUrl();
   const policyUrl = `${appUrl}/p/${input.company.slug}`;
   const arcoUrl = `${appUrl}/solicitud/${input.company.slug}`;
   const contact = input.company.dpo_email || input.company.email;

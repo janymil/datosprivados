@@ -5,6 +5,7 @@ import { DocBody } from "@/components/doc-body";
 import { PrintButton } from "@/components/print-button";
 import { Logo } from "@/components/icons";
 import { companyIdentityLine } from "@/lib/documents";
+import { demoPreview, isDemoCompany } from "@/lib/demo";
 
 export const metadata = { title: "Política de Privacidad" };
 
@@ -12,7 +13,10 @@ export default async function PublicPolicyPage({ params }: { params: Promise<{ s
   const { slug } = await params;
   const data = getPolicyBySlug(slug);
   if (!data) notFound();
-  const { company, doc } = data;
+  const { company, doc: storedDoc } = data;
+  // La política de la empresa de demostración es pública: solo se muestra una vista previa.
+  const demo = isDemoCompany(company);
+  const doc = demo ? { ...storedDoc, content: demoPreview(storedDoc.content) } : storedDoc;
 
   return (
     <div className="min-h-screen">
@@ -25,7 +29,7 @@ export default async function PublicPolicyPage({ params }: { params: Promise<{ s
             <Link href={`/solicitud/${slug}`} className="hidden font-mono text-xs font-medium uppercase tracking-[0.1em] text-ink-soft hover:text-crimson sm:block">
               Ejercer derechos ARCO ↗
             </Link>
-            <PrintButton label="Descargar PDF" />
+            <PrintButton label="Descargar PDF" locked={demo} />
           </div>
         </div>
       </header>

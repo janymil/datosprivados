@@ -1,6 +1,6 @@
 "use server";
 
-import { requireSession } from "@/lib/auth";
+import { requireActiveSession } from "@/lib/auth";
 import { getIncident, getRequest, listBanks, listDocuments, listIncidents, listRequests, listProviders, listEvidence } from "@/lib/data";
 import { computeCompliance } from "@/lib/compliance";
 import {
@@ -18,11 +18,17 @@ import {
   type IncidentAiTriage,
 } from "@/lib/ai";
 
+const DEMO_AI_MESSAGE =
+  "La IA está desactivada en la cuenta de demostración. Crea tu cuenta para usarla.";
+
 export async function askAiAssistantAction(
   userMessage: string,
   history: Array<{ role: "user" | "assistant"; content: string }> = []
 ): Promise<ChatAssistantResult> {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession({ allowDemo: true });
+  if (company.billing_status === "demo") {
+    return { answer: DEMO_AI_MESSAGE, mode: "basico", sanitizedPromptSentToAi: "", redactedItems: [], model: "modo-basico" };
+  }
   const banks = listBanks(company.id);
   const requests = listRequests(company.id);
   const incidents = listIncidents(company.id);
@@ -51,7 +57,10 @@ export async function askAiAssistantAction(
 export async function runArcoAiCopilotAction(
   requestId: string
 ): Promise<{ ok: true; data: ArcoAiAnalysis } | { ok: false; error: string }> {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession({ allowDemo: true });
+  if (company.billing_status === "demo") {
+    return { ok: false, error: DEMO_AI_MESSAGE };
+  }
   if (company.plan !== "pro") {
     return {
       ok: false,
@@ -70,7 +79,10 @@ export async function runArcoAiCopilotAction(
 export async function runBankAiWizardAction(
   rawDescription: string
 ): Promise<{ ok: true; data: GeneratedBankSuggestion } | { ok: false; error: string }> {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession({ allowDemo: true });
+  if (company.billing_status === "demo") {
+    return { ok: false, error: DEMO_AI_MESSAGE };
+  }
   if (company.plan !== "pro") {
     return {
       ok: false,
@@ -84,7 +96,10 @@ export async function runBankAiWizardAction(
 export async function runIncidentAiTriageAction(
   incidentId: string
 ): Promise<{ ok: true; data: IncidentAiTriage } | { ok: false; error: string }> {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession({ allowDemo: true });
+  if (company.billing_status === "demo") {
+    return { ok: false, error: DEMO_AI_MESSAGE };
+  }
   if (company.plan !== "pro") {
     return {
       ok: false,
@@ -103,7 +118,10 @@ export async function runTextComplianceAuditAction(input: {
   rawText: string;
   channelType: "whatsapp" | "formulario_web" | "sorteo_redes";
 }): Promise<{ ok: true; data: AuditedTextResult } | { ok: false; error: string }> {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession({ allowDemo: true });
+  if (company.billing_status === "demo") {
+    return { ok: false, error: DEMO_AI_MESSAGE };
+  }
   if (company.plan !== "pro") {
     return {
       ok: false,
@@ -121,7 +139,10 @@ export async function runTextComplianceAuditAction(input: {
 export async function runBusinessDocumentAdvisorAction(
   businessWayDescription: string
 ): Promise<{ ok: true; data: BusinessDocumentRecommendation } | { ok: false; error: string }> {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession({ allowDemo: true });
+  if (company.billing_status === "demo") {
+    return { ok: false, error: DEMO_AI_MESSAGE };
+  }
   const trimmed = businessWayDescription.trim();
   if (!trimmed) {
     return { ok: false, error: "Cuéntanos brevemente cómo vendes o atiendes a tus clientes." };

@@ -6,10 +6,13 @@ export function CopyButton({
   text,
   label = "Copiar",
   className,
+  locked = false,
 }: {
   text: string;
   label?: string;
   className?: string;
+  /** Desactiva el botón (cuenta de demostración). */
+  locked?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -24,7 +27,13 @@ export function CopyButton({
   }
 
   return (
-    <button type="button" onClick={copy} className={className ?? "btn btn-ghost btn-sm"}>
+    <button
+      type="button"
+      onClick={copy}
+      disabled={locked}
+      title={locked ? "Disponible al activar tu plan" : undefined}
+      className={`${className ?? "btn btn-ghost btn-sm"}${locked ? " cursor-not-allowed opacity-50" : ""}`}
+    >
       {copied ? "Copiado" : label}
     </button>
   );

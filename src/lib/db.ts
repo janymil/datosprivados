@@ -50,6 +50,19 @@ export type Company = {
   subscription_id: string | null;
   /** pending | authorized | paused | cancelled | demo */
   subscription_status: string | null;
+  /**
+   * Cambio de plan en curso: la suscripción nueva aún no está autorizada en
+   * MercadoPago. El plan y el término solo se aplican cuando se autoriza.
+   */
+  pending_subscription_id: string | null;
+  pending_plan: string | null;
+  pending_term: string | null;
+  /** Cuándo se verificó el RUC con la SUNAT; null si nunca se verificó (cuentas anteriores). */
+  ruc_verified_at: string | null;
+  /** Estado del RUC según la SUNAT al verificarlo (ACTIVO, …). */
+  ruc_status: string | null;
+  /** Condición del contribuyente según la SUNAT (HABIDO, NO HABIDO, …). */
+  ruc_condition: string | null;
   dpo_name: string;
   dpo_email: string;
   /**
@@ -223,6 +236,8 @@ function initSchema(db: DatabaseSync) {
   db.exec(`
     PRAGMA journal_mode = WAL;
     PRAGMA foreign_keys = ON;
+    PRAGMA busy_timeout = 5000;
+    PRAGMA synchronous = NORMAL;
 
     CREATE TABLE IF NOT EXISTS companies (
       id TEXT PRIMARY KEY,
@@ -412,7 +427,7 @@ function initSchema(db: DatabaseSync) {
  * cacheada en `globalThis` (en `next dev` la conexión sobrevive a los recargos
  * en caliente y `initSchema` no vuelve a correr).
  */
-const SCHEMA_VERSION = 9;
+const SCHEMA_VERSION = 11;
 
 function migrate(db: DatabaseSync) {
   const companyColumns = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
@@ -562,6 +577,41 @@ function migrate(db: DatabaseSync) {
     CREATE INDEX IF NOT EXISTS idx_payments_company ON payments(company_id);
     CREATE INDEX IF NOT EXISTS idx_payments_external ON payments(external_reference);
   `);
+
+  // v10: cambio de plan pendiente de autorización, límites de intentos y
+  // índices para las búsquedas por empresa.
+  const billingColumnsV10 = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
+  const hasV10 = (name: string) => billingColumnsV10.some((column) => column.name === name);
+  if (!hasV10("pending_subscription_id")) {
+    db.exec("ALTER TABLE companies ADD COLUMN pending_subscription_id TEXT");
+  }
+  if (!hasV10("pending_plan")) {
+    db.exec("ALTER TABLE companies ADD COLUMN pending_plan TEXT");
+  }
+  if (!hasV10("pending_term")) {
+    db.exec("ALTER TABLE companies ADD COLUMN pending_term TEXT");
+  }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS rate_limits (
+      key TEXT PRIMARY KEY,
+      window_start INTEGER NOT NULL,
+      count INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_arco_company_status ON arco_requests(company_id, status, due_at);
+    CREATE INDEX IF NOT EXISTS idx_arco_company_ticket ON arco_requests(company_id, ticket);
+    CREATE INDEX IF NOT EXISTS idx_incidents_company_status ON incidents(company_id, status);
+    CREATE INDEX IF NOT EXISTS idx_documents_company_kind ON documents(company_id, kind);
+    CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+    CREATE INDEX IF NOT EXISTS idx_users_email_lower ON users(lower(email));
+    CREATE INDEX IF NOT EXISTS idx_companies_ruc ON companies(ruc);
+  `);
+
+  // v11: verificación del RUC con la SUNAT.
+  const rucColumns = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
+  const hasRucColumn = (name: string) => rucColumns.some((column) => column.name === name);
+  if (!hasRucColumn("ruc_verified_at")) db.exec("ALTER TABLE companies ADD COLUMN ruc_verified_at TEXT");
+  if (!hasRucColumn("ruc_status")) db.exec("ALTER TABLE companies ADD COLUMN ruc_status TEXT");
+  if (!hasRucColumn("ruc_condition")) db.exec("ALTER TABLE companies ADD COLUMN ruc_condition TEXT");
 }
 
 declare global {

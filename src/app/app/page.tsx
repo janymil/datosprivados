@@ -5,6 +5,7 @@ import { listActivity, listBanks, listDocuments, listIncidents, listRequests, li
 import { computeCompliance, dueTone } from "@/lib/compliance";
 import { appUrl } from "@/lib/documents";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { DEMO_READONLY_MESSAGE } from "@/lib/demo";
 import { ComplianceRing, PageHeader, StatusPill } from "@/components/ui";
 import { Term } from "@/components/help";
 import { PlanSteps } from "@/components/plan-steps";
@@ -15,11 +16,11 @@ export const metadata = { title: "Panel" };
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ bienvenida?: string }>;
+  searchParams: Promise<{ bienvenida?: string; demo?: string }>;
 }) {
   const { company, user } = await requireSession();
   if (!company.onboarded_at) redirect("/bienvenida");
-  const { bienvenida } = await searchParams;
+  const { bienvenida, demo } = await searchParams;
 
   const banks = listBanks(company.id);
   const requests = listRequests(company.id);
@@ -64,6 +65,11 @@ export default async function DashboardPage({
 
   return (
     <div className="space-y-7">
+      {demo === "lectura" && (
+        <p className="mb-6 border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-sm" role="status">
+          {DEMO_READONLY_MESSAGE}
+        </p>
+      )}
       {bienvenida && (
         <div className="border-l-3 border-sage bg-sage/[0.08] px-5 py-4 text-base leading-relaxed">
           <span className="font-semibold">¡Listo, tu plan está armado!</span> Creamos tus bancos de datos en borrador y

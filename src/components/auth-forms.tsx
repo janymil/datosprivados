@@ -90,11 +90,11 @@ export function SignupForm({
       <input type="hidden" name="term" value={term ?? "monthly"} />
       {sector && <input type="hidden" name="sector" value={sector} />}
 
-      <Field label="Nombre de la empresa">
+      <Field label="Nombre de la empresa" hint="Al verificar tu RUC se reemplaza por la razón social registrada en la SUNAT. Podrás editarla después en «Empresa».">
         <input name="company" required className="input" placeholder="Casa Verde Perú S.A.C." />
       </Field>
 
-      <Field label="RUC" hint="11 dígitos. Solo empresas o personas con negocio constituidas en el Perú.">
+      <Field label="RUC" hint="11 dígitos. Lo verificamos con la SUNAT: debe existir y estar ACTIVO. Solo empresas o personas con negocio constituidas en el Perú.">
         <input
           name="ruc"
           required
@@ -121,12 +121,12 @@ export function SignupForm({
         />
       </Field>
 
-      <Field label="Contraseña" hint="Mínimo 8 caracteres.">
+      <Field label="Contraseña" hint="Mínimo 10 caracteres.">
         <input
           type="password"
           name="password"
           required
-          minLength={8}
+          minLength={10}
           autoComplete="new-password"
           className="input"
           placeholder="••••••••"

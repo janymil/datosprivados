@@ -3,17 +3,19 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, newId, nowIso } from "@/lib/db";
-import { requireSession } from "@/lib/auth";
+import { requireActiveSession } from "@/lib/auth";
 import { logActivity } from "@/lib/data";
 import { limaToday } from "@/lib/format";
 import { cleanUrl, salesBandOrEmpty } from "@/lib/provider-input";
+import { isValidRuc } from "@/lib/ruc";
+import { checkCompanyRuc } from "@/lib/ruc-lookup";
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
 export async function saveBankAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   const db = getDb();
   const id = text(formData, "id");
   const name = text(formData, "name");
@@ -77,7 +79,7 @@ export async function saveBankAction(formData: FormData) {
 }
 
 export async function markBankRegisteredAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   const id = text(formData, "id");
   const code = text(formData, "sipdp_code");
   const date = text(formData, "registered_at") || limaToday();
@@ -103,7 +105,7 @@ export async function markBankRegisteredAction(formData: FormData) {
 }
 
 export async function reopenBankAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   const id = text(formData, "id");
   getDb()
     .prepare("UPDATE data_banks SET status = 'borrador', updated_at = ? WHERE id = ? AND company_id = ?")
@@ -113,20 +115,46 @@ export async function reopenBankAction(formData: FormData) {
 }
 
 export async function updateCompanyAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   // Perú únicamente: el SIPDP exige una empresa peruana con RUC. Los campos
   // heredados de sociedad extranjera se limpian al guardar.
   const entityType = "peruana";
+
+  // Cambiar el RUC exige verificarlo otra vez: si no, la verificación del registro se esquivaría.
+  const newRuc = text(formData, "ruc");
+  let name = text(formData, "name") || company.name;
+  let verification: { at: string | null; status: string | null; condition: string | null } = {
+    at: company.ruc_verified_at,
+    status: company.ruc_status,
+    condition: company.ruc_condition,
+  };
+  if (newRuc !== company.ruc) {
+    if (!isValidRuc(newRuc)) redirect("/app/empresa?error=ruc_formato");
+    const taken = getDb()
+      .prepare("SELECT id FROM companies WHERE ruc = ? AND id != ? AND billing_status IN ('active', 'demo') LIMIT 1")
+      .get(newRuc, company.id);
+    if (taken) redirect("/app/empresa?error=ruc_en_uso");
+    const rucCheck = await checkCompanyRuc(newRuc);
+    if (!rucCheck.ok) redirect(`/app/empresa?error=ruc_${rucCheck.code}`);
+    if (rucCheck.verified) {
+      name = rucCheck.razonSocial.slice(0, 200);
+      verification = { at: nowIso(), status: rucCheck.estado, condition: rucCheck.condicion };
+    } else {
+      verification = { at: null, status: null, condition: null };
+    }
+  }
+
   getDb()
     .prepare(
       `UPDATE companies SET name = ?, ruc = ?, sector = ?, email = ?, phone = ?, address = ?, dpo_name = ?, dpo_email = ?,
        entity_type = ?, country = ?, representative_name = ?, representative_address = ?,
-       website = ?, complaints_url = ?, sales_band = ?
+       website = ?, complaints_url = ?, sales_band = ?,
+       ruc_verified_at = ?, ruc_status = ?, ruc_condition = ?
        WHERE id = ?`
     )
     .run(
-      text(formData, "name") || company.name,
-      text(formData, "ruc"),
+      name,
+      newRuc,
       text(formData, "sector") || company.sector,
       text(formData, "email") || company.email,
       text(formData, "phone"),
@@ -140,6 +168,9 @@ export async function updateCompanyAction(formData: FormData) {
       cleanUrl(text(formData, "website")),
       cleanUrl(text(formData, "complaints_url")),
       salesBandOrEmpty(text(formData, "sales_band")),
+      verification.at,
+      verification.status,
+      verification.condition,
       company.id
     );
   logActivity(company.id, "empresa", "Actualizaste los datos de tu empresa.");

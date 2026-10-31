@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, newId, nowIso, type Company } from "@/lib/db";
-import { requireSession } from "@/lib/auth";
+import { requireActiveSession } from "@/lib/auth";
 import { generateAndSaveDocument, getDocument, listBanks, logActivity, syncProviders } from "@/lib/data";
 import { cleanUrl, parseToolsInput, salesBandOrEmpty } from "@/lib/provider-input";
 import { getBankPreset, type BankPreset } from "@/lib/bank-presets";
@@ -14,7 +14,7 @@ function text(formData: FormData, key: string) {
 }
 
 export async function completeOnboardingAction(formData: FormData) {
-  const { company, user } = await requireSession();
+  const { company, user } = await requireActiveSession();
   const db = getDb();
   const now = nowIso();
 

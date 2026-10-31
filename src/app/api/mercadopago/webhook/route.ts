@@ -1,19 +1,19 @@
 import {
-  activateSubscription,
   companyTerm,
+  getCompanyById,
   getCompanyBySubscriptionId,
   markSubscriptionStatus,
+  planFromCompany,
   recordSubscriptionCharge,
 } from "@/lib/billing";
-import {
-  getAuthorizedPayment,
-  getPreapproval,
-  validateMercadoPagoSignature,
-} from "@/lib/mercadopago";
+import { confirmAuthorizedSubscription } from "@/lib/subscriptions";
+import { getAuthorizedPayment, getPreapproval, validateMercadoPagoSignature } from "@/lib/mercadopago";
 import { planPrice } from "@/lib/plans";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const MAX_BODY_BYTES = 16 * 1024;
 
 type WebhookBody = {
   type?: string;
@@ -26,10 +26,17 @@ function isPaid(status: string | undefined) {
 }
 
 export async function POST(request: Request) {
+  const declared = Number(request.headers.get("content-length") ?? "0");
+  if (declared > MAX_BODY_BYTES) {
+    return new Response("Payload too large", { status: 413 });
+  }
+
   const url = new URL(request.url);
   let body: WebhookBody = {};
   try {
-    body = (await request.json()) as WebhookBody;
+    const text = await request.text();
+    if (text.length > MAX_BODY_BYTES) return new Response("Payload too large", { status: 413 });
+    body = text ? (JSON.parse(text) as WebhookBody) : {};
   } catch {
     // MercadoPago también puede enviar solo query params.
   }
@@ -41,6 +48,7 @@ export async function POST(request: Request) {
     return Response.json({ ok: true, ignored: true });
   }
 
+  // La firma se valida antes de consultar nada, con el id que llegó en la petición.
   const valid = validateMercadoPagoSignature({
     signature: request.headers.get("x-signature"),
     requestId: request.headers.get("x-request-id"),
@@ -53,23 +61,27 @@ export async function POST(request: Request) {
   try {
     if (type === "subscription_preapproval") {
       const preapproval = await getPreapproval(dataId);
-      const companyId =
-        preapproval.external_reference ||
-        getCompanyBySubscriptionId(dataId)?.id ||
-        "";
+      const company = preapproval.external_reference ? getCompanyById(preapproval.external_reference) : undefined;
 
-      if (!companyId) {
-        return Response.json({ ok: false, error: "Suscripción sin empresa." }, { status: 200 });
+      // Solo la suscripción actual o la pendiente de la empresa cambian su estado.
+      const linked =
+        company && (company.subscription_id === dataId || company.pending_subscription_id === dataId);
+      if (!company || !linked) {
+        return Response.json({ ok: true, ignored: true, type });
       }
 
       if (preapproval.status === "authorized") {
-        activateSubscription({ companyId, subscriptionId: dataId });
-      } else if (
-        preapproval.status === "paused" ||
-        preapproval.status === "cancelled" ||
-        preapproval.status === "canceled"
-      ) {
-        markSubscriptionStatus(companyId, preapproval.status === "paused" ? "paused" : "cancelled");
+        const result = await confirmAuthorizedSubscription(dataId);
+        if (!result.ok) {
+          console.warn(`[mercadopago] Autorización no aplicada: ${result.reason}`);
+        }
+        return Response.json({ ok: result.ok, type, status: preapproval.status });
+      }
+
+      if (preapproval.status === "cancelled" || preapproval.status === "canceled") {
+        markSubscriptionStatus(company.id, dataId, "cancelled");
+      } else if (preapproval.status === "paused") {
+        markSubscriptionStatus(company.id, dataId, "paused");
       }
 
       return Response.json({ ok: true, type, status: preapproval.status });
@@ -80,16 +92,25 @@ export async function POST(request: Request) {
       const subscriptionId = invoice.preapproval_id ?? "";
       const company = subscriptionId ? getCompanyBySubscriptionId(subscriptionId) : undefined;
       if (!company) {
-        return Response.json({ ok: false, error: "Cobro sin suscripción." }, { status: 200 });
+        return Response.json({ ok: true, ignored: true, type });
       }
 
       const paymentStatus = invoice.payment?.status ?? invoice.status;
       if (isPaid(paymentStatus)) {
+        // Un cobro de la suscripción pendiente implica que ya fue autorizada:
+        // se confirma primero (con verificación) y luego se registra el cobro.
+        if (company.pending_subscription_id === subscriptionId) {
+          const confirmed = await confirmAuthorizedSubscription(subscriptionId);
+          if (!confirmed.ok) {
+            // 500 para que MercadoPago reintente más tarde.
+            return Response.json({ ok: false, error: confirmed.reason }, { status: 500 });
+          }
+        }
         recordSubscriptionCharge({
           companyId: company.id,
           subscriptionId,
           paymentId: String(invoice.payment?.id ?? invoice.id),
-          amount: invoice.transaction_amount ?? planPrice(company.plan, companyTerm(company)),
+          amount: invoice.transaction_amount ?? planPrice(planFromCompany(company), companyTerm(company)),
           paidAt: invoice.date_created ?? new Date().toISOString(),
           raw: JSON.stringify(invoice),
         });

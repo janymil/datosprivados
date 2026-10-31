@@ -151,8 +151,35 @@ export async function getAuthorizedPayment(id: string): Promise<MercadoPagoAutho
 }
 
 /**
- * Valida el header x-signature de MercadoPago si hay un secreto configurado.
- * Sin secreto (desarrollo), deja pasar; en producción conviene configurarlo.
+ * Comprueba que una suscripción de MercadoPago corresponde a lo que la empresa
+ * pidió: misma empresa (external_reference), mismo monto, moneda y frecuencia.
+ * Devuelve el motivo del rechazo, o null si todo coincide.
+ */
+export function preapprovalMismatch(
+  preapproval: MercadoPagoPreapproval,
+  expected: { companyId: string; amount: number; term: BillingTerm }
+): string | null {
+  if (preapproval.external_reference !== expected.companyId) {
+    return "La suscripción no pertenece a esta empresa.";
+  }
+  const recurring = preapproval.auto_recurring;
+  if (Number(recurring?.transaction_amount) !== expected.amount) {
+    return "El monto de la suscripción no coincide con el plan.";
+  }
+  if (recurring?.currency_id !== "PEN") {
+    return "La moneda de la suscripción no es soles.";
+  }
+  const months = expected.term === "yearly" ? 12 : 1;
+  if (Number(recurring?.frequency) !== months || recurring?.frequency_type !== "months") {
+    return "La frecuencia de la suscripción no coincide con el plan.";
+  }
+  return null;
+}
+
+/**
+ * Valida el header x-signature de MercadoPago. En producción el secreto es
+ * obligatorio: sin él se rechaza todo (fallo cerrado). En desarrollo, sin
+ * secreto, se acepta para poder probar el flujo.
  */
 export function validateMercadoPagoSignature(input: {
   signature: string | null;
@@ -160,7 +187,7 @@ export function validateMercadoPagoSignature(input: {
   dataId: string | null;
 }) {
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET?.trim();
-  if (!secret) return true;
+  if (!secret) return process.env.NODE_ENV !== "production";
   if (!input.signature || !input.requestId || !input.dataId) return false;
 
   const parts = Object.fromEntries(

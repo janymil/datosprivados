@@ -3,8 +3,16 @@
 import { redirect } from "next/navigation";
 import { getDb, hashPassword, newId, nowIso } from "@/lib/db";
 import { destroySession, signIn } from "@/lib/auth";
+import { clientIp } from "@/lib/client-ip";
 import { findSectorById } from "@/lib/sectors";
 import { isBillingTerm } from "@/lib/plans";
+import { takeRateLimit } from "@/lib/rate-limit";
+import { isValidRuc } from "@/lib/ruc";
+import { checkCompanyRuc } from "@/lib/ruc-lookup";
+
+const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
+const MIN_PASSWORD_LENGTH = 10;
 
 export type AuthState = { error?: string };
 
@@ -28,6 +36,14 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
 
   if (!email || !password) return { error: "Ingresa tu correo y contraseña." };
 
+  const ip = await clientIp();
+  const attemptsOk =
+    takeRateLimit(`login:ip:${ip}`, 30, 15 * MINUTE) &&
+    takeRateLimit(`login:email:${email.toLowerCase()}`, 10, 15 * MINUTE);
+  if (!attemptsOk) {
+    return { error: "Demasiados intentos. Espera unos minutos y vuelve a intentarlo." };
+  }
+
   const result = await signIn(email, password);
   if (result.error) return result;
 
@@ -49,27 +65,67 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
   if (!companyName || !ownerName || !email || !password) {
     return { error: "Completa todos los campos obligatorios." };
   }
-  if (!/^\d{11}$/.test(ruc)) {
-    return { error: "El RUC debe tener 11 dígitos." };
+  if (!isValidRuc(ruc)) {
+    return { error: "Revisa tu RUC: son 11 dígitos válidos según SUNAT." };
   }
-  if (password.length < 8) {
-    return { error: "La contraseña debe tener al menos 8 caracteres." };
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return { error: `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.` };
+  }
+
+  const ip = await clientIp();
+  if (!takeRateLimit(`signup:ip:${ip}`, 5, HOUR)) {
+    return { error: "Demasiados registros desde tu conexión. Intenta más tarde." };
   }
 
   const db = getDb();
   const exists = db.prepare("SELECT id FROM users WHERE lower(email) = lower(?)").get(email);
   if (exists) return { error: "Ya existe una cuenta con ese correo. Inicia sesión." };
 
+  // Un RUC con cuenta activa o de demostración no se registra otra vez. Las cuentas
+  // pendientes de pago no bloquean: así nadie puede reservar el RUC de otra empresa sin pagar.
+  const rucTaken = db
+    .prepare("SELECT id FROM companies WHERE ruc = ? AND billing_status IN ('active', 'demo') LIMIT 1")
+    .get(ruc);
+  if (rucTaken) {
+    return {
+      error:
+        "Ya existe una cuenta activa para ese RUC. Si es tu empresa y no la creaste tú, escríbenos a hola@datosprivados.pe.",
+    };
+  }
+
+  // Se consulta a la SUNAT al final de las validaciones locales, para gastar la mínima cuota.
+  const rucCheck = await checkCompanyRuc(ruc);
+  if (!rucCheck.ok) return { error: rucCheck.message };
+
   const companyId = newId();
   const now = nowIso();
-  let slug = slugify(companyName) || "empresa";
+  // Con el RUC verificado, la razón social y el domicilio fiscal son los de la SUNAT:
+  // son los que deben figurar en los documentos legales.
+  const legalName = rucCheck.verified ? rucCheck.razonSocial.slice(0, 200) : companyName;
+  let slug = slugify(legalName) || "empresa";
   const taken = db.prepare("SELECT id FROM companies WHERE slug = ?").get(slug);
   if (taken) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
 
   db.prepare(
-    `INSERT INTO companies (id, name, ruc, sector, slug, email, phone, address, plan, billing_term, billing_status, dpo_name, dpo_email, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, '', '', ?, ?, 'pending', ?, ?, ?)`
-  ).run(companyId, companyName, ruc, sector, slug, email, plan, term, ownerName, email, now);
+    `INSERT INTO companies (id, name, ruc, sector, slug, email, phone, address, plan, billing_term, billing_status, dpo_name, dpo_email, ruc_verified_at, ruc_status, ruc_condition, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, '', ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)`
+  ).run(
+    companyId,
+    legalName,
+    ruc,
+    sector,
+    slug,
+    email,
+    rucCheck.verified ? rucCheck.direccion.slice(0, 300) : "",
+    plan,
+    term,
+    ownerName,
+    email,
+    rucCheck.verified ? now : null,
+    rucCheck.verified ? rucCheck.estado : null,
+    rucCheck.verified ? rucCheck.condicion : null,
+    now
+  );
 
   db.prepare(
     `INSERT INTO users (id, company_id, name, email, password_hash, role, created_at)
@@ -81,7 +137,9 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
   ).run(
     newId(),
     companyId,
-    "Creaste tu cuenta. El plan queda pendiente hasta confirmar el pago del primer mes.",
+    rucCheck.verified
+      ? `Creaste tu cuenta. RUC ${ruc} verificado en la SUNAT (${legalName}). El plan queda pendiente hasta confirmar el pago del primer mes.`
+      : "Creaste tu cuenta. El plan queda pendiente hasta confirmar el pago del primer mes.",
     now
   );
 

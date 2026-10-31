@@ -28,7 +28,8 @@ export default async function SettingsPage({
   const subscriptionCancelled = company.subscription_status === "cancelled";
   const canCancel = Boolean(company.subscription_id) && !subscriptionCancelled;
 
-  const exported = JSON.stringify(
+  // En la demo el expediente (incluye el texto de los documentos) no se construye ni se envía.
+  const exported = isDemo ? "" : JSON.stringify(
     {
       exported_at: new Date().toISOString(),
       company,
@@ -174,6 +175,7 @@ export default async function SettingsPage({
               text={exported}
               filename={`expediente-${company.slug}.json`}
               label="Descargar expediente (.json)"
+              locked={isDemo}
               className="border-paper/40 text-paper hover:bg-paper hover:text-ink"
             />
           </div>

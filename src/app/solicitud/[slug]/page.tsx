@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createArcoRequestAction } from "@/app/actions/arco";
-import { getPolicyBySlug, getCompanyBySlug, listRequests } from "@/lib/data";
+import { getPolicyBySlug, getCompanyBySlug, hasRequestTicket } from "@/lib/data";
 import { Logo } from "@/components/icons";
 import { Field } from "@/components/ui";
 import { companyIdentityLine } from "@/lib/documents";
@@ -28,7 +28,7 @@ export default async function PublicRequestPage({
   if (!company) notFound();
   const policy = getPolicyBySlug(slug);
   // Solo se muestra la constancia de un ticket que existe para esta empresa.
-  const ticket = ok && listRequests(company.id).some((r) => r.ticket === ok) ? ok : undefined;
+  const ticket = ok && hasRequestTicket(company.id, ok) ? ok : undefined;
 
   return (
     <div className="min-h-screen">
@@ -123,7 +123,11 @@ export default async function PublicRequestPage({
 
               {error && (
                 <p className="border-l-3 border-crimson bg-crimson/[0.06] px-3.5 py-2.5 text-sm text-crimson">
-                  Por favor completa los campos obligatorios e inténtalo de nuevo.
+                  {error === "limite"
+                    ? "Recibimos muchas solicitudes desde tu conexión. Intenta de nuevo en unos minutos."
+                    : error === "demo"
+                      ? "Esta es una página de demostración: no se guardan solicitudes. Crea tu cuenta para tener tu propio formulario."
+                      : "Por favor completa los campos obligatorios e inténtalo de nuevo."}
                 </p>
               )}
 

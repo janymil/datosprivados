@@ -3,8 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { addBusinessDays, arcoLegalBusinessDays, getDb, newId, nowIso } from "@/lib/db";
-import { requireSession } from "@/lib/auth";
+import { requireActiveSession } from "@/lib/auth";
 import { getCompanyBySlug, logActivity, nextTicketNumber } from "@/lib/data";
+import { clientIp } from "@/lib/client-ip";
+import { isDemoCompany } from "@/lib/demo";
+import { takeRateLimit } from "@/lib/rate-limit";
+
+const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -18,6 +24,15 @@ export async function createArcoRequestAction(formData: FormData) {
   const slug = text(formData, "slug");
   const company = getCompanyBySlug(slug);
   if (!company) redirect("/");
+  // La empresa de demostración se ve en público: no guarda datos de desconocidos.
+  if (isDemoCompany(company)) redirect(`/solicitud/${slug}?error=demo`);
+
+  // Límite por persona (IP) y por empresa: el formulario público no debe poder
+  // llenar la bandeja de la empresa.
+  const ip = await clientIp();
+  if (!takeRateLimit(`arco:ip:${ip}`, 5, 10 * MINUTE) || !takeRateLimit(`arco:company:${company.id}`, 300, HOUR)) {
+    redirect(`/solicitud/${slug}?error=limite`);
+  }
 
   const name = text(formData, "requester_name").slice(0, 200);
   const description = text(formData, "description").slice(0, 5000);
@@ -70,7 +85,7 @@ const MANUAL_CHANNELS = ["whatsapp", "telefono", "correo", "presencial", "carta"
 
 /** Registra una solicitud que llegó fuera del formulario web (WhatsApp, teléfono, etc.). */
 export async function createManualArcoRequestAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
 
   const type = text(formData, "type");
   const channel = text(formData, "channel");
@@ -109,7 +124,7 @@ export async function createManualArcoRequestAction(formData: FormData) {
 }
 
 export async function respondArcoAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   const id = text(formData, "id");
   const response = text(formData, "response");
   const requested = text(formData, "status");
@@ -144,7 +159,7 @@ export async function respondArcoAction(formData: FormData) {
 }
 
 export async function setArcoStatusAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   const id = text(formData, "id");
   const status = text(formData, "status");
   if (!["nuevo", "en_proceso", "rechazado"].includes(status)) redirect(`/app/arco/${id}`);

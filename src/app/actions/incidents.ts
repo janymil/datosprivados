@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, newId, nowIso } from "@/lib/db";
-import { requireSession } from "@/lib/auth";
+import { requireActiveSession } from "@/lib/auth";
 import { logActivity } from "@/lib/data";
 import { normalizeCriteria, serializeCriteria } from "@/lib/incident-criteria";
 
@@ -37,7 +37,7 @@ function affectedSample(formData: FormData) {
 }
 
 export async function createIncidentAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   const title = text(formData, "title", 200);
   if (!title) redirect("/app/incidentes/nuevo?error=1");
 
@@ -89,7 +89,7 @@ export async function createIncidentAction(formData: FormData) {
 }
 
 export async function updateIncidentAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireActiveSession();
   const id = text(formData, "id", 64);
   const action = text(formData, "action", 20);
   if (!id || !(ACTIONS as readonly string[]).includes(action)) redirect("/app/incidentes");
