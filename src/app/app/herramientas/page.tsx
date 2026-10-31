@@ -6,7 +6,7 @@ import { ToolsPicker } from "@/components/tools-picker";
 import { PageHeader, StatusPill } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 import { Toast } from "@/components/toast";
-import { isAbroad, toolCategory } from "@/lib/provider-catalog";
+import { ADEQUATE_COUNTRIES, ADEQUATE_LIST_REVIEWED, isAbroad, toolCategory } from "@/lib/provider-catalog";
 import { sectorLegalProfile } from "@/lib/sector-legal";
 
 export const metadata = { title: "Herramientas" };
@@ -53,6 +53,13 @@ export default async function ToolsPage({
           </p>
         </div>
       </section>
+
+      <p className="max-w-[80ch] text-sm leading-relaxed text-ink-soft">
+        {ADEQUATE_COUNTRIES.length === 0
+          ? `Países con nivel adecuado: la ANPD no ha publicado ninguna resolución que conozcamos (revisado el ${ADEQUATE_LIST_REVIEWED}). Por eso, todo envío de datos al exterior exige garantías (cláusulas contractuales, art. 18.2 y 20) además de comunicarse a la ANPD.`
+          : `Países con nivel adecuado declarados: ${ADEQUATE_COUNTRIES.map((entry) => `${entry.country} (${entry.resolution})`).join(", ")}.`}{" "}
+        Verifica siempre en el portal de la ANPD (gob.pe/anpd) si hay novedades.
+      </p>
 
       {abroad.length > 0 && (
         <section className="card border-l-3 border-ochre p-6">

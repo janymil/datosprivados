@@ -15,11 +15,11 @@ export const metadata = { title: "Panel" };
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ bienvenida?: string }>;
+  searchParams: Promise<{ bienvenida?: string; denegado?: string }>;
 }) {
   const { company, user } = await requireSession();
   if (!company.onboarded_at) redirect("/bienvenida");
-  const { bienvenida } = await searchParams;
+  const { bienvenida, denegado } = await searchParams;
 
   const banks = listBanks(company.id);
   const requests = listRequests(company.id);
@@ -64,6 +64,11 @@ export default async function DashboardPage({
 
   return (
     <div className="space-y-7">
+      {denegado && (
+        <p className="border-l-3 border-crimson bg-crimson/10 px-4 py-3 text-[15px] text-crimson" role="alert">
+          Tu rol no permite hacer ese cambio. Pide a un administrador que te dé permiso de edición.
+        </p>
+      )}
       {bienvenida && (
         <div className="border-l-3 border-sage bg-sage/[0.08] px-5 py-4 text-base leading-relaxed">
           <span className="font-semibold">¡Listo, tu plan está armado!</span> Creamos tus bancos de datos en borrador y
@@ -221,7 +226,10 @@ export default async function DashboardPage({
                 <span className="shrink-0 font-mono text-xs uppercase tracking-[0.06em] text-ink-soft sm:w-44">
                   {formatDateTime(item.created_at)}
                 </span>
-                <span className="text-[15px] leading-snug">{item.message}</span>
+                <span className="text-[15px] leading-snug">
+                  {item.message}
+                  {item.actor && <span className="text-ink-soft"> — {item.actor}</span>}
+                </span>
               </li>
             ))}
           </ol>

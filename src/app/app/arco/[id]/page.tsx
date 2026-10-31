@@ -5,6 +5,7 @@ import { getRequest } from "@/lib/data";
 import { arcoLegalBusinessDays, businessDaysBetween } from "@/lib/db";
 import { formatDate, formatDateTime, limaToday } from "@/lib/format";
 import { ArcoResponseForm } from "@/components/arco-response-form";
+import { ARCO_DENIAL, sectorArcoNotes, sectorLegalProfile } from "@/lib/sector-legal";
 import { PageHeader, StatusPill } from "@/components/ui";
 import { Term } from "@/components/help";
 
@@ -140,6 +141,9 @@ export default async function ArcoDetailPage({
                 type={request.type}
                 response={request.response}
                 status={request.status}
+                sectorTitle={sectorLegalProfile(company).title}
+                notes={sectorArcoNotes(sectorLegalProfile(company).family)}
+                denial={ARCO_DENIAL}
               />
             </div>
           </section>

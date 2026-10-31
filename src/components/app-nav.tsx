@@ -12,6 +12,7 @@ import {
   InboxIcon,
   PlugIcon,
   SettingsIcon,
+  UsersIcon,
   ShieldIcon,
   SparklesIcon,
 } from "./icons";
@@ -26,6 +27,7 @@ const ITEMS = [
   { href: "/app/incidentes", label: "Incidentes", icon: AlertIcon, group: "Atender" },
   { href: "/app/asistente", label: "Asistente legal", icon: SparklesIcon, group: "Ayuda" },
   { href: "/app/empresa", label: "Empresa", icon: BuildingIcon, group: "Cuenta" },
+  { href: "/app/equipo", label: "Equipo", icon: UsersIcon, group: "Cuenta" },
   { href: "/app/ajustes", label: "Ajustes", icon: SettingsIcon, group: "Cuenta" },
 ];
 
@@ -39,6 +41,7 @@ const MOBILE_LABEL: Record<string, string> = {
   "/app/herramientas": "Herramientas",
   "/app/evidencias": "Evidencias",
   "/app/empresa": "Empresa",
+  "/app/equipo": "Equipo",
   "/app/ajustes": "Ajustes",
 };
 

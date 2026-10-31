@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { requireSession } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import {
   activateDevPlan,
   canBypassPayment,
@@ -38,7 +38,7 @@ async function requestBaseUrl() {
  * la suscripción anterior para no cobrar dos veces.
  */
 export async function startSubscriptionAction(formData: FormData) {
-  const { company, user } = await requireSession();
+  const { company, user } = await requireRole("admin");
   const change = String(formData.get("change") ?? "") === "1";
   if (isCompanyActive(company) && !change) redirect("/app");
 
@@ -82,7 +82,7 @@ export async function startSubscriptionAction(formData: FormData) {
 }
 
 export async function activateDevAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company } = await requireRole("admin");
   if (!canBypassPayment()) redirect("/pago?error=dev");
 
   const rawPlan = String(formData.get("plan") ?? company.plan);
@@ -95,7 +95,7 @@ export async function activateDevAction(formData: FormData) {
 }
 
 export async function cancelSubscriptionAction() {
-  const { company } = await requireSession();
+  const { company } = await requireRole("admin");
   if (!company.subscription_id) {
     redirect("/app/ajustes?error=cancel");
   }

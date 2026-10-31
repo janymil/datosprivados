@@ -5,6 +5,7 @@ import Link from "next/link";
 import { respondArcoAction } from "@/app/actions/arco";
 import { runArcoAiCopilotAction } from "@/app/actions/ai";
 import type { ArcoAiAnalysis } from "@/lib/ai";
+import type { SectorArcoNotes } from "@/lib/sector-legal";
 import { SubmitButton } from "@/components/submit-button";
 import { CheckIcon, LockIcon, SparklesIcon } from "./icons";
 
@@ -71,6 +72,17 @@ Atentamente,
 ${company}`,
 };
 
+/** Inserta el párrafo propio del rubro justo antes de la frase de gratuidad y reclamo. */
+function withNote(template: string, note: string | undefined) {
+  if (!template || !note) return template;
+  const marker = "Este trámite es totalmente gratuito";
+  return template.includes(marker) ? template.replace(marker, `${note}
+
+${marker}`) : `${template}
+
+${note}`;
+}
+
 export function ArcoResponseForm({
   id,
   companyName,
@@ -79,7 +91,13 @@ export function ArcoResponseForm({
   type,
   response,
   status,
+  sectorTitle,
+  notes,
+  denial,
 }: {
+  sectorTitle?: string;
+  notes?: SectorArcoNotes;
+  denial?: string;
   id: string;
   companyName: string;
   companyPlan?: "basico" | "pro";
@@ -88,7 +106,8 @@ export function ArcoResponseForm({
   response: string | null;
   status: string;
 }) {
-  const template = TEMPLATES[type]?.(requesterName, companyName) ?? "";
+  const note = notes?.[type as keyof SectorArcoNotes];
+  const template = withNote(TEMPLATES[type]?.(requesterName, companyName) ?? "", note?.letter);
   const [text, setText] = useState(response?.trim() ? response : template);
   const [copied, setCopied] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<ArcoAiAnalysis | null>(null);
@@ -191,7 +210,26 @@ export function ArcoResponseForm({
         </p>
       )}
 
+      {(note?.letter || note?.tip) && (
+        <div className="border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-[14.5px] leading-relaxed">
+          <p className="font-semibold">Para tu rubro{sectorTitle ? ` (${sectorTitle})` : ""}</p>
+          {note.letter && <p className="mt-1">Agregamos a la carta un párrafo propio de tu actividad. Revísalo y completa lo que está entre [corchetes].</p>}
+          {note.tip && <p className="mt-1">Antes de enviar: {note.tip}</p>}
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-2.5">
+        {denial && (
+          <button
+            type="button"
+            onClick={() => setText((current) => `${current.trimEnd()}
+
+${denial}`)}
+            className="btn btn-ghost btn-sm whitespace-nowrap"
+          >
+            Insertar texto de denegatoria
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setText(template)}

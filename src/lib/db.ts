@@ -94,6 +94,56 @@ export type Provider = {
   updated_at: string;
 };
 
+/** admin: todo, incluido equipo y plan; responsable: edita; lector: solo consulta. */
+export type Role = "admin" | "responsable" | "lector";
+
+export type Invitation = {
+  id: string;
+  company_id: string;
+  email: string;
+  role: Role;
+  /** Si existe, la invitación restablece el acceso de ese usuario en lugar de crear uno. */
+  user_id: string | null;
+  token_hash: string;
+  invited_by: string;
+  expires_at: string;
+  accepted_at: string | null;
+  created_at: string;
+};
+
+export type ReviewStatus = "pendiente" | "aprobado" | "observado";
+
+/** Revisión de un documento por un abogado externo, mediante un enlace seguro. */
+export type DocumentReview = {
+  id: string;
+  company_id: string;
+  document_kind: string;
+  token_hash: string;
+  status: ReviewStatus;
+  requested_by: string;
+  reviewer_name: string;
+  reviewer_email: string;
+  reviewer_license: string;
+  notes: string;
+  /** Huella del texto que el abogado revisó; si cambia el documento, la revisión deja de estar vigente. */
+  content_hash: string | null;
+  document_version: number | null;
+  expires_at: string;
+  requested_at: string;
+  responded_at: string | null;
+};
+
+export type DocumentVersionRow = {
+  id: string;
+  company_id: string;
+  kind: string;
+  version: number;
+  title: string;
+  content: string;
+  template_version: number | null;
+  created_at: string;
+};
+
 export type EvidenceType = "consentimiento" | "capacitacion" | "revision_accesos" | "prueba_respaldo" | "purga";
 
 /** Registro de evidencia para demostrar cumplimiento ante una fiscalización. */
@@ -213,6 +263,8 @@ export type Activity = {
   company_id: string;
   kind: string;
   message: string;
+  /** Nombre de quien hizo el cambio; vacío en eventos del sistema (pagos, vencimientos). */
+  actor: string;
   created_at: string;
 };
 
@@ -526,6 +578,62 @@ function migrate(db: DatabaseSync) {
     );
     CREATE INDEX IF NOT EXISTS idx_evidence_company ON evidence(company_id, type);
   `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS invitations (
+      id TEXT PRIMARY KEY,
+      company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+      email TEXT NOT NULL,
+      role TEXT NOT NULL,
+      user_id TEXT,
+      token_hash TEXT NOT NULL UNIQUE,
+      invited_by TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      accepted_at TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_invitations_company ON invitations(company_id);
+
+    CREATE TABLE IF NOT EXISTS document_reviews (
+      id TEXT PRIMARY KEY,
+      company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+      document_kind TEXT NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      status TEXT NOT NULL DEFAULT 'pendiente',
+      requested_by TEXT NOT NULL DEFAULT '',
+      reviewer_name TEXT NOT NULL DEFAULT '',
+      reviewer_email TEXT NOT NULL DEFAULT '',
+      reviewer_license TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      content_hash TEXT,
+      document_version INTEGER,
+      expires_at TEXT NOT NULL,
+      requested_at TEXT NOT NULL,
+      responded_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_reviews_company ON document_reviews(company_id, document_kind);
+
+    CREATE TABLE IF NOT EXISTS document_versions (
+      id TEXT PRIMARY KEY,
+      company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL,
+      version INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      template_version INTEGER,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_doc_versions ON document_versions(company_id, kind, version);
+
+    CREATE TABLE IF NOT EXISTS login_attempts (
+      key TEXT PRIMARY KEY,
+      failures INTEGER NOT NULL,
+      first_at TEXT NOT NULL
+    );
+  `);
+  const activityColumns = db.prepare("PRAGMA table_info(activity)").all() as { name: string }[];
+  if (!activityColumns.some((column) => column.name === "actor")) {
+    db.exec("ALTER TABLE activity ADD COLUMN actor TEXT NOT NULL DEFAULT ''");
+  }
   const documentColumns = db.prepare("PRAGMA table_info(documents)").all() as { name: string }[];
   if (!documentColumns.some((column) => column.name === "template_version")) {
     db.exec("ALTER TABLE documents ADD COLUMN template_version INTEGER");

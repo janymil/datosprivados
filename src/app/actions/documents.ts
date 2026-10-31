@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, nowIso } from "@/lib/db";
-import { requireSession } from "@/lib/auth";
-import { generateAndSaveDocument, listBanks, listDocuments, listProviders, logActivity } from "@/lib/data";
+import { requireRole } from "@/lib/auth";
+import { generateAndSaveDocument, listBanks, listDocuments, listProviders, logAs } from "@/lib/data";
 import { documentTitle, isDocumentKind } from "@/lib/document-catalog";
 import { documentFreshness } from "@/lib/document-freshness";
 import { SECURITY_CHECKS, isSecurityCheckId } from "@/lib/security-checks";
@@ -14,7 +14,7 @@ function text(formData: FormData, key: string) {
 }
 
 export async function generateDocumentAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company, user } = await requireRole("responsable");
   const kind = text(formData, "kind");
   if (!isDocumentKind(kind)) redirect("/app/documentos");
 
@@ -22,7 +22,7 @@ export async function generateDocumentAction(formData: FormData) {
   const title = documentTitle(kind);
   const version = generateAndSaveDocument(company, banks, kind);
 
-  logActivity(company.id, "documento", `Generaste «${title}» (v${version}).`);
+  logAs(user.name, company.id, "documento", `Generaste «${title}» (v${version}).`);
   revalidatePath("/app", "layout");
   redirect(`/app/documentos?tab=${kind}&ok=1`);
 }
@@ -34,7 +34,7 @@ export async function generateDocumentAction(formData: FormData) {
  * publicación de la política.
  */
 export async function regenerateOutdatedAction() {
-  const { company } = await requireSession();
+  const { company, user } = await requireRole("responsable");
   const banks = listBanks(company.id);
   const providers = listProviders(company.id);
   const outdated = listDocuments(company.id).filter((doc) => documentFreshness(doc, company, banks, providers).stale);
@@ -45,7 +45,7 @@ export async function regenerateOutdatedAction() {
   }
 
   if (outdated.length) {
-    logActivity(
+    logAs(user.name, 
       company.id,
       "documento",
       `Actualizaste ${outdated.length} ${outdated.length === 1 ? "documento desactualizado" : "documentos desactualizados"}.`
@@ -56,14 +56,14 @@ export async function regenerateOutdatedAction() {
 }
 
 export async function togglePublishAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company, user } = await requireRole("responsable");
   // Solo la Política de Privacidad tiene enlace público.
   const kind = "politica";
   const publish = text(formData, "publish") === "1";
   getDb()
     .prepare("UPDATE documents SET published = ? WHERE company_id = ? AND kind = ?")
     .run(publish ? 1 : 0, company.id, kind);
-  logActivity(
+  logAs(user.name, 
     company.id,
     "documento",
     publish ? "Publicaste tu Política de Privacidad." : "Despublicaste tu Política de Privacidad."
@@ -77,7 +77,7 @@ export async function togglePublishAction(formData: FormData) {
  * negocio. La ANPD no pide solo el texto: pide evidencia de que la medida opera.
  */
 export async function toggleSecurityCheckAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company, user } = await requireRole("responsable");
   const item = text(formData, "item");
   if (!isSecurityCheckId(item)) redirect("/app/documentos?tab=seguridad");
 
@@ -89,7 +89,7 @@ export async function toggleSecurityCheckAction(formData: FormData) {
   if (existing) {
     db.prepare("DELETE FROM security_checks WHERE company_id = ? AND item = ?").run(company.id, item);
     const label = SECURITY_CHECKS.find((check) => check.id === item)?.label ?? item;
-    logActivity(company.id, "documento", `Marcaste como pendiente la medida «${label}».`);
+    logAs(user.name, company.id, "documento", `Marcaste como pendiente la medida «${label}».`);
   } else {
     db.prepare("INSERT INTO security_checks (company_id, item, done_at) VALUES (?, ?, ?)").run(
       company.id,
@@ -97,7 +97,7 @@ export async function toggleSecurityCheckAction(formData: FormData) {
       nowIso()
     );
     const label = SECURITY_CHECKS.find((check) => check.id === item)?.label ?? item;
-    logActivity(company.id, "documento", `Registraste la medida «${label}» como implementada.`);
+    logAs(user.name, company.id, "documento", `Registraste la medida «${label}» como implementada.`);
   }
 
   revalidatePath("/app", "layout");

@@ -29,7 +29,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="mt-8 space-y-3.5 border-t border-paper/15 pt-6">
             {[
               "Inventario de bancos de datos",
-              "Plazos ARCO de 10 y 20 días hábiles",
+              "Plazos ARCO de 8, 10 y 20 días hábiles",
               "Incidentes con reloj de 48 horas",
             ].map((item) => (
               <p key={item} className="flex items-center gap-3 text-[15.5px] text-paper/80">

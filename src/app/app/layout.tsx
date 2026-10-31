@@ -128,6 +128,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 </div>
               </div>
             )}
+            {!isDemo && user.role !== "admin" && user.role !== "responsable" && (
+              <p className="no-print mb-6 border-l-3 border-ink bg-ink/[0.04] px-4 py-3 text-sm">
+                <strong>Acceso de solo lectura.</strong> Puedes consultar todo, pero no modificar. Pide a un administrador
+                que cambie tu rol si necesitas editar.
+              </p>
+            )}
             {children}
           </div>
         </main>

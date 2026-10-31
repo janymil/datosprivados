@@ -140,3 +140,18 @@ Added after the first audit (all of it driven by the same sector profiles):
 | Compliance | `compliance.ts` | New scored item "Declara las herramientas" (weights still sum to 100). Warning alerts, not penalised: foreign tools without contract/ANPD communication, banks saying "no transfer" while foreign tools exist, SIPDP sheet outdated after changes (art. 44), ODP date approaching, access review older than six months. |
 
 Caveats: the suggested countries are defaults to confirm in each provider account (where unsure the catalogue says "No sé", treated as a transfer to verify); the list of countries the ANPD considers adequate is not hardcoded.
+
+## 11. Update 2026-10-31 (2): team, lawyer review, sector ARCO letters, history
+
+| Piece | Where | What it does |
+|---|---|---|
+| Roles | `auth.ts` (`requireRole`), every mutating server action | `admin` (all, team, company, plan), `responsable` (edits banks, documents, ARCO, incidents, tools, evidence), `lector` (read only). Enforced on the server, not only by hiding buttons. |
+| Team | `/app/equipo`, `invitations` table | Invitation by single-use link (7 days, only the SHA-256 is stored), change role, remove, "restablecer acceso" link. No e-mail is sent. At least one admin always remains. |
+| Activity with author | `activity.actor`, `logAs` | The history says who made each change; system events (payments, public ARCO submissions) have no author. |
+| Login throttle | `signIn` | 5 failed attempts per e-mail in 15 minutes lock that e-mail for the rest of the window. |
+| Lawyer review | `/revision/[token]`, `document_reviews` | Link valid 14 days, no account needed; the lawyer approves or leaves observations with name and optional CAL. The review is bound to the hash of the text read and stops being current if the document changes. |
+| Sector ARCO letters | `sector-legal.ts` (`sectorArcoNotes`), ARCO form | Per family: letter paragraphs (e.g. clinical records cannot be erased, 10-year SPLAFT records, schools' certificates, logs 2 years) and tips for the person answering; button to insert the art. 73 denial text. |
+| Version history | `document_versions` | Every generated text is kept; first regeneration also saves the old text. Lets you show which policy text was in force when someone consented. |
+| Adequate countries | `ADEQUATE_COUNTRIES` in `provider-catalog.ts` | Empty (no ANPD resolution found on 2026-10-31); fill in when one is published. |
+
+Limits: one e-mail = one account in one company; no plan-based seat limits; invitation links are shown once and use `NEXT_PUBLIC_APP_URL` as host.

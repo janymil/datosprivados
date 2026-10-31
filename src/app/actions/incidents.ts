@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, newId, nowIso } from "@/lib/db";
-import { requireSession } from "@/lib/auth";
-import { logActivity } from "@/lib/data";
+import { requireRole } from "@/lib/auth";
+import { logAs } from "@/lib/data";
 import { normalizeCriteria, serializeCriteria } from "@/lib/incident-criteria";
 
 const SEVERITIES = ["leve", "moderado", "grave"] as const;
@@ -37,7 +37,7 @@ function affectedSample(formData: FormData) {
 }
 
 export async function createIncidentAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company, user } = await requireRole("responsable");
   const title = text(formData, "title", 200);
   if (!title) redirect("/app/incidentes/nuevo?error=1");
 
@@ -77,7 +77,7 @@ export async function createIncidentAction(formData: FormData) {
       nowIso()
     );
 
-  logActivity(
+  logAs(user.name, 
     company.id,
     "incidente",
     hasCriteria
@@ -89,7 +89,7 @@ export async function createIncidentAction(formData: FormData) {
 }
 
 export async function updateIncidentAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company, user } = await requireRole("responsable");
   const id = text(formData, "id", 64);
   const action = text(formData, "action", 20);
   if (!id || !(ACTIONS as readonly string[]).includes(action)) redirect("/app/incidentes");
@@ -104,19 +104,19 @@ export async function updateIncidentAction(formData: FormData) {
     db.prepare(
       "UPDATE incidents SET status = 'notificado', notified_at = ? WHERE id = ? AND company_id = ?"
     ).run(nowIso(), id, company.id);
-    logActivity(company.id, "incidente", `Notificaste el incidente «${incident.title}» a la ANPD.`);
+    logAs(user.name, company.id, "incidente", `Notificaste el incidente «${incident.title}» a la ANPD.`);
   } else if (action === "cerrar") {
     db.prepare("UPDATE incidents SET status = 'cerrado' WHERE id = ? AND company_id = ?").run(
       id,
       company.id
     );
-    logActivity(company.id, "incidente", `Cerraste el incidente «${incident.title}».`);
+    logAs(user.name, company.id, "incidente", `Cerraste el incidente «${incident.title}».`);
   } else if (action === "analisis") {
     db.prepare("UPDATE incidents SET status = 'en_analisis' WHERE id = ? AND company_id = ?").run(
       id,
       company.id
     );
-    logActivity(company.id, "incidente", `Marcaste el incidente «${incident.title}» en análisis.`);
+    logAs(user.name, company.id, "incidente", `Marcaste el incidente «${incident.title}» en análisis.`);
   } else if (action === "guardar" && incident.status !== "cerrado") {
     db.prepare(
       "UPDATE incidents SET description = ?, measures = ?, affected_people = ?, affected_sample = ?, criteria = ?, data_categories = ?, severity = ? WHERE id = ? AND company_id = ?"

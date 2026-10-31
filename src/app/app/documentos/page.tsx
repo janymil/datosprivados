@@ -1,6 +1,19 @@
 import Link from "next/link";
-import { requireSession } from "@/lib/auth";
-import { getDocument, listBanks, listDocuments, listProviders, listSecurityChecks } from "@/lib/data";
+import { cookies } from "next/headers";
+import { hasRole, requireSession } from "@/lib/auth";
+import {
+  getDocument,
+  getVersion,
+  latestResponse,
+  listBanks,
+  listDocuments,
+  listProviders,
+  listReviews,
+  listSecurityChecks,
+  listVersions,
+  sha256,
+} from "@/lib/data";
+import { requestReviewAction } from "@/app/actions/review";
 import { documentFit, sectorLegalProfile } from "@/lib/sector-legal";
 import { STALE_REASON_LABELS, TEMPLATE_VERSIONS, documentFreshness, type Freshness } from "@/lib/document-freshness";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -49,10 +62,10 @@ function documentStatus(meta: DocumentTab, doc: DocumentRow | undefined, freshne
 export default async function DocumentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; ok?: string; regen?: string }>;
+  searchParams: Promise<{ tab?: string; ok?: string; regen?: string; v?: string; review?: string }>;
 }) {
-  const { company } = await requireSession();
-  const { tab, ok, regen } = await searchParams;
+  const { company, user } = await requireSession();
+  const { tab, ok, regen, v, review } = await searchParams;
 
   if (!tab || !isDocumentKind(tab)) {
     return <DocumentsOverview company={company} regenerated={regen} />;
@@ -68,6 +81,16 @@ export default async function DocumentsPage({
   const canPublish = meta.shareable === true;
   const securityDone = active === "seguridad" ? listSecurityChecks(company.id) : new Map<string, string>();
   const securityDoneCount = SECURITY_CHECKS.filter((item) => securityDone.has(item.id)).length;
+
+  const canWrite = hasRole(user.role, "responsable");
+  const reviews = doc ? listReviews(company.id, active) : [];
+  const lastResponse = doc ? latestResponse(company.id, active) : undefined;
+  const reviewCurrent = Boolean(doc && lastResponse && lastResponse.content_hash === sha256(doc.content));
+  const reviewToken = review ? (await cookies()).get("pdp_review")?.value : undefined;
+  const reviewLink = reviewToken ? `${appUrl()}/revision/${reviewToken}` : "";
+  const versions = doc ? listVersions(company.id, active) : [];
+  const viewing = doc && v ? getVersion(company.id, active, Number(v)) : undefined;
+  const shown = viewing ?? doc;
 
   return (
     <div className="space-y-6">
@@ -166,6 +189,86 @@ export default async function DocumentsPage({
         ) : null}
       </section>
 
+      {doc && (
+        <section className="card p-6 md:p-7">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-display text-2xl tracking-[-0.02em]">Revisión por abogado</h2>
+            {lastResponse ? (
+              <StatusPill tone={reviewCurrent ? (lastResponse.status === "aprobado" ? "ok" : "warn") : "neutral"}>
+                {reviewCurrent
+                  ? lastResponse.status === "aprobado"
+                    ? "Revisado y aprobado"
+                    : "Con observaciones"
+                  : "Revisión no vigente"}
+              </StatusPill>
+            ) : (
+              <StatusPill tone="neutral">Sin revisar</StatusPill>
+            )}
+          </div>
+          {lastResponse && (
+            <p className="mt-2 max-w-[68ch] text-[15px] leading-relaxed">
+              {lastResponse.reviewer_name}
+              {lastResponse.reviewer_license ? ` (${lastResponse.reviewer_license})` : ""} respondió el{" "}
+              {formatDate(lastResponse.responded_at, "short")} sobre la versión {lastResponse.document_version}:{" "}
+              <strong>{lastResponse.status === "aprobado" ? "sin observaciones" : "con observaciones"}</strong>.
+              {!reviewCurrent && " El documento cambió después de esa revisión: pide una nueva."}
+              {lastResponse.notes && <span className="mt-1 block text-ink-soft">«{lastResponse.notes}»</span>}
+            </p>
+          )}
+          {reviewLink && (
+            <div className="mt-4 border-l-3 border-sage bg-sage/[0.08] px-4 py-3">
+              <p className="text-[15px]">
+                <strong>Enlace para tu abogado</strong> (vale 14 días; solo se muestra ahora):
+              </p>
+              <p className="mt-1 break-all font-mono text-sm">{reviewLink}</p>
+              <div className="mt-2">
+                <CopyButton text={reviewLink} label="Copiar enlace" />
+              </div>
+            </div>
+          )}
+          {canWrite && (
+            <form action={requestReviewAction} className="mt-4 flex flex-wrap items-end gap-3">
+              <input type="hidden" name="kind" value={active} />
+              <label className="min-w-[200px] flex-1 text-sm text-ink-soft">
+                Nombre del abogado (opcional)
+                <input name="reviewer_name" maxLength={120} className="input mt-1" />
+              </label>
+              <label className="min-w-[200px] flex-1 text-sm text-ink-soft">
+                Correo (opcional)
+                <input name="reviewer_email" type="email" maxLength={160} className="input mt-1" />
+              </label>
+              <SubmitButton pendingLabel="Creando…" className="btn btn-ghost btn-sm">
+                Crear enlace de revisión
+              </SubmitButton>
+            </form>
+          )}
+          <p className="mt-3 max-w-[68ch] text-sm leading-relaxed text-ink-soft">
+            Tu abogado abre el enlace sin crear cuenta, lee este documento y registra su decisión con su nombre. No
+            enviamos correos: copia el enlace y mándalo. DatosPrivados no verifica la colegiatura ni presta asesoría
+            legal.
+          </p>
+          {reviews.length > 0 && (
+            <ul className="mt-3 divide-y divide-line border-t border-line text-sm">
+              {reviews.map((item) => (
+                <li key={item.id} className="flex flex-wrap justify-between gap-2 py-2">
+                  <span>
+                    {formatDate(item.requested_at, "short")} ·{" "}
+                    {item.status === "pendiente"
+                      ? item.expires_at < new Date().toISOString()
+                        ? "venció sin respuesta"
+                        : "esperando respuesta"
+                      : item.status === "aprobado"
+                        ? "aprobado"
+                        : "con observaciones"}
+                  </span>
+                  <span className="text-ink-soft">{item.reviewer_name || item.reviewer_email || "sin nombre"}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
       {active === "seguridad" && doc && (
         <section className="card p-6 md:p-7">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -222,21 +325,55 @@ export default async function DocumentsPage({
 
       {active === "consentimiento" && <ConsentAiAuditor companyPlan={company.plan} />}
 
-      {doc && (
+      {doc && versions.length > 1 && (
         <details className="group border border-line bg-white">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-4 text-[15.5px] font-medium [&::-webkit-details-marker]:hidden">
+            <span>Historial de versiones ({versions.length})</span>
+            <span className="text-sm text-ink-soft">Qué texto estaba vigente en cada fecha</span>
+          </summary>
+          <ul className="divide-y divide-line border-t border-line">
+            {versions.map((item) => (
+              <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 px-6 py-3 text-[15px]">
+                <span>
+                  Versión {item.version} · {formatDateTime(item.created_at)}
+                  {item.template_version != null && ` · plantilla v${item.template_version}`}
+                  {item.version === doc.version && " · vigente"}
+                </span>
+                <Link
+                  href={`/app/documentos?tab=${active}&v=${item.version}`}
+                  className="link-underline text-sm font-medium"
+                >
+                  Ver este texto
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      {doc && (
+        <details className="group border border-line bg-white" open={Boolean(viewing)}>
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-4 text-[15.5px] font-medium [&::-webkit-details-marker]:hidden">
             <span>Ver el texto completo</span>
             <span className="text-sm text-ink-soft group-open:hidden">Mostrar ↓</span>
             <span className="hidden text-sm text-ink-soft group-open:inline">Ocultar ↑</span>
           </summary>
           <div className="border-t border-line p-6 md:p-10">
+            {viewing && (
+              <p className="mx-auto mb-5 max-w-[780px] border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-[15px]">
+                Estás viendo la <strong>versión {viewing.version}</strong> guardada el {formatDateTime(viewing.created_at)}.{" "}
+                <Link href={`/app/documentos?tab=${active}`} className="link-underline font-medium">
+                  Volver a la versión vigente
+                </Link>
+              </p>
+            )}
             <article className="mx-auto max-w-[780px]">
               <p className="font-mono text-xs uppercase tracking-[0.12em] text-ink-soft">
                 {companyIdentityLine(company)}
               </p>
               <h2 className="mt-2 font-display text-[2.1rem] leading-tight tracking-[-0.03em]">{meta.short}</h2>
               <div className="mt-6">
-                <DocBody key={`${doc.id}-${doc.version}`} content={doc.content} />
+                <DocBody key={`${doc.id}-${shown!.version}`} content={shown!.content} />
               </div>
             </article>
           </div>

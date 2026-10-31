@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, newId, nowIso, type Company } from "@/lib/db";
-import { requireSession } from "@/lib/auth";
-import { generateAndSaveDocument, getDocument, listBanks, logActivity, syncProviders } from "@/lib/data";
+import { requireRole } from "@/lib/auth";
+import { generateAndSaveDocument, getDocument, listBanks, logAs, syncProviders } from "@/lib/data";
 import { cleanUrl, parseToolsInput, salesBandOrEmpty } from "@/lib/provider-input";
 import { getBankPreset, type BankPreset } from "@/lib/bank-presets";
 import { findSectorByLabel } from "@/lib/sectors";
@@ -14,7 +14,7 @@ function text(formData: FormData, key: string) {
 }
 
 export async function completeOnboardingAction(formData: FormData) {
-  const { company, user } = await requireSession();
+  const { company, user } = await requireRole("admin");
   const db = getDb();
   const now = nowIso();
 
@@ -78,7 +78,7 @@ export async function completeOnboardingAction(formData: FormData) {
     generateAndSaveDocument(updated, listBanks(company.id), "consentimiento");
   }
 
-  logActivity(
+  logAs(user.name, 
     company.id,
     "cuenta",
     `Completaste la configuración inicial (${sector}) con ${presets.length} ${presets.length === 1 ? "banco de datos" : "bancos de datos"} en borrador.`

@@ -68,6 +68,16 @@ export function PlugIcon({ className }: IconProps) {
   );
 }
 
+export function UsersIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={`${base} ${className ?? ""}`} aria-hidden="true">
+      <circle cx="9" cy="8.5" r="3.2" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M3.2 20c.4-3.4 2.7-5.4 5.8-5.4s5.4 2 5.8 5.4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M15.5 5.6a3 3 0 0 1 0 5.8M17.6 14.9c1.8.6 3 2.2 3.2 5.1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function ClipboardIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={`${base} ${className ?? ""}`} aria-hidden="true">

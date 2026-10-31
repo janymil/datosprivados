@@ -562,3 +562,22 @@ export function isOwnTool(categoryId: string, name: string): boolean {
   const tool = findTool(categoryId, name);
   return Boolean(tool && OWN_TOOL_IDS.has(tool.id));
 }
+
+/**
+ * Países que la Autoridad declaró con nivel adecuado de protección (art. 19 del
+ * DS N.° 016-2024-JUS, mediante resolución de la Dirección General de
+ * Transparencia, Acceso a la Información Pública y Protección de Datos
+ * Personales).
+ *
+ * Revisado el 2026-10-31: no encontramos ninguna resolución publicada, por lo que
+ * la lista está vacía y todo flujo transfronterizo exige garantías (art. 18.2 y
+ * 20). Cuando la ANPD publique una, agrégala aquí con su número de resolución:
+ * los documentos y la pantalla de herramientas la usarán sin más cambios.
+ */
+export const ADEQUATE_COUNTRIES: Array<{ country: Country; resolution: string }> = [];
+
+export const ADEQUATE_LIST_REVIEWED = "2026-10-31";
+
+export function adequacyOf(country: string) {
+  return ADEQUATE_COUNTRIES.find((entry) => entry.country === country);
+}

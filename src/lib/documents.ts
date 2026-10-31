@@ -1,5 +1,5 @@
 import type { Company, DataBank, Provider } from "./db";
-import { isAbroad, toolCategory } from "./provider-catalog";
+import { adequacyOf, isAbroad, toolCategory } from "./provider-catalog";
 import { formatDate } from "./format";
 import {
   isSensitiveBank,
@@ -1013,7 +1013,9 @@ export function buildProcessingAgreement(company: Company, banks: DataBank[], pr
           provider.data || "[datos a los que accede]",
           COUNTRY_LABEL(provider.country),
           isAbroad(provider.country)
-            ? "Cláusulas contractuales (art. 20) + comunicación a la ANPD (art. 21.2)"
+            ? adequacyOf(provider.country)
+              ? `País con nivel adecuado (${adequacyOf(provider.country)!.resolution}) + comunicación a la ANPD (art. 21.2)`
+              : "Cláusulas contractuales (art. 20) + comunicación a la ANPD (art. 21.2)"
             : "No aplica (en el Perú)",
           "[verificar]",
           DPA_LABEL[provider.dpa_status],

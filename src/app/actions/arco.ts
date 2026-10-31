@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { addBusinessDays, arcoLegalBusinessDays, getDb, newId, nowIso } from "@/lib/db";
-import { requireSession } from "@/lib/auth";
-import { getCompanyBySlug, logActivity, nextTicketNumber } from "@/lib/data";
+import { requireRole } from "@/lib/auth";
+import { getCompanyBySlug, logActivity, logAs, nextTicketNumber } from "@/lib/data";
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -70,7 +70,7 @@ const MANUAL_CHANNELS = ["whatsapp", "telefono", "correo", "presencial", "carta"
 
 /** Registra una solicitud que llegó fuera del formulario web (WhatsApp, teléfono, etc.). */
 export async function createManualArcoRequestAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company, user } = await requireRole("responsable");
 
   const type = text(formData, "type");
   const channel = text(formData, "channel");
@@ -103,13 +103,13 @@ export async function createManualArcoRequestAction(formData: FormData) {
     )
     .run(id, company.id, ticket, type, channel, name, docNumber, email, phone, description, received, due, nowIso());
 
-  logActivity(company.id, "arco", `Registraste una solicitud ARCO recibida por ${channel}: ${ticket} (${type}).`);
+  logAs(user.name, company.id, "arco", `Registraste una solicitud ARCO recibida por ${channel}: ${ticket} (${type}).`);
   revalidatePath("/app", "layout");
   redirect(`/app/arco/${id}`);
 }
 
 export async function respondArcoAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company, user } = await requireRole("responsable");
   const id = text(formData, "id");
   const response = text(formData, "response");
   const requested = text(formData, "status");
@@ -130,7 +130,7 @@ export async function respondArcoAction(formData: FormData) {
   ).run(response, status, status, nowIso(), id, company.id);
 
   const late = todayLima() > request.due_at;
-  logActivity(
+  logAs(user.name, 
     company.id,
     "arco",
     request.status === "respondido"
@@ -144,7 +144,7 @@ export async function respondArcoAction(formData: FormData) {
 }
 
 export async function setArcoStatusAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company, user } = await requireRole("responsable");
   const id = text(formData, "id");
   const status = text(formData, "status");
   if (!["nuevo", "en_proceso", "rechazado"].includes(status)) redirect(`/app/arco/${id}`);

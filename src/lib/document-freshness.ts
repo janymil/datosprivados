@@ -22,7 +22,7 @@ export const TEMPLATE_VERSIONS: Record<DocumentKind, number> = {
   consentimiento: 2,
   seguridad: 3,
   retencion: 2,
-  encargo: 3,
+  encargo: 4,
   clausulas: 3,
   eipd: 3,
   trabajadores: 1,

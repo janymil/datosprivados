@@ -2,11 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireSession } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import {
   addEvidence,
   deleteEvidence,
-  logActivity,
+  logAs,
   syncProviders,
   updateProviderStatus,
 } from "@/lib/data";
@@ -20,11 +20,11 @@ function text(formData: FormData, key: string) {
 
 /** Guarda la lista de herramientas completa que envía el selector. */
 export async function saveToolsAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company, user } = await requireRole("responsable");
   const tools = parseToolsInput(text(formData, "tools"));
   syncProviders(company.id, tools);
   const abroad = tools.filter((tool) => tool.country !== "Perú").length;
-  logActivity(
+  logAs(user.name, 
     company.id,
     "herramientas",
     `Actualizaste tus herramientas: ${tools.length} declaradas, ${abroad} con datos fuera del Perú.`
@@ -35,12 +35,12 @@ export async function saveToolsAction(formData: FormData) {
 
 /** Marca el estado del contrato de encargo y de la comunicación a la ANPD de una herramienta. */
 export async function updateProviderAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company, user } = await requireRole("responsable");
   updateProviderStatus(company.id, text(formData, "id"), {
     dpa_status: text(formData, "dpa_status"),
     transfer_status: text(formData, "transfer_status"),
   });
-  logActivity(company.id, "herramientas", `Actualizaste el estado de contrato de «${text(formData, "name")}».`);
+  logAs(user.name, company.id, "herramientas", `Actualizaste el estado de contrato de «${text(formData, "name")}».`);
   revalidatePath("/app", "layout");
   redirect("/app/herramientas?saved=1");
 }
@@ -48,7 +48,7 @@ export async function updateProviderAction(formData: FormData) {
 const EVIDENCE_TYPES: EvidenceType[] = ["consentimiento", "capacitacion", "revision_accesos", "prueba_respaldo", "purga"];
 
 export async function addEvidenceAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company, user } = await requireRole("responsable");
   const type = text(formData, "type") as EvidenceType;
   if (!EVIDENCE_TYPES.includes(type)) redirect("/app/evidencias");
   const date = text(formData, "occurred_on");
@@ -58,13 +58,13 @@ export async function addEvidenceAction(formData: FormData) {
     detail: text(formData, "detail").slice(0, 600),
     reference: text(formData, "reference").slice(0, 200),
   });
-  logActivity(company.id, "evidencia", "Registraste una evidencia de cumplimiento.");
+  logAs(user.name, company.id, "evidencia", "Registraste una evidencia de cumplimiento.");
   revalidatePath("/app", "layout");
   redirect(`/app/evidencias?type=${type}&ok=1`);
 }
 
 export async function deleteEvidenceAction(formData: FormData) {
-  const { company } = await requireSession();
+  const { company, user } = await requireRole("responsable");
   deleteEvidence(company.id, text(formData, "id"));
   revalidatePath("/app", "layout");
   redirect(`/app/evidencias?type=${text(formData, "type")}`);

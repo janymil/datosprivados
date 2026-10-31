@@ -1074,3 +1074,182 @@ const GENERIC_PROTOCOL = [
 export function sectorProtocol(family: LegalFamily): string[] {
   return PROTOCOLS[family] ?? GENERIC_PROTOCOL;
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Particularidades de las respuestas ARCO por rubro                         */
+/* -------------------------------------------------------------------------- */
+
+export type ArcoRight = "acceso" | "rectificacion" | "cancelacion" | "oposicion";
+
+/**
+ * `letter` es un párrafo que se agrega a la carta de respuesta; `tip` es una
+ * advertencia para quien responde y no se incluye en la carta.
+ */
+export type ArcoNote = { letter?: string; tip?: string };
+export type SectorArcoNotes = Partial<Record<ArcoRight, ArcoNote>>;
+
+const SPLAFT_CANCEL: ArcoNote = {
+  letter:
+    "Particularidad de nuestra actividad: por la normativa de prevención de lavado de activos (Ley N.° 27693 y DS N.° 020-2017-JUS), el registro de operaciones y la información de debida diligencia deben conservarse durante 10 años. Por ese motivo no pueden eliminarse antes de ese plazo; permanecen bloqueados y solo se usan para ese fin legal (art. 84 del DS N.° 016-2024-JUS).",
+};
+const SPLAFT_ACCESS: ArcoNote = {
+  tip: "No informes si hubo o no un reporte a la UIF-Perú: la normativa de prevención de lavado de activos exige reserva. Consulta a tu oficial de cumplimiento antes de entregar el expediente.",
+};
+const CCTV_ACCESS: ArcoNote = {
+  tip: "Si la persona aparece en grabaciones, entrégalas resguardando la identidad de terceros (por ejemplo, difuminando otros rostros). Si el plazo de conservación ya venció, responde que no existen imágenes porque se eliminaron según el ciclo informado en el cartel.",
+};
+const MARKETING = "Publicidad: hemos excluido sus datos de todas nuestras listas de difusión (WhatsApp, correo, SMS y redes) y no volveremos a contactarlo con fines comerciales (art. 26.5 del DS N.° 016-2024-JUS).";
+const MARKETING_OPPOSITION: ArcoNote = { letter: MARKETING };
+
+const NOTES: Partial<Record<LegalFamily, SectorArcoNotes>> = {
+  salud: {
+    acceso: {
+      letter:
+        "Su historia clínica puede entregarse en copia (Ley N.° 29414 y NTS N.° 139-MINSA/2018/DGAIN). [Indica el medio de entrega y, si la norma sanitaria lo permite, el costo de reproducción de la copia; el ejercicio del derecho en sí es gratuito, art. 67.3.]",
+      tip: "Entrega la historia clínica solo al paciente, a su representante acreditado o a la autoridad competente.",
+    },
+    rectificacion: {
+      letter:
+        "Sus datos de identificación y contacto fueron corregidos. Las anotaciones clínicas del profesional no se borran ni se reemplazan: si hay un error material se corrige con una nota de rectificación fechada y firmada, conservando la anotación original. [Confirma con el profesional tratante.]",
+    },
+    cancelacion: {
+      letter:
+        "Particularidad de nuestra actividad: la historia clínica no puede eliminarse mientras dure el plazo que fija la NTS N.° 139-MINSA/2018/DGAIN (archivo activo y pasivo). Por esa obligación legal sus datos de salud permanecen bloqueados: solo se usan para ese fin y no para otra finalidad (art. 84 del DS N.° 016-2024-JUS). Sí eliminamos sus datos de contacto de nuestras listas de publicidad.",
+    },
+    oposicion: MARKETING_OPPOSITION,
+  },
+  bienestar: {
+    acceso: { tip: "Entrega copia de la ficha de evaluación y de las fotos antes/después que figuren a nombre de la persona." },
+    cancelacion: {
+      letter:
+        "Eliminamos de inmediato sus fotografías antes/después y sus datos biométricos (huella o rostro), porque no existe obligación legal de conservarlos. Las fichas de tratamiento pueden conservarse bloqueadas por el plazo de defensa de reclamaciones [indica el plazo, p. ej. 2 años] y los comprobantes por el plazo tributario.",
+    },
+    oposicion: MARKETING_OPPOSITION,
+  },
+  farmacia: {
+    acceso: { tip: "El historial de compra de medicamentos y las recetas son datos de salud: entrégalos solo a la persona titular, tras verificar su identidad." },
+    cancelacion: {
+      letter:
+        "Particularidad de nuestra actividad: los registros de dispensación y las recetas deben conservarse según la normativa sanitaria de establecimientos farmacéuticos (Ley N.° 29459 y su reglamento); permanecen bloqueados. Eliminamos sus datos de nuestras campañas y programas de fidelidad.",
+    },
+    oposicion: MARKETING_OPPOSITION,
+  },
+  educacion_menores: {
+    acceso: {
+      tip: "Verifica el vínculo de quien solicita: los menores de 14 años ejercen sus derechos por medio de sus padres o tutores y los adolescentes de 14 a 17 años pueden hacerlo por sí mismos (art. 22). No entregues datos de otros alumnos o familias.",
+    },
+    cancelacion: {
+      letter:
+        "Particularidad de nuestra actividad: las actas, nóminas, certificados y registros de matrícula se conservan según la normativa del sector educación y no pueden eliminarse; permanecen bloqueados. Sí eliminamos las fotografías o videos del alumno que hayamos publicado y sus datos de nuestras listas de comunicación comercial.",
+    },
+    oposicion: { letter: "Retiramos las publicaciones con la imagen del alumno y dejamos de usarla (Código Civil, art. 15). " + MARKETING },
+  },
+  educacion_adultos: {
+    cancelacion: {
+      letter:
+        "Particularidad de nuestra actividad: los registros académicos y los certificados emitidos se conservan y no se eliminan; permanecen bloqueados. Sí eliminamos las grabaciones de clases en las que aparece y sus datos de contacto comercial.",
+    },
+    oposicion: MARKETING_OPPOSITION,
+  },
+  hospedaje: {
+    cancelacion: {
+      letter:
+        "Particularidad de nuestra actividad: el registro de huéspedes es exigido por el Reglamento de Establecimientos de Hospedaje (DS N.° 001-2015-MINCETUR) y los comprobantes por la normativa tributaria; permanecen bloqueados durante esos plazos. Eliminamos las copias de pasaporte o documento que no sean necesarias y sus datos de nuestras listas comerciales.",
+    },
+    oposicion: MARKETING_OPPOSITION,
+  },
+  nocturno: { acceso: CCTV_ACCESS, oposicion: { letter: "Retiramos las publicaciones del local donde aparece y dejamos de usarlas. " + MARKETING } },
+  alimentos: { acceso: CCTV_ACCESS, oposicion: MARKETING_OPPOSITION },
+  comercio: { acceso: CCTV_ACCESS, oposicion: MARKETING_OPPOSITION },
+  condominio: {
+    acceso: { tip: "Entrega solo los datos de la persona que lo pide, sin revelar los de otros residentes o visitantes. " + (CCTV_ACCESS.tip ?? "") },
+    cancelacion: {
+      letter:
+        "Los registros de visitas se eliminan al vencer el plazo informado. Las actas de junta y los registros de cuotas se conservan bloqueados por las obligaciones contables y de defensa de la junta.",
+    },
+  },
+  finanzas: {
+    acceso: SPLAFT_ACCESS,
+    cancelacion: SPLAFT_CANCEL,
+    rectificacion: {
+      letter:
+        "Si la rectificación se refiere a información de centrales de riesgo, le informamos que además puede reclamar ante la central de riesgo correspondiente (Ley N.° 27489). Comunicaremos la corrección a quienes recibieron el dato (art. 83 del DS N.° 016-2024-JUS).",
+    },
+    oposicion: MARKETING_OPPOSITION,
+  },
+  seguros: { acceso: SPLAFT_ACCESS, cancelacion: SPLAFT_CANCEL, oposicion: MARKETING_OPPOSITION },
+  inmobiliaria: { acceso: SPLAFT_ACCESS, cancelacion: SPLAFT_CANCEL, oposicion: MARKETING_OPPOSITION },
+  vehiculos: { acceso: SPLAFT_ACCESS, cancelacion: SPLAFT_CANCEL, oposicion: MARKETING_OPPOSITION },
+  profesional: {
+    acceso: { tip: "Entrega solo lo que corresponde a la persona solicitante y respeta el secreto profesional respecto de terceros. " + (SPLAFT_ACCESS.tip ?? "") },
+    cancelacion: {
+      letter:
+        "Particularidad de nuestra actividad: los expedientes y papeles de trabajo se conservan durante los plazos de nuestra profesión [indica el plazo] y, si somos sujeto obligado ante la UIF-Perú, el registro de operaciones por 10 años; permanecen bloqueados.",
+    },
+  },
+  rrhh: {
+    acceso: {
+      letter: "Informamos si hubo decisiones automatizadas en su proceso y cómo solicitar la revisión de una persona (art. 87 del DS N.° 016-2024-JUS).",
+    },
+    cancelacion: {
+      letter: "Eliminamos su CV y las evaluaciones del proceso de selección. Si había autorizado la bolsa de trabajo, también fue retirado de ella.",
+    },
+  },
+  plataforma: {
+    acceso: { letter: "Adjuntamos los datos de su cuenta en formato estructurado y de uso común (portabilidad, art. 76) y la lista de proveedores y países de destino de sus datos." },
+    cancelacion: {
+      letter:
+        "Eliminamos su cuenta y sus datos activos. Los registros de acceso e interacción con datos personales se conservan bloqueados 2 años (art. 46.3 del DS N.° 016-2024-JUS), la facturación 5 años por obligación tributaria y las copias de respaldo se sobrescriben en su ciclo de rotación [indica días].",
+    },
+  },
+  fintech: {
+    acceso: {
+      letter: "Adjuntamos los datos de su cuenta, sus movimientos y los documentos cargados en formato estructurado (portabilidad, art. 76), y los proveedores de IA o procesamiento que intervienen, con su país.",
+    },
+    cancelacion: {
+      letter:
+        "Eliminamos su cuenta, movimientos, recibos y audios. Los registros de acceso (2 años, art. 46.3) y la facturación (5 años) se conservan bloqueados por obligación legal; las copias de respaldo se sobrescriben en su ciclo de rotación [indica días].",
+    },
+  },
+  venta_online: {
+    acceso: { letter: "Incluimos sus pedidos, direcciones de entrega, historial de comunicaciones comerciales y las herramientas de analítica o publicidad que reciben sus datos." },
+    oposicion: { letter: MARKETING + " También dejamos de usar sus datos en audiencias de publicidad (píxeles y listas personalizadas)." },
+  },
+  seguridad_privada: {
+    acceso: {
+      tip: "Eres encargado de tus clientes: traslada la solicitud al titular del banco de datos (tu cliente) en un máximo de 3 días (art. 66.4), salvo que el contrato te obligue a responder. " + (CCTV_ACCESS.tip ?? ""),
+    },
+  },
+  organizacion: {
+    cancelacion: {
+      letter:
+        "Dejamos de tratar sus datos de afiliación (religiosa, política o sindical; datos sensibles) y lo retiramos del padrón. Los comprobantes de donaciones o cuotas se conservan bloqueados por obligación tributaria.",
+    },
+    oposicion: MARKETING_OPPOSITION,
+  },
+  industria: {
+    acceso: { tip: "Si quien solicita es un trabajador, entrega los datos de su legajo; el diagnóstico de los exámenes médicos ocupacionales lo recibe el propio trabajador." },
+    cancelacion: {
+      letter: "Los datos de planilla y de seguridad y salud en el trabajo se conservan bloqueados por las obligaciones laborales y tributarias [indica el plazo, p. ej. 5 años desde el cese].",
+    },
+  },
+  viajes: {
+    cancelacion: {
+      letter: "Los datos necesarios para comprobantes y reclamos se conservan bloqueados por el plazo tributario. Eliminamos las copias de pasaporte y los datos de salud porque el viaje ya terminó.",
+    },
+    oposicion: MARKETING_OPPOSITION,
+  },
+  pasajeros: { acceso: CCTV_ACCESS },
+  carga: {
+    cancelacion: { letter: "Los datos de destinatarios recibidos por encargo de otras empresas se devuelven o eliminan al terminar el encargo (máximo 2 años, art. 31.2 del DS N.° 016-2024-JUS)." },
+  },
+  medios: { oposicion: { letter: "Retiramos el contenido en que aparece su imagen o voz (Código Civil, art. 15) en un plazo diligente que no excede de 10 días. " + MARKETING } },
+};
+
+export function sectorArcoNotes(family: LegalFamily): SectorArcoNotes {
+  return NOTES[family] ?? {};
+}
+
+/** Párrafo de denegatoria (art. 73 del DS N.° 016-2024-JUS): debe justificarse e indicar cómo reclamar. */
+export const ARCO_DENIAL =
+  "No es posible atender [total/parcialmente] su solicitud porque [indicar el motivo legal concreto]. Esta decisión no limita su derecho a presentar una reclamación ante la Dirección de Protección de Datos Personales de la ANPD (plataforma «Yo cuido mis datos personales») o a acudir al Poder Judicial mediante acción de hábeas data (art. 73 del DS N.° 016-2024-JUS y art. 24 de la Ley N.° 29733).";

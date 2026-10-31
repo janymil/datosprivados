@@ -1,15 +1,19 @@
 import "server-only";
 
+import nodeCrypto from "node:crypto";
 import {
   getDb,
   type Activity,
   type ArcoRequest,
   type Company,
   type DataBank,
+  type DocumentReview,
   type DocumentRow,
+  type DocumentVersionRow,
   type EvidenceRow,
   type EvidenceType,
   type Incident,
+  type Invitation,
   type Provider,
 } from "./db";
 import { findTool, isAbroad, isOwnTool, toolCategory } from "./provider-catalog";
@@ -116,6 +120,14 @@ export function listSecurityChecks(companyId: string): Map<string, string> {
   return new Map(rows.map((row) => [row.item, row.done_at]));
 }
 
+/** Registra un cambio hecho por una persona del equipo: el historial dice quién lo hizo. */
+export function logAs(actor: string, companyId: string, kind: string, message: string) {
+  getDb()
+    .prepare("INSERT INTO activity (id, company_id, kind, message, actor, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+    .run(crypto.randomUUID(), companyId, kind, message, actor.slice(0, 120), new Date().toISOString());
+}
+
+/** Evento del sistema (pagos, webhooks) sin autor humano. */
 export function logActivity(companyId: string, kind: string, message: string) {
   getDb()
     .prepare("INSERT INTO activity (id, company_id, kind, message, created_at) VALUES (?, ?, ?, ?, ?)")
@@ -151,21 +163,57 @@ export function upsertDocument(
 ): number {
   const db = getDb();
   const now = new Date().toISOString();
-  const existing = one<{ id: string; version: number }>(
-    "SELECT id, version FROM documents WHERE company_id = ? AND kind = ? ORDER BY version DESC LIMIT 1",
+  const existing = one<{
+    id: string;
+    version: number;
+    title: string;
+    content: string;
+    template_version: number | null;
+    updated_at: string;
+  }>(
+    "SELECT id, version, title, content, template_version, updated_at FROM documents WHERE company_id = ? AND kind = ? ORDER BY version DESC LIMIT 1",
     companyId,
     kind
   );
   if (existing) {
+    // Documentos creados antes del historial: guarda el texto vigente antes de reemplazarlo.
+    const hasSnapshot = one<{ id: string }>(
+      "SELECT id FROM document_versions WHERE company_id = ? AND kind = ? AND version = ?",
+      companyId,
+      kind,
+      existing.version
+    );
+    if (!hasSnapshot) {
+      snapshotVersion(companyId, kind, existing.version, existing.title, existing.content, existing.template_version, existing.updated_at);
+    }
     db.prepare(
       "UPDATE documents SET content = ?, version = ?, updated_at = ?, template_version = ?, built_from = ? WHERE id = ?"
     ).run(content, existing.version + 1, now, meta?.templateVersion ?? null, meta?.builtFrom ?? null, existing.id);
+    snapshotVersion(companyId, kind, existing.version + 1, title, content, meta?.templateVersion ?? null, now);
     return existing.version + 1;
   }
   db.prepare(
     "INSERT INTO documents (id, company_id, kind, title, content, version, published, updated_at, template_version, built_from) VALUES (?, ?, ?, ?, ?, 1, 0, ?, ?, ?)"
   ).run(crypto.randomUUID(), companyId, kind, title, content, now, meta?.templateVersion ?? null, meta?.builtFrom ?? null);
+  snapshotVersion(companyId, kind, 1, title, content, meta?.templateVersion ?? null, now);
   return 1;
+}
+
+/** Cada versión generada queda guardada: sirve para probar qué texto estaba vigente cuando alguien consintió. */
+function snapshotVersion(
+  companyId: string,
+  kind: string,
+  version: number,
+  title: string,
+  content: string,
+  templateVersion: number | null,
+  now: string
+) {
+  getDb()
+    .prepare(
+      "INSERT INTO document_versions (id, company_id, kind, version, title, content, template_version, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    )
+    .run(crypto.randomUUID(), companyId, kind, version, title, content, templateVersion, now);
 }
 
 export function nextTicketNumber(companyId: string): string {
@@ -325,4 +373,109 @@ export function addEvidence(
 
 export function deleteEvidence(companyId: string, id: string): void {
   getDb().prepare("DELETE FROM evidence WHERE id = ? AND company_id = ?").run(id, companyId);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Equipo, revisiones legales e historial de versiones                       */
+/* -------------------------------------------------------------------------- */
+
+export function sha256(value: string): string {
+  return nodeCrypto.createHash("sha256").update(value).digest("hex");
+}
+
+/** Token aleatorio para enlaces de un solo propósito; en la base solo se guarda su huella. */
+export function newToken(): { token: string; hash: string } {
+  const token = nodeCrypto.randomBytes(32).toString("base64url");
+  return { token, hash: sha256(token) };
+}
+
+export type TeamUser = { id: string; name: string; email: string; role: string; created_at: string };
+
+export function listUsers(companyId: string): TeamUser[] {
+  return all<TeamUser>(
+    "SELECT id, name, email, role, created_at FROM users WHERE company_id = ? ORDER BY created_at",
+    companyId
+  );
+}
+
+export function listPendingInvitations(companyId: string): Invitation[] {
+  return all<Invitation>(
+    "SELECT * FROM invitations WHERE company_id = ? AND accepted_at IS NULL AND expires_at > ? ORDER BY created_at DESC",
+    companyId,
+    new Date().toISOString()
+  );
+}
+
+export function findInvitation(token: string): Invitation | undefined {
+  return one<Invitation>("SELECT * FROM invitations WHERE token_hash = ?", sha256(token));
+}
+
+/* ---- Revisión por abogado ---- */
+
+export function createReview(
+  companyId: string,
+  kind: string,
+  requestedBy: string,
+  reviewer: { name: string; email: string }
+): string {
+  const { token, hash } = newToken();
+  const now = new Date();
+  getDb()
+    .prepare(
+      `INSERT INTO document_reviews (id, company_id, document_kind, token_hash, status, requested_by, reviewer_name, reviewer_email, expires_at, requested_at)
+       VALUES (?, ?, ?, ?, 'pendiente', ?, ?, ?, ?, ?)`
+    )
+    .run(
+      crypto.randomUUID(),
+      companyId,
+      kind,
+      hash,
+      requestedBy,
+      reviewer.name,
+      reviewer.email,
+      new Date(now.getTime() + 14 * 86_400_000).toISOString(),
+      now.toISOString()
+    );
+  return token;
+}
+
+export function listReviews(companyId: string, kind: string): DocumentReview[] {
+  return all<DocumentReview>(
+    "SELECT * FROM document_reviews WHERE company_id = ? AND document_kind = ? ORDER BY requested_at DESC",
+    companyId,
+    kind
+  );
+}
+
+export function getReviewByToken(token: string): DocumentReview | undefined {
+  return one<DocumentReview>("SELECT * FROM document_reviews WHERE token_hash = ?", sha256(token));
+}
+
+/** Última revisión respondida del documento (aprobada u observada). */
+export function latestResponse(companyId: string, kind: string): DocumentReview | undefined {
+  return one<DocumentReview>(
+    `SELECT * FROM document_reviews WHERE company_id = ? AND document_kind = ? AND status != 'pendiente'
+     ORDER BY responded_at DESC LIMIT 1`,
+    companyId,
+    kind
+  );
+}
+
+/* ---- Historial de versiones ---- */
+
+export function listVersions(companyId: string, kind: string): DocumentVersionRow[] {
+  return all<DocumentVersionRow>(
+    "SELECT * FROM document_versions WHERE company_id = ? AND kind = ? ORDER BY version DESC",
+    companyId,
+    kind
+  );
+}
+
+export function getVersion(companyId: string, kind: string, version: number): DocumentVersionRow | undefined {
+  return one<DocumentVersionRow>(
+    "SELECT * FROM document_versions WHERE company_id = ? AND kind = ? AND version = ?",
+    companyId,
+    kind,
+    version
+  );
 }
