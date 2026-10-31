@@ -68,3 +68,67 @@ export function makeCompany(overrides: Partial<Company> = {}) {
 export function getCompanyRow(companyId: string) {
   return getDb().prepare("SELECT * FROM companies WHERE id = ?").get(companyId) as unknown as Company;
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Empresa con suscripción vigente: la que usan las pruebas de acciones. */
+export function makeActiveCompany(overrides: Partial<Company> = {}) {
+  return makeCompany({ billing_status: "active", paid_until: new Date(Date.now() + 30 * DAY_MS).toISOString(), ...overrides });
+}
+
+export function getCompany(companyId: string): Company {
+  return getCompanyRow(companyId);
+}
+
+export function makeBank(companyId: string, overrides: Record<string, string> = {}) {
+  const id = newId();
+  const now = nowIso();
+  const v = { name: "Clientes", purpose: "Vender y entregar pedidos", data_categories: "nombre, DNI, correo, teléfono", legal_basis: "contrato", retention: "5 años", recipients: "Courier", transfers: "no", channel: "web", status: "borrador", ...overrides };
+  getDb()
+    .prepare(
+      `INSERT INTO data_banks (id, company_id, name, purpose, data_categories, legal_basis, retention, recipients, transfers, channel, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .run(id, companyId, v.name, v.purpose, v.data_categories, v.legal_basis, v.retention, v.recipients, v.transfers, v.channel, v.status, now, now);
+  return id;
+}
+
+export function makeIncident(companyId: string, overrides: Record<string, string | number | null> = {}) {
+  const id = newId();
+  const v = { title: "Fuga de correos", status: "abierto", criteria: "", detected_at: nowIso(), due_at: new Date(Date.now() + 2 * DAY_MS).toISOString(), notified_at: null, ...overrides };
+  getDb()
+    .prepare(
+      "INSERT INTO incidents (id, company_id, title, status, criteria, detected_at, due_at, notified_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    )
+    .run(id, companyId, v.title, v.status, v.criteria, v.detected_at, v.due_at, v.notified_at, nowIso());
+  return id;
+}
+
+export function makeArcoRequest(companyId: string, overrides: Record<string, string> = {}) {
+  const id = newId();
+  const v = { ticket: `ARCO-T-${id.slice(0, 6)}`, type: "acceso", status: "nuevo", received_at: "2026-10-01", due_at: "2026-10-29", ...overrides };
+  getDb()
+    .prepare(
+      "INSERT INTO arco_requests (id, company_id, ticket, type, requester_name, email, description, status, received_at, due_at, created_at) VALUES (?, ?, ?, ?, 'Ana Torres', 'ana@example.com', 'Quiero mis datos', ?, ?, ?, ?)"
+    )
+    .run(id, companyId, v.ticket, v.type, v.status, v.received_at, v.due_at, nowIso());
+  return id;
+}
+
+export function makeProvider(companyId: string, overrides: Record<string, string> = {}) {
+  const id = newId();
+  const now = nowIso();
+  const v = { category: "correo", name: "Gmail", country: "Estados Unidos", ...overrides };
+  getDb()
+    .prepare("INSERT INTO providers (id, company_id, category, name, country, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
+    .run(id, companyId, v.category, v.name, v.country, now, now);
+  return id;
+}
+
+export function makeEvidence(companyId: string) {
+  const id = newId();
+  getDb()
+    .prepare("INSERT INTO evidence (id, company_id, type, occurred_on, created_at) VALUES (?, ?, 'capacitacion', '2026-10-01', ?)")
+    .run(id, companyId, nowIso());
+  return id;
+}

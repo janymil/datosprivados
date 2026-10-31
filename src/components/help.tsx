@@ -386,7 +386,7 @@ export function GuideBox({
             </div>
 
             <div className="flex shrink-0 items-center gap-2 border-t border-line pt-3 sm:border-t-0 sm:pt-0">
-              {tabs.map((tab, idx) => (
+              {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   type="button"

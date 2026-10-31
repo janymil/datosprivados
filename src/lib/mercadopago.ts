@@ -14,7 +14,8 @@ import type { BillingTerm } from "./plans";
  * No usamos SDK: son llamadas REST con el access token del servidor.
  */
 
-const API = "https://api.mercadopago.com";
+/** Se puede apuntar a un servidor simulado (pruebas E2E) con MERCADOPAGO_API_BASE. */
+const API = (process.env.MERCADOPAGO_API_BASE || "https://api.mercadopago.com").replace(/\/$/, "");
 
 export type MercadoPagoPreapproval = {
   id: string;

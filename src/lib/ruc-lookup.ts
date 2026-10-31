@@ -15,7 +15,8 @@ import "server-only";
  * por una caída, una clave vencida o una cuota agotada del proveedor.
  */
 
-const ENDPOINT = "https://api.decolecta.com/v1/sunat/ruc";
+/** Se puede apuntar a un servidor simulado (pruebas E2E) con DECOLECTA_API_BASE. */
+const ENDPOINT = `${(process.env.DECOLECTA_API_BASE || "https://api.decolecta.com").replace(/\/$/, "")}/v1/sunat/ruc`;
 const TIMEOUT_MS = 8_000;
 
 export type RucLookup =

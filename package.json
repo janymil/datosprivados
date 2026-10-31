@@ -2,6 +2,7 @@
   "name": "datosprivados",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.34.9",
   "description": "Cumplimiento de la Ley 29733 para MYPE peruanas",
   "scripts": {
     "dev": "next dev --port 3000",
@@ -9,7 +10,10 @@
     "start": "next start --port 3000",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "test:e2e": "next build && playwright test",
+    "audit:prod": "pnpm audit --prod"
   },
   "dependencies": {
     "next": "16.4.3",
@@ -17,10 +21,13 @@
     "react-dom": "19.2.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "24.10.1",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
+    "eslint": "10.14.0",
+    "eslint-config-next": "16.4.3",
     "playwright": "^1.64.1",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",

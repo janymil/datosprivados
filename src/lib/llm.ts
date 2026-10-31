@@ -45,6 +45,11 @@ export function isLlmConfigured(): boolean {
   return provider() !== null;
 }
 
+/** Permite apuntar a un servidor simulado (pruebas E2E) sin tocar el código. */
+function apiBase(envName: string, fallback: string) {
+  return (process.env[envName] || fallback).replace(/\/$/, "");
+}
+
 /** Devuelve el texto generado, o null si no hay proveedor o la llamada falla. */
 export async function callLlm({
   system,
@@ -60,7 +65,7 @@ export async function callLlm({
 
   try {
     if (p.kind === "anthropic") {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch(`${apiBase("ANTHROPIC_API_BASE", "https://api.anthropic.com")}/v1/messages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -83,7 +88,7 @@ export async function callLlm({
       return text || null;
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(`${apiBase("OPENAI_API_BASE", "https://api.openai.com")}/v1/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${p.apiKey}` },
       body: JSON.stringify({

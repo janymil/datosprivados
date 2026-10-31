@@ -992,9 +992,7 @@ Para establecimientos físicos, además: libro en formato físico en el mostrado
  * una base para el flujo transfronterizo.
  */
 export function buildProcessingAgreement(company: Company, banks: DataBank[], providers: Provider[] = []): string {
-  const date = formatDate(new Date().toISOString(), "long");
   const name = company.name;
-  const contact = company.dpo_email || company.email;
   const transfers = banks.filter((bank) => bank.transfers === "si");
   const bankList = banks.length
     ? banks.map((bank) => `«${bank.name}»`).join(", ")

@@ -263,6 +263,19 @@ Apply to `createArcoRequestAction`, `/solicitud/[slug]`, `/p/[slug]`, webhook:
 
 No tests exist. Without them, nothing below can be declared "working perfectly".
 
+> **Status (2026-10-31): implemented in the working tree, NOT yet committed, CI workflow NOT yet run on GitHub.**
+> Verified locally: `pnpm typecheck` · `pnpm lint` (0 warnings) · `pnpm test` 136/136 · `pnpm build` · `pnpm exec playwright test` 1/1 (full journey against `next start` with mock MercadoPago + mock SUNAT) · `pnpm audit --prod` clean.
+>
+> | Task | State |
+> |---|---|
+> | P2-HARNESS 1–3 | **Done.** Vitest; per-file temp DB; `test/helpers/next.ts` (cookies/headers/redirect mocks, `freezeTime`) registered globally in `test/helpers/setup.ts`; `test/helpers/db.ts` factories. |
+> | P2-HARNESS 4 | **Mostly.** Playwright runner + `e2e/mock-server.mjs` (MercadoPago preapproval + Decolecta). `MERCADOPAGO_API_BASE`, `DECOLECTA_API_BASE`, `ANTHROPIC_API_BASE`, `OPENAI_API_BASE` added. **Not done:** a mock LLM server (no journey step uses the model yet). |
+> | P2-HARNESS 5–6 | **Done in files, unproven in CI.** `.github/workflows/ci.yml` (typecheck, lint, test, build, E2E, `pnpm audit --prod`), ESLint flat config (`eslint-config-next`), `.github/dependabot.yml` as the update policy. |
+> | P2-COVERAGE | **Covered:** business days/holidays/Lima TZ, incident criteria + actions (incl. 48 h, future date, closed = immutable), compliance, document freshness + `regenerateOutdatedAction`, all 14 builders × 4 sectors × 2 tool variants (no `undefined`/`{{`/`[object` leaks), anonymizer + no PII reaching `callLlm`, auth/session/cookie flags/timing, provider-input/`cleanUrl`, cross-tenant for banks/ARCO/incidents/providers/evidence. **Gaps:** documents are checked structurally, not as snapshots; webhook route handler is not tested end to end (only signature + `confirmAuthorizedSubscription`); no coverage report tool. |
+> | P2-E2E | **Done except two steps:** the journey covers signup → pay → onboarding → bank → registered → publish → public policy → public ARCO → respond → incident → notified → document download → cancel → expiry redirect. "Export" is the per-document download (account data export is Phase 3). |
+>
+> **Defect found and fixed by the new tests:** a closed incident could still be re-notified or moved back to "en análisis" (`updateIncidentAction`). **Known limit surfaced:** the anonymizer cannot detect a person's name typed in free text (only DNI/RUC/email/phone/address patterns and names it already knows).
+
 **P2-HARNESS**
 1. Add **Vitest** (unit/integration, `node` environment) — `pnpm add -D vitest`; scripts `test`, `test:watch`. Pin versions (repo pins exact versions).
 2. Make the DB injectable: `getDb()` should accept `DATOSPRIVADOS_DB=:memory:` or a temp file so each test gets a clean schema via the migration runner. Provide `test/helpers/db.ts` (`makeCompany`, `makeSession`, `freezeTime`).

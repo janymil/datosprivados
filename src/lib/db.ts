@@ -615,9 +615,7 @@ function migrate(db: DatabaseSync) {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var __datosprivadosDb: DatabaseSync | undefined;
-  // eslint-disable-next-line no-var
   var __datosprivadosSchemaVersion: number | undefined;
 }
 

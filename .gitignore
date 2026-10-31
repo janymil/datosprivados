@@ -21,3 +21,7 @@ debug.log
 # Respaldos locales de la base (copiar fuera del servidor).
 backups/
 test/.tmp/
+
+# Pruebas E2E
+playwright-report/
+test-results/

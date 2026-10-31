@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { askAiAssistantAction } from "@/app/actions/ai";
 import { CopyButton } from "./copy-button";
 import { DocBody } from "./doc-body";
-import { CheckIcon, LockIcon, ShieldIcon, SparklesIcon } from "./icons";
+import { LockIcon, ShieldIcon, SparklesIcon } from "./icons";
 
 type Message = {
   id: string;
@@ -53,12 +53,15 @@ export function AiChatAssistant({
     },
   ]);
 
+  const nextId = useRef(0);
+  const newMessageId = (prefix: string) => `${prefix}-${nextId.current++}`;
+
   function sendPrompt(textToSend: string) {
     const trimmed = textToSend.trim();
     if (!trimmed || isPending) return;
 
     const userMsg: Message = {
-      id: `u-${Date.now()}`,
+      id: newMessageId("u"),
       role: "user",
       content: trimmed,
     };
@@ -74,7 +77,7 @@ export function AiChatAssistant({
         setMessages((prev) => [
           ...prev,
           {
-            id: `a-${Date.now()}`,
+            id: newMessageId("a"),
             role: "assistant",
             content: res.answer,
           },
@@ -83,7 +86,7 @@ export function AiChatAssistant({
         setMessages((prev) => [
           ...prev,
           {
-            id: `err-${Date.now()}`,
+            id: newMessageId("err"),
             role: "assistant",
             content:
               "Ocurrió un inconveniente al procesar tu consulta. Por favor, intenta nuevamente.",

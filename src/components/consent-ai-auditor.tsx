@@ -5,7 +5,7 @@ import Link from "next/link";
 import { runTextComplianceAuditAction } from "@/app/actions/ai";
 import type { AuditedTextResult } from "@/lib/ai";
 import { CopyButton } from "./copy-button";
-import { CheckIcon, LockIcon, ShieldIcon, SparklesIcon } from "./icons";
+import { CheckIcon, LockIcon, SparklesIcon } from "./icons";
 
 export function ConsentAiAuditor({
   companyPlan,
