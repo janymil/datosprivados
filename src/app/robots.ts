@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       // Panel, pagos, API y páginas de clientes: no son contenido de marketing.
-      disallow: ["/app", "/pago", "/api", "/demo", "/login", "/registro", "/bienvenida", "/solicitud/", "/p/"],
+      disallow: ["/app", "/pago", "/api", "/demo", "/login", "/registro", "/bienvenida", "/cuenta", "/olvide", "/restablecer", "/verificar", "/solicitud/", "/p/"],
     },
     sitemap: `${siteUrl()}/sitemap.xml`,
   };

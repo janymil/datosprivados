@@ -51,3 +51,84 @@ pnpm test          # Vitest; cada archivo usa su propia base SQLite en test/.tmp
 - Si los registros empiezan a fallar con «No pudimos verificar tu RUC»: mirar `pm2 logs datosprivados` y buscar `[ruc] Decolecta no disponible: HTTP 401`.
   Un 401 puede ser **token vencido o cuota agotada** (el servicio usa el mismo mensaje para ambos); revisar el panel de Decolecta.
 - Cuota del plan: 1.000 consultas al mes. Al agotarse, Decolecta responde 401 y los registros nuevos quedan bloqueados hasta que se renueve o se amplíe el plan.
+
+## Tareas programadas (cron)
+
+La app no tiene planificador propio: un cron del sistema llama a `POST /api/cron/<tarea>` con `Authorization: Bearer $CRON_SECRET`.
+Cada tarea es idempotente y lleva candado (`job_runs`): dispararla dos veces no duplica correos. Un candado de más de 15 min se
+considera de un proceso muerto.
+
+| Tarea | Frecuencia sugerida | Qué hace |
+|---|---|---|
+| `send-outbox` | cada minuto | Entrega `email_outbox` (reintentos con espera creciente, 6 intentos). |
+| `incident-deadline-reminders` | cada 30 min | Incidentes con criterios del art. 34.1 sin notificar: aviso a 12 h y a 2 h del plazo de 48 h. |
+| `arco-deadline-reminders` | diario 08:00 Lima | Solicitudes ARCO a ≤3 días hábiles del plazo y vencidas. |
+| `billing-reconcile` | diario 06:00 Lima | Marca vencidas las cuentas con `paid_until` pasado; avisos de renovación / vencimiento (3 días). |
+| `lapsed-account-notices` | diario | Avisos de borrado de cuentas vencidas (30 y 60 días, y 7 días antes). |
+| `purge-old-data` | diario 03:00 Lima | Borra cuentas vencidas ≥ `LAPSED_RETENTION_DAYS` **que recibieron el último aviso**, altas sin pago de >30 días, correos enviados >90 días, `job_runs` >180 días, `ai_usage` >400 días. |
+| `document-staleness-notice` | semanal | Un aviso por empresa con documentos desactualizados (opcional para la empresa). |
+| `expire-sessions` | diario | Sesiones, tokens y límites de intentos vencidos. |
+| `holidays-check` | semanal | Asegura feriados de este año y el siguiente; informa los años aún sin decreto confirmado. |
+
+Ejemplo (`/etc/cron.d/datosprivados`; `curl -fsS` falla si la tarea devuelve error):
+
+```cron
+* * * * *    root curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/send-outbox >/dev/null
+*/30 * * * * root curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/incident-deadline-reminders >/dev/null
+0 13 * * *   root curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/arco-deadline-reminders >/dev/null
+# … el resto, diarias o semanales (13:00 UTC = 08:00 Lima)
+```
+
+**Alerta de tareas atrasadas:** `GET /api/cron/health` (mismo bearer) devuelve 200 si cada tarea tuvo una ejecución correcta dentro de su
+plazo y no hay correos con más de 1 h sin salir; si no, 503 con el detalle. Apuntar un monitor externo (UptimeRobot, Better Stack) y
+verificar la alerta apagando el cron una vez. **Pendiente:** no hay monitor configurado ni se ha probado la alerta. El respaldo
+(`scripts/backup-db.mjs`) sigue siendo un cron aparte del shell, fuera de este esquema.
+
+## Correo
+
+Proveedor elegido provisionalmente: **Resend** (ver DECISIONS.md). Variables: `MAIL_PROVIDER=resend`, `MAIL_API_KEY`, `MAIL_FROM`,
+`MAIL_WEBHOOK_SECRET`. En Resend, apuntar el webhook a `https://<host>/api/mail/webhook` con los eventos `email.bounced` y
+`email.complained`; las direcciones que reboten o se quejen quedan en `email_suppressions` y no reciben más correo.
+
+**Pendiente (requiere acceso al DNS de `datosprivados.pe`, que aún no existe):** SPF, DKIM y DMARC, y la prueba de entregabilidad
+(mail-tester ≥ 9/10) con un correo real de cada plantilla. Hasta entonces los correos no son entregables de forma fiable.
+
+Diagnóstico: `SELECT status, COUNT(*) FROM email_outbox GROUP BY status;` — `dead` = agotó los reintentos (ver columna `error`);
+`pending` con `attempts > 0` = proveedor caído, reintentando.
+
+## IA
+
+`AI_DISABLED=1` apaga la IA al instante (todas las funciones caen al modo básico). `AI_MONTHLY_BUDGET_USD` la apaga sola al
+llegar al gasto estimado del mes (tokens registrados en `ai_usage` × precio por millón configurable) y manda un correo a
+`ALERT_EMAIL`. El gasto real hay que contrastarlo con la factura del proveedor: es una estimación.
+
+```sql
+-- Consumo del mes por empresa y función
+SELECT company_id, feature, COUNT(*) calls, SUM(input_tokens) in_tok, SUM(output_tokens) out_tok
+FROM ai_usage WHERE created_at >= strftime('%Y-%m-01', 'now') GROUP BY 1, 2 ORDER BY out_tok DESC;
+```
+
+El circuito se abre tras 5 fallos seguidos del proveedor y se prueba de nuevo a los 60 s (estado en memoria del proceso).
+
+## Cuentas: vencimiento y borrado
+
+- Cuenta vencida: no entra al panel (va a `/pago`), pero `/cuenta` sigue disponible para **descargar todos los datos** y **eliminar la cuenta**.
+- La Política de Privacidad publicada y el formulario ARCO público **siguen funcionando** mientras exista la cuenta, para no apagar
+  un canal que la empresa declaró ante sus clientes. Las solicitudes que lleguen quedan guardadas y el titular de la cuenta recibe el aviso.
+- A los 30 y 60 días del vencimiento, y 7 días antes del borrado, se envía un aviso. A los `LAPSED_RETENTION_DAYS` (90) se borra, **solo
+  si el último aviso se envió**.
+- El borrado deja una fila mínima de la empresa (razón social reemplazada, sin contacto ni dirección pública) y sus pagos, sin la
+  respuesta cruda del proveedor, por la obligación tributaria de conservar comprobantes. Todo lo demás se elimina.
+
+## Feriados
+
+Los feriados viven en la tabla `holidays` (sembrada 2025–2032 por regla: fijos + Semana Santa). Un decreto que declare un día no
+laborable se carga desde una consola de Node o SQL:
+
+```sql
+INSERT INTO holidays (date, name, source) VALUES ('2026-11-23', 'Feriado por decreto', 'decreto')
+  ON CONFLICT(date) DO UPDATE SET name = excluded.name, source = excluded.source;
+```
+
+Los plazos ARCO ya calculados **no se recalculan** al cargar un feriado; solo cambia lo que se cree después. `holidays-check` informa
+los años cuyos feriados siguen siendo `calculado` (sin decreto confirmado): en octubre, cargar el decreto del año siguiente.

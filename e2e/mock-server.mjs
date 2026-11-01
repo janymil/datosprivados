@@ -1,10 +1,12 @@
-// Servidor simulado para las pruebas E2E: hace de MercadoPago (preapproval) y de
-// Decolecta (consulta de RUC) en un solo puerto. Sin dependencias.
+// Servidor simulado para las pruebas E2E: hace de MercadoPago (preapproval), de
+// Decolecta (consulta de RUC) y del proveedor de correo (POST /emails, GET /_mail)
+// en un solo puerto. Sin dependencias.
 import http from "node:http";
 
 const port = Number(process.env.MOCK_PORT || 4010);
 const appOrigin = process.env.APP_ORIGIN || "http://localhost:3100";
 const preapprovals = new Map();
+const mails = [];
 let counter = 0;
 
 function json(res, status, body) {
@@ -23,6 +25,14 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
   try {
     if (req.method === "GET" && url.pathname === "/health") return json(res, 200, { ok: true });
+
+    // Proveedor de correo (Resend): guarda lo recibido para que la prueba lo lea.
+    if (req.method === "POST" && url.pathname === "/emails") {
+      const body = await readBody(req);
+      mails.push({ to: [].concat(body.to)[0], subject: body.subject, text: body.text, from: body.from });
+      return json(res, 200, { id: `mail-${mails.length}` });
+    }
+    if (req.method === "GET" && url.pathname === "/_mail") return json(res, 200, mails);
 
     // Decolecta: todo RUC con formato válido existe y figura ACTIVO/HABIDO.
     if (req.method === "GET" && url.pathname === "/v1/sunat/ruc") {

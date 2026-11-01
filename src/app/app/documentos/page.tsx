@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth";
-import { getDocument, listBanks, listDocuments, listProviders, listSecurityChecks } from "@/lib/data";
+import { getDocument, listDocumentVersions, listBanks, listDocuments, listProviders, listSecurityChecks } from "@/lib/data";
 import { documentFit, sectorLegalProfile } from "@/lib/sector-legal";
 import { STALE_REASON_LABELS, TEMPLATE_VERSIONS, documentFreshness, type Freshness } from "@/lib/document-freshness";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -31,6 +31,7 @@ import { GuideBox, Term } from "@/components/help";
 import { SubmitButton } from "@/components/submit-button";
 import { Toast } from "@/components/toast";
 import { companyIdentityLine, appUrl } from "@/lib/documents";
+import { publishBlockers } from "@/lib/document-publish";
 
 export const metadata = { title: "Documentos" };
 
@@ -50,10 +51,10 @@ function documentStatus(meta: DocumentTab, doc: DocumentRow | undefined, freshne
 export default async function DocumentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; ok?: string; regen?: string }>;
+  searchParams: Promise<{ tab?: string; ok?: string; regen?: string; error?: string }>;
 }) {
   const { company } = await requireSession();
-  const { tab, ok, regen } = await searchParams;
+  const { tab, ok, regen, error } = await searchParams;
 
   if (!tab || !isDocumentKind(tab)) {
     return <DocumentsOverview company={company} regenerated={regen} />;
@@ -70,6 +71,9 @@ export default async function DocumentsPage({
   const freshness = doc ? documentFreshness(doc, company, banks, listProviders(company.id)) : undefined;
   const status = documentStatus(meta, doc, freshness);
   const canPublish = meta.shareable === true;
+  const blockers = canPublish && doc && !demo ? publishBlockers(doc.content) : [];
+  const versions = canPublish && !demo ? listDocumentVersions(company.id, active) : [];
+  const draftAhead = Boolean(doc?.published && doc.published_version && doc.published_version !== doc.version);
   const securityDone = active === "seguridad" ? listSecurityChecks(company.id) : new Map<string, string>();
   const securityDoneCount = SECURITY_CHECKS.filter((item) => securityDone.has(item.id)).length;
 
@@ -137,6 +141,15 @@ export default async function DocumentsPage({
           </div>
         ) : (
           <div className="mt-5 flex flex-wrap items-center gap-2.5 border-t border-line pt-5">
+            {canPublish && draftAhead && (
+              <form action={togglePublishAction}>
+                <input type="hidden" name="kind" value={active} />
+                <input type="hidden" name="publish" value="1" />
+                <SubmitButton pendingLabel="Publicando…" className="btn btn-primary btn-sm" disabled={blockers.length > 0}>
+                  Publicar la versión {doc.version}
+                </SubmitButton>
+              </form>
+            )}
             {canPublish && (
               <form action={togglePublishAction}>
                 <input type="hidden" name="kind" value={active} />
@@ -144,6 +157,7 @@ export default async function DocumentsPage({
                 <SubmitButton
                   pendingLabel={doc.published ? "Ocultando…" : "Publicando…"}
                   className={`btn btn-sm ${doc.published ? "btn-ghost" : "btn-primary"}`}
+                  disabled={!doc.published && blockers.length > 0}
                 >
                   {doc.published ? "Ocultar enlace público" : "Publicar enlace público"}
                 </SubmitButton>
@@ -160,6 +174,23 @@ export default async function DocumentsPage({
           </div>
         )}
 
+        {canPublish && (error === "pendientes" || blockers.length > 0) && (
+          <div className="mt-4 border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-[15px] leading-relaxed">
+            <strong>No se puede publicar todavía:</strong> el texto tiene campos sin completar. Complétalos en{" "}
+            <Link href="/app/empresa" className="link-underline">Empresa</Link> y actualiza el documento.
+            <ul className="mt-2 list-disc pl-5 text-sm">
+              {blockers.slice(0, 8).map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {canPublish && doc?.published && draftAhead && (
+          <p className="mt-4 border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-[15px] leading-relaxed">
+            Tu enlace público muestra la <strong>versión {doc.published_version}</strong>. Regeneraste el documento
+            (versión {doc.version}) pero no se ve en público hasta que la publiques.
+          </p>
+        )}
         {canPublish && doc?.published ? (
           <p className="mt-4 text-[15px] text-ink-soft">
             Tu enlace:{" "}
@@ -169,6 +200,29 @@ export default async function DocumentsPage({
           </p>
         ) : null}
       </section>
+
+      {canPublish && versions.length > 0 && (
+        <section className="card p-6 md:p-7">
+          <h2 className="font-display text-2xl tracking-[-0.02em]">Historial de versiones</h2>
+          <p className="mt-1.5 max-w-[62ch] text-[15px] leading-relaxed text-ink-soft">
+            Cada versión queda guardada, con las fechas en que estuvo publicada. Sirve de evidencia de qué texto vio el
+            público en cada momento.
+          </p>
+          <ul className="mt-4 divide-y divide-line border-t border-line text-[15px]">
+            {versions.map((version) => (
+              <li key={version.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <span className="font-medium">Versión {version.version}</span>
+                <span className="text-ink-soft">
+                  Generada el {formatDateTime(version.created_at)}
+                  {version.published_at
+                    ? ` · publicada el ${formatDateTime(version.published_at)}${version.unpublished_at ? ` · retirada el ${formatDateTime(version.unpublished_at)}` : " · vigente"}`
+                    : " · nunca publicada"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {active === "seguridad" && doc && (
         <section className="card p-6 md:p-7">

@@ -23,6 +23,32 @@ usar credenciales de MercadoPago de producción y fijar el dominio definitivo.
 | Periodo inicial | Se concede una vez por suscripción, solo si no hay pagos aprobados de ella ni periodo vigente | Evita que re-autorizar una suscripción vencida regale un mes. | — |
 | Cuenta demo (sin prueba gratuita) | **Solo lectura.** Los documentos se muestran como vista previa recortada **en el servidor** (≈900 caracteres + títulos de las secciones); copiar, descargar, imprimir y exportar están bloqueados; no escribe, no publica, no contrata, no usa IA y su formulario ARCO público no guarda solicitudes | No hay prueba de 14 días porque se podían copiar los documentos y cancelar. Quien se registra puede crear usuario y empresa, pero para generar documentos debe pagar. La demo no debe regalar el texto. | Si se quisiera una demo interactiva con escritura, usar una base separada y seguir sin entregar el texto completo. |
 
+## Decididas en la Fase 3 (provisionales hasta cerrar la Fase 0)
+
+| Decisión | Elegida | Motivo | Si cambia |
+|---|---|---|---|
+| Proveedor de correo | **Resend** por API HTTP, sin dependencias nuevas | Es el que menos código y menos configuración pide; la interfaz (`MailTransport`) es una función, cambiar a Postmark/SES es reescribir ~25 líneas. **Provisional:** el roadmap exige registrarlo como sub-encargado en la política de la plataforma; eso depende de P0-ENTITY. | Cambiar `resendTransport` en `src/lib/mail.ts` y el webhook de rebotes. |
+| Entrega de correo | Bandeja en la base (`email_outbox`) + tarea `send-outbox`; nunca dentro de la petición | Una caída del proveedor no pierde ni bloquea nada. | — |
+| Planificador | `POST /api/cron/<tarea>` con bearer `CRON_SECRET`, disparado por el cron del sistema | Un solo proceso, sin dependencias. | Con varias instancias, el candado de `job_runs` ya evita ejecuciones simultáneas en la misma base. |
+| IA: consentimiento | **Opt-in por empresa**, con fecha, en Ajustes. Sin él, modo básico | El texto sale a un proveedor en el extranjero y el anonimizador no es infalible. **Cambio de comportamiento:** las empresas Pro existentes pierden la IA hasta aceptar. | Quitar la condición en `aiBlockReason`. |
+| IA: cuotas | Básico 60 y Pro 400 consultas por mes calendario (Lima); 6 por minuto por empresa | Valores iniciales sin base de costos real. | `aiMonthlyQuota` en `plans.ts`, `PER_MINUTE_LIMIT` en `ai-guard.ts`. |
+| IA: modelo de OpenAI | **Sin modelo por defecto**: exige `OPENAI_MODEL` | El id `gpt-6-luna` del código no estaba verificado. | — |
+| Documentos públicos | La página pública sirve la **versión publicada** (instantánea en `document_versions`), no el borrador. Regenerar no cambia lo público hasta volver a publicar | Antes, regenerar sobrescribía lo que veía el público sin dejar rastro. **Cambio de comportamiento.** | — |
+| Publicar | Se bloquea si el texto tiene campos `[entre corchetes]` sin completar | Una política pública con «[completar domicilio]» no es creíble. | `publishBlockers` en `document-publish.ts`. |
+| Cuenta vencida | Sin panel, **con** `/cuenta` (descargar y eliminar). Política y formulario ARCO públicos siguen vivos hasta el borrado | Apagar el canal ARCO de un cliente sería un incumplimiento suyo. Resuelve la decisión que P3-ACCOUNT dejaba abierta. | — |
+| Retención | Borrado a los **90 días** del vencimiento, solo con el último aviso enviado; altas sin pago, a los 30 días | Valor propuesto; **P0-SUPPORT lo fija**. | `LAPSED_RETENTION_DAYS` (mínimo 45). |
+| Eliminar cuenta | Borra todo y deja una fila mínima + pagos (sin la respuesta cruda del proveedor) | Obligación tributaria de conservar comprobantes. Pide contraseña y escribir ELIMINAR; si MercadoPago no confirma la cancelación, no se borra. | — |
+| Feriados | Tabla `holidays` editable, sembrada por regla | Un decreto no puede requerir un despliegue. No hay pantalla de administración: se edita por SQL (ver RUNBOOK). | Agregar una pantalla cuando exista el rol de administrador de plataforma. |
+
+**Límites conocidos de la Fase 3**
+- El anonimizador no detecta un nombre escrito en texto libre sin título ni dato asociado (hay una prueba que lo documenta). Se
+  mejoraron DNI con espacios o guiones y direcciones sin «Av.» con punto.
+- No hay evaluación con modelo real (`test/ai-evals/` corre en modo básico y, con `AI_EVAL_LIVE=1`, contra el proveedor).
+- SPF/DKIM/DMARC y la entregabilidad real no se pudieron probar (sin dominio ni cuenta del proveedor).
+- El gasto de IA es una estimación a partir de tokens; no lee la factura del proveedor.
+- Exportación: solo JSON (sin PDF/ZIP por documento).
+- Los avisos de plazos se calculan al correr la tarea, no al instante: un incidente creado con menos de 12 h de plazo recibe el aviso en la siguiente corrida (≤30 min).
+
 ## Verificación del RUC (Decolecta → SUNAT)
 
 Implementada el 2026-10-31 en el registro y al cambiar el RUC en Empresa (`src/lib/ruc-lookup.ts`).

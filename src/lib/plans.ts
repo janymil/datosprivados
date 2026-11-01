@@ -14,6 +14,8 @@ export type Plan = {
   prices: Record<BillingTerm, number>;
   tagline: string;
   audience: string;
+  /** Consultas a la IA por mes calendario (hora de Lima). */
+  aiMonthlyQuota: number;
 };
 
 export const PLANS: Record<PlanId, Plan> = {
@@ -23,6 +25,7 @@ export const PLANS: Record<PlanId, Plan> = {
     prices: { monthly: 19, yearly: 190 },
     tagline: "Para ordenar lo esencial",
     audience: "Bodega, consultorio, tienda o estudio que recién empieza.",
+    aiMonthlyQuota: 60,
   },
   pro: {
     id: "pro",
@@ -30,6 +33,7 @@ export const PLANS: Record<PlanId, Plan> = {
     prices: { monthly: 39, yearly: 390 },
     tagline: "Para consultorios y equipos",
     audience: "Varios profesionales, sedes o canales que quieren automatizar con IA.",
+    aiMonthlyQuota: 400,
   },
 };
 

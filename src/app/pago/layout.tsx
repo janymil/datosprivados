@@ -22,7 +22,11 @@ export default function PagoLayout({ children }: { children: React.ReactNode }) 
       </header>
       <main className="mx-auto w-full max-w-[820px] px-5 py-10 md:py-14">{children}</main>
       <footer className="mx-auto w-full max-w-[820px] px-5 pb-8 text-xs leading-relaxed text-ink-soft">
-        Pago procesado por MercadoPago. DatosPrivados no almacena los datos de tu tarjeta.
+        Pago procesado por MercadoPago. DatosPrivados no almacena los datos de tu tarjeta.{" "}
+        <Link href="/cuenta" className="link-underline">
+          Descargar o eliminar mis datos
+        </Link>
+        .
       </footer>
     </div>
   );

@@ -10,12 +10,14 @@ export function SubmitButton({
   className = "btn btn-primary",
   name,
   value,
+  disabled = false,
 }: {
   children: ReactNode;
   pendingLabel?: string;
   className?: string;
   name?: string;
   value?: string;
+  disabled?: boolean;
 }) {
   const { pending } = useFormStatus();
   return (
@@ -23,7 +25,7 @@ export function SubmitButton({
       type="submit"
       name={name}
       value={value}
-      disabled={pending}
+      disabled={pending || disabled}
       aria-busy={pending}
       className={`${className} disabled:cursor-wait disabled:opacity-60`}
     >

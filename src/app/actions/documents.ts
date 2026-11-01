@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, nowIso } from "@/lib/db";
 import { requireActiveSession } from "@/lib/auth";
-import { generateAndSaveDocument, listBanks, listDocuments, listProviders, logActivity } from "@/lib/data";
+import { generateAndSaveDocument, listBanks, listDocuments, listProviders, logActivity, publishDocument, unpublishDocument } from "@/lib/data";
 import { documentTitle, isDocumentKind } from "@/lib/document-catalog";
 import { documentFreshness } from "@/lib/document-freshness";
 import { SECURITY_CHECKS, isSecurityCheckId } from "@/lib/security-checks";
@@ -60,14 +60,14 @@ export async function togglePublishAction(formData: FormData) {
   // Solo la Política de Privacidad tiene enlace público.
   const kind = "politica";
   const publish = text(formData, "publish") === "1";
-  getDb()
-    .prepare("UPDATE documents SET published = ? WHERE company_id = ? AND kind = ?")
-    .run(publish ? 1 : 0, company.id, kind);
-  logActivity(
-    company.id,
-    "documento",
-    publish ? "Publicaste tu Política de Privacidad." : "Despublicaste tu Política de Privacidad."
-  );
+  if (publish) {
+    const result = publishDocument(company.id, kind);
+    if (!result.ok) redirect(`/app/documentos?tab=${kind}&error=${result.reason}`);
+    logActivity(company.id, "documento", `Publicaste la versión ${result.version} de tu Política de Privacidad.`);
+  } else {
+    unpublishDocument(company.id, kind);
+    logActivity(company.id, "documento", "Despublicaste tu Política de Privacidad.");
+  }
   revalidatePath("/app", "layout");
   redirect(`/app/documentos?tab=${kind}`);
 }

@@ -49,6 +49,10 @@ export async function createSession(userId: string) {
   });
 }
 
+export async function currentSessionId(): Promise<string | undefined> {
+  return (await cookies()).get(COOKIE)?.value;
+}
+
 export async function destroySession() {
   const jar = await cookies();
   const id = jar.get(COOKIE)?.value;

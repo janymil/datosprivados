@@ -16,7 +16,7 @@ function maskPreview(val: string): string {
 /**
  * Construye una bóveda de anonimización en el servidor.
  * Reemplaza todos los datos personales (DNI, RUC, nombres, correos, teléfonos, direcciones)
- * por tokens deterministas ({{TOKEN}}) ANTES de enviar cualquier texto al modelo GPT-6 Luna.
+ * por tokens deterministas ({{TOKEN}}) ANTES de enviar cualquier texto al modelo de lenguaje configurado.
  */
 export function createAnonymizationVault(input: {
   company: Company;
@@ -96,16 +96,7 @@ export function anonymizeText(rawText: string, vault: AnonymizationVault): strin
     return token;
   });
 
-  // 4. Replace Peruvian DNI (8 digits)
-  let dniIdx = 1;
-  sanitized = sanitized.replace(/\b\d{8}\b/g, (match) => {
-    const token = `{{DNI_ANON_${dniIdx++}}}`;
-    vault.tokenToReal[token] = match;
-    vault.redactedItems.push({ token, category: "DNI detectado", preview: maskPreview(match) });
-    return token;
-  });
-
-  // 5. Replace Peruvian Phone numbers (+51 9xx xxx xxx or 9xxxxxxxx)
+  // 4. Replace Peruvian Phone numbers (+51 9xx xxx xxx or 9xxxxxxxx)
   let phoneIdx = 1;
   sanitized = sanitized.replace(
     /(?:\+?51[\s-]?)?\b9\d{2}[\s-]?\d{3}[\s-]?\d{3}\b/g,
@@ -117,27 +108,45 @@ export function anonymizeText(rawText: string, vault: AnonymizationVault): strin
     }
   );
 
+  // 5. Replace Peruvian DNI: 8 digits, optionally grouped with spaces, dots or hyphens
+  // (4567 8912, 45-678-912) and with the check digit (45678912-3). Runs after phones so a 9xx xxx xxx
+  // number is not read as a DNI.
+  let dniIdx = 1;
+  sanitized = sanitized.replace(/\b(?:\d{8}(?:-\d)?|\d{4}[\s.-]\d{4}|\d{2}[\s.-]\d{3}[\s.-]\d{3})\b/g, (match) => {
+    const token = `{{DNI_ANON_${dniIdx++}}}`;
+    vault.tokenToReal[token] = match;
+    vault.redactedItems.push({ token, category: "DNI detectado", preview: maskPreview(match) });
+    return token;
+  });
+
   // 6. Replace Peruvian street addresses (Av., Jr., Calle, Psj., Urb. followed by text/numbers)
   let addrIdx = 1;
+  const redactAddress = (match: string) => {
+    const token = `{{DIRECCION_ANON_${addrIdx++}}}`;
+    vault.tokenToReal[token] = match.trim();
+    vault.redactedItems.push({
+      token,
+      category: "Dirección física",
+      preview: maskPreview(match.trim()),
+    });
+    return token;
+  };
   sanitized = sanitized.replace(
     /\b(?:Av\.|Avenida|Jr\.|Jirón|Calle|Psj\.|Pasaje|Urb\.)\s+[A-Za-záéíóúÁÉÍÓÚñÑ0-9\s.,#-]{5,45}/g,
-    (match) => {
-      const token = `{{DIRECCION_ANON_${addrIdx++}}}`;
-      vault.tokenToReal[token] = match.trim();
-      vault.redactedItems.push({
-        token,
-        category: "Dirección física",
-        preview: maskPreview(match.trim()),
-      });
-      return token;
-    }
+    redactAddress
+  );
+  // Variantes sin punto o en minúscula (av arequipa 1234, jiron lima 123, mz b lote 4): solo si llevan un número,
+  // para no tapar frases comunes como «en la calle».
+  sanitized = sanitized.replace(
+    /\b(?:Av|Avenida|Jr|Jirón|Jiron|Calle|Psj|Pasaje|Urb|Urbanización|Mz|Manzana)\.?\s+(?=[^\n]{0,40}?\d)[A-Za-záéíóúÁÉÍÓÚñÑ0-9\s.,#-]{3,45}/gi,
+    redactAddress
   );
 
   return sanitized;
 }
 
 /**
- * Re-hidrata en el servidor la respuesta del modelo GPT-6 Luna reemplazando los
+ * Re-hidrata en el servidor la respuesta del modelo de lenguaje reemplazando los
  * tokens {{TOKEN}} por los datos reales de la empresa o del titular.
  */
 export function deAnonymizeText(aiOutput: string, vault: AnonymizationVault): string {

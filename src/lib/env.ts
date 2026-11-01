@@ -42,6 +42,29 @@ export function checkEnvironment(env: NodeJS.ProcessEnv = process.env): { errors
   if (!env.ANTHROPIC_API_KEY && !env.OPENAI_API_KEY) {
     warnings.push("Sin clave de IA: las funciones de IA usan el modo básico.");
   }
+  if (env.OPENAI_API_KEY && !env.ANTHROPIC_API_KEY && !env.OPENAI_MODEL) {
+    warnings.push("OPENAI_API_KEY sin OPENAI_MODEL: la IA queda en modo básico (no hay modelo por defecto).");
+  }
+  if (env.ANTHROPIC_API_KEY && !env.ANTHROPIC_MODEL) {
+    warnings.push("ANTHROPIC_MODEL no está definido: se usa el valor por defecto del código; fíjalo y verifica que el id es válido para tu cuenta.");
+  }
+  if (env.AI_MONTHLY_BUDGET_USD === undefined && (env.ANTHROPIC_API_KEY || env.OPENAI_API_KEY)) {
+    warnings.push("Sin AI_MONTHLY_BUDGET_USD: no hay tope de gasto mensual de IA.");
+  }
+
+  const mailProvider = env.MAIL_PROVIDER?.trim().toLowerCase();
+  if (mailProvider === "resend" && !env.MAIL_API_KEY?.trim()) {
+    errors.push("MAIL_PROVIDER=resend requiere MAIL_API_KEY.");
+  }
+  if (mailProvider !== "resend") {
+    warnings.push("Sin MAIL_PROVIDER: los correos se acumulan en la bandeja de salida y no se envían (restablecer contraseña y avisos de plazos no funcionan).");
+  }
+  if (env.MAIL_PROVIDER && !env.MAIL_WEBHOOK_SECRET?.trim() && mailProvider === "resend") {
+    warnings.push("Sin MAIL_WEBHOOK_SECRET: los rebotes y quejas del correo no se procesan.");
+  }
+  if (!env.CRON_SECRET || env.CRON_SECRET.length < 16) {
+    warnings.push("CRON_SECRET ausente o menor de 16 caracteres: las tareas programadas (/api/cron) rechazan toda petición.");
+  }
 
   return { errors, warnings };
 }

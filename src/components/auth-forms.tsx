@@ -52,6 +52,12 @@ export function LoginForm() {
         {pending ? "Entrando…" : "Entrar"}
       </button>
 
+      <p className="text-[14.5px] text-ink-soft">
+        <Link href="/olvide" className="link-underline">
+          ¿Olvidaste tu contraseña?
+        </Link>
+      </p>
+
       <div className="flex items-center gap-3 pt-1">
         <span className="h-px flex-1 bg-line" />
         <span className="font-mono text-[12px] uppercase tracking-[0.14em] text-ink-soft">o</span>

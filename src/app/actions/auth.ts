@@ -9,10 +9,10 @@ import { isBillingTerm } from "@/lib/plans";
 import { takeRateLimit } from "@/lib/rate-limit";
 import { isValidRuc } from "@/lib/ruc";
 import { checkCompanyRuc } from "@/lib/ruc-lookup";
+import { MIN_PASSWORD_LENGTH, sendVerificationEmail } from "@/lib/account";
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
-const MIN_PASSWORD_LENGTH = 10;
 
 export type AuthState = { error?: string };
 
@@ -127,10 +127,12 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
     now
   );
 
+  const userId = newId();
   db.prepare(
     `INSERT INTO users (id, company_id, name, email, password_hash, role, created_at)
      VALUES (?, ?, ?, ?, ?, 'admin', ?)`
-  ).run(newId(), companyId, ownerName, email, hashPassword(password), now);
+  ).run(userId, companyId, ownerName, email, hashPassword(password), now);
+  sendVerificationEmail(userId);
 
   db.prepare(
     "INSERT INTO activity (id, company_id, kind, message, created_at) VALUES (?, ?, 'cuenta', ?, ?)"

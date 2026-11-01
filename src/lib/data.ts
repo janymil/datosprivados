@@ -7,6 +7,7 @@ import {
   type Company,
   type DataBank,
   type DocumentRow,
+  type DocumentVersionRow,
   type EvidenceRow,
   type EvidenceType,
   type Incident,
@@ -14,6 +15,7 @@ import {
 } from "./db";
 import { findTool, isAbroad, isOwnTool, toolCategory } from "./provider-catalog";
 import { limaToday } from "./format";
+import { publishBlockers } from "./document-publish";
 import { buildDocument, documentTitle } from "./document-catalog";
 import { TEMPLATE_VERSIONS, fingerprint, serializeBuiltFrom } from "./document-freshness";
 import type { DocumentKind } from "./db";
@@ -93,6 +95,11 @@ export function getDocument(companyId: string, kind: string): DocumentRow | unde
   );
 }
 
+/**
+ * Política pública: se sirve la VERSIÓN PUBLICADA (instantánea en `document_versions`),
+ * no el borrador de trabajo. Regenerar o editar no cambia lo que ve el público
+ * hasta que la empresa publica de nuevo.
+ */
 export function getPolicyBySlug(slug: string): { company: Company; doc: DocumentRow } | undefined {
   const company = getCompanyBySlug(slug);
   if (!company) return undefined;
@@ -101,7 +108,70 @@ export function getPolicyBySlug(slug: string): { company: Company; doc: Document
     company.id
   );
   if (!doc) return undefined;
-  return { company, doc };
+  const snapshot = doc.published_version
+    ? one<DocumentVersionRow>(
+        "SELECT * FROM document_versions WHERE document_id = ? AND version = ?",
+        doc.id,
+        doc.published_version
+      )
+    : undefined;
+  if (!snapshot) return { company, doc };
+  return {
+    company,
+    doc: {
+      ...doc,
+      title: snapshot.title,
+      content: snapshot.content,
+      version: snapshot.version,
+      updated_at: doc.published_at ?? snapshot.published_at ?? snapshot.created_at,
+    },
+  };
+}
+
+/** Historial de versiones de un documento, la más nueva primero. */
+export function listDocumentVersions(companyId: string, kind: string): DocumentVersionRow[] {
+  return all<DocumentVersionRow>(
+    "SELECT * FROM document_versions WHERE company_id = ? AND kind = ? ORDER BY version DESC",
+    companyId,
+    kind
+  );
+}
+
+export type PublishResult = { ok: true; version: number } | { ok: false; reason: "sin_documento" | "pendientes"; placeholders?: string[] };
+
+/** Publica la versión vigente del borrador de un documento (solo la Política de Privacidad tiene enlace público). */
+export function publishDocument(companyId: string, kind: string, now = new Date()): PublishResult {
+  const doc = one<DocumentRow>("SELECT * FROM documents WHERE company_id = ? AND kind = ?", companyId, kind);
+  if (!doc) return { ok: false, reason: "sin_documento" };
+  const blockers = publishBlockers(doc.content);
+  if (blockers.length) return { ok: false, reason: "pendientes", placeholders: blockers };
+
+  const db = getDb();
+  const iso = now.toISOString();
+  // Se cierra la publicación anterior (si la hubo) y se abre la de esta versión.
+  db.prepare(
+    "UPDATE document_versions SET unpublished_at = ? WHERE document_id = ? AND published_at IS NOT NULL AND unpublished_at IS NULL AND version <> ?"
+  ).run(iso, doc.id, doc.version);
+  db.prepare(
+    "UPDATE document_versions SET published_at = COALESCE(published_at, ?), unpublished_at = NULL WHERE document_id = ? AND version = ?"
+  ).run(iso, doc.id, doc.version);
+  db.prepare("UPDATE documents SET published = 1, published_version = ?, published_at = ? WHERE id = ?").run(
+    doc.version,
+    iso,
+    doc.id
+  );
+  return { ok: true, version: doc.version };
+}
+
+export function unpublishDocument(companyId: string, kind: string, now = new Date()) {
+  const db = getDb();
+  const doc = one<DocumentRow>("SELECT * FROM documents WHERE company_id = ? AND kind = ?", companyId, kind);
+  if (!doc) return;
+  db.prepare("UPDATE document_versions SET unpublished_at = ? WHERE document_id = ? AND published_at IS NOT NULL AND unpublished_at IS NULL").run(
+    now.toISOString(),
+    doc.id
+  );
+  db.prepare("UPDATE documents SET published = 0, published_version = NULL, published_at = NULL WHERE id = ?").run(doc.id);
 }
 
 export function listActivity(companyId: string, limit = 6): Activity[] {
@@ -161,15 +231,27 @@ export function upsertDocument(
     companyId,
     kind
   );
+  const snapshot = (documentId: string, version: number) =>
+    db
+      .prepare(
+        `INSERT INTO document_versions (id, company_id, document_id, kind, version, title, content, template_version, built_from, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(crypto.randomUUID(), companyId, documentId, kind, version, title, content, meta?.templateVersion ?? null, meta?.builtFrom ?? null, now);
+
   if (existing) {
+    const version = existing.version + 1;
     db.prepare(
       "UPDATE documents SET content = ?, version = ?, updated_at = ?, template_version = ?, built_from = ? WHERE id = ?"
-    ).run(content, existing.version + 1, now, meta?.templateVersion ?? null, meta?.builtFrom ?? null, existing.id);
-    return existing.version + 1;
+    ).run(content, version, now, meta?.templateVersion ?? null, meta?.builtFrom ?? null, existing.id);
+    snapshot(existing.id, version);
+    return version;
   }
+  const id = crypto.randomUUID();
   db.prepare(
     "INSERT INTO documents (id, company_id, kind, title, content, version, published, updated_at, template_version, built_from) VALUES (?, ?, ?, ?, ?, 1, 0, ?, ?, ?)"
-  ).run(crypto.randomUUID(), companyId, kind, title, content, now, meta?.templateVersion ?? null, meta?.builtFrom ?? null);
+  ).run(id, companyId, kind, title, content, now, meta?.templateVersion ?? null, meta?.builtFrom ?? null);
+  snapshot(id, 1);
   return 1;
 }
 

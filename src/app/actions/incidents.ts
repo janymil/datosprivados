@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { getDb, newId, nowIso } from "@/lib/db";
 import { requireActiveSession } from "@/lib/auth";
 import { logActivity } from "@/lib/data";
+import { notifyCompany } from "@/lib/notify";
+import { formatDateTime } from "@/lib/format";
 import { normalizeCriteria, serializeCriteria } from "@/lib/incident-criteria";
 
 const SEVERITIES = ["leve", "moderado", "grave"] as const;
@@ -84,6 +86,14 @@ export async function createIncidentAction(formData: FormData) {
       ? `Registraste el incidente «${title}»: cumple criterios del art. 34.1, aviso a la ANPD en 48 h.`
       : `Registraste el incidente «${title}»: no cumple criterios del art. 34.1, se documenta (art. 35).`
   );
+  if (hasCriteria) {
+    notifyCompany(
+      company,
+      "incident_opened",
+      { title, dueAt: formatDateTime(due.toISOString()), path: `/app/incidentes/${id}` },
+      { to: "responsable", dedupeKey: `incident-opened:${id}` }
+    );
+  }
   revalidatePath("/app", "layout");
   redirect(`/app/incidentes/${id}`);
 }

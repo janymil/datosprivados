@@ -51,7 +51,7 @@ export default async function AiAssistantPage() {
           companyRuc={company.ruc}
           companyPlan={company.plan}
           complianceScore={compliance.score}
-          mode={aiMode()}
+          mode={aiMode(company)}
           embedded
         />
       </section>

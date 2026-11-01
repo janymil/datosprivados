@@ -1,3 +1,4 @@
+import fs from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import { expect, test, type Page } from "@playwright/test";
 import { E2E_DB } from "./paths";
@@ -5,6 +6,7 @@ import { E2E_DB } from "./paths";
 const RUC = "20512345671";
 const EMAIL = "dueno@e2e.example.com";
 const PASSWORD = "clave-segura-e2e-1";
+const NEW_PASSWORD = "clave-nueva-e2e-2026";
 
 /** Edita la base temporal de la prueba (p. ej. para simular que venció el período pagado). */
 function sql(statement: string, ...params: string[]) {
@@ -15,6 +17,23 @@ function sql(statement: string, ...params: string[]) {
     db.close();
   }
 }
+
+const APP = "http://localhost:3100";
+const MOCK = "http://localhost:4010";
+const CRON = { Authorization: "Bearer e2e-cron-secret-0123456789" };
+
+/** Dispara la tarea que entrega la bandeja de salida, como haría el cron del servidor. */
+async function flushMail() {
+  const response = await fetch(`${APP}/api/cron/send-outbox`, { method: "POST", headers: CRON });
+  expect(response.status).toBe(200);
+}
+
+async function sentMail(): Promise<Array<{ to: string; subject: string; text: string }>> {
+  return (await fetch(`${MOCK}/_mail`)).json();
+}
+
+/** Primer enlace del correo, apuntado al servidor de la prueba (NEXT_PUBLIC_APP_URL queda fijado en el build). */
+const linkIn = (text: string) => text.match(/https?:\/\/\S+/)![0].replace(/^https?:\/\/[^/]+/, APP);
 
 const OWN = `company_id = (SELECT id FROM companies WHERE ruc = '${RUC}')`;
 
@@ -113,6 +132,20 @@ test("recorrido completo: de la suscripción al vencimiento", async ({ page, bro
     expect(sql(`SELECT COUNT(*) n FROM arco_requests WHERE ${OWN}`)[0].n).toBe(1);
   });
 
+  await test.step("los correos salen por el proveedor: acuse al titular, aviso al responsable y verificación", async () => {
+    await flushMail();
+    await flushMail(); // repetir la tarea no reenvía
+    const mails = await sentMail();
+    const subjects = (to: string) => mails.filter((m) => m.to === to).map((m) => m.subject);
+    expect(subjects("rosa@example.com")).toEqual([expect.stringMatching(/Recibimos tu solicitud ARCO-/)]);
+    expect(subjects(EMAIL)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/Confirma tu correo/), expect.stringMatching(/Nueva solicitud ARCO/), expect.stringMatching(/Bienvenido/)])
+    );
+    const ack = mails.find((m) => m.to === "rosa@example.com")!;
+    expect(ack.text).toMatch(/plazo legal/);
+    expect(mails.filter((m) => m.to === "rosa@example.com")).toHaveLength(1);
+  });
+
   await test.step("la bandeja muestra la solicitud y se responde dentro del plazo", async () => {
     await page.goto("/app/arco");
     await expect(page.getByText("Rosa Díaz").first()).toBeAttached();
@@ -139,6 +172,17 @@ test("recorrido completo: de la suscripción al vencimiento", async ({ page, bro
     expect(incident.notified_at).toBeTruthy();
   });
 
+  await test.step("regenerar la política no cambia la versión pública hasta publicar de nuevo", async () => {
+    await page.goto("/app/documentos?tab=politica");
+    await page.getByRole("button", { name: "Actualizar con mis últimos datos" }).click();
+    await page.waitForURL(/ok=1/);
+    await expect(page.getByText(/Tu enlace público muestra la versión 1/)).toBeVisible();
+    await page.getByRole("button", { name: /Publicar la versión 2/ }).click();
+    await expect(page.getByText(/Tu enlace público muestra la versión/)).toHaveCount(0);
+    expect(sql(`SELECT published_version FROM documents WHERE kind = 'politica' AND ${OWN}`)[0].published_version).toBe(2);
+    await expect(page.getByText("Historial de versiones")).toBeVisible();
+  });
+
   await test.step("exportar un documento descarga un archivo con el contenido", async () => {
     await page.goto("/app/documentos?tab=politica");
     const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Descargar" }).first().click()]);
@@ -157,5 +201,83 @@ test("recorrido completo: de la suscripción al vencimiento", async ({ page, bro
     sql("UPDATE companies SET paid_until = ? WHERE ruc = ?", new Date(Date.now() - 86_400_000).toISOString(), RUC);
     await page.goto("/app");
     await expect(page).toHaveURL(/\/pago/);
+  });
+
+  await test.step("con la cuenta vencida aún se pueden descargar todos los datos", async () => {
+    await page.goto("/cuenta");
+    await expect(page.getByRole("heading", { name: "Mis datos" })).toBeVisible();
+    const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: /Descargar mis datos/ }).click()]);
+    expect(download.suggestedFilename()).toBe(`expediente-${slug}.json`);
+    const data = JSON.parse(await fs.readFile((await download.path())!, "utf8"));
+    expect(data.company.ruc).toBe(RUC);
+    expect(data.arco_requests).toHaveLength(1);
+    expect(data.document_versions.length).toBeGreaterThanOrEqual(2);
+    expect(JSON.stringify(data)).not.toContain("password_hash");
+  });
+
+  await test.step("olvidé mi contraseña: el enlace del correo permite elegir una nueva", async () => {
+    const anonymous = await browser.newContext();
+    const visitor = await anonymous.newPage();
+    await visitor.goto(`${APP}/olvide`);
+    await visitor.locator('input[name="email"]').fill(EMAIL);
+    await visitor.getByRole("button", { name: "Enviarme el enlace" }).click();
+    await expect(visitor.getByText(/Si existe una cuenta/)).toBeVisible();
+    await flushMail();
+    const reset = (await sentMail()).filter((m) => m.to === EMAIL && /Restablece/.test(m.subject)).at(-1)!;
+    await visitor.goto(linkIn(reset.text));
+    await visitor.locator('input[name="password"]').fill(NEW_PASSWORD);
+    await visitor.getByRole("button", { name: "Guardar contraseña" }).click();
+    await visitor.waitForURL(/\/login\?restablecida=1/);
+    // El enlace es de un solo uso.
+    await visitor.goto(linkIn(reset.text));
+    await visitor.locator('input[name="password"]').fill("otra-clave-segura-99");
+    await visitor.getByRole("button", { name: "Guardar contraseña" }).click();
+    await expect(visitor.getByText(/no es válido o ya venció/)).toBeVisible();
+    // La contraseña vieja ya no sirve; la nueva sí, y lleva a /pago por estar vencida.
+    await visitor.goto(`${APP}/login`);
+    await visitor.locator('input[name="email"]').fill(EMAIL);
+    await visitor.locator('input[name="password"]').fill(PASSWORD);
+    await visitor.getByRole("button", { name: "Entrar" }).click();
+    await expect(visitor.getByText(/Correo o contraseña incorrectos/)).toBeVisible();
+    // React vacía el formulario tras la acción: se vuelve a escribir todo.
+    await visitor.locator('input[name="email"]').fill(EMAIL);
+    await visitor.locator('input[name="password"]').fill(NEW_PASSWORD);
+    await visitor.getByRole("button", { name: "Entrar" }).click();
+    await visitor.waitForURL(/\/pago/);
+    await anonymous.close();
+  });
+
+  await test.step("eliminar la cuenta borra los datos y apaga las páginas públicas", async () => {
+    // Restablecer la contraseña cerró todas las sesiones, incluida la de esta pestaña.
+    await page.goto("/cuenta");
+    await expect(page).toHaveURL(/\/login/);
+    await page.locator('input[name="email"]').fill(EMAIL);
+    await page.locator('input[name="password"]').fill(NEW_PASSWORD);
+    await page.getByRole("button", { name: "Entrar" }).click();
+    await page.waitForURL(/\/pago/);
+    await page.goto("/cuenta");
+    await page.locator('input[name="password"]').fill(PASSWORD);
+    await page.locator('input[name="confirm"]').fill("ELIMINAR");
+    await page.getByRole("button", { name: /Eliminar mi cuenta y mis datos/ }).click();
+    await expect(page.getByText(/no es correcta/)).toBeVisible();
+    // El formulario se vacía tras la acción: se vuelve a escribir todo.
+    await page.locator('input[name="confirm"]').fill("ELIMINAR");
+    await page.locator('input[name="password"]').fill(NEW_PASSWORD);
+    await page.getByRole("button", { name: /Eliminar mi cuenta y mis datos/ }).click();
+    await page.waitForURL(/\/\?cuenta=eliminada/);
+
+    expect(sql(`SELECT COUNT(*) n FROM arco_requests WHERE ${OWN}`)[0].n).toBe(0);
+    expect(sql(`SELECT COUNT(*) n FROM documents WHERE ${OWN}`)[0].n).toBe(0);
+    expect(sql("SELECT COUNT(*) n FROM users WHERE email = ?", EMAIL)[0].n).toBe(0);
+    expect(sql("SELECT billing_status, deleted_at FROM companies WHERE ruc = ?", RUC)[0]).toMatchObject({ billing_status: "deleted" });
+
+    const anonymous = await browser.newContext();
+    const visitor = await anonymous.newPage();
+    expect((await visitor.goto(`${APP}/p/${slug}`))!.status()).toBe(404);
+    expect((await visitor.goto(`${APP}/solicitud/${slug}`))!.status()).toBe(404);
+    await anonymous.close();
+
+    await flushMail();
+    expect((await sentMail()).some((m) => m.to === EMAIL && /Eliminamos tu cuenta/.test(m.subject))).toBe(true);
   });
 });

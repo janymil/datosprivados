@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth";
-import { listActivity, listBanks, listDocuments, listIncidents, listRequests } from "@/lib/data";
+import { listBanks, listDocuments, listIncidents, listRequests } from "@/lib/data";
 import { billingLabel, isCompanyActive, planFromCompany } from "@/lib/billing";
 import { formatDate } from "@/lib/format";
 import { planName } from "@/lib/plans";
 import { cancelSubscriptionAction } from "@/app/pago/actions";
-import { DownloadButton } from "@/components/download-button";
 import { PageHeader, StatusPill } from "@/components/ui";
+import { ChangeEmailForm, ChangePasswordForm } from "@/components/account-forms";
+import { resendVerificationAction, setAiConsentAction, setMailOptoutAction } from "@/app/actions/account";
+import { aiBlockReason, companyMonthlyUsage, monthlyQuota } from "@/lib/ai-guard";
+import { activeProviderName, isLlmConfigured } from "@/lib/llm";
+import { getDb } from "@/lib/db";
 
 export const metadata = { title: "Ajustes" };
 
@@ -16,32 +20,24 @@ export default async function SettingsPage({
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
   const { company, user } = await requireSession();
+  const verified = Boolean(
+    (getDb().prepare("SELECT email_verified_at FROM users WHERE id = ?").get(user.id) as { email_verified_at: string | null } | undefined)
+      ?.email_verified_at
+  );
+  const aiProvider = activeProviderName();
+  const aiBlock = isLlmConfigured() ? aiBlockReason(company) : null;
+  const aiUsed = companyMonthlyUsage(company.id);
+  const aiQuota = monthlyQuota(company);
   const { ok, error } = await searchParams;
   const banks = listBanks(company.id);
   const requests = listRequests(company.id);
   const incidents = listIncidents(company.id);
   const documents = listDocuments(company.id);
-  const activity = listActivity(company.id, 50);
   const active = isCompanyActive(company);
   const currentPlan = planFromCompany(company);
   const isDemo = company.billing_status === "demo";
   const subscriptionCancelled = company.subscription_status === "cancelled";
   const canCancel = Boolean(company.subscription_id) && !subscriptionCancelled;
-
-  // En la demo el expediente (incluye el texto de los documentos) no se construye ni se envía.
-  const exported = isDemo ? "" : JSON.stringify(
-    {
-      exported_at: new Date().toISOString(),
-      company,
-      banks,
-      arco_requests: requests,
-      incidents,
-      documents,
-      activity,
-    },
-    null,
-    2
-  );
 
   return (
     <div className="space-y-7">
@@ -155,11 +151,82 @@ export default async function SettingsPage({
               </div>
             ))}
           </dl>
-          <p className="mt-3.5 text-sm leading-relaxed text-ink-soft">
-            Para cambiar el correo o la contraseña, escríbenos. La autenticación con múltiples usuarios
-            llega en la siguiente versión.
-          </p>
+          <div className="mt-3.5 text-sm leading-relaxed text-ink-soft">
+            {verified ? (
+              "Tu correo está confirmado."
+            ) : (
+              <>
+                Tu correo aún no está confirmado.{" "}
+                {!isDemo && (
+                  <form action={resendVerificationAction} className="inline">
+                    <button type="submit" className="link-underline font-medium text-ink">Reenviar el enlace</button>
+                  </form>
+                )}
+              </>
+            )}{" "}
+            El acceso con varios usuarios llega en una versión posterior.
+          </div>
         </section>
+
+        {!isDemo && (
+          <>
+            <section className="card p-6 md:p-7">
+              <p className="label-mono">Contraseña</p>
+              <div className="mt-4">
+                <ChangePasswordForm />
+              </div>
+            </section>
+
+            <section className="card p-6 md:p-7">
+              <p className="label-mono">Correo de acceso</p>
+              <p className="mt-2 text-sm text-ink-soft">Lo confirmas desde el correo nuevo; hasta entonces no cambia.</p>
+              <div className="mt-4">
+                <ChangeEmailForm />
+              </div>
+            </section>
+
+            <section className="card p-6 md:p-7">
+              <p className="label-mono">Inteligencia artificial</p>
+              {ok === "ia" && <p className="mt-3 border-l-3 border-sage bg-sage/[0.08] px-4 py-3 text-sm">Preferencia guardada.</p>}
+              <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+                {aiProvider
+                  ? `Las funciones de IA envían texto a ${aiProvider}, un proveedor en el extranjero (Estados Unidos), para generar borradores.`
+                  : "Hoy la IA no está conectada: las funciones usan respuestas predefinidas."}{" "}
+                Antes de enviarlo, un filtro reemplaza DNI, RUC, correos, teléfonos, direcciones y los nombres que ya
+                conocemos por marcadores. <strong>No es infalible:</strong> un nombre escrito a mano en un texto libre
+                puede pasar. No pegues datos de personas que no hayan aceptado ese uso. Todo lo que genera la IA es un
+                borrador que debe revisar un abogado.
+              </p>
+              <p className="mt-3 text-sm text-ink-soft">
+                {company.ai_consent_at
+                  ? `Activada el ${formatDate(company.ai_consent_at)}. Consultas este mes: ${aiUsed} de ${aiQuota}.`
+                  : "Está desactivada. Sin tu aceptación no se envía nada al proveedor."}
+                {aiBlock && company.ai_consent_at ? ` ${aiBlock.message}` : ""}
+              </p>
+              <form action={setAiConsentAction} className="mt-4">
+                <input type="hidden" name="accept" value={company.ai_consent_at ? "0" : "1"} />
+                <button type="submit" className={`btn btn-sm ${company.ai_consent_at ? "btn-ghost" : "btn-primary"}`}>
+                  {company.ai_consent_at ? "Desactivar la IA" : "Activar la IA y aceptar el envío anonimizado"}
+                </button>
+              </form>
+            </section>
+
+            <section className="card p-6 md:p-7">
+              <p className="label-mono">Avisos por correo</p>
+              {ok === "correo" && <p className="mt-3 border-l-3 border-sage bg-sage/[0.08] px-4 py-3 text-sm">Preferencia guardada.</p>}
+              <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+                Siempre te escribimos por seguridad de la cuenta, cobros y plazos legales (solicitudes ARCO e
+                incidentes). Los avisos de «documentos desactualizados» se pueden desactivar.
+              </p>
+              <form action={setMailOptoutAction} className="mt-4">
+                <input type="hidden" name="optout" value={company.mail_optout ? "0" : "1"} />
+                <button type="submit" className="btn btn-ghost btn-sm">
+                  {company.mail_optout ? "Volver a recibir avisos de documentos" : "Dejar de recibir avisos de documentos"}
+                </button>
+              </form>
+            </section>
+          </>
+        )}
 
         <section className="border border-ink bg-ink p-6 text-paper md:p-7">
           <p className="font-mono text-xs uppercase tracking-[0.12em] text-paper/55">
@@ -170,14 +237,19 @@ export default async function SettingsPage({
             Descarga un JSON con tu empresa, bancos de datos, solicitudes ARCO, incidentes y documentos.
             Sirve como respaldo o para entregarlo a tu abogado.
           </p>
-          <div className="mt-5">
-            <DownloadButton
-              text={exported}
-              filename={`expediente-${company.slug}.json`}
-              label="Descargar expediente (.json)"
-              locked={isDemo}
-              className="border-paper/40 text-paper hover:bg-paper hover:text-ink"
-            />
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            {isDemo ? (
+              <span className="text-sm text-paper/70">No disponible en la demostración.</span>
+            ) : (
+              <>
+                <a href="/cuenta/exportar" className="btn btn-ghost btn-sm border-paper/40 text-paper hover:bg-paper hover:text-ink">
+                  Descargar expediente (.json)
+                </a>
+                <Link href="/cuenta" className="text-sm text-paper/70 underline hover:text-paper">
+                  Eliminar mi cuenta
+                </Link>
+              </>
+            )}
           </div>
           <p className="mt-5 border-t border-paper/15 pt-3.5 font-mono text-xs uppercase tracking-[0.08em] text-paper/55">
             {banks.length} bancos · {requests.length} solicitudes · {incidents.length} incidentes ·{" "}

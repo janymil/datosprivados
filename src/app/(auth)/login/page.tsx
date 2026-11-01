@@ -5,7 +5,8 @@ import { LoginForm } from "@/components/auth-forms";
 
 export const metadata = { title: "Entrar" };
 
-export default async function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ restablecida?: string; verificado?: string }> }) {
+  const { restablecida, verificado } = await searchParams;
   const session = await getSession();
   const isDemo = session?.user.email === DEMO_EMAIL;
   if (session && !isDemo) redirect("/app");
@@ -19,6 +20,12 @@ export default async function LoginPage() {
       <p className="mt-2.5 text-[16px] leading-relaxed text-ink-soft">
         Gestiona tus bancos de datos, solicitudes y documentos desde un solo lugar.
       </p>
+
+      {(restablecida || verificado) && (
+        <p role="status" className="mt-5 border-l-3 border-sage bg-sage/[0.08] px-4 py-3 text-[15px] leading-relaxed">
+          {restablecida ? "Cambiaste tu contraseña. Entra con la nueva." : "Correo confirmado."}
+        </p>
+      )}
 
       {isDemo && (
         <p className="mt-5 border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-[15px] leading-relaxed">

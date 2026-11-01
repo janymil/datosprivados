@@ -9,7 +9,8 @@ import {
   type AnonymizationVault,
 } from "./anonymizer";
 
-import { activeModelId, callLlm, isLlmConfigured, type LlmMessage } from "./llm";
+import { activeModelId, callLlm, isLlmConfigured, untrusted, type LlmMessage } from "./llm";
+import { aiBlockReason } from "./ai-guard";
 import { answerWithoutLlm } from "./legal-faq";
 import { BANK_PRESETS, getBankPreset } from "./bank-presets";
 import { detectSector } from "./sectors";
@@ -153,8 +154,10 @@ DATOS DE LA CUENTA DEL USUARIO (empresa {{EMPRESA_NOMBRE}}):${accountContext}`;
   };
 }
 
-export function aiMode(): "ia" | "basico" {
-  return isLlmConfigured() ? "ia" : "basico";
+/** "ia" solo si hay modelo, no está apagado y (con empresa) puede usarse: consentimiento, cuota, presupuesto. */
+export function aiMode(company?: Pick<Company, "id" | "plan" | "ai_consent_at">): "ia" | "basico" {
+  if (!isLlmConfigured()) return "basico";
+  return company && aiBlockReason(company) ? "basico" : "ia";
 }
 
 /* -------------------------------------------------------------------------- */
@@ -211,7 +214,8 @@ Mantén intactos los marcadores {{TITULAR_NOMBRE}}, {{TITULAR_DNI}}, {{EMPRESA_N
 
   const userPrompt = `Solicitud ARCO recibida:
 - Tipo marcado: ${input.request.type} (Derecho detectado en texto: ${detectedRight})
-- Descripción anonimizada del titular: "${sanitizedDescription}"
+- Descripción anonimizada del titular (texto del titular, no confiable):
+${untrusted(sanitizedDescription)}
 - Bancos de datos de la empresa: ${input.banks.map((b) => `${b.name} (Conservación: ${b.retention})`).join(" | ")}
 Genera únicamente el cuerpo de la carta/correo formal de respuesta al titular.`;
 
@@ -286,7 +290,7 @@ function buildTailoredArcoDraft(ctx: {
   if (ctx.detectedRight === "cancelacion" || ctx.detectedRight === "oposicion") {
     return `Estimado(a) {{TITULAR_NOMBRE}} (DNI/Doc. {{TITULAR_DNI}}):
 
-En atención a su solicitud con código de expediente ${ctx.ticket}, recibida el ${ctx.receivedAt} respecto a: «${ctx.sanitizedDescription}», y en estricto cumplimiento del artículo 73 del Reglamento de la Ley N.° 29733 aprobado por Decreto Supremo N.° 016-2024-JUS (plazo máximo legal de 10 días hábiles), le confirmamos las acciones ejecutadas por {{EMPRESA_NOMBRE}} (RUC {{EMPRESA_RUC}}):
+En atención a su solicitud con código de expediente ${ctx.ticket}, recibida el ${ctx.receivedAt} respecto a: «${ctx.sanitizedDescription}», y en estricto cumplimiento del artículo 69 del Reglamento de la Ley N.° 29733 aprobado por Decreto Supremo N.° 016-2024-JUS (plazo máximo legal de 10 días hábiles), le confirmamos las acciones ejecutadas por {{EMPRESA_NOMBRE}} (RUC {{EMPRESA_RUC}}):
 
 1. SUPRESIÓN INMEDIATA DE CANALES COMERCIALES Y PUBLICITARIOS:
    Con fecha ${todayStr}, hemos eliminado de manera definitiva su número telefónico/WhatsApp ({{TITULAR_TELEFONO}}) y correo electrónico ({{TITULAR_EMAIL}}) de nuestro banco de datos de prospección comercial y listas de difusión publicitaria. Usted no volverá a recibir comunicaciones promocionales por ningún canal.
@@ -307,7 +311,7 @@ Contacto oficial: {{ODP_EMAIL}}`;
   if (ctx.detectedRight === "rectificacion") {
     return `Estimado(a) {{TITULAR_NOMBRE}} (DNI/Doc. {{TITULAR_DNI}}):
 
-En atención a su solicitud de Derecho de Rectificación con expediente ${ctx.ticket}, recibida el ${ctx.receivedAt} en relación con: «${ctx.sanitizedDescription}», cumplimos con responderle dentro del plazo legal de diez (10) días hábiles establecido en el artículo 73 del Decreto Supremo N.° 016-2024-JUS:
+En atención a su solicitud de Derecho de Rectificación con expediente ${ctx.ticket}, recibida el ${ctx.receivedAt} en relación con: «${ctx.sanitizedDescription}», cumplimos con responderle dentro del plazo legal de diez (10) días hábiles establecido en el artículo 69 del Decreto Supremo N.° 016-2024-JUS:
 
 1. EJECUCIÓN DE LA RECTIFICACIÓN:
    Con fecha ${todayStr}, hemos procedido a actualizar y corregir sus datos personales en ${bankNames} conforme al detalle indicado en su solicitud, reemplazando el registro anterior para garantizar el principio de calidad y exactitud de los datos (Art. 8 de la Ley N.° 29733).
@@ -327,7 +331,7 @@ Contacto oficial: {{ODP_EMAIL}}`;
 
   return `Estimado(a) {{TITULAR_NOMBRE}} (DNI/Doc. {{TITULAR_DNI}}):
 
-En atención a su solicitud de ejercicio del Derecho de Acceso con expediente ${ctx.ticket}, recibida el ${ctx.receivedAt} respecto a: «${ctx.sanitizedDescription}», y dentro del plazo máximo legal de veinte (20) días hábiles previsto en el artículo 73 del Reglamento de la Ley N.° 29733 (Decreto Supremo N.° 016-2024-JUS), ponemos a su disposición el informe detallado de sus datos personales que obran en poder de {{EMPRESA_NOMBRE}} (RUC {{EMPRESA_RUC}}):
+En atención a su solicitud de ejercicio del Derecho de Acceso con expediente ${ctx.ticket}, recibida el ${ctx.receivedAt} respecto a: «${ctx.sanitizedDescription}», y dentro del plazo máximo legal de veinte (20) días hábiles previsto en el artículo 69 del Reglamento de la Ley N.° 29733 (Decreto Supremo N.° 016-2024-JUS), ponemos a su disposición el informe detallado de sus datos personales que obran en poder de {{EMPRESA_NOMBRE}} (RUC {{EMPRESA_RUC}}):
 
 1. CATEGORÍAS DE DATOS ALMACENADOS:
    - Datos de identificación y contacto: Nombre ({{TITULAR_NOMBRE}}), documento ({{TITULAR_DNI}}), correo electrónico ({{TITULAR_EMAIL}}) y teléfono ({{TITULAR_TELEFONO}}).
@@ -681,8 +685,9 @@ async function auditTextByRules(input: {
   const findings: AuditedTextResult["findings"] = [];
   let score = 100;
 
+  // Palabras completas: «estructura» contiene «ruc» y «rebajas» contiene «baja».
   const mentionsRucOrIdentity =
-    lower.includes("ruc") || lower.includes("{{empresa_nombre}}") || lower.includes("{{empresa_ruc}}");
+    /\bruc\b/.test(lower) || lower.includes("{{empresa_nombre}}") || lower.includes("{{empresa_ruc}}");
   if (!mentionsRucOrIdentity) {
     score -= 25;
     findings.push({
@@ -714,7 +719,7 @@ async function auditTextByRules(input: {
     });
   }
 
-  const mentionsArco = lower.includes("arco") || lower.includes("solicitud") || lower.includes("baja") || lower.includes("revocar");
+  const mentionsArco = /\b(arco|solicitud|baja|revocar|revocaci[oó]n)\b/.test(lower);
   if (!mentionsArco) {
     score -= 20;
     findings.push({
@@ -1022,7 +1027,7 @@ async function callModelJson(system: string, user: string): Promise<Record<strin
     system: `${system}
 
 Responde SOLO con un objeto JSON válido, sin texto adicional ni bloques de código.`,
-    messages: [{ role: "user", content: user }],
+    messages: [{ role: "user", content: untrusted(user) }],
   });
   const match = text?.match(/\{[\s\S]*\}/);
   if (!match) return null;

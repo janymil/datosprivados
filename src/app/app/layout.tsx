@@ -146,7 +146,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           companyRuc={company.ruc}
           companyPlan={company.plan}
           complianceScore={compliance.score}
-          mode={aiMode()}
+          mode={aiMode(company)}
         />
       </div>
     </div>

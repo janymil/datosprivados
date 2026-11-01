@@ -8,7 +8,8 @@ import {
 } from "@/lib/billing";
 import { confirmAuthorizedSubscription } from "@/lib/subscriptions";
 import { getAuthorizedPayment, getPreapproval, validateMercadoPagoSignature } from "@/lib/mercadopago";
-import { planPrice } from "@/lib/plans";
+import { planName, planPrice } from "@/lib/plans";
+import { notifyCompany } from "@/lib/notify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -114,6 +115,10 @@ export async function POST(request: Request) {
           paidAt: invoice.date_created ?? new Date().toISOString(),
           raw: JSON.stringify(invoice),
         });
+      }
+
+      if (paymentStatus === "rejected" && company.subscription_id === subscriptionId) {
+        notifyCompany(company, "payment_failed", { plan: planName(planFromCompany(company)) }, { dedupeKey: `failed:${dataId}` });
       }
 
       return Response.json({ ok: true, type, status: paymentStatus });

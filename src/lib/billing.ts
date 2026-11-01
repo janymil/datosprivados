@@ -2,6 +2,7 @@ import "server-only";
 
 import { getDb, newId, nowIso, type Company } from "./db";
 import { logActivity } from "./data";
+import { notifyCompany } from "./notify";
 import {
   PLANS,
   isBillingTerm,
@@ -223,6 +224,13 @@ export function activateSubscription(input: {
     ).toLocaleDateString("es-PE", { timeZone: "America/Lima" })}.`
   );
 
+  if (grant) {
+    const owner = db.prepare("SELECT name FROM users WHERE company_id = ? ORDER BY created_at LIMIT 1").get(input.companyId) as
+      | { name: string }
+      | undefined;
+    notifyCompany(company, "welcome", { name: owner?.name ?? company.name }, { dedupeKey: `welcome:${input.companyId}` });
+  }
+
   return { paidUntil, replacedSubscriptionId: replaced };
 }
 
@@ -285,6 +293,17 @@ export function recordSubscriptionCharge(input: {
     nowIso()
   );
 
+  notifyCompany(
+    company,
+    "payment_receipt",
+    {
+      plan: PLANS[plan].name,
+      amount: `S/ ${input.amount.toFixed(2)}`,
+      paidUntil: new Date(paidUntil).toLocaleDateString("es-PE", { timeZone: "America/Lima", day: "2-digit", month: "long", year: "numeric" }),
+    },
+    { dedupeKey: `receipt:${input.paymentId}` }
+  );
+
   logActivity(
     input.companyId,
     "pago",
@@ -318,6 +337,15 @@ export function markSubscriptionStatus(
   getDb()
     .prepare("UPDATE companies SET subscription_status = ? WHERE id = ?")
     .run(status, companyId);
+
+  if (status === "cancelled") {
+    notifyCompany(
+      company,
+      "subscription_cancelled",
+      { paidUntil: company.paid_until ? new Date(company.paid_until).toLocaleDateString("es-PE", { timeZone: "America/Lima", day: "2-digit", month: "long", year: "numeric" }) : "hoy" },
+      { dedupeKey: `cancelled:${subscriptionId}` }
+    );
+  }
 
   const label =
     status === "cancelled"

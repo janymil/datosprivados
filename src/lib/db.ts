@@ -41,7 +41,7 @@ export type Company = {
   /** monthly | yearly; se fija al crear la suscripción. */
   billing_term: "monthly" | "yearly";
   /** active: plan pagado; pending: falta la suscripción; demo: cuenta de ejemplo. */
-  billing_status: "active" | "pending" | "expired" | "demo";
+  billing_status: "active" | "pending" | "expired" | "demo" | "deleted";
   /** Fin del período pagado (ISO). null en cuentas legacy o de demo. */
   paid_until: string | null;
   /** Último pago de MercadoPago aplicado a la cuenta. */
@@ -84,6 +84,14 @@ export type Company = {
   sales_band: "" | "micro" | "pequena" | "mediana" | "grande";
   /** Cuándo declaró sus herramientas; null si aún no lo hizo. */
   tools_declared_at: string | null;
+  /** Cuándo aceptó que sus consultas (anonimizadas) se envíen a un proveedor de IA; null = sin consentimiento. */
+  ai_consent_at: string | null;
+  /** 1 = no quiere correos no esenciales (resúmenes, avisos de documentos). */
+  mail_optout: number;
+  /** Cuándo se eliminó la cuenta; la fila queda solo como registro tributario (sin datos personales). */
+  deleted_at: string | null;
+  /** Último aviso de borrado por cuenta vencida enviado (0 = ninguno, 1/2/3 = etapa). */
+  lapsed_notice: number;
   created_at: string;
 };
 
@@ -127,6 +135,7 @@ export type User = {
   email: string;
   password_hash: string;
   role: string;
+  email_verified_at: string | null;
   created_at: string;
 };
 
@@ -219,6 +228,24 @@ export type DocumentRow = {
   template_version: number | null;
   /** Huella de empresa, rubro y bancos usados al generar (JSON). */
   built_from: string | null;
+  /** Versión que se sirve en la página pública (distinta de `version` si se editó después de publicar). */
+  published_version: number | null;
+  published_at: string | null;
+};
+
+export type DocumentVersionRow = {
+  id: string;
+  company_id: string;
+  document_id: string;
+  kind: string;
+  version: number;
+  title: string;
+  content: string;
+  template_version: number | null;
+  built_from: string | null;
+  created_at: string;
+  published_at: string | null;
+  unpublished_at: string | null;
 };
 
 export type Activity = {
@@ -427,7 +454,7 @@ function initSchema(db: DatabaseSync) {
  * cacheada en `globalThis` (en `next dev` la conexión sobrevive a los recargos
  * en caliente y `initSchema` no vuelve a correr).
  */
-const SCHEMA_VERSION = 11;
+const SCHEMA_VERSION = 12;
 
 function migrate(db: DatabaseSync) {
   const companyColumns = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
@@ -612,6 +639,120 @@ function migrate(db: DatabaseSync) {
   if (!hasRucColumn("ruc_verified_at")) db.exec("ALTER TABLE companies ADD COLUMN ruc_verified_at TEXT");
   if (!hasRucColumn("ruc_status")) db.exec("ALTER TABLE companies ADD COLUMN ruc_status TEXT");
   if (!hasRucColumn("ruc_condition")) db.exec("ALTER TABLE companies ADD COLUMN ruc_condition TEXT");
+
+  // v12: Fase 3 — correo transaccional, tareas programadas, uso de IA, historial
+  // de documentos, feriados editables y ciclo de vida de la cuenta.
+  const hasV12Company = (name: string) =>
+    (db.prepare("PRAGMA table_info(companies)").all() as { name: string }[]).some((column) => column.name === name);
+  if (!hasV12Company("ai_consent_at")) db.exec("ALTER TABLE companies ADD COLUMN ai_consent_at TEXT");
+  if (!hasV12Company("mail_optout")) db.exec("ALTER TABLE companies ADD COLUMN mail_optout INTEGER NOT NULL DEFAULT 0");
+  if (!hasV12Company("deleted_at")) db.exec("ALTER TABLE companies ADD COLUMN deleted_at TEXT");
+  if (!hasV12Company("lapsed_notice")) db.exec("ALTER TABLE companies ADD COLUMN lapsed_notice INTEGER NOT NULL DEFAULT 0");
+
+  const v12UserColumns = db.prepare("PRAGMA table_info(users)").all() as { name: string }[];
+  if (!v12UserColumns.some((column) => column.name === "email_verified_at")) {
+    db.exec("ALTER TABLE users ADD COLUMN email_verified_at TEXT");
+  }
+
+  const v12DocColumns = db.prepare("PRAGMA table_info(documents)").all() as { name: string }[];
+  if (!v12DocColumns.some((column) => column.name === "published_version")) {
+    db.exec("ALTER TABLE documents ADD COLUMN published_version INTEGER");
+    db.exec("ALTER TABLE documents ADD COLUMN published_at TEXT");
+    // Lo que ya estaba publicado queda como la versión publicada actual.
+    db.exec("UPDATE documents SET published_version = version, published_at = updated_at WHERE published = 1");
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS email_outbox (
+      id TEXT PRIMARY KEY,
+      company_id TEXT REFERENCES companies(id) ON DELETE SET NULL,
+      to_email TEXT NOT NULL,
+      template TEXT NOT NULL,
+      payload TEXT NOT NULL DEFAULT '{}',
+      essential INTEGER NOT NULL DEFAULT 1,
+      status TEXT NOT NULL DEFAULT 'pending',
+      attempts INTEGER NOT NULL DEFAULT 0,
+      next_attempt_at TEXT NOT NULL,
+      error TEXT,
+      dedupe_key TEXT UNIQUE,
+      created_at TEXT NOT NULL,
+      sent_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_outbox_due ON email_outbox(status, next_attempt_at);
+
+    CREATE TABLE IF NOT EXISTS email_suppressions (
+      email TEXT PRIMARY KEY,
+      reason TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS job_runs (
+      id TEXT PRIMARY KEY,
+      job TEXT NOT NULL,
+      started_at TEXT NOT NULL,
+      finished_at TEXT,
+      ok INTEGER,
+      error TEXT,
+      detail TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_job_runs_job ON job_runs(job, started_at);
+
+    CREATE TABLE IF NOT EXISTS ai_usage (
+      id TEXT PRIMARY KEY,
+      company_id TEXT REFERENCES companies(id) ON DELETE CASCADE,
+      feature TEXT NOT NULL,
+      model TEXT NOT NULL,
+      input_tokens INTEGER NOT NULL DEFAULT 0,
+      output_tokens INTEGER NOT NULL DEFAULT 0,
+      latency_ms INTEGER NOT NULL DEFAULT 0,
+      ok INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_ai_usage_company ON ai_usage(company_id, created_at);
+
+    CREATE TABLE IF NOT EXISTS document_versions (
+      id TEXT PRIMARY KEY,
+      company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+      document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL,
+      version INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      template_version INTEGER,
+      built_from TEXT,
+      created_at TEXT NOT NULL,
+      published_at TEXT,
+      unpublished_at TEXT,
+      UNIQUE (document_id, version)
+    );
+    CREATE INDEX IF NOT EXISTS idx_doc_versions_company ON document_versions(company_id, kind);
+
+    CREATE TABLE IF NOT EXISTS holidays (
+      date TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      source TEXT NOT NULL DEFAULT 'calculado'
+    );
+
+    CREATE TABLE IF NOT EXISTS auth_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      payload TEXT,
+      expires_at TEXT NOT NULL,
+      used_at TEXT
+    );
+  `);
+
+  // Historial inicial: cada documento existente queda como su versión vigente.
+  db.exec(`
+    INSERT OR IGNORE INTO document_versions
+      (id, company_id, document_id, kind, version, title, content, template_version, built_from, created_at, published_at)
+    SELECT lower(hex(randomblob(16))), company_id, id, kind, version, title, content, template_version, built_from,
+           updated_at, CASE WHEN published = 1 THEN updated_at END
+    FROM documents
+  `);
+  seedHolidays(db);
 }
 
 declare global {
@@ -1042,7 +1183,25 @@ function easterSunday(year: number): Date {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
-function peruHolidays(year: number): Set<string> {
+const FIXED_HOLIDAYS: Array<[string, string]> = [
+  ["01-01", "Año Nuevo"],
+  ["05-01", "Día del Trabajo"],
+  ["06-07", "Batalla de Arica y Día de la Bandera"],
+  ["06-29", "San Pedro y San Pablo"],
+  ["07-23", "Día de la Fuerza Aérea del Perú"],
+  ["07-28", "Fiestas Patrias"],
+  ["07-29", "Fiestas Patrias"],
+  ["08-06", "Batalla de Junín"],
+  ["08-30", "Santa Rosa de Lima"],
+  ["10-08", "Combate de Angamos"],
+  ["11-01", "Todos los Santos"],
+  ["12-08", "Inmaculada Concepción"],
+  ["12-09", "Batalla de Ayacucho"],
+  ["12-25", "Navidad"],
+];
+
+/** Feriados nacionales calculados por regla (fijos + Semana Santa). Es la fuente de las filas sembradas. */
+export function calculatedHolidays(year: number): Array<{ date: string; name: string }> {
   const easter = easterSunday(year);
   const fmt = (d: Date) => d.toISOString().slice(0, 10);
   const shift = (d: Date, n: number) => {
@@ -1050,24 +1209,44 @@ function peruHolidays(year: number): Set<string> {
     copy.setUTCDate(copy.getUTCDate() + n);
     return copy;
   };
-  return new Set<string>([
-    `${year}-01-01`,
-    fmt(shift(easter, -3)), // Jueves Santo
-    fmt(shift(easter, -2)), // Viernes Santo
-    `${year}-05-01`,
-    `${year}-06-07`,
-    `${year}-06-29`,
-    `${year}-07-23`,
-    `${year}-07-28`,
-    `${year}-07-29`,
-    `${year}-08-06`,
-    `${year}-08-30`,
-    `${year}-10-08`,
-    `${year}-11-01`,
-    `${year}-12-08`,
-    `${year}-12-09`,
-    `${year}-12-25`,
-  ]);
+  return [
+    ...FIXED_HOLIDAYS.map(([md, name]) => ({ date: `${year}-${md}`, name })),
+    { date: fmt(shift(easter, -3)), name: "Jueves Santo" },
+    { date: fmt(shift(easter, -2)), name: "Viernes Santo" },
+  ].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+const SEEDED_YEARS_FROM = 2025;
+const SEEDED_YEARS_TO = 2032;
+
+/** Siembra los años que aún no tienen filas; no pisa lo que un administrador haya editado. */
+export function seedHolidays(db: DatabaseSync) {
+  const has = db.prepare("SELECT 1 FROM holidays WHERE date LIKE ? LIMIT 1");
+  const insert = db.prepare("INSERT OR IGNORE INTO holidays (date, name, source) VALUES (?, ?, 'calculado')");
+  for (let year = SEEDED_YEARS_FROM; year <= SEEDED_YEARS_TO; year += 1) {
+    if (has.get(`${year}-%`)) continue;
+    for (const holiday of calculatedHolidays(year)) insert.run(holiday.date, holiday.name);
+  }
+}
+
+/** Feriados del año: de la tabla `holidays`; si el año no está cargado, calculados por regla. */
+function peruHolidays(year: number): Set<string> {
+  const rows = getDb().prepare("SELECT date FROM holidays WHERE date LIKE ?").all(`${year}-%`) as { date: string }[];
+  if (rows.length) return new Set(rows.map((row) => row.date));
+  return new Set(calculatedHolidays(year).map((holiday) => holiday.date));
+}
+
+/** Alta o corrección de un feriado (decreto supremo que declara un día no laborable). */
+export function setHoliday(date: string, name: string, source = "decreto") {
+  getDb()
+    .prepare(
+      "INSERT INTO holidays (date, name, source) VALUES (?, ?, ?) ON CONFLICT(date) DO UPDATE SET name = excluded.name, source = excluded.source"
+    )
+    .run(date, name, source);
+}
+
+export function removeHoliday(date: string) {
+  getDb().prepare("DELETE FROM holidays WHERE date = ?").run(date);
 }
 
 function isBusinessDay(d: Date): boolean {

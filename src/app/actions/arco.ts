@@ -7,6 +7,9 @@ import { requireActiveSession } from "@/lib/auth";
 import { getCompanyBySlug, logActivity, nextTicketNumber } from "@/lib/data";
 import { clientIp } from "@/lib/client-ip";
 import { isDemoCompany } from "@/lib/demo";
+import { notifyCompany } from "@/lib/notify";
+import { enqueueEmail } from "@/lib/mail";
+import { formatDate } from "@/lib/format";
 import { takeRateLimit } from "@/lib/rate-limit";
 
 const MINUTE = 60_000;
@@ -76,6 +79,22 @@ export async function createArcoRequestAction(formData: FormData) {
   );
 
   logActivity(company.id, "arco", `Nueva solicitud ARCO recibida: ${ticket} (${type}).`);
+  notifyCompany(
+    company,
+    "arco_received_owner",
+    { ticket, type, requester: name, dueAt: formatDate(due), path: `/app/arco/${id}` },
+    { to: "responsable", dedupeKey: `arco-received:${id}` }
+  );
+  // Acuse al titular: ticket y plazo legal. Solo si dejó un correo.
+  if (email) {
+    enqueueEmail({
+      to: email,
+      template: "arco_ack_requester",
+      payload: { company: company.name, ticket, type, dueAt: formatDate(due) },
+      companyId: company.id,
+      dedupeKey: `arco-ack:${id}`,
+    });
+  }
   revalidatePath("/app", "layout");
   redirect(`/solicitud/${slug}?ok=${ticket}`);
 }
@@ -119,6 +138,15 @@ export async function createManualArcoRequestAction(formData: FormData) {
     .run(id, company.id, ticket, type, channel, name, docNumber, email, phone, description, received, due, nowIso());
 
   logActivity(company.id, "arco", `Registraste una solicitud ARCO recibida por ${channel}: ${ticket} (${type}).`);
+  if (email) {
+    enqueueEmail({
+      to: email,
+      template: "arco_ack_requester",
+      payload: { company: company.name, ticket, type, dueAt: formatDate(due) },
+      companyId: company.id,
+      dedupeKey: `arco-ack:${id}`,
+    });
+  }
   revalidatePath("/app", "layout");
   redirect(`/app/arco/${id}`);
 }
