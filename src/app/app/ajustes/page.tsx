@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HelpTip } from "@/components/help-tip";
 import { requireSession } from "@/lib/auth";
 import { listBanks, listDocuments, listIncidents, listRequests } from "@/lib/data";
 import { billingLabel, getPaymentsForCompany, isCompanyActive, planFromCompany } from "@/lib/billing";
@@ -235,7 +236,9 @@ export default async function SettingsPage({
             </section>
 
             <section className="card p-6 md:p-7">
-              <p className="label-mono">Inteligencia artificial</p>
+              <p className="label-mono">
+                Inteligencia artificial <HelpTip k="ia_consentimiento" className="ml-1.5" />
+              </p>
               {ok === "ia" && <p className="mt-3 border-l-3 border-sage bg-sage/[0.08] px-4 py-3 text-sm">Preferencia guardada.</p>}
               <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
                 {aiProvider

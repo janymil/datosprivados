@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HelpTip } from "@/components/help-tip";
 import { requireSession } from "@/lib/auth";
 import { listProviders } from "@/lib/data";
 import { saveToolsAction, updateProviderAction } from "@/app/actions/tools";
@@ -114,7 +115,9 @@ export default async function ToolsPage({
                       <input type="hidden" name="id" value={provider.id} />
                       <input type="hidden" name="name" value={provider.name} />
                       <label className="text-xs text-ink-soft">
-                        Contrato de encargo
+                        <span className="flex items-center gap-1.5">
+                          Contrato de encargo <HelpTip k="herramienta_contrato" />
+                        </span>
                         <select name="dpa_status" defaultValue={provider.dpa_status} className="input mt-1 !h-9 !py-1">
                           <option value="pendiente">Pendiente</option>
                           <option value="firmado">Firmado / aceptado</option>
@@ -123,7 +126,9 @@ export default async function ToolsPage({
                       </label>
                       {out && (
                         <label className="text-xs text-ink-soft">
-                          Comunicado a la ANPD
+                          <span className="flex items-center gap-1.5">
+                            Comunicado a la ANPD <HelpTip k="herramienta_comunicacion" />
+                          </span>
                           <select
                             name="transfer_status"
                             defaultValue={provider.transfer_status}

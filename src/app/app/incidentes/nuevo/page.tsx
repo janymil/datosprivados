@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HelpTip } from "@/components/help-tip";
 import { requireSession } from "@/lib/auth";
 import { createIncidentAction } from "@/app/actions/incidents";
 import { limaDateTimeLocal } from "@/lib/format";
@@ -36,7 +37,11 @@ export default async function NewIncidentPage({
 
       <PageHeader
         title="Registrar un incidente"
-        description="Anota primero cuándo lo detectaste: el plazo de 48 horas corre desde ese momento. Lo demás puedes completarlo después."
+        description={
+          <>
+            Anota primero cuándo lo detectaste: el plazo de 48 horas corre desde ese momento <HelpTip k="incidente_48h" />. Lo demás puedes completarlo después.
+          </>
+        }
       />
 
       <div className="border-l-3 border-ochre bg-ochre/[0.05] px-5 py-4 text-[15px] leading-relaxed">
@@ -114,7 +119,8 @@ export default async function NewIncidentPage({
         </Field>
 
         <fieldset className="border-t border-line pt-5">
-          <legend className="field-label">¿Cumple algún criterio de aviso obligatorio? (art. 34.1)</legend>
+          <legend className="field-label">¿Cumple algún criterio de aviso obligatorio? (art. 34.1) <HelpTip k="incidente_criterios" className="ml-1" />
+          </legend>
           <p className="mt-1 text-[13.5px] leading-snug text-ink-soft">
             Marca los que apliquen. Con uno basta para avisar a la ANPD en 48 horas; si no marcas
             ninguno, el incidente igual queda documentado (art. 35).

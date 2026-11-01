@@ -12,6 +12,7 @@ import {
 import { activeModelId, callLlm, isLlmConfigured, untrusted, type LlmMessage } from "./llm";
 import { aiBlockReason } from "./ai-guard";
 import { answerWithoutLlm } from "./legal-faq";
+import { appKnowledgeForAi } from "./help-knowledge";
 import { BANK_PRESETS, getBankPreset } from "./bank-presets";
 import { detectSector } from "./sectors";
 import { legalBasisLabel } from "./documents";
@@ -120,13 +121,16 @@ CÓMO RESPONDER:
 - Si la pregunta no tiene relación con protección de datos o con DatosPrivados, dilo en una frase y ofrece ayuda con el tema.
 - Si piden un borrador, redáctalo completo y listo para usar.
 - No inventes artículos, plazos ni montos. Si la norma no lo dice o no estás seguro, dilo y sugiere consultar a un abogado.
-- Si es útil, indica en qué sección de DatosPrivados se hace: Mi plan, Bancos de datos (plantillas y ficha SIPDP), Documentos (política, consentimientos, documento de seguridad, confidencialidad/encargo/cartel de cámaras), Solicitudes ARCO, Incidentes, Empresa.
+- Si es útil, indica en qué sección de DatosPrivados se hace y enlázala con Markdown, por ejemplo [Bancos de datos](/app/bancos). Solo enlaza rutas que aparezcan en la GUÍA DE LA APP (las que empiezan con /app/).
+- Si preguntan cómo usar la app («¿dónde publico mi política?», «¿qué significa Borrador?», «¿qué hago primero?»), responde con pasos numerados basados en la GUÍA DE LA APP y cierra con el enlace al artículo del Centro de ayuda. No inventes botones ni pantallas que la guía no mencione.
 - Los datos identificables están reemplazados por marcadores como {{EMPRESA_NOMBRE}} o {{TITULAR_NOMBRE}}. Si los usas, cópialos exactos.
 
 TIPOS DE BANCOS DE DATOS HABITUALES:
 ${BANK_CATALOG}
 
 ${PERU_LEGAL_RAG}
+
+${appKnowledgeForAi(input.userMessage, input.history)}
 
 DATOS DE LA CUENTA DEL USUARIO (empresa {{EMPRESA_NOMBRE}}):${accountContext}`;
 

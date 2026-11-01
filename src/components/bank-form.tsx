@@ -7,6 +7,7 @@ import { runBankAiWizardAction } from "@/app/actions/ai";
 import { Field } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 import { Term } from "@/components/help";
+import { HelpTip } from "@/components/help-tip";
 import { LockIcon, SparklesIcon } from "@/components/icons";
 import { BANK_PRESETS as PRESETS, type BankPreset } from "@/lib/bank-presets";
 
@@ -234,7 +235,11 @@ export function BankForm({
         </Field>
 
         <Field
-          label="Finalidad (¿Para qué pides y usas estos datos?)"
+          label={
+            <>
+              Finalidad (¿Para qué pides y usas estos datos?) <HelpTip k="banco_finalidad" className="ml-1" />
+            </>
+          }
           className="sm:col-span-2"
           hint={
             <>
@@ -315,7 +320,11 @@ export function BankForm({
         </Field>
 
         <Field
-          label="Plazo de conservación (¿Cuánto tiempo los guardas?)"
+          label={
+            <>
+              Plazo de conservación (¿Cuánto tiempo los guardas?) <HelpTip k="banco_plazo" className="ml-1" />
+            </>
+          }
         >
           <input
             name="retention"
@@ -329,7 +338,7 @@ export function BankForm({
         <Field
           label={
             <>
-              <Term k="transferencia">Transferencia internacional</Term> (¿Usas nube extranjera?)
+              <Term k="transferencia">Transferencia internacional</Term> (¿Usas nube extranjera?) <HelpTip k="banco_transferencia" className="ml-1" />
             </>
           }
           hint="«Sí» si usas Google, WhatsApp, Shopify, Mailchimp u otros servicios con servidores fuera del Perú."

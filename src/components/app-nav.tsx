@@ -9,6 +9,7 @@ import {
   ClipboardIcon,
   DatabaseIcon,
   FileIcon,
+  HelpIcon,
   InboxIcon,
   PlugIcon,
   SettingsIcon,
@@ -17,20 +18,22 @@ import {
 } from "./icons";
 
 const ITEMS = [
-  { href: "/app", label: "Mi plan", icon: ShieldIcon, group: "" },
-  { href: "/app/bancos", label: "Bancos de datos", icon: DatabaseIcon, group: "Configurar" },
-  { href: "/app/herramientas", label: "Herramientas", icon: PlugIcon, group: "Configurar" },
-  { href: "/app/documentos", label: "Documentos", icon: FileIcon, group: "Configurar" },
-  { href: "/app/evidencias", label: "Evidencias", icon: ClipboardIcon, group: "Atender" },
-  { href: "/app/arco", label: "Solicitudes ARCO", icon: InboxIcon, group: "Atender" },
-  { href: "/app/incidentes", label: "Incidentes", icon: AlertIcon, group: "Atender" },
-  { href: "/app/asistente", label: "Asistente legal", icon: SparklesIcon, group: "Ayuda" },
-  { href: "/app/empresa", label: "Empresa", icon: BuildingIcon, group: "Cuenta" },
-  { href: "/app/ajustes", label: "Ajustes", icon: SettingsIcon, group: "Cuenta" },
+  { href: "/app", label: "Mi plan", icon: ShieldIcon, group: "", hint: "Tu puntaje, tus alertas y el siguiente paso." },
+  { href: "/app/bancos", label: "Bancos de datos", icon: DatabaseIcon, group: "Configurar", hint: "Tus listas de personas (clientes, trabajadores…) y su inscripción gratis en el SIPDP." },
+  { href: "/app/herramientas", label: "Herramientas", icon: PlugIcon, group: "Configurar", hint: "Los programas que guardan datos de tus clientes: web, correo, WhatsApp, nube." },
+  { href: "/app/documentos", label: "Documentos", icon: FileIcon, group: "Configurar", hint: "Política de privacidad, consentimientos, seguridad y contratos, armados con tus datos." },
+  { href: "/app/evidencias", label: "Evidencias", icon: ClipboardIcon, group: "Atender", hint: "Tus pruebas con fecha de que aplicas las medidas." },
+  { href: "/app/arco", label: "Solicitudes ARCO", icon: InboxIcon, group: "Atender", hint: "Personas que piden ver, corregir o borrar sus datos. Tienen plazo legal." },
+  { href: "/app/incidentes", label: "Incidentes", icon: AlertIcon, group: "Atender", hint: "Pérdidas, robos o filtraciones de datos. Corre un reloj de 48 horas." },
+  { href: "/app/ayuda", label: "Centro de ayuda", icon: HelpIcon, group: "Ayuda", hint: "Guía completa de la A a la Z, buscador, glosario y preguntas frecuentes." },
+  { href: "/app/asistente", label: "Asistente legal", icon: SparklesIcon, group: "Ayuda", hint: "Pregunta lo que quieras sobre la ley o sobre cómo usar la app." },
+  { href: "/app/empresa", label: "Empresa", icon: BuildingIcon, group: "Cuenta", hint: "Tus datos y tu responsable de privacidad: salen en tus documentos." },
+  { href: "/app/ajustes", label: "Ajustes", icon: SettingsIcon, group: "Cuenta", hint: "Plan, pagos, contraseña, IA y exportar tu expediente." },
 ];
 
 const MOBILE_LABEL: Record<string, string> = {
   "/app": "Mi plan",
+  "/app/ayuda": "Ayuda",
   "/app/asistente": "Asistente",
   "/app/bancos": "Bancos",
   "/app/arco": "ARCO",
@@ -74,6 +77,7 @@ export function AppNav({
             )}
             <Link
               href={item.href}
+              aria-describedby={`nav-hint-${index}`}
               className={`group relative flex items-center gap-3 px-3.5 py-2.5 text-[15px] font-medium transition-colors ${
                 active ? "bg-ink text-paper" : "text-ink-soft hover:bg-ink/[0.04] hover:text-ink"
               }`}
@@ -89,6 +93,13 @@ export function AppNav({
                   {badge}
                 </span>
               )}
+              <span
+                id={`nav-hint-${index}`}
+                role="tooltip"
+                className="pointer-events-none invisible absolute left-full top-1/2 z-50 ml-3 w-60 -translate-y-1/2 rounded-[3px] border border-ink bg-paper-2 px-3 py-2 text-[13px] font-normal leading-snug text-ink opacity-0 shadow-[0_14px_36px_-10px_rgba(23,25,30,0.45)] transition-opacity delay-300 group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100"
+              >
+                {item.hint}
+              </span>
             </Link>
           </div>
         );

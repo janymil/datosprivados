@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HelpTip } from "@/components/help-tip";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { listActivity, listBanks, listDocuments, listIncidents, listRequests, listProviders, listEvidence } from "@/lib/data";
@@ -116,6 +117,7 @@ export default async function DashboardPage({
               >
                 {compliance.label}
               </StatusPill>
+              <HelpTip k="score" className="ml-2" />
               <p className="mt-2 max-w-[24ch] text-sm leading-snug text-ink-soft">
                 {done} de {compliance.items.length} pasos completados
               </p>

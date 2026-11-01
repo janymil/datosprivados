@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HelpTip } from "@/components/help-tip";
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { getBank } from "@/lib/data";
@@ -100,7 +101,7 @@ export default async function BankDetailPage({
           {bank.status === "registrado" ? (
             <section className="border border-sage/40 bg-sage/[0.06] p-6">
               <p className="font-mono text-xs font-semibold uppercase tracking-[0.1em] text-sage">
-                Inscrito oficialmente en el <Term k="sipdp">SIPDP</Term>
+                Inscrito oficialmente en el <Term k="sipdp">SIPDP</Term> <HelpTip k="banco_estado" className="ml-1.5" />
               </p>
               <p className="mt-2 font-mono text-xl font-semibold">{bank.sipdp_code}</p>
               <p className="mt-1 text-sm text-ink-soft">
@@ -119,7 +120,9 @@ export default async function BankDetailPage({
             </section>
           ) : (
             <section className="card p-6">
-              <p className="label-mono">Paso 2 · Inscripción gratuita (S/ 0)</p>
+              <p className="label-mono">
+                Paso 2 · Inscripción gratuita (S/ 0) <HelpTip k="ficha_sipdp" className="ml-1.5" />
+              </p>
               <h2 className="mt-1.5 font-display text-2xl tracking-[-0.02em]">
                 Inscríbelo en el <Term k="sipdp">SIPDP</Term> y guarda tu código
               </h2>

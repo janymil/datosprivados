@@ -1,20 +1,33 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
+/** Solo se enlazan rutas internas del panel (`/app/...`): el texto puede venir de la IA. */
+const INLINE_TOKEN = /(\*\*[^*]+\*\*|\[[^\]]+\]\(\/app\/[A-Za-z0-9\-_/?=&#]*\))/g;
+const LINK = /^\[([^\]]+)\]\((\/app\/[A-Za-z0-9\-_/?=&#]*)\)$/;
+
 function Inline({ text }: { text: string }) {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  const parts = text.split(INLINE_TOKEN);
   return (
     <>
-      {parts.map((part, index) =>
-        part.startsWith("**") && part.endsWith("**") ? (
+      {parts.map((part, index) => {
+        const link = LINK.exec(part);
+        if (link) {
+          return (
+            <Link key={index} href={link[2]} className="font-medium text-crimson underline underline-offset-2 hover:text-crimson-dark">
+              {link[1]}
+            </Link>
+          );
+        }
+        return part.startsWith("**") && part.endsWith("**") ? (
           <strong key={index} className="font-semibold text-ink">
             {part.slice(2, -2)}
           </strong>
         ) : (
           <span key={index}>{part}</span>
-        )
-      )}
+        );
+      })}
     </>
   );
 }

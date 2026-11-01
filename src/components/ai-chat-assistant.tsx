@@ -16,6 +16,7 @@ type Message = {
 
 const QUICK_PROMPTS = [
   "¿Qué me falta para estar al día?",
+  "¿Cómo uso DatosPrivados, paso a paso?",
   "Soy una empresa SaaS: ¿qué bancos de datos y documentos necesito?",
   "¿Cuánto tiempo tengo para responder una solicitud ARCO?",
   "¿Cómo pido permiso para enviar promociones por WhatsApp?",
@@ -28,6 +29,7 @@ export function AiChatAssistant({
   mode,
   initialOpen = false,
   embedded = false,
+  initialPrompt = "",
 }: {
   companyName: string;
   companyRuc?: string;
@@ -37,10 +39,12 @@ export function AiChatAssistant({
   mode: "ia" | "basico";
   initialOpen?: boolean;
   embedded?: boolean;
+  /** Pregunta que llega precargada (por ejemplo, desde la Ayuda); el usuario decide si la envía. */
+  initialPrompt?: string;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(initialOpen);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(initialPrompt);
   const [isPending, startTransition] = useTransition();
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -48,8 +52,8 @@ export function AiChatAssistant({
       role: "assistant",
       content:
         mode === "ia"
-          ? `Hola. Pregúntame lo que necesites sobre la **Ley 29733**, para **${companyName}** o en general, o pídeme que redacte un correo o una respuesta.`
-          : `Hola. Estoy en **modo básico**: respondo preguntas frecuentes sobre la **Ley 29733** (plazos, consentimiento, incidentes, qué necesita cada tipo de negocio). Para preguntas abiertas y redacción libre hay que conectar la IA.`,
+          ? `Hola. Pregúntame lo que necesites sobre la **Ley 29733**, sobre **cómo usar cada parte de la app**, para **${companyName}** o en general, o pídeme que redacte un correo o una respuesta.`
+          : `Hola. Estoy en **modo básico**: respondo preguntas frecuentes sobre la **Ley 29733** (plazos, consentimiento, incidentes, qué necesita cada tipo de negocio). Para preguntas abiertas y redacción libre hay que conectar la IA. También puedo explicarte cómo usar cada pantalla de la app.`,
     },
   ]);
 
@@ -232,6 +236,12 @@ export function AiChatAssistant({
             <ShieldIcon className="h-3.5 w-3.5 text-sage" />
             Tus datos identificables se anonimizan antes de enviarse al modelo.
           </span>
+          <Link
+            href="/app/ayuda"
+            className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-soft hover:text-crimson hover:underline"
+          >
+            Centro de ayuda →
+          </Link>
           {companyPlan === "basico" && (
             <Link
               href="/app/ajustes"

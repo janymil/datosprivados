@@ -6,6 +6,7 @@ import { getStats, listBanks, listDocuments, listIncidents, listRequests, listPr
 import { computeCompliance } from "@/lib/compliance";
 import { logoutAction } from "@/app/actions/auth";
 import { AppNav } from "@/components/app-nav";
+import { PageHelpLink } from "@/components/page-help-link";
 import { AiChatAssistant } from "@/components/ai-chat-assistant";
 import { aiMode } from "@/lib/ai";
 import { Logo } from "@/components/icons";
@@ -32,7 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[276px_1fr] print:block">
-      <aside className="no-print hidden border-r border-line bg-paper-2 lg:flex lg:min-h-screen lg:flex-col lg:sticky lg:top-0 lg:h-screen">
+      <aside className="no-print hidden border-r border-line bg-paper-2 lg:flex lg:min-h-screen lg:flex-col lg:sticky lg:top-0 lg:z-40 lg:h-screen">
         <div className="px-5 pb-5 pt-6">
           <Link href="/" aria-label="DatosPrivados, inicio">
             <Logo />
@@ -128,6 +129,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 </div>
               </div>
             )}
+            <PageHelpLink />
             {children}
           </div>
         </main>

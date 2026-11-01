@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HelpTip } from "@/components/help-tip";
 import { requireSession } from "@/lib/auth";
 import { listDocuments } from "@/lib/data";
 import { updateCompanyAction } from "@/app/actions/company";
@@ -173,7 +174,9 @@ export default async function CompanyPage({
             </Field>
 
             <div className="sm:col-span-2 border-t border-line pt-5">
-              <p className="label-mono">Contacto de privacidad</p>
+              <p className="label-mono">
+                Contacto de privacidad <HelpTip k="responsable_privacidad" className="ml-1.5" />
+              </p>
               <p className="mt-1.5 max-w-[62ch] text-[15px] leading-relaxed text-ink-soft">
                 Quien revisa las solicitudes <Term k="arco">ARCO</Term>. Puedes ser tú mismo.
               </p>

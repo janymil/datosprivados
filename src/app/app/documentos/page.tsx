@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HelpTip } from "@/components/help-tip";
 import { requireSession } from "@/lib/auth";
 import { getDocument, listDocumentVersions, listBanks, listDocuments, listProviders, listSecurityChecks } from "@/lib/data";
 import { documentFit, sectorLegalProfile } from "@/lib/sector-legal";
@@ -100,7 +101,7 @@ export default async function DocumentsPage({
         </div>
         {doc && freshness?.stale && (
           <div className="mt-4 border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-[15px] leading-relaxed">
-            <strong>Este documento está desactualizado.</strong>{" "}
+            <strong>Este documento está desactualizado.</strong> <HelpTip k="doc_desactualizado" />{" "}
             {freshness.reasons.map((reason) => STALE_REASON_LABELS[reason]).join(" · ")}. Actualízalo para que refleje la
             plantilla vigente (v{TEMPLATE_VERSIONS[active]}) y tus datos actuales.
             {meta.action === "firmar" && " Si ya lo imprimiste o lo firmaron, deberás volver a firmarlo."}
@@ -406,7 +407,9 @@ function DocumentsOverview({ company, regenerated }: { company: Company; regener
         return (
           <section key={group.key} className="card overflow-hidden">
             <div className="border-b border-line px-6 py-4">
-              <h2 className="font-display text-xl tracking-[-0.02em]">{group.title}</h2>
+              <h2 className="flex items-center gap-2 font-display text-xl tracking-[-0.02em]">
+                {group.title} <HelpTip k="doc_publico_interno" />
+              </h2>
               <p className="mt-0.5 text-sm text-ink-soft">{group.hint}</p>
             </div>
             <ul className="divide-y divide-line">

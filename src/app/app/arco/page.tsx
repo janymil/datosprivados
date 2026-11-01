@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HelpTip } from "@/components/help-tip";
 import { requireSession } from "@/lib/auth";
 import { listRequests } from "@/lib/data";
 import { formatDate, limaToday } from "@/lib/format";
@@ -144,7 +145,7 @@ export default async function ArcoPage({
         }
         how={
           <>
-            Comparte tu enlace público (<span className="font-mono text-[11px]">/solicitud/{company.slug}</span>) en tu web o WhatsApp. Si un pedido te llega por otro canal, regístralo aquí abajo. Luego ábrelo, usa la <strong>plantilla de respuesta</strong> y márcalo como respondido.
+            Comparte tu enlace público (<span className="font-mono text-[11px]">/solicitud/{company.slug}</span>) <HelpTip k="arco_enlace" /> en tu web o WhatsApp. Si un pedido te llega por otro canal, regístralo aquí abajo. Luego ábrelo, usa la <strong>plantilla de respuesta</strong> y márcalo como respondido.
           </>
         }
       />
@@ -217,7 +218,7 @@ export default async function ArcoPage({
           <Field label="Teléfono / WhatsApp" hint="Indica correo o teléfono (al menos uno).">
             <input name="phone" type="tel" className="input" maxLength={40} />
           </Field>
-          <Field label="Fecha de recepción" hint="El plazo se cuenta desde el día hábil siguiente.">
+          <Field label={<>Fecha de recepción <HelpTip k="arco_plazo" className="ml-1" /></>} hint="El plazo se cuenta desde el día hábil siguiente.">
             <input name="received_at" type="date" className="input" defaultValue={today} max={today} required />
           </Field>
           <Field label="¿Qué pide?" className="sm:col-span-2">

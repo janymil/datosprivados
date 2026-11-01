@@ -6,6 +6,8 @@ import { requiresAnpdNotification } from "./incident-criteria";
 import { STALE_REASON_LABELS, documentFreshness } from "./document-freshness";
 
 export type ComplianceItem = {
+  /** Identificador estable del paso (lo usa la ruta de Ayuda para marcar avances). */
+  key: "perfil" | "bancos" | "sipdp" | "herramientas" | "politica" | "consentimiento" | "seguridad" | "clausulas";
   label: string;
   detail: string;
   weight: number;
@@ -66,6 +68,7 @@ export function computeCompliance(input: {
 
   const items: ComplianceItem[] = [
     {
+      key: "perfil",
       label: "Completa los datos de tu empresa",
       detail: profileComplete
         ? "Razón social, RUC, dirección y contacto listos para tus documentos."
@@ -76,6 +79,7 @@ export function computeCompliance(input: {
       cta: "Completar datos",
     },
     {
+      key: "bancos",
       label: "Declara tus bancos de datos",
       detail: banks.length
         ? `${banks.length} ${banks.length === 1 ? "lista declarada" : "listas declaradas"} (clientes, trabajadores, etc.).`
@@ -86,6 +90,7 @@ export function computeCompliance(input: {
       cta: "Declarar listas",
     },
     {
+      key: "sipdp",
       label: "Inscríbelos gratis en el SIPDP",
       detail: allRegistered
         ? `${registered} de ${banks.length} inscritos con código oficial.`
@@ -96,6 +101,7 @@ export function computeCompliance(input: {
       cta: "Inscribir",
     },
     {
+      key: "herramientas",
       label: "Declara las herramientas que usas",
       detail: company.tools_declared_at
         ? providers.length
@@ -108,6 +114,7 @@ export function computeCompliance(input: {
       cta: "Declarar herramientas",
     },
     {
+      key: "politica",
       label: "Publica tu Política de Privacidad",
       detail: policyOutdated
         ? `Tu política quedó desactualizada (${policyFreshness!.reasons.map((r) => STALE_REASON_LABELS[r].toLowerCase()).join("; ")}): actualízala; seguirá publicada.`
@@ -120,6 +127,7 @@ export function computeCompliance(input: {
       cta: policyOutdated ? "Actualizar política" : "Revisar y publicar",
     },
     {
+      key: "consentimiento",
       label: "Usa textos de consentimiento",
       detail: doc("consentimiento")
         ? "Textos listos para formularios, WhatsApp y correos."
@@ -130,6 +138,7 @@ export function computeCompliance(input: {
       cta: "Generar textos",
     },
     {
+      key: "seguridad",
       label: "Genera tu Documento de Seguridad",
       detail: doc("seguridad")
         ? "Manual interno de medidas de seguridad generado."
@@ -140,6 +149,7 @@ export function computeCompliance(input: {
       cta: "Generar documento",
     },
     {
+      key: "clausulas",
       label: "Firma compromisos de confidencialidad",
       detail: doc("clausulas")
         ? "Formatos de confidencialidad, encargo a proveedores y cartel de cámaras listos."

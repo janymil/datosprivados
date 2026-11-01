@@ -4,6 +4,7 @@ import type { ArcoRequest, Company, DataBank, Incident } from "./db";
 import { getBankPreset } from "./bank-presets";
 import { detectSector, findSectorByLabel, type Sector } from "./sectors";
 import { FAMILIES, SECTOR_FAMILY } from "./sector-legal";
+import { helpAnswerWithoutLlm } from "./help-knowledge";
 
 /**
  * Modo básico del asistente (sin modelo de lenguaje conectado). Reconoce la
@@ -40,6 +41,16 @@ export function answerWithoutLlm(ctx: Context): string {
   const aboutOwnAccount = has(q, "mi expediente", "mi cuenta", "me falta", "diagnost", "mi avance", "mi puntaje", "estoy al dia");
 
   if (aboutOwnAccount) return accountStatus(ctx);
+
+  // «¿Cómo uso la app?», «¿dónde publico…?»: se responde desde el Centro de ayuda.
+  const aboutTheApp = has(
+    q, "como uso", "como funciona", "como se usa", "paso a paso", "esta app", "esta aplicacion", "datosprivados",
+    "donde esta", "donde hago", "donde publico", "donde veo", "que significa", "centro de ayuda", "ayuda", "tutorial", "menu"
+  );
+  if (aboutTheApp) {
+    const help = helpAnswerWithoutLlm(ctx.message);
+    if (help) return help;
+  }
   if (mentioned && (asksRequirements || has(q, "soy ", "tengo un", "tengo una", "somos "))) {
     return requirementsFor(mentioned, false);
   }
@@ -61,7 +72,7 @@ export function answerWithoutLlm(ctx: Context): string {
   if (has(q, "politica", "aviso de privacidad")) return POLICY;
   if (mentioned) return requirementsFor(mentioned, false);
 
-  return FALLBACK;
+  return helpAnswerWithoutLlm(ctx.message) ?? FALLBACK;
 }
 
 function requirementsFor(sector: Sector, own: boolean): string {
@@ -197,11 +208,11 @@ const POLICY = `### Política de Privacidad
 const DRAFTING = `### Borradores y cartas
 
 En modo básico no redacto textos libres, pero tienes plantillas listas:
-- **Respuestas ARCO:** abre la solicitud en **Solicitudes ARCO** y usa «Cargar plantilla».
+- **Respuestas ARCO:** abre la solicitud en **Solicitudes ARCO** y usa «Restaurar plantilla».
 - **Consentimientos, confidencialidad, encargo a proveedores y cartel de cámaras:** en **Documentos**.
-- **Aviso a afectados por un incidente:** dentro de cada incidente.`;
+- **Aviso a la ANPD por un incidente:** el «Borrador para la ANPD» está dentro de cada incidente.`;
 
-const FALLBACK = `No tengo una respuesta preparada para esa pregunta en el modo básico. Prueba con temas como:
+const FALLBACK = `No tengo una respuesta preparada para esa pregunta en el modo básico. Puedes buscarla en el [Centro de ayuda](/app/ayuda) o probar con temas como:
 - «Tengo un gimnasio, ¿qué bancos y documentos necesito?»
 - «¿Cuánto tiempo tengo para responder una solicitud ARCO?»
 - «¿Cómo pido permiso para enviar promociones por WhatsApp?»

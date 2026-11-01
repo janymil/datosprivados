@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HelpTip } from "@/components/help-tip";
 import { requireSession } from "@/lib/auth";
 import { listEvidence } from "@/lib/data";
 import { addEvidenceAction, deleteEvidenceAction } from "@/app/actions/tools";
@@ -81,7 +82,9 @@ export default async function EvidencePage({
       </nav>
 
       <section className="card p-6">
-        <h2 className="font-display text-xl tracking-[-0.02em]">{active.label}</h2>
+        <h2 className="flex items-center gap-2 font-display text-xl tracking-[-0.02em]">
+          {active.label} <HelpTip k="evidencia" />
+        </h2>
         <p className="mt-1 max-w-[68ch] text-[15px] text-ink-soft">{active.why}</p>
 
         <form action={addEvidenceAction} className="mt-5 grid gap-4 sm:grid-cols-[180px_1fr]">

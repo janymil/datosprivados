@@ -5,10 +5,12 @@ import { AiChatAssistant } from "@/components/ai-chat-assistant";
 import { aiMode } from "@/lib/ai";
 import { PageHeader, StatusPill } from "@/components/ui";
 import { Term } from "@/components/help";
+import { HelpTip } from "@/components/help-tip";
 
 export const metadata = { title: "Asistente Legal" };
 
-export default async function AiAssistantPage() {
+export default async function AiAssistantPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q } = await searchParams;
   const { company } = await requireSession();
   const banks = listBanks(company.id);
   const requests = listRequests(company.id);
@@ -38,9 +40,13 @@ export default async function AiAssistantPage() {
           </>
         }
         actions={
-          <StatusPill tone="ok">
-            Plan {isPro ? "Pro" : "Básico"}
-          </StatusPill>
+          <>
+            <HelpTip k="ia_anonimizado" label="Ayuda: anonimización" />
+            <HelpTip k="ia_cuota" label="Ayuda: consultas de IA" />
+            <StatusPill tone="ok">
+              Plan {isPro ? "Pro" : "Básico"}
+            </StatusPill>
+          </>
         }
       />
 
@@ -53,6 +59,7 @@ export default async function AiAssistantPage() {
           complianceScore={compliance.score}
           mode={aiMode(company)}
           embedded
+          initialPrompt={(q ?? "").slice(0, 300)}
         />
       </section>
     </div>

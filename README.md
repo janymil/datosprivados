@@ -40,6 +40,11 @@ MYPE y negocios pequeños. No es un documento legal: es el expediente operativo.
   SIPDP exige una empresa peruana para inscribir bancos de datos, así que no se atienden
   responsables constituidos en el extranjero.
 - **Exportación** del expediente completo en JSON.
+- **Centro de ayuda** (`/app/ayuda`): ruta de la A a la Z que se marca sola según el estado de la
+  cuenta, buscador, «¿Qué necesita mi negocio?», mapa de la app, 18 artículos, glosario, preguntas
+  frecuentes y tooltips contextuales (`HelpTip`). Todo el contenido vive en `src/lib/help-content.ts`
+  y `src/lib/help-tips.ts`, y es **la misma fuente** que alimenta al asistente de IA
+  (`src/lib/help-knowledge.ts`): al cambiar una pantalla se corrige ahí una sola vez.
 
 ## Arranque
 
