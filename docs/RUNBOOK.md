@@ -140,3 +140,14 @@ INSERT INTO holidays (date, name, source) VALUES ('2026-11-23', 'Feriado por dec
 
 Los plazos ARCO ya calculados **no se recalculan** al cargar un feriado; solo cambia lo que se cree después. `holidays-check` informa
 los años cuyos feriados siguen siendo `calculado` (sin decreto confirmado): en octubre, cargar el decreto del año siguiente.
+
+## Salud y alertas (Fase 6)
+
+- `GET /api/health` (público, sin secretos): 200 si la base lee y escribe; 503 si no. Para el monitor externo.
+- `GET /api/ready` (público): además, en producción exige correo, MercadoPago y `CRON_SECRET`.
+- `GET /api/cron/health` (Bearer `CRON_SECRET`): tareas atrasadas, correos atascados > 1 h, ≥ `ALERT_WEBHOOK_FAILURES` webhooks fallidos en 24 h,
+  respaldo de más de 26 h en `BACKUP_DIR`, disco > 80 %. Devuelve `alerts: [{code, message}]` y 503 si hay alguna.
+- Errores de servidor: `pm2 logs datosprivados | grep request_error` (JSON con `digest`, ruta y método; sin cuerpos ni correos).
+- Pase a producción: `docs/CUTOVER.md`. Plantilla de nginx: `deploy/nginx-production.conf`.
+
+- Revisiones recurrentes (semanal, mensual, anual): `docs/POST-LAUNCH.md`; `pnpm ops:weekly`, `pnpm ops:restore-drill`.

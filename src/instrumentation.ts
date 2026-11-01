@@ -8,3 +8,19 @@ export async function register() {
     throw new Error(`Configuración inválida: ${errors.join(" ")}`);
   }
 }
+
+/** Errores de render, rutas y Server Actions: una línea JSON con el digest, sin cuerpo ni cabeceras. */
+export async function onRequestError(error: unknown, request: { path: string; method: string }, context: { routerKind: string; routeType: string; routePath: string }) {
+  if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  const { logEvent } = await import("./lib/log");
+  const err = error as { message?: string; digest?: string; name?: string };
+  logEvent("error", "request_error", {
+    message: err?.message ?? String(error),
+    digest: err?.digest,
+    kind: err?.name,
+    method: request.method,
+    path: request.path.split("?")[0],
+    route: context.routePath,
+    route_type: context.routeType,
+  });
+}

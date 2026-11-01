@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { isJobName, jobsHealth, runJob } from "@/lib/jobs";
+import { operationalAlerts } from "@/lib/ops";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,11 +24,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ job
   return Response.json(outcome, { status: outcome.status === "error" ? 500 : outcome.status === "locked" ? 409 : 200 });
 }
 
-/** GET /api/cron/health — 200 si todo corre a tiempo, 503 si no. Para un monitor externo. */
+/** GET /api/cron/health — 200 si todo corre a tiempo y no hay alertas operativas, 503 si no. Para un monitor externo. */
 export async function GET(request: Request, { params }: { params: Promise<{ job: string }> }) {
   if (!authorized(request)) return new Response("Unauthorized", { status: 401 });
   const { job } = await params;
   if (job !== "health") return new Response("Not found", { status: 404 });
   const health = jobsHealth();
-  return Response.json(health, { status: health.healthy ? 200 : 503 });
+  const alerts = operationalAlerts();
+  return Response.json({ ...health, healthy: health.healthy && alerts.length === 0, alerts }, { status: health.healthy && alerts.length === 0 ? 200 : 503 });
 }

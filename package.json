@@ -13,7 +13,9 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "test:e2e": "next build && playwright test",
-    "audit:prod": "pnpm audit --prod"
+    "audit:prod": "pnpm audit --prod",
+    "ops:weekly": "node scripts/weekly-report.mjs",
+    "ops:restore-drill": "node scripts/restore-drill.mjs"
   },
   "dependencies": {
     "next": "16.4.3",
