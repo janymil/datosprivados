@@ -77,20 +77,55 @@ considera de un proceso muerto.
 | `expire-sessions` | diario | Sesiones, tokens y límites de intentos vencidos. |
 | `holidays-check` | semanal | Asegura feriados de este año y el siguiente; informa los años aún sin decreto confirmado. |
 
-Ejemplo (`/etc/cron.d/datosprivados`; `curl -fsS` falla si la tarea devuelve error):
+### Instalación (2026-11-01, este servidor)
+
+Tres piezas, todas fuera del repositorio:
+
+- `/usr/local/bin/datosprivados-cron <tarea>|health [--at HH:MM] [--dow 1-7]` — lee `CRON_SECRET` de `/etc/datosprivados.env`
+  (600) o del `.env` del repo, hace la petición con `curl` y registra los fallos en syslog (`logger -t datosprivados-cron`).
+  El cron de este servidor no tiene MTA (`No MTA installed, discarding output`): la salida por stdout se pierde, por eso los
+  errores van a syslog.
+- `/usr/local/bin/datosprivados-backup` — respaldo horario con `scripts/backup-db.mjs` en `/var/backups/datosprivados`, que es
+  el `BACKUP_DIR` que vigila `GET /api/cron/health`.
+- `/etc/cron.d/datosprivados` — la tabla. **No lleva el secreto**, porque `/etc/cron.d` es legible por todos.
+
+**Horas: el cron de Ubuntu (3.0pl1) no soporta `CRON_TZ`.** Interpreta el horario en la zona del sistema —aquí `Europe/Berlin`,
+con horario de verano— y su manual recomienda comprobar la hora dentro del script. Por eso las tareas diarias y semanales se
+disparan **cada hora** y el wrapper decide en hora de Lima con `--at` (y `--dow 1..7` para las semanales, 1 = lunes). Lo que va
+por intervalo (cada minuto, cada 30 min, cada hora) no depende de la zona horaria.
 
 ```cron
-* * * * *    root curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/send-outbox >/dev/null
-*/30 * * * * root curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/incident-deadline-reminders >/dev/null
-0 14 * * *   root curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/billing-sync >/dev/null
-0 13 * * *   root curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/arco-deadline-reminders >/dev/null
-# … el resto, diarias o semanales (13:00 UTC = 08:00 Lima)
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# por intervalo
+* * * * *       root /usr/local/bin/datosprivados-cron send-outbox
+*/30 * * * *    root /usr/local/bin/datosprivados-cron incident-deadline-reminders
+0 * * * *       root /usr/local/bin/datosprivados-backup
+
+# diarias (hora de Lima; el wrapper filtra)
+0 * * * *       root /usr/local/bin/datosprivados-cron purge-old-data            --at 03:00
+0 * * * *       root /usr/local/bin/datosprivados-cron expire-sessions           --at 04:00
+0 * * * *       root /usr/local/bin/datosprivados-cron billing-reconcile         --at 06:00
+0 * * * *       root /usr/local/bin/datosprivados-cron billing-sync              --at 06:15
+0 * * * *       root /usr/local/bin/datosprivados-cron lapsed-account-notices    --at 06:30
+0 * * * *       root /usr/local/bin/datosprivados-cron arco-deadline-reminders   --at 08:00
+
+# semanales (lunes, hora de Lima)
+0 * * * *       root /usr/local/bin/datosprivados-cron document-staleness-notice --at 05:00 --dow 1
+0 * * * *       root /usr/local/bin/datosprivados-cron holidays-check            --at 05:30 --dow 1
 ```
+
+Dos trampas al escribir la tabla: los `%` deben escaparse (`\%`) o el cron los convierte en saltos de línea, y `$CRON_SECRET`
+**no** se expande —el cron no hereda el entorno del shell—, así que un `curl -H "Authorization: Bearer $CRON_SECRET"` en la tabla
+enviaría un bearer vacío y recibiría 401. De ahí el wrapper.
+
+Comprobación: `datosprivados-cron health; echo $?` (0 = HTTP 200) y `grep datosprivados /var/log/syslog`.
 
 **Alerta de tareas atrasadas:** `GET /api/cron/health` (mismo bearer) devuelve 200 si cada tarea tuvo una ejecución correcta dentro de su
 plazo y no hay correos con más de 1 h sin salir; si no, 503 con el detalle. Apuntar un monitor externo (UptimeRobot, Better Stack) y
-verificar la alerta apagando el cron una vez. **Pendiente:** no hay monitor configurado ni se ha probado la alerta. El respaldo
-(`scripts/backup-db.mjs`) sigue siendo un cron aparte del shell, fuera de este esquema.
+verificar la alerta apagando el cron una vez. **Estado:** cron instalado y verificado el 2026-11-01 (`healthy: true`, 200, respaldo
+horario incluido); **pendiente:** el monitor externo y la prueba de la alerta en un monitor real.
 
 ## Correo
 
