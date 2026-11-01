@@ -7,7 +7,7 @@ Las filas «Abierto» dicen quién o qué falta.
 
 | # | Criterio | Estado | Evidencia / qué falta |
 |---|---|---|---|
-| 1 | CI en verde | **En curso** | El flujo **sí se ejecutó** en GitHub: las corridas `41256959484` (`0351293`) y `41271540554` (`f686f26`) fallaron en el paso `pnpm test` (no en la instalación, el tipado ni el lint). Causa: `test/helpers/setup.ts` apuntaba `DATOSPRIVADOS_DB` a `test/.tmp/`, carpeta que existe en esta máquina pero no en un clon limpio (`getDb()` solo crea `data/`), así que SQLite devolvía `unable to open database file` (294 de 375 pruebas). **Corregido** con `fs.mkdirSync(dir, { recursive: true })` y reproducido en un clon limpio sin `.env`: 378/378 y `build` en verde. Pendiente: corrida verde tras el nuevo push. |
+| 1 | CI en verde | **Hecho (2026-11-01)** | El flujo **sí se había ejecutado** antes: las corridas `41256959484` (`0351293`) y `41271540554` (`f686f26`) fallaron en el paso `pnpm test` (no en la instalación, el tipado ni el lint). Causa: `test/helpers/setup.ts` apuntaba `DATOSPRIVADOS_DB` a `test/.tmp/`, carpeta que existe en esta máquina pero no en un clon limpio (`getDb()` solo crea `data/`), así que SQLite devolvía `unable to open database file` (294 de 375 pruebas). **Corregido** con `fs.mkdirSync(dir, { recursive: true })`; corrida verde `41272543343` (`6c805d0`): auditoría, typecheck/lint/pruebas/build y E2E (Playwright **31/31**) en verde. |
 | 2 | E2E en verde en staging | **Parcial** | Recorrido completo + pruebas de calidad en verde contra `next start` local con MercadoPago simulado (ver «Resultados»). No hay staging real (`docs/STAGING.md` lo describe). |
 | 3 | Cero S1/S2 abiertos | **Sin verificar** | No hay lista de defectos viva; los de la sección 2 del roadmap tienen prueba de regresión según las fases 1–4. |
 | 4 | Matriz de autorización sin fuga entre empresas | **Hecho** | `test/authz.test.ts`, `test/tenancy.test.ts` (parte de las 378 pruebas). |
@@ -94,6 +94,8 @@ Las dos corridas que existían sobre `master` fallaron y la causa no era el cód
 - Motivo: `test/helpers/setup.ts` escribía en `test/.tmp/`, que **existe en la máquina de desarrollo** (está en `.gitignore`) pero no en un clon limpio. `getDb()` solo crea la carpeta de la base por defecto (`data/`), así que `new DatabaseSync()` devolvía `unable to open database file` en 17 de 18 archivos (294 de 375 pruebas). En local nunca se vio porque la carpeta ya estaba creada.
 - Arreglo: `fs.mkdirSync(dir, { recursive: true })` en el `setupFiles` de Vitest.
 - Comprobación: clon limpio (`git worktree` de `f686f26`) **sin `.env` y sin `test/.tmp`**: `typecheck` y `lint` en verde, **378/378** pruebas, `build` en verde (con `NEXT_PUBLIC_APP_URL=https://ci.example.com`, como en CI) y E2E **31/31** sobre esa misma compilación. Sirve también de prueba de que el pipeline completo pasa en las condiciones de GitHub.
+- Corrida verde tras el arreglo: `41272543343` (`6c805d0`), 3 de 3 trabajos en verde (auditoría 9 s, typecheck/lint/pruebas/build 60 s, E2E 46 s) y `🎭 Playwright Run Summary: 31 passed`.
+- Avisos del ejecutor que no cambian el resultado y quedan como mantenimiento: los `uses:` de v4 se fuerzan a Node 24 porque Node 20 está deprecado en Actions (hay PR de Dependabot abiertos para subirlos) y `ubuntu-latest` migra a Ubuntu 26 desde el 2026-10-19.
 
 ## Pendiente del propietario (no se puede hacer desde el repositorio)
 
