@@ -7,7 +7,7 @@ Las filas «Abierto» dicen quién o qué falta.
 
 | # | Criterio | Estado | Evidencia / qué falta |
 |---|---|---|---|
-| 1 | CI en verde | **Abierto** | El flujo `.github/workflows/ci.yml` nunca se ejecutó en GitHub (nada confirmado/subido). Local: `pnpm typecheck`, `pnpm test`, `pnpm lint`, `pnpm build` en verde. |
+| 1 | CI en verde | **En curso** | El flujo **sí se ejecutó** en GitHub: las corridas `41256959484` (`0351293`) y `41271540554` (`f686f26`) fallaron en el paso `pnpm test` (no en la instalación, el tipado ni el lint). Causa: `test/helpers/setup.ts` apuntaba `DATOSPRIVADOS_DB` a `test/.tmp/`, carpeta que existe en esta máquina pero no en un clon limpio (`getDb()` solo crea `data/`), así que SQLite devolvía `unable to open database file` (294 de 375 pruebas). **Corregido** con `fs.mkdirSync(dir, { recursive: true })` y reproducido en un clon limpio sin `.env`: 378/378 y `build` en verde. Pendiente: corrida verde tras el nuevo push. |
 | 2 | E2E en verde en staging | **Parcial** | Recorrido completo + pruebas de calidad en verde contra `next start` local con MercadoPago simulado (ver «Resultados»). No hay staging real (`docs/STAGING.md` lo describe). |
 | 3 | Cero S1/S2 abiertos | **Sin verificar** | No hay lista de defectos viva; los de la sección 2 del roadmap tienen prueba de regresión según las fases 1–4. |
 | 4 | Matriz de autorización sin fuga entre empresas | **Hecho** | `test/authz.test.ts`, `test/tenancy.test.ts` (parte de las 378 pruebas). |
@@ -62,7 +62,7 @@ del héroe, que retrasaba el primer pintado del elemento más grande. Login y te
 | Cookies | `pdp_session`: HttpOnly, SameSite=Lax, Secure según `COOKIE_SECURE` (`test/security.test.ts`). |
 | Dependencias | `pnpm audit --prod`: sin vulnerabilidades conocidas. |
 | Secretos | Búsqueda por patrones en el árbol de trabajo y en todo el historial de git: sin claves. **Excepción:** `docs/MERCADOPAGO-SANDBOX.md` (sin seguir en git) contiene tokens de la app de prueba y contraseñas de las cuentas de prueba. **No subirlo tal cual** (el remoto `origin` está en GitHub): redactar los valores o rotarlos antes. No se usó `gitleaks` (no instalado). |
-| nginx `server_tokens` | **Abierto:** sigue comentado en `/etc/nginx/nginx.conf` (servidor compartido; el cambio lo bloqueó el entorno). Pasos: descomentar `server_tokens off;`, `nginx -t`, `systemctl reload nginx`. |
+| nginx `server_tokens` | **Hecho (2026-11-01, servidor del preview):** `server_tokens off;` descomentado en `/etc/nginx/nginx.conf:21` (copia previa en `/etc/nginx/nginx.conf.bak-20261101-050815`), `nginx -t` OK y `systemctl reload nginx`. Verificado: la respuesta directa pasa de `Server: nginx/1.24.0 (Ubuntu)` a `Server: nginx`; por Cloudflare se anuncia igual `server: cloudflare`. |
 | CSRF de Server Actions | Next verifica `Origin` contra `Host`. Detrás de Cloudflare/nginx con `Host` reenviado igual no hace falta `allowedOrigins`; probar en staging con el dominio real. |
 | SSRF | Solo URLs fijas de proveedores (MercadoPago, Decolecta, correo, LLM). |
 | TLS (SSL Labs A) y pen-test externo | **Abierto:** requieren el dominio público / un tercero. |
@@ -86,9 +86,18 @@ Ejecutadas el 2026-11-01 sobre una compilación limpia de la versión actual (`.
 asociada (la etiqueta era un `div`). `Field` (`src/components/ui.tsx`) ahora usa `<label htmlFor>` y `aria-describedby` para la ayuda
 cuando el hijo es un solo control; los grupos de controles no cambian.
 
+### CI en GitHub (2026-11-01)
+
+Las dos corridas que existían sobre `master` fallaron y la causa no era el código de la app sino el entorno de pruebas:
+
+- `41271540554` (`f686f26`): `pnpm install`, `typecheck` y `lint` en verde; **`pnpm test` falló a los 3 s**; `build` y E2E quedaron saltados. `41256959484` (`0351293`) igual. `audit` en verde en ambas.
+- Motivo: `test/helpers/setup.ts` escribía en `test/.tmp/`, que **existe en la máquina de desarrollo** (está en `.gitignore`) pero no en un clon limpio. `getDb()` solo crea la carpeta de la base por defecto (`data/`), así que `new DatabaseSync()` devolvía `unable to open database file` en 17 de 18 archivos (294 de 375 pruebas). En local nunca se vio porque la carpeta ya estaba creada.
+- Arreglo: `fs.mkdirSync(dir, { recursive: true })` en el `setupFiles` de Vitest.
+- Comprobación: clon limpio (`git worktree` de `f686f26`) **sin `.env` y sin `test/.tmp`**: `typecheck` y `lint` en verde, **378/378** pruebas, `build` en verde (con `NEXT_PUBLIC_APP_URL=https://ci.example.com`, como en CI) y E2E **31/31** sobre esa misma compilación. Sirve también de prueba de que el pipeline completo pasa en las condiciones de GitHub.
+
 ## Pendiente del propietario (no se puede hacer desde el repositorio)
 
-1. `server_tokens off;` en `/etc/nginx/nginx.conf` (+ `nginx -t` y `systemctl reload nginx`). Hay copia previa del archivo solo si lo haces tú.
+1. ~~`server_tokens off;` en `/etc/nginx/nginx.conf`~~ **Hecho el 2026-11-01** (ver «Seguridad»). Queda del bloque nginx de P6-INFRA solo lo que toca al cortafuegos/edge: gzip/brotli, `limit_req` en `/login`, `/registro`, `/solicitud/` y `/api/`, y `set_real_ip_from` con los rangos de Cloudflare.
 2. No subir `docs/MERCADOPAGO-SANDBOX.md` con los tokens y contraseñas de prueba: redactarlos o rotarlos.
 3. Crear staging real (dominio, base, certificado) con `docs/STAGING.md` y ejecutar ahí `scripts/deploy.sh` una vez.
 4. Empresa operadora, abogado, dominio y correo (SPF/DKIM/DMARC): bloquean los textos legales finales y la entrega real de correos.
