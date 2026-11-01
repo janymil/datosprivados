@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Children, cloneElement, isValidElement, useId, type ReactElement, type ReactNode } from "react";
 import { ArrowRightIcon } from "./icons";
 
 export function PageHeader({
@@ -178,6 +178,8 @@ export function Notice({
   );
 }
 
+const CONTROLS = new Set(["input", "select", "textarea"]);
+
 export function Field({
   label,
   children,
@@ -189,11 +191,37 @@ export function Field({
   hint?: ReactNode;
   className?: string;
 }) {
+  const id = useId();
+  // Con un solo control hijo, la etiqueta y la ayuda se asocian de forma programática (lectores de pantalla).
+  // Con varios controles (grupos), no se toca el contenido: cada uno debe etiquetarse por su cuenta.
+  const only = Children.count(children) === 1 ? Children.toArray(children)[0] : null;
+  const control =
+    isValidElement(only) && typeof only.type === "string" && CONTROLS.has(only.type)
+      ? (only as ReactElement<{ id?: string; "aria-describedby"?: string }>)
+      : null;
+  const controlId = control?.props.id ?? `${id}-control`;
+  const hintId = `${id}-hint`;
+
   return (
     <div className={`block ${className ?? ""}`}>
-      <div className="field-label">{label}</div>
-      {children}
-      {hint && <div className="mt-1.5 block text-[13.5px] leading-snug text-ink-soft">{hint}</div>}
+      {control ? (
+        <label htmlFor={controlId} className="field-label">
+          {label}
+        </label>
+      ) : (
+        <div className="field-label">{label}</div>
+      )}
+      {control
+        ? cloneElement(control, {
+            id: controlId,
+            ...(hint ? { "aria-describedby": control.props["aria-describedby"] ?? hintId } : {}),
+          })
+        : children}
+      {hint && (
+        <div id={hintId} className="mt-1.5 block text-[13.5px] leading-snug text-ink-soft">
+          {hint}
+        </div>
+      )}
     </div>
   );
 }

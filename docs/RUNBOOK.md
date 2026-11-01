@@ -33,6 +33,10 @@ El preview corre con PM2 (`datosprivados`) sobre `next start -p 3000 -H 127.0.0.
 lo que sirve el proceso en marcha: **construir en el mismo directorio mientras corre puede romper el preview**. Construye en una
 copia o detén el proceso antes. Tras un build nuevo: `pm2 restart datosprivados`.
 
+Despliegue recomendado: `scripts/deploy.sh`. Hace typecheck y pruebas, respaldo de la base, compila en `.deploy/build`
+(el proceso en marcha sigue sirviendo), intercambia `.next`, reinicia con PM2 y prueba `/` y `/demo`. Si la prueba de humo
+falla, vuelve sola a la compilación anterior (`.next.prev`). En fork mode el reinicio corta el servicio unos segundos.
+
 Al arrancar en producción, `src/instrumentation.ts` valida la configuración y **no arranca** si `NEXT_PUBLIC_APP_URL` no es
 https, si `COOKIE_SECURE=0`, si `PAYMENTS_DEV_BYPASS=1`, si `DATOSPRIVADOS_DB` no es ruta absoluta, o si hay token de
 MercadoPago sin `MERCADOPAGO_WEBHOOK_SECRET`.
@@ -43,6 +47,9 @@ MercadoPago sin `MERCADOPAGO_WEBHOOK_SECRET`.
 pnpm typecheck
 pnpm test          # Vitest; cada archivo usa su propia base SQLite en test/.tmp/
 ```
+
+**Pago de punta a punta en sandbox:** `docs/MERCADOPAGO-SANDBOX.md` — cuentas de prueba (vendedor y comprador), app de
+sandbox con sus tokens, tarjetas de prueba y el procedimiento que ya funcionó (pago de S/ 19 aprobado el 2026-11-01).
 
 ## Verificación del RUC (Decolecta)
 
@@ -75,6 +82,7 @@ Ejemplo (`/etc/cron.d/datosprivados`; `curl -fsS` falla si la tarea devuelve err
 ```cron
 * * * * *    root curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/send-outbox >/dev/null
 */30 * * * * root curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/incident-deadline-reminders >/dev/null
+0 14 * * *   root curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/billing-sync >/dev/null
 0 13 * * *   root curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/arco-deadline-reminders >/dev/null
 # … el resto, diarias o semanales (13:00 UTC = 08:00 Lima)
 ```

@@ -21,6 +21,7 @@ import { getDb } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { checkCompanyRuc, lookupRuc } from "@/lib/ruc-lookup";
 import { signupAction } from "@/app/actions/auth";
+import { LEGAL_VERSION } from "@/lib/platform-legal";
 import { updateCompanyAction } from "@/app/actions/company";
 import { getCompanyRow, makeCompany } from "./helpers/db";
 
@@ -51,7 +52,7 @@ function form(values: Record<string, string>) {
   return data;
 }
 const signupForm = (over: Record<string, string> = {}) =>
-  form({ company: "Mi Tienda", ruc: RUC_A, name: "Ana", email: `ana-${Math.random().toString(36).slice(2)}@example.com`, password: "clave-larga-123", plan: "basico", term: "monthly", ...over });
+  form({ company: "Mi Tienda", ruc: RUC_A, name: "Ana", email: `ana-${Math.random().toString(36).slice(2)}@example.com`, password: "clave-larga-123", plan: "basico", term: "monthly", accept_legal: "on", ...over });
 const count = (sql: string, ...p: string[]) => (getDb().prepare(sql).get(...p) as { n: number }).n;
 
 let run = 0;
@@ -129,6 +130,28 @@ describe("registro con verificación de RUC", () => {
     expect(company.ruc_status).toBe("ACTIVO");
     expect(company.ruc_condition).toBe("HABIDO");
     expect(company.ruc_verified_at).toBeTruthy();
+  });
+
+  it("sin aceptar los términos no se crea la cuenta", async () => {
+    fetchMock.mockResolvedValue(reply(200, sunat()));
+    const data = signupForm({ email: "sin-aceptar@example.com" });
+    data.delete("accept_legal");
+    expect((await signupAction({}, data)).error).toMatch(/Términos/);
+    expect(count("SELECT COUNT(*) AS n FROM users WHERE email = ?", "sin-aceptar@example.com")).toBe(0);
+  });
+
+  it("registra versión, fecha e IP de los términos y la privacidad aceptados", async () => {
+    fetchMock.mockResolvedValue(reply(200, sunat()));
+    const email = "acepta@example.com";
+    await expect(signupAction({}, signupForm({ email }))).rejects.toThrow("REDIRECT:/pago");
+    const rows = getDb()
+      .prepare("SELECT document, version, context, ip, accepted_at FROM legal_consents WHERE user_id = (SELECT id FROM users WHERE email = ?) ORDER BY document")
+      .all(email) as Array<Record<string, string>>;
+    expect(rows.map((r) => r.document)).toEqual(["privacy", "terms"]);
+    for (const row of rows) {
+      expect(row).toMatchObject({ context: "signup", ip: ctx.ip, version: LEGAL_VERSION });
+      expect(row.accepted_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    }
   });
 
   it("si la SUNAT no responde no se crea nada", async () => {

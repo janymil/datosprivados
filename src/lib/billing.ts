@@ -3,11 +3,12 @@ import "server-only";
 import { getDb, newId, nowIso, type Company } from "./db";
 import { logActivity } from "./data";
 import { notifyCompany } from "./notify";
+import { createInvoiceForPayment, getInvoiceByPayment, voidPendingInvoice } from "./invoicing";
 import {
   PLANS,
   isBillingTerm,
   isPlanId,
-  termDays,
+  termMonths,
   termLabel,
   type BillingTerm,
   type PlanId,
@@ -32,7 +33,7 @@ import {
  *   su primer cobro no debe volver a extenderlo.
  */
 
-export type PaymentStatus = "pending" | "approved" | "rejected" | "cancelled";
+export type PaymentStatus = "pending" | "approved" | "rejected" | "cancelled" | "refunded";
 
 export type PaymentRow = {
   id: string;
@@ -62,11 +63,11 @@ export function isCompanyActive(
 }
 
 export function canBypassPayment() {
-  return process.env.NODE_ENV !== "production" && process.env.PAYMENTS_DEV_BYPASS !== "0";
+  return process.env.NODE_ENV !== "production" && process.env.PAYMENTS_DEV_BYPASS === "1";
 }
 
 export function billingLabel(
-  company: Pick<Company, "billing_status" | "paid_until" | "subscription_status" | "billing_term">
+  company: Pick<Company, "billing_status" | "paid_until" | "subscription_status" | "billing_term" | "subscription_id">
 ) {
   if (company.billing_status === "demo") return "Cuenta de demostración";
   if (company.billing_status === "pending") return "Pendiente de pago";
@@ -74,6 +75,8 @@ export function billingLabel(
   if (company.paid_until && new Date(company.paid_until).getTime() <= Date.now()) {
     return "Plan vencido";
   }
+  // Sin suscripción de MercadoPago (transferencia o activación manual): el plan está pagado.
+  if (!company.subscription_id) return `Plan ${termLabel(company.billing_term).toLowerCase()} activo`;
   if (company.subscription_status === "cancelled") return "Suscripción cancelada";
   if (company.subscription_status === "paused") return "Suscripción pausada";
   return `Suscripción ${termLabel(company.billing_term).toLowerCase()} activa`;
@@ -89,10 +92,21 @@ export function addDays(date: Date, days: number) {
   return next;
 }
 
-export function nextPaidUntil(currentPaidUntil: string | null, paidAt: Date, days = 30) {
+/** Suma meses de calendario (31 ene + 1 mes = 28/29 feb), para no desfasarse de la renovación de MercadoPago. */
+export function addMonths(date: Date, months: number) {
+  const next = new Date(date);
+  const day = next.getUTCDate();
+  next.setUTCDate(1);
+  next.setUTCMonth(next.getUTCMonth() + months);
+  const lastDay = new Date(Date.UTC(next.getUTCFullYear(), next.getUTCMonth() + 1, 0)).getUTCDate();
+  next.setUTCDate(Math.min(day, lastDay));
+  return next;
+}
+
+export function nextPaidUntil(currentPaidUntil: string | null, paidAt: Date, months = 1) {
   const current = currentPaidUntil ? new Date(currentPaidUntil) : null;
   const base = current && current.getTime() > paidAt.getTime() ? current : paidAt;
-  return addDays(base, days).toISOString();
+  return addMonths(base, months).toISOString();
 }
 
 export function getPaymentsForCompany(companyId: string, limit = 8) {
@@ -194,7 +208,7 @@ export function activateSubscription(input: {
   const alreadyGranted = company.last_payment_id === `auth-${input.subscriptionId}`;
   const grant = !alreadyGranted && !periodFuture && !hasApprovedPayments(input.subscriptionId);
 
-  const paidUntil = grant ? addDays(now, termDays(input.term)).toISOString() : (company.paid_until ?? now.toISOString());
+  const paidUntil = grant ? addMonths(now, termMonths(input.term)).toISOString() : (company.paid_until ?? now.toISOString());
   const lastPaymentId = grant ? `auth-${input.subscriptionId}` : company.last_payment_id;
 
   db.prepare(
@@ -264,8 +278,8 @@ export function recordSubscriptionCharge(input: {
   const paidUntil = firstAfterAuthorization
     ? company.paid_until && new Date(company.paid_until).getTime() > paidAt.getTime()
       ? company.paid_until
-      : addDays(paidAt, termDays(term)).toISOString()
-    : nextPaidUntil(company.paid_until, paidAt, termDays(term));
+      : addMonths(paidAt, termMonths(term)).toISOString()
+    : nextPaidUntil(company.paid_until, paidAt, termMonths(term));
   const plan = isPlanId(company.plan) ? company.plan : "basico";
 
   db.prepare(
@@ -274,13 +288,14 @@ export function recordSubscriptionCharge(input: {
      WHERE id = ?`
   ).run(paidUntil, input.paymentId, plan, term, input.companyId);
 
+  const rowId = newId();
   db.prepare(
     `INSERT INTO payments
        (id, company_id, plan, term, amount, currency, status, provider, payment_id,
         external_reference, subscription_id, paid_at, raw, created_at)
      VALUES (?, ?, ?, ?, ?, 'PEN', 'approved', 'mercadopago', ?, ?, ?, ?, ?, ?)`
   ).run(
-    newId(),
+    rowId,
     input.companyId,
     plan,
     term,
@@ -292,6 +307,8 @@ export function recordSubscriptionCharge(input: {
     input.raw ?? null,
     nowIso()
   );
+
+  createInvoiceForPayment(rowId);
 
   notifyCompany(
     company,
@@ -357,7 +374,7 @@ export function markSubscriptionStatus(
 }
 
 export function activateDevPlan(companyId: string, plan: PlanId, term: BillingTerm = "monthly") {
-  const paidUntil = addDays(new Date(), termDays(term)).toISOString();
+  const paidUntil = addMonths(new Date(), termMonths(term)).toISOString();
   getDb()
     .prepare(
       `UPDATE companies SET plan = ?, billing_term = ?, billing_status = 'active', paid_until = ?,
@@ -376,4 +393,45 @@ export function activateDevPlan(companyId: string, plan: PlanId, term: BillingTe
 
 export function planFromCompany(company: Pick<Company, "plan">): PlanId {
   return isPlanId(company.plan) ? company.plan : "basico";
+}
+
+/**
+ * Un cobro fue reembolsado o contracargado: se descuenta del plan el periodo
+ * que cubría y se anula su comprobante si aún no se emitió. Si ya se emitió,
+ * queda en la actividad para que el operador emita la nota de crédito.
+ * Idempotente: un cobro ya reembolsado no vuelve a descontarse.
+ */
+export function recordRefund(input: { providerPaymentId: string }) {
+  const db = getDb();
+  const payment = db.prepare("SELECT * FROM payments WHERE payment_id = ?").get(input.providerPaymentId) as unknown as
+    | PaymentRow
+    | undefined;
+  if (!payment || payment.status !== "approved") return { refunded: false };
+
+  const company = getCompanyById(payment.company_id);
+  if (!company) return { refunded: false };
+
+  const term = isBillingTerm(payment.term) ? payment.term : "monthly";
+  db.prepare("UPDATE payments SET status = 'refunded' WHERE id = ?").run(payment.id);
+  if (company.paid_until) {
+    const reduced = addMonths(new Date(company.paid_until), -termMonths(term)).toISOString();
+    db.prepare("UPDATE companies SET paid_until = ? WHERE id = ?").run(reduced, company.id);
+  }
+
+  const invoice = getInvoiceByPayment(payment.id);
+  if (invoice?.status === "pending") voidPendingInvoice(payment.id);
+  logActivity(
+    company.id,
+    "pago",
+    invoice?.status === "issued"
+      ? `Reembolsamos S/ ${payment.amount.toFixed(2)}. La factura ${invoice.series}-${invoice.number} requiere una nota de crédito.`
+      : `Reembolsamos S/ ${payment.amount.toFixed(2)} y descontamos el periodo que cubría.`
+  );
+  notifyCompany(
+    company,
+    "payment_refunded",
+    { plan: isPlanId(payment.plan) ? PLANS[payment.plan].name : payment.plan, amount: `S/ ${payment.amount.toFixed(2)}` },
+    { dedupeKey: `refund:${payment.id}` }
+  );
+  return { refunded: true, needsCreditNote: invoice?.status === "issued" };
 }

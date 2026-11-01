@@ -139,6 +139,21 @@ export function SignupForm({
         />
       </Field>
 
+      <label className="flex items-start gap-3 text-[14.5px] leading-relaxed text-ink-soft">
+        <input type="checkbox" name="accept_legal" required className="mt-1 h-4 w-4 shrink-0" />
+        <span>
+          Acepto los{" "}
+          <a href="/terminos" target="_blank" rel="noopener" className="link-underline font-medium text-ink">
+            Términos y condiciones
+          </a>{" "}
+          y la{" "}
+          <a href="/privacidad" target="_blank" rel="noopener" className="link-underline font-medium text-ink">
+            Política de privacidad
+          </a>
+          .
+        </span>
+      </label>
+
       <button type="submit" disabled={pending} className="btn btn-primary w-full disabled:opacity-60">
         {pending ? "Creando cuenta…" : `Crear cuenta ${plan === "pro" ? "Pro" : "Básica"}`}
       </button>

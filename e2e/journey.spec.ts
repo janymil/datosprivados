@@ -51,8 +51,13 @@ test("recorrido completo: de la suscripción al vencimiento", async ({ page, bro
     await page.locator('input[name="name"]').fill("Dueño E2E");
     await page.locator('input[name="email"]').fill(EMAIL);
     await page.locator('input[name="password"]').fill(PASSWORD);
+    await page.locator('input[name="accept_legal"]').check();
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL("**/pago**");
+    expect(sql("SELECT document, context FROM legal_consents WHERE company_id = (SELECT id FROM companies WHERE ruc = ?) ORDER BY document", RUC)).toEqual([
+      { document: "privacy", context: "signup" },
+      { document: "terms", context: "signup" },
+    ]);
     // La razón social sale de la SUNAT (servidor simulado), no de lo que escribió el usuario.
     expect(sql("SELECT name, billing_status FROM companies WHERE ruc = ?", RUC)[0]).toMatchObject({
       name: "EMPRESA E2E S.A.C.",

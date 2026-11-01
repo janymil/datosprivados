@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { listBanks, listDocuments, listIncidents, listRequests } from "@/lib/data";
-import { billingLabel, isCompanyActive, planFromCompany } from "@/lib/billing";
+import { billingLabel, getPaymentsForCompany, isCompanyActive, planFromCompany } from "@/lib/billing";
+import { formatSol, invoiceNumber, listInvoicesForCompany } from "@/lib/invoicing";
 import { formatDate } from "@/lib/format";
 import { planName } from "@/lib/plans";
 import { cancelSubscriptionAction } from "@/app/pago/actions";
@@ -34,6 +35,8 @@ export default async function SettingsPage({
   const incidents = listIncidents(company.id);
   const documents = listDocuments(company.id);
   const active = isCompanyActive(company);
+  const payments = getPaymentsForCompany(company.id, 12).filter((payment) => payment.status !== "cancelled");
+  const invoiceByPayment = new Map(listInvoicesForCompany(company.id).map((invoice) => [invoice.payment_id, invoice]));
   const currentPlan = planFromCompany(company);
   const isDemo = company.billing_status === "demo";
   const subscriptionCancelled = company.subscription_status === "cancelled";
@@ -135,6 +138,52 @@ export default async function SettingsPage({
             </>
           )}
         </section>
+
+        {!isDemo && payments.length > 0 && (
+          <section className="card p-6 md:p-7 lg:col-span-2">
+            <p className="label-mono">Pagos y facturas</p>
+            <ul className="mt-3 divide-y divide-line border-t border-line text-[15px]">
+              {payments.map((payment) => {
+                const invoice = invoiceByPayment.get(payment.id);
+                const number = invoice ? invoiceNumber(invoice) : null;
+                return (
+                  <li key={payment.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-3">
+                    <span>
+                      {formatDate(payment.paid_at ?? payment.created_at)} · Plan {planName(planFromCompany(payment))} ·{" "}
+                      <strong>{formatSol(payment.amount)}</strong>{" "}
+                      <span className="text-ink-soft">
+                        (
+                        {payment.status === "approved"
+                          ? "pagado"
+                          : payment.status === "refunded"
+                            ? "reembolsado"
+                            : payment.provider === "transfer"
+                              ? `por transferir · ref. ${payment.external_reference}`
+                              : "pendiente"}
+                        )
+                      </span>
+                    </span>
+                    <span className="text-sm text-ink-soft">
+                      {number ? (
+                        invoice?.pdf_url ? (
+                          <a href={invoice.pdf_url} target="_blank" rel="noopener noreferrer" className="link-underline font-medium text-ink">
+                            Factura {number}
+                          </a>
+                        ) : (
+                          `Factura ${number}`
+                        )
+                      ) : invoice ? (
+                        "Factura en preparación"
+                      ) : (
+                        ""
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
 
         <section className="card p-6 md:p-7">
           <p className="label-mono">Cuenta</p>

@@ -47,8 +47,13 @@ export function exportCompanyData(companyId: string) {
     users: rows("SELECT id, name, email, role, email_verified_at, created_at FROM users WHERE company_id = ?", companyId),
     ...tables,
     security_checks: rows("SELECT item, done_at FROM security_checks WHERE company_id = ?", companyId),
+    legal_consents: rows("SELECT document, version, context, ip, accepted_at FROM legal_consents WHERE company_id = ? ORDER BY accepted_at", companyId),
     payments: rows(
       "SELECT id, plan, term, amount, currency, status, provider, payment_id, subscription_id, paid_at, created_at FROM payments WHERE company_id = ? ORDER BY created_at",
+      companyId
+    ),
+    invoices: rows(
+      "SELECT id, payment_id, status, doc_type, buyer_ruc, buyer_name, description, base_amount, igv_amount, total, currency, series, number, issued_at, created_at FROM invoices WHERE company_id = ? ORDER BY created_at",
       companyId
     ),
     ai_usage: rows(
@@ -65,9 +70,10 @@ export function exportCompanyData(companyId: string) {
 /**
  * Borra todos los datos de la empresa y de las personas que figuran en ellos
  * (titulares ARCO, afectados, usuarios). Se conserva una fila mínima de la
- * empresa y sus pagos, porque la ley tributaria obliga a guardar los
- * comprobantes (obligación legal, no uso comercial). La fila queda sin
- * nombre de contacto, correo, dirección ni dirección pública (`slug`).
+ * empresa, sus pagos y sus comprobantes (`invoices`: RUC, razón social, monto e
+ * IGV), porque la ley tributaria obliga a guardarlos (obligación legal, no uso
+ * comercial). La fila queda sin nombre de contacto, correo, dirección ni
+ * dirección pública (`slug`).
  */
 export function deleteCompanyData(companyId: string): { deleted: boolean; ownerEmails: string[]; companyName: string } {
   const db = getDb();
@@ -83,6 +89,7 @@ export function deleteCompanyData(companyId: string): { deleted: boolean; ownerE
       db.prepare(`DELETE FROM ${table} WHERE company_id = ?`).run(companyId);
     }
     db.prepare("DELETE FROM ai_usage WHERE company_id = ?").run(companyId);
+    db.prepare("DELETE FROM legal_consents WHERE company_id = ?").run(companyId);
     db.prepare("DELETE FROM email_outbox WHERE company_id = ?").run(companyId);
     db.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE company_id = ?)").run(companyId);
     db.prepare("DELETE FROM auth_tokens WHERE user_id IN (SELECT id FROM users WHERE company_id = ?)").run(companyId);

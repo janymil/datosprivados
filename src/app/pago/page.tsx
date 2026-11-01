@@ -22,7 +22,9 @@ import {
 } from "@/lib/plans";
 import { formatDate } from "@/lib/format";
 import { ArrowRightIcon, CheckIcon } from "@/components/icons";
-import { startSubscriptionAction, activateDevAction } from "./actions";
+import { getPendingTransfer, isTransferConfigured, transferBankDetails } from "@/lib/transfers";
+import { formatSol } from "@/lib/invoicing";
+import { startSubscriptionAction, activateDevAction, requestTransferAction } from "./actions";
 
 export const metadata = { title: "Suscripción" };
 
@@ -44,7 +46,7 @@ const PLAN_BULLETS = {
 export default async function PagoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ plan?: string; term?: string; error?: string; change?: string }>;
+  searchParams: Promise<{ plan?: string; term?: string; error?: string; change?: string; transfer?: string; detail?: string }>;
 }) {
   const { company } = await requireSession();
   const params = await searchParams;
@@ -61,6 +63,8 @@ export default async function PagoPage({
   const configured = isMercadoPagoConfigured();
   const devBypass = canBypassPayment();
   const error = params.error;
+  const transferAvailable = isTransferConfigured();
+  const pendingTransfer = params.transfer ? getPendingTransfer(company.id) : undefined;
 
   return (
     <div>
@@ -119,12 +123,27 @@ export default async function PagoPage({
             ? "MercadoPago no está configurado en este entorno. En producción se activa con las credenciales del servidor."
             : error === "cancel"
               ? "No pudimos cancelar la suscripción anterior. No creamos una nueva para evitar un doble cobro."
+              : error === "transfer"
+                ? (params.detail ?? "No pudimos registrar la transferencia.")
               : error === "mp"
                 ? "No pudimos abrir la suscripción de MercadoPago. Intenta de nuevo en un momento."
                 : error === "dev"
                   ? "La activación de desarrollo no está disponible en este entorno."
                   : "No pudimos procesar la suscripción. Intenta de nuevo."}
         </p>
+      )}
+
+      {pendingTransfer && (
+        <div className="mt-5 border-l-3 border-sage bg-sage/[0.08] px-4 py-3 text-[15px] leading-relaxed">
+          <p>
+            <strong>Pago por transferencia pendiente:</strong> {formatSol(pendingTransfer.amount)} (IGV incluido), referencia{" "}
+            <strong>{pendingTransfer.external_reference}</strong>.
+          </p>
+          <p className="mt-1 whitespace-pre-line">{transferBankDetails()}</p>
+          <p className="mt-1">
+            También te lo enviamos por correo. Te mandaremos la factura electrónica y activaremos tu plan cuando recibamos el pago.
+          </p>
+        </div>
       )}
 
       <form action={startSubscriptionAction} className="mt-8">
@@ -158,7 +177,7 @@ export default async function PagoPage({
                   <span className="font-display text-4xl tracking-[-0.04em]">
                     S/ {planPrice(id, term)}
                   </span>
-                  <span className="text-sm text-ink-soft">/ {termShortLabel(term)}</span>
+                  <span className="text-sm text-ink-soft">/ {termShortLabel(term)} · IGV incluido</span>
                 </span>
                 {term === "yearly" && (
                   <span className="mt-1 block font-mono text-xs uppercase tracking-[0.08em] text-sage">
@@ -187,10 +206,22 @@ export default async function PagoPage({
           </p>
 
           {configured ? (
-            <button type="submit" className="btn btn-primary mt-4 w-full">
-              {active ? "Cambiar de plan con MercadoPago" : "Suscribirme con MercadoPago"}
-              <ArrowRightIcon className="h-4 w-4" />
-            </button>
+            <>
+              <p className="mt-4 text-sm leading-relaxed text-ink-soft">
+                Puedes pagar con tarjeta de crédito o débito (o Yape) en el formulario de MercadoPago.
+                No necesitas tener ni crear una cuenta de MercadoPago: elige «continuar sin cuenta».
+              </p>
+              <p className="mt-4 text-[13.5px] leading-relaxed text-ink-soft">
+                Al suscribirte aceptas los{" "}
+                <Link href="/terminos" target="_blank" className="link-underline font-medium text-ink">Términos y condiciones</Link>{" "}
+                y la{" "}
+                <Link href="/privacidad" target="_blank" className="link-underline font-medium text-ink">Política de privacidad</Link>.
+              </p>
+              <button type="submit" className="btn btn-primary mt-4 w-full">
+                {active ? "Cambiar de plan con MercadoPago" : "Suscribirme con MercadoPago"}
+                <ArrowRightIcon className="h-4 w-4" />
+              </button>
+            </>
           ) : devBypass ? (
             <>
               <p className="mt-4 border-l-3 border-ochre bg-ochre/[0.08] px-3.5 py-2.5 text-sm leading-relaxed">
@@ -210,6 +241,11 @@ export default async function PagoPage({
               La suscripción no está disponible en este entorno. Configura las credenciales de
               MercadoPago para habilitarla.
             </p>
+          )}
+          {transferAvailable && (
+            <button type="submit" formAction={requestTransferAction} className="btn btn-ghost mt-3 w-full">
+              Prefiero pagar por transferencia con factura
+            </button>
           )}
         </div>
       </form>

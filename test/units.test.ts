@@ -4,7 +4,7 @@ import path from "node:path";
 import { describe, expect, it, afterEach } from "vitest";
 import { isValidRuc } from "@/lib/ruc";
 import { checkEnvironment } from "@/lib/env";
-import { preapprovalMismatch, validateMercadoPagoSignature } from "@/lib/mercadopago";
+import { preapprovalMismatch, REASON_MAX_LENGTH, subscriptionReason, validateMercadoPagoSignature } from "@/lib/mercadopago";
 import { takeRateLimit } from "@/lib/rate-limit";
 import { getDb } from "@/lib/db";
 import { backupDatabase } from "../scripts/backup-db.mjs";
@@ -63,6 +63,11 @@ describe("firma del webhook", () => {
     expect(validateMercadoPagoSignature({ signature: `ts=1700000000,v1=${v1}`, requestId: "req-1", dataId: "43" })).toBe(false);
     expect(validateMercadoPagoSignature({ signature: `ts=1700000001,v1=${v1}`, requestId: "req-1", dataId: "42" })).toBe(false);
   });
+  it("un id alfanumérico se firma en minúsculas, como indica la documentación", () => {
+    process.env = { ...original, NODE_ENV: "production", MERCADOPAGO_WEBHOOK_SECRET: "secreto" };
+    const v1 = sign("secreto", "2c938084abcdef", "req-1", "1700000000");
+    expect(validateMercadoPagoSignature({ signature: `ts=1700000000,v1=${v1}`, requestId: "req-1", dataId: "2C938084ABCDEF" })).toBe(true);
+  });
 });
 
 describe("preapprovalMismatch", () => {
@@ -109,3 +114,15 @@ describe("respaldo y restauración", () => {
     expect(() => restoreDatabase({ backupFile: result.file, target: path.join(dir, "otra.db") })).toThrow(/sha256/);
   });
 });
+
+describe("reason de la suscripción", () => {
+  it("respeta el límite de 60 caracteres de MercadoPago", () => {
+    expect(subscriptionReason("Básico", "monthly")).toBe("DatosPrivados Básico — suscripción mensual");
+    expect(subscriptionReason("Pro", "yearly")).toBe("DatosPrivados Pro — suscripción anual");
+    const long = subscriptionReason("Plan Empresa con un nombre larguísimo", "yearly");
+    expect(long.length).toBeLessThanOrEqual(REASON_MAX_LENGTH);
+    expect(long.startsWith("DatosPrivados Plan Empresa")).toBe(true);
+    expect(long.endsWith("…")).toBe(true);
+  });
+});
+

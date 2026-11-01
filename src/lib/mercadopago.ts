@@ -87,6 +87,16 @@ async function mpFetch(path: string, init?: RequestInit) {
   return (await response.json()) as Record<string, unknown>;
 }
 
+/** MercadoPago rechaza el `reason` con HTTP 400 si pasa de 60 caracteres. */
+export const REASON_MAX_LENGTH = 60;
+
+/** Texto que ve el pagador en MercadoPago, recortado al límite de la API. */
+export function subscriptionReason(planName: string, term: BillingTerm) {
+  const termName = term === "yearly" ? "anual" : "mensual";
+  const reason = `DatosPrivados ${planName} — suscripción ${termName}`;
+  return reason.length > REASON_MAX_LENGTH ? `${reason.slice(0, REASON_MAX_LENGTH - 1).trimEnd()}…` : reason;
+}
+
 export async function createSubscriptionPreapproval(input: {
   companyId: string;
   payerEmail: string;
@@ -95,11 +105,10 @@ export async function createSubscriptionPreapproval(input: {
   term: BillingTerm;
   baseUrl: string;
 }): Promise<SubscriptionCheckout> {
-  const termName = input.term === "yearly" ? "anual" : "mensual";
   const data = await mpFetch("/preapproval", {
     method: "POST",
     body: JSON.stringify({
-      reason: `DatosPrivados ${input.planName} — suscripción ${termName}`,
+      reason: subscriptionReason(input.planName, input.term),
       external_reference: input.companyId,
       payer_email: input.payerEmail,
       auto_recurring: {
@@ -201,7 +210,8 @@ export function validateMercadoPagoSignature(input: {
   const v1 = parts.v1;
   if (!ts || !v1) return false;
 
-  const manifest = `id:${input.dataId};request-id:${input.requestId};ts:${ts};`;
+  // Según la documentación de MercadoPago, un id alfanumérico se firma en minúsculas.
+  const manifest = `id:${input.dataId.toLowerCase()};request-id:${input.requestId};ts:${ts};`;
   const expected = crypto.createHmac("sha256", secret).update(manifest).digest("hex");
   const a = Buffer.from(expected, "utf8");
   const b = Buffer.from(v1, "utf8");

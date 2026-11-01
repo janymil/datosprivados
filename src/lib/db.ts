@@ -454,7 +454,7 @@ function initSchema(db: DatabaseSync) {
  * cacheada en `globalThis` (en `next dev` la conexión sobrevive a los recargos
  * en caliente y `initSchema` no vuelve a correr).
  */
-const SCHEMA_VERSION = 12;
+const SCHEMA_VERSION = 13;
 
 function migrate(db: DatabaseSync) {
   const companyColumns = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
@@ -624,6 +624,18 @@ function migrate(db: DatabaseSync) {
       window_start INTEGER NOT NULL,
       count INTEGER NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS legal_consents (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      company_id TEXT NOT NULL,
+      document TEXT NOT NULL,
+      version TEXT NOT NULL,
+      context TEXT NOT NULL,
+      ip TEXT NOT NULL,
+      user_agent TEXT NOT NULL DEFAULT '',
+      accepted_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_legal_consents_company ON legal_consents(company_id, accepted_at);
     CREATE INDEX IF NOT EXISTS idx_arco_company_status ON arco_requests(company_id, status, due_at);
     CREATE INDEX IF NOT EXISTS idx_arco_company_ticket ON arco_requests(company_id, ticket);
     CREATE INDEX IF NOT EXISTS idx_incidents_company_status ON incidents(company_id, status);
@@ -742,7 +754,61 @@ function migrate(db: DatabaseSync) {
       expires_at TEXT NOT NULL,
       used_at TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS invoices (
+      id TEXT PRIMARY KEY,
+      company_id TEXT NOT NULL REFERENCES companies(id),
+      payment_id TEXT NOT NULL UNIQUE REFERENCES payments(id),
+      status TEXT NOT NULL DEFAULT 'pending',
+      doc_type TEXT NOT NULL DEFAULT 'factura',
+      buyer_ruc TEXT NOT NULL,
+      buyer_name TEXT NOT NULL,
+      buyer_address TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL,
+      base_amount REAL NOT NULL,
+      igv_amount REAL NOT NULL,
+      total REAL NOT NULL,
+      currency TEXT NOT NULL DEFAULT 'PEN',
+      series TEXT,
+      number TEXT,
+      pdf_url TEXT,
+      issued_at TEXT,
+      emailed_at TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status, created_at);
+    CREATE INDEX IF NOT EXISTS idx_invoices_company ON invoices(company_id);
+
+    CREATE TABLE IF NOT EXISTS webhook_events (
+      id TEXT PRIMARY KEY,
+      provider TEXT NOT NULL,
+      type TEXT NOT NULL,
+      data_id TEXT NOT NULL,
+      request_id TEXT,
+      payload TEXT,
+      received_at TEXT NOT NULL,
+      processed_at TEXT,
+      outcome TEXT,
+      error TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_webhook_events_data ON webhook_events(provider, data_id);
   `);
+
+  // Un cobro de MercadoPago se registra una sola vez: la base lo garantiza, no solo el código.
+  try {
+    db.exec("CREATE UNIQUE INDEX IF NOT EXISTS uq_payments_payment_id ON payments(payment_id) WHERE payment_id IS NOT NULL");
+  } catch (error) {
+    console.error("[db] Hay cobros duplicados; no se pudo crear el índice único de payments.payment_id:", error);
+  }
+
+  // Serie y número de un comprobante no se repiten; dos operadores a la vez no pueden emitir el mismo.
+  try {
+    db.exec(
+      "CREATE UNIQUE INDEX IF NOT EXISTS uq_invoices_number ON invoices(series, number) WHERE series IS NOT NULL AND number IS NOT NULL"
+    );
+  } catch (error) {
+    console.error("[db] Hay comprobantes con la misma serie y número; revísalos antes de emitir:", error);
+  }
 
   // Historial inicial: cada documento existente queda como su versión vigente.
   db.exec(`

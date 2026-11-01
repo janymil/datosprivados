@@ -39,6 +39,12 @@ export function checkEnvironment(env: NodeJS.ProcessEnv = process.env): { errors
   if (!hasMercadoPago) {
     warnings.push("Sin MERCADOPAGO_ACCESS_TOKEN: las cuentas nuevas no pueden activarse.");
   }
+  if (!env.OPERATOR_EMAILS?.trim()) {
+    warnings.push("Sin OPERATOR_EMAILS: nadie puede emitir comprobantes ni confirmar transferencias en /operador.");
+  }
+  if (!env.TRANSFER_BANK_DETAILS?.trim()) {
+    warnings.push("Sin TRANSFER_BANK_DETAILS: el pago por transferencia con factura queda desactivado.");
+  }
   if (!env.ANTHROPIC_API_KEY && !env.OPENAI_API_KEY) {
     warnings.push("Sin clave de IA: las funciones de IA usan el modo básico.");
   }

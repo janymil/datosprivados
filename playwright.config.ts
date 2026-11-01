@@ -21,7 +21,11 @@ export default defineConfig({
   timeout: 120_000,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: { baseURL: APP_ORIGIN, trace: "retain-on-failure", locale: "es-PE", timezoneId: "America/Lima" },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    // Android Chrome (Pixel 7): solo las pruebas de calidad; el recorrido completo ya corre en escritorio.
+    { name: "mobile-chrome", use: { ...devices["Pixel 7"] }, testMatch: "**/quality.spec.ts" },
+  ],
   webServer: [
     {
       command: "node e2e/mock-server.mjs",

@@ -3,10 +3,12 @@ import "server-only";
 import { businessDaysBetween, calculatedHolidays, getDb, newId, seedHolidays, type Company } from "./db";
 import { deleteAccount } from "./account";
 import { formatDate, formatDateTime, limaToday } from "./format";
-import { isCompanyActive, planFromCompany } from "./billing";
+import { isCompanyActive, markSubscriptionStatus, planFromCompany } from "./billing";
+import { confirmAuthorizedSubscription } from "./subscriptions";
+import { getPreapproval, isMercadoPagoConfigured } from "./mercadopago";
 import { documentFreshness } from "./document-freshness";
 import { listBanks, listDocuments, listProviders } from "./data";
-import { processOutbox, stuckOutboxCount } from "./mail";
+import { enqueueEmail, processOutbox, stuckOutboxCount } from "./mail";
 import { notifyCompany } from "./notify";
 import { planName } from "./plans";
 
@@ -130,6 +132,73 @@ const JOBS = {
     return { expired: Number(expired.changes), notices };
   },
 
+  /**
+   * Concilia con MercadoPago: corrige suscripciones que se cancelaron o pausaron sin que
+   * llegara el webhook, activa las que se autorizaron sin webhook (o cuyo webhook se perdió)
+   * y avisa al operador de comprobantes sin emitir con más de 3 días.
+   */
+  async "billing-sync"({ now }: JobContext): Promise<JobResult> {
+    const db = getDb();
+    let checked = 0;
+    let corrected = 0;
+    let activated = 0;
+    let failed = 0;
+    if (isMercadoPagoConfigured()) {
+      for (const company of realCompanies()) {
+        if (!company.subscription_id || company.subscription_status === "dev") continue;
+        checked += 1;
+        try {
+          const remote = await getPreapproval(company.subscription_id);
+          const status = remote.status === "canceled" ? "cancelled" : remote.status;
+          if ((status === "cancelled" || status === "paused") && company.subscription_status !== status) {
+            markSubscriptionStatus(company.id, company.subscription_id, status);
+            corrected += 1;
+          }
+        } catch (error) {
+          failed += 1;
+          console.error(`[billing-sync] No se pudo consultar ${company.subscription_id}:`, error);
+        }
+      }
+
+      // Autorizaciones cuyo webhook no llegó: MercadoPago ya autorizó y la empresa sigue sin acceso.
+      const waiting = db
+        .prepare("SELECT * FROM companies WHERE pending_subscription_id IS NOT NULL AND deleted_at IS NULL")
+        .all() as unknown as Company[];
+      for (const company of waiting) {
+        const subscriptionId = company.pending_subscription_id;
+        if (!subscriptionId) continue;
+        checked += 1;
+        try {
+          const remote = await getPreapproval(subscriptionId);
+          if (remote.status !== "authorized") continue;
+          const result = await confirmAuthorizedSubscription(subscriptionId);
+          if (result.ok) activated += 1;
+          else console.warn(`[billing-sync] Autorización no aplicada: ${result.reason}`);
+        } catch (error) {
+          failed += 1;
+          console.error(`[billing-sync] No se pudo confirmar ${subscriptionId}:`, error);
+        }
+      }
+    }
+
+    const overdue = db
+      .prepare("SELECT COUNT(*) AS n FROM invoices WHERE status = 'pending' AND created_at <= ?")
+      .get(new Date(now.getTime() - 3 * DAY).toISOString()) as { n: number };
+    const alertTo = process.env.ALERT_EMAIL?.trim();
+    if (overdue.n > 0 && alertTo) {
+      enqueueEmail({
+        to: alertTo,
+        template: "ops_alert",
+        payload: {
+          subject: `${overdue.n} factura(s) sin emitir hace más de 3 días`,
+          message: "Emítelas y regístralas en /operador. El plazo para enviar facturas a la SUNAT es corto.",
+        },
+        dedupeKey: `invoices-overdue:${limaToday(now)}`,
+      });
+    }
+    return { checked, corrected, activated, failed, facturas_atrasadas: overdue.n };
+  },
+
   /** Un aviso semanal por empresa con documentos desactualizados (se omite si desactivó los no esenciales). */
   "document-staleness-notice"({ now }: JobContext): JobResult {
     const week = Math.floor(now.getTime() / (7 * DAY));
@@ -187,8 +256,9 @@ const JOBS = {
 
     const outbox = db.prepare("DELETE FROM email_outbox WHERE status IN ('sent','skipped','suppressed') AND created_at <= ?").run(new Date(now.getTime() - 90 * DAY).toISOString());
     const runs = db.prepare("DELETE FROM job_runs WHERE started_at <= ?").run(new Date(now.getTime() - 180 * DAY).toISOString());
+    const events = db.prepare("DELETE FROM webhook_events WHERE received_at <= ?").run(new Date(now.getTime() - 180 * DAY).toISOString());
     const usage = db.prepare("DELETE FROM ai_usage WHERE created_at <= ?").run(new Date(now.getTime() - 400 * DAY).toISOString());
-    return { accounts, signups, outbox: Number(outbox.changes), job_runs: Number(runs.changes), ai_usage: Number(usage.changes) };
+    return { accounts, signups, outbox: Number(outbox.changes), job_runs: Number(runs.changes), webhook_events: Number(events.changes), ai_usage: Number(usage.changes) };
   },
 
   /** Verifica que los dos próximos años tengan feriados cargados y avisa cuáles siguen sin decreto confirmado. */
@@ -223,6 +293,7 @@ export const JOB_MAX_AGE_HOURS: Record<JobName, number> = {
   "arco-deadline-reminders": 26,
   "incident-deadline-reminders": 2,
   "billing-reconcile": 26,
+  "billing-sync": 26,
   "document-staleness-notice": 8 * 24,
   "lapsed-account-notices": 26,
   "purge-old-data": 26,

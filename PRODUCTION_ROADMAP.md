@@ -387,11 +387,28 @@ Prerequisite: P0-ENTITY, P0-SUNAT, D-01…D-05 fixed. Read the current MercadoPa
 8. **Live cutover checklist:** swap to production MP credentials; webhook secret set; small real payment end-to-end with refund; verify the comprobante and email; verify IGV on the receipt.
 **Acceptance:** an automated suite using a MP mock covers every row of the state machine; a manual sandbox run of the full lifecycle produces correct `paid_until`, payments rows, emails and activity log; one real live S/ 19 transaction verified and refunded.
 
+> **Phase 4 status (2026-11-01) — partly done.** Done in code + tests (367 unit tests, E2E journey green): calendar-month periods, `UNIQUE(payment_id)`, `webhook_events` log, refund/chargeback handling, `billing-sync` job, `invoices` queue with IGV split and an operator screen (`/operador`) for manual factura issuing, bank transfer against a factura, payments + invoices in Ajustes, dev bypass now opt-in. Yape/Plin deliberately not offered. See `docs/BILLING.md`. **Not done:** the real MercadoPago sandbox run, `x-signature` re-verification against current docs, grace period + dunning emails, automated PSE/OSE issuing (needs the operator entity), the live S/ 19 test, and the provider interface.
+
 **Exit gate P4:** billing state machine tested + reconciled; first real payment verified; comprobante issued.
 
 ---
 
 ### PHASE 5 — Staging soak, performance and acceptance
+
+> **Phase 5 status (2026-11-01) — everything doable from the repo is done; gate NOT passed.** Phase 4 was worked first by the owner's call, so phases overlap. Full checklist with evidence and what is left for the owner: **`docs/GO-NO-GO.md`**.
+>
+> Verified on a clean build of the current tree: typecheck · lint · `pnpm test` 378/378 · Playwright 31/31 (journey + quality, desktop and Pixel 7) · `pnpm audit --prod` clean.
+>
+> | Task | State |
+> |---|---|
+> | §1 staging + deploy | **Artifacts written, staging not created.** `scripts/deploy.sh` (tests, backup, build in copy, swap, `pm2 restart`, smoke test, auto-rollback; not run: it would restart the live preview), `ecosystem.staging.config.cjs`, `docs/STAGING.md`. DNS/nginx/cert are the owner's. |
+> | §2 performance | **Done locally.** Per-request p95 ≤ 33 ms; panel p95 194 ms at 10 continuous users; one process saturates ≈ 70 panel req/s at 50 continuous. No caching needed yet. Landing LCP on mobile 4G: 3.0–3.4 s → **1.8–2.1 s** after removing the hero `<h1>` entrance animation. Videos use `preload="none"` and none download on load. Scripts: `perf-seed.mjs`, `perf-check.sh`, `loadtest.mjs`, `lcp-check.mjs`. Lighthouse/k6 not installed (dependency-free equivalents used). |
+> | §3 security | **Partly.** `test/xss.test.ts`, header/cookie checks, secrets scan of tree + git history (clean), `pnpm audit` clean. Open: nginx `server_tokens` (change blocked by the environment; steps in GO-NO-GO), no CSP (needs a decision), ASVS walk-through, SSL Labs, external pen-test. `docs/MERCADOPAGO-SANDBOX.md` holds sandbox secrets and is untracked: do not commit as is. |
+> | §4 accessibility / browsers | **Partly.** Basic a11y + mobile overflow checks on Chrome desktop and Android Chrome. Found and fixed unlabeled form inputs (`Field`). Firefox/Safari/iOS not installed here. |
+> | §5 UAT | **Not done.** Needs 3–5 people. |
+> | §6 legal acceptance | **Mechanism done, content open.** `legal_consents` table (document, version, context, IP, UA, time), required checkbox at signup, notice + consent record at checkout, footer links, draft `/terminos` `/privacidad` `/cookies` with draft banner and `noindex` (`src/lib/platform-legal.ts`). Needs the operator entity and the lawyer. |
+> | §7 DR drill | **Local only:** backup 0.16 s, restore 0.09 s, checksum + integrity OK. Fresh-box drill with RTO/RPO and an hourly backup cron are open. |
+
 
 1. **Staging environment** identical to prod (separate domain `staging.…`, separate DB, MP sandbox, LLM key with low budget, mail in sandbox/catch-all). Deploy script `scripts/deploy.sh` (build, migrate, `pm2 reload`, smoke test, rollback to previous build dir).
 2. **Performance:** run Lighthouse on landing (target LCP < 2.5 s on mobile 4G; the landing HTML is 95 KB and videos are 3.7–8.4 MB each — verify they are lazy and that `preload="none"` is used; Cloudflare caching rules for `/video/*`), and the main `/app` pages. Check `getDb()` query counts per page (layout alone runs 7+ queries per navigation); add caching or consolidate if p95 > 300 ms. Load test (k6) 50 concurrent users on login, panel, public ARCO form, webhook.

@@ -10,6 +10,8 @@ import { takeRateLimit } from "@/lib/rate-limit";
 import { isValidRuc } from "@/lib/ruc";
 import { checkCompanyRuc } from "@/lib/ruc-lookup";
 import { MIN_PASSWORD_LENGTH, sendVerificationEmail } from "@/lib/account";
+import { recordConsents } from "@/lib/platform-legal";
+import { headers } from "next/headers";
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
@@ -70,6 +72,9 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
   }
   if (password.length < MIN_PASSWORD_LENGTH) {
     return { error: `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.` };
+  }
+  if (text(formData, "accept_legal") !== "on") {
+    return { error: "Para crear tu cuenta debes aceptar los Términos y la Política de privacidad." };
   }
 
   const ip = await clientIp();
@@ -132,6 +137,14 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
     `INSERT INTO users (id, company_id, name, email, password_hash, role, created_at)
      VALUES (?, ?, ?, ?, ?, 'admin', ?)`
   ).run(userId, companyId, ownerName, email, hashPassword(password), now);
+  recordConsents({
+    userId,
+    companyId,
+    documents: ["terms", "privacy"],
+    context: "signup",
+    ip,
+    userAgent: (await headers()).get("user-agent") ?? "",
+  });
   sendVerificationEmail(userId);
 
   db.prepare(

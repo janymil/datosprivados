@@ -14,6 +14,9 @@ export type MailTemplate =
   | "welcome"
   | "payment_receipt"
   | "payment_failed"
+  | "invoice_issued"
+  | "transfer_instructions"
+  | "payment_refunded"
   | "renewal_soon"
   | "subscription_cancelled"
   | "subscription_expiring"
@@ -40,6 +43,9 @@ const ESSENTIAL: Record<MailTemplate, boolean> = {
   welcome: true,
   payment_receipt: true,
   payment_failed: true,
+  invoice_issued: true,
+  transfer_instructions: true,
+  payment_refunded: true,
   renewal_soon: true,
   subscription_cancelled: true,
   subscription_expiring: true,
@@ -192,6 +198,45 @@ export function renderMail(template: MailTemplate, payload: MailPayload): Render
             "Revisa tu medio de pago. Mientras tanto tu cuenta sigue activa hasta el fin del periodo pagado.",
           ],
           action: { label: "Revisar mi suscripción", url: "/pago" },
+        },
+        company
+      );
+    case "invoice_issued":
+      need("number", "amount");
+      return layout(
+        {
+          subject: `Tu factura electrónica ${s(payload, "number")}`,
+          paragraphs: [
+            `Emitimos la factura electrónica ${s(payload, "number")} por ${s(payload, "amount")} a nombre de ${s(payload, "company")}.`,
+            ...(payload.dueNote ? [s(payload, "dueNote")] : []),
+          ],
+          ...(payload.pdfUrl ? { action: { label: "Ver la factura", url: s(payload, "pdfUrl") } } : {}),
+        },
+        company
+      );
+    case "transfer_instructions":
+      need("plan", "amount", "reference", "bankDetails");
+      return layout(
+        {
+          subject: "Cómo pagar por transferencia",
+          paragraphs: [
+            `Para activar el Plan ${s(payload, "plan")} paga ${s(payload, "amount")} (IGV incluido) por transferencia.`,
+            s(payload, "bankDetails"),
+            `Indica esta referencia en la transferencia: ${s(payload, "reference")}. Te enviaremos la factura electrónica a este correo y activaremos tu plan cuando recibamos el pago.`,
+          ],
+        },
+        company
+      );
+    case "payment_refunded":
+      need("plan", "amount");
+      return layout(
+        {
+          subject: "Reembolsamos tu pago",
+          paragraphs: [
+            `Registramos el reembolso de ${s(payload, "amount")} del Plan ${s(payload, "plan")}.`,
+            "El periodo cubierto por ese pago se descontó de tu plan. Si tienes dudas, escríbenos.",
+          ],
+          action: { label: "Ver mi plan", url: "/app/ajustes" },
         },
         company
       );

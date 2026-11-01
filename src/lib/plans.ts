@@ -63,12 +63,9 @@ export function termShortLabel(term: BillingTerm) {
   return term === "yearly" ? "año" : "mes";
 }
 
+/** Meses de calendario que cubre un cobro (MercadoPago renueva por meses, no por días). */
 export function termMonths(term: BillingTerm) {
   return term === "yearly" ? 12 : 1;
-}
-
-export function termDays(term: BillingTerm) {
-  return term === "yearly" ? 365 : 30;
 }
 
 /** Ahorro del plan anual frente a 12 pagos mensuales. */

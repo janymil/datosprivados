@@ -1,5 +1,18 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const mp = vi.hoisted(() => ({ preapprovals: new Map<string, unknown>() }));
+
+vi.mock("@/lib/mercadopago", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/lib/mercadopago")>();
+  return {
+    ...original,
+    isMercadoPagoConfigured: () => true,
+    getPreapproval: async (id: string) => mp.preapprovals.get(id) ?? { id, status: "pending" },
+  };
+});
+
 import { getDb, newId } from "@/lib/db";
+import { setSubscriptionPending } from "@/lib/billing";
 import { JOB_NAMES, jobsHealth, runJob } from "@/lib/jobs";
 import { POST as cronPost, GET as cronGet } from "@/app/api/cron/[job]/route";
 import { makeActiveCompany, makeArcoRequest, makeCompany, makeIncident } from "./helpers/db";
@@ -258,3 +271,47 @@ describe("ruta /api/cron", () => {
     expect((await call("health", {}, "GET")).status).toBe(401);
   });
 });
+
+describe("conciliación con MercadoPago", () => {
+  it("billing-sync activa una suscripción autorizada cuyo webhook se perdió", async () => {
+    const { companyId } = makeCompany({ billing_status: "pending" });
+    const subscriptionId = `sub-perdida-${newId()}`;
+    setSubscriptionPending(companyId, subscriptionId, "basico", "monthly");
+    mp.preapprovals.set(subscriptionId, {
+      id: subscriptionId,
+      status: "authorized",
+      external_reference: companyId,
+      auto_recurring: { frequency: 1, frequency_type: "months", transaction_amount: 19, currency_id: "PEN" },
+    });
+
+    const result = await runJob("billing-sync", NOW);
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") throw new Error("la tarea debía correr");
+    expect(result.detail.activated).toBe(1);
+
+    const company = getDb()
+      .prepare("SELECT billing_status, subscription_id, paid_until FROM companies WHERE id = ?")
+      .get(companyId) as { billing_status: string; subscription_id: string | null; paid_until: string | null };
+    expect(company.billing_status).toBe("active");
+    expect(company.subscription_id).toBe(subscriptionId);
+    expect(company.paid_until).toBeTruthy();
+  });
+
+  it("billing-sync no activa una suscripción que sigue sin autorizar", async () => {
+    const { companyId } = makeCompany({ billing_status: "pending" });
+    const subscriptionId = `sub-espera-${newId()}`;
+    setSubscriptionPending(companyId, subscriptionId, "basico", "monthly");
+    mp.preapprovals.set(subscriptionId, { id: subscriptionId, status: "pending", external_reference: companyId });
+
+    const result = await runJob("billing-sync", NOW);
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") throw new Error("la tarea debía correr");
+    expect(result.detail.activated).toBe(0);
+
+    const row = getDb().prepare("SELECT billing_status FROM companies WHERE id = ?").get(companyId) as {
+      billing_status: string;
+    };
+    expect(row.billing_status).toBe("pending");
+  });
+});
+

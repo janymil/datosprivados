@@ -25,3 +25,8 @@ test/.tmp/
 # Pruebas E2E
 playwright-report/
 test-results/
+
+# Despliegue: compilación en copia y compilaciones anteriores (scripts/deploy.sh).
+.deploy/
+.next.prev/
+.next.failed/

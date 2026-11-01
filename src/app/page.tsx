@@ -100,7 +100,7 @@ function Hero() {
 
       <div className="container-page relative grid gap-14 py-14 md:py-20 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-10 lg:py-22">
         <div>
-          <h1 className="rise d2 max-w-[19ch] font-display text-[2.6rem] leading-[1.02] tracking-[-0.035em] sm:text-[3.3rem] lg:text-[3.85rem]">
+          <h1 className="max-w-[19ch] font-display text-[2.6rem] leading-[1.02] tracking-[-0.035em] sm:text-[3.3rem] lg:text-[3.85rem]">
             ¿Atiendes pacientes, clientes o trabajadores?{" "}
             <em className="text-crimson">La ley ya te aplica.</em>
           </h1>
@@ -558,6 +558,9 @@ function Footer() {
               <li><a href="mailto:hola@datosprivados.pe" className="hover:text-ink">hola@datosprivados.pe</a></li>
               <li><Link href="/login" className="hover:text-ink">Ingresar a mi cuenta</Link></li>
               <li><Link href="/registro" className="hover:text-ink">Crear una cuenta</Link></li>
+              <li><Link href="/terminos" className="hover:text-ink">Términos y condiciones</Link></li>
+              <li><Link href="/privacidad" className="hover:text-ink">Política de privacidad</Link></li>
+              <li><Link href="/cookies" className="hover:text-ink">Cookies</Link></li>
             </ul>
           </div>
         </div>

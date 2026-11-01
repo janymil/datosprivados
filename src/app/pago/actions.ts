@@ -21,6 +21,9 @@ import {
 import { isBillingTerm, isPlanId, planName, planPrice, type BillingTerm } from "@/lib/plans";
 import { siteUrl } from "@/lib/site";
 import { isDemoCompany } from "@/lib/demo";
+import { requestTransfer } from "@/lib/transfers";
+import { recordConsents } from "@/lib/platform-legal";
+import { clientIp } from "@/lib/client-ip";
 
 /** URL de retorno de MercadoPago. En desarrollo sin NEXT_PUBLIC_APP_URL usa el host local. */
 async function requestBaseUrl() {
@@ -52,6 +55,15 @@ export async function startSubscriptionAction(formData: FormData) {
   if (!isMercadoPagoConfigured()) {
     redirect("/pago?error=config");
   }
+
+  recordConsents({
+    userId: user.id,
+    companyId: company.id,
+    documents: ["terms", "privacy"],
+    context: "checkout",
+    ip: await clientIp(),
+    userAgent: (await headers()).get("user-agent") ?? "",
+  });
 
   // Un intento anterior que quedó sin autorizar se reemplaza por este.
   const abandonedPending = company.pending_subscription_id;
@@ -119,4 +131,35 @@ export async function cancelSubscriptionAction() {
   if (company.pending_subscription_id) clearPendingSubscription(company.id);
   revalidatePath("/app/ajustes");
   redirect("/app/ajustes?ok=cancel");
+}
+
+/** Pide pagar por transferencia: crea el pago pendiente y la factura, y muestra los datos bancarios. */
+export async function requestTransferAction(formData: FormData) {
+  const { company } = await requireSession();
+  if (isDemoCompany(company)) redirect("/app?demo=lectura");
+
+  const rawPlan = String(formData.get("plan") ?? company.plan);
+  const plan = isPlanId(rawPlan) ? rawPlan : "basico";
+  const rawTerm = String(formData.get("term") ?? company.billing_term);
+  const term: BillingTerm = isBillingTerm(rawTerm) ? rawTerm : "monthly";
+
+  // Una suscripción creada y todavía no autorizada cobraría además de la transferencia.
+  if (company.pending_subscription_id) {
+    if (!isMercadoPagoConfigured()) {
+      redirect(`/pago?error=transfer&detail=${encodeURIComponent("No pudimos cancelar tu suscripción pendiente de MercadoPago.")}`);
+    }
+    try {
+      await cancelPreapproval(company.pending_subscription_id);
+    } catch (error) {
+      console.error("[mercadopago] No se pudo cancelar la suscripción pendiente antes de la transferencia:", error);
+      redirect(
+        `/pago?error=transfer&detail=${encodeURIComponent("No pudimos cancelar tu suscripción pendiente de MercadoPago. Intenta de nuevo.")}`
+      );
+    }
+    clearPendingSubscription(company.id);
+  }
+
+  const result = requestTransfer(company, plan, term);
+  if (!result.ok) redirect(`/pago?error=transfer&detail=${encodeURIComponent(result.error)}`);
+  redirect(`/pago?transfer=${result.reference}`);
 }

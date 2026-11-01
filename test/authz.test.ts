@@ -104,7 +104,7 @@ describe("limites de intentos", () => {
   });
 
   it("rechaza RUC inválido y contraseña corta en el registro", async () => {
-    const base = { company: "X SAC", name: "Ana", email: "ana@example.com", plan: "basico", term: "monthly" };
+    const base = { company: "X SAC", name: "Ana", email: "ana@example.com", plan: "basico", term: "monthly", accept_legal: "on" };
     expect((await signupAction({}, form({ ...base, ruc: "20604567892", password: "una-clave-larga" }))).error).toMatch(/RUC/);
     expect((await signupAction({}, form({ ...base, ruc: "20604567891", password: "corta" }))).error).toMatch(/10 caracteres/);
   });

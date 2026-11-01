@@ -18,6 +18,7 @@ vi.mock("@/lib/mercadopago", async (importOriginal) => {
 
 import { getDb } from "@/lib/db";
 import {
+  addMonths,
   isCompanyActive,
   markSubscriptionStatus,
   recordSubscriptionCharge,
@@ -77,7 +78,7 @@ describe("alta de suscripción nueva", () => {
     expect(getCompanyRow(companyId).paid_until).toBe(granted);
 
     recordSubscriptionCharge({ companyId, subscriptionId: S("sub-1"), paymentId: S("pay-2"), amount: 19 });
-    expect(new Date(getCompanyRow(companyId).paid_until!).getTime() - new Date(granted).getTime()).toBe(30 * DAY);
+    expect(getCompanyRow(companyId).paid_until).toBe(addMonths(new Date(granted), 1).toISOString());
 
     // El mismo cobro repetido no extiende otra vez.
     const before = getCompanyRow(companyId).paid_until;
