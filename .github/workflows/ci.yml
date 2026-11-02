@@ -22,6 +22,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Escaneo de secretos
+        run: pnpm scan:secrets
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test

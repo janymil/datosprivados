@@ -86,7 +86,7 @@ export function backupAgeHours(dir: string, now = new Date()): number | null {
   let newest = 0;
   try {
     for (const name of fs.readdirSync(dir)) {
-      if (!/^datosprivados-.*\.db\.gz$/.test(name)) continue;
+      if (!/^datosprivados-.*\.db\.gz(\.enc)?$/.test(name)) continue;
       newest = Math.max(newest, fs.statSync(path.join(dir, name)).mtimeMs);
     }
   } catch {

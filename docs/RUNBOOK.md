@@ -2,12 +2,24 @@
 
 ## Origen (obligatorio para que los límites de intentos funcionen)
 
-Los límites de intentos (`src/lib/rate-limit.ts`) usan la IP de `CF-Connecting-IP` (Cloudflare) y, si falta, `X-Real-IP`.
-Esas cabeceras solo son confiables si **el servidor de origen acepta tráfico únicamente desde Cloudflare**. Hoy el origen
-(`194.163.157.221`) es público: quien llame directo a la IP puede inventar `CF-Connecting-IP` y esquivar los límites.
+Los límites de intentos (`src/lib/rate-limit.ts`) se calculan sobre la IP de
+`src/lib/client-ip.ts`, que cree primero a `X-Real-IP` (lo escribe nginx en cada
+petición) y solo después a `CF-Connecting-IP`.
 
-Pendiente (nginx o firewall): permitir 80/443 solo desde los rangos de Cloudflare
-(<https://www.cloudflare.com/ips/>) y restaurar la IP real con `set_real_ip_from` + `real_ip_header CF-Connecting-IP`.
+Para que `X-Real-IP` sea la IP del cliente y no la del borde de Cloudflare, nginx
+necesita `set_real_ip_from` + `real_ip_header CF-Connecting-IP`. **Hecho**:
+
+- preview `datosprivados.registio.app` (2026-11-02): aplicado en
+  `/etc/nginx/sites-enabled/datosprivados.registio.app`; el `access_log` ya registra
+  la IP real del cliente en lugar de la del borde. Copia previa del archivo en
+  `/root/datosprivados-nginx-preview-*.bak`.
+- producción: está en `deploy/nginx-production.conf` junto con el cierre del origen
+  (`geo $realip_remote_addr` + `if ($from_cloudflare = 0) { return 403; }`).
+
+Pendiente en producción: aplicar esa plantilla (bloquea IPs fuera de Cloudflare y de
+`127.0.0.1`) y mantener actualizados los rangos con <https://www.cloudflare.com/ips/>.
+Si se aplica el cierre del origen, comprobar antes que ningún monitor ni webhook entra
+por la IP directa.
 
 ## Respaldos
 
@@ -36,6 +48,34 @@ simulacro en una máquina nueva. Hoy los respaldos solo quedan en el mismo disco
 
 Simulacro hecho (2026-10-31): respaldo de la base del preview → restauración en ruta nueva → mismas filas en companies, users,
 data_banks, arco_requests, incidents, documents, sessions. Un archivo alterado se rechaza por sha256.
+
+### Cifrado en reposo (2026-11-02)
+
+El respaldo contiene datos personales de clientes y de quienes ejercieron derechos
+ARCO: una copia filtrada es una brecha notificable. Con `BACKUP_ENCRYPTION_KEY`
+(32 bytes, `openssl rand -base64 32`) el archivo sale como `*.db.gz.enc`:
+
+```bash
+# Activar (una vez): añade la clave a /etc/datosprivados.env (permisos 600) o al .env
+printf 'BACKUP_ENCRYPTION_KEY=%s\n' "$(openssl rand -base64 32)" >> /etc/datosprivados.env
+
+# Restaurar un respaldo cifrado: el sha256 se verifica antes de descifrar
+BACKUP_ENCRYPTION_KEY=... node scripts/restore-db.mjs /var/backups/datosprivados/xxx.db.gz.enc /ruta/nueva.db
+```
+
+- Formato: `PDPENC01` + IV (12 B) + etiqueta GCM (16 B) + ciphertext del `.gz`. GCM
+  autentica: si alguien toca un byte, el descifrado falla en vez de devolver una base
+  corrupta. Pruebas: `test/backup-crypto.test.ts`.
+- **Custodia de la clave:** fuera del servidor de respaldos y de esta caja (gestor de
+  contraseñas del propietario). Si se pierde, las copias cifradas no se abren. No se
+  activó por defecto para no dejar respaldos irrecuperables antes de que exista esa copia.
+- **Retención y datos personales:** `BACKUP_RETENTION_DAYS=7` es también el plazo máximo
+  en que sobreviven los datos de una cuenta eliminada. Hoy no se reconstruyen los
+  respaldos al borrar una cuenta: eso queda declarado en la política de retención
+  (P0-SUPPORT) y en la respuesta a la solicitud de cancelación.
+- **Secretos aparte:** el respaldo es solo la base; nunca incluye `.env`. Los secretos
+  viven en `/etc/datosprivados.env` (600) y su copia de seguridad va al gestor de
+  contraseñas, no a `/var/backups`. Si se rota uno, se rota allí y se reinicia PM2.
 
 ## Despliegue
 

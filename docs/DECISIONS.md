@@ -80,6 +80,30 @@ pruebas) no se marcan como verificadas: la base de producción se estrena con es
 versión, así que no hay clientes en esa situación. Si algún día hubiera que
 perdonar la verificación a una cuenta concreta: `UPDATE users SET email_verified_at = ... WHERE id = ...`.
 
+## CSP: observación primero, bloqueo después
+
+| Pregunta | Decisión | Motivo |
+|---|---|---|
+| ¿Se activa una CSP que bloquee? | **No todavía.** Hoy va una `Content-Security-Policy-Report-Only` | Bloquear sin datos rompe funciones en producción (Next inyecta scripts y estilos en línea). Primero se recogen los avisos reales |
+| ¿Qué política se observa? | `default-src 'self'` con `script-src`/`style-src 'self' 'unsafe-inline'`, `frame-ancestors 'none'`, `form-action 'self'`, `base-uri 'self'`, `object-src 'none'`, `connect-src 'self'`, `img-src 'self' data: blob:` | Detecta recursos externos, formularios a otros orígenes, `embed`/`object` y `base` secuestrado **sin** generar ruido por los scripts en línea de Next. Definida en `next.config.ts` |
+| ¿A dónde llegan los avisos? | `POST /api/csp-report` (tope 8 KB, 30 por minuto e IP) que registra **solo** directiva, origen bloqueado recortado y la ruta del documento | `docs/GO-NO-GO.md` exige poder operar; el endpoint es público por diseño y no debe poder llenar el disco ni guardar datos personales |
+| ¿Qué hace falta para bloquear? | `proxy.ts` con nonce por petición (guía de Next: `01-app/02-guides/content-security-policy.md`), quitar `'unsafe-inline'` y volver a medir LCP/E2E | Un nonce por petición vuelve dinámicas todas las páginas: cambia el rendimiento medido y puede tumbar la caché de Cloudflare. **Decisión del propietario, pendiente** |
+| ¿Y `X-Frame-Options`? | Se mantiene además de `frame-ancestors` | Navegadores antiguos no entienden CSP |
+
+## IP del cliente: qué encabezado se cree
+
+`clientIp()` (`src/lib/client-ip.ts`) alimenta los límites de intentos. Orden:
+`X-Real-IP` (lo escribe nginx, el cliente no puede fijarlo) → `CF-Connecting-IP` (solo
+cuando no hay nginx delante) → `X-Forwarded-For` (primer valor) → `"desconocida"`.
+Un valor que no sea una IP se descarta.
+
+Para que `X-Real-IP` sea la IP real detrás de Cloudflare, nginx necesita
+`set_real_ip_from` (rangos del borde) + `real_ip_header CF-Connecting-IP`; aplicado en
+el preview el 2026-11-02 y descrito en `deploy/nginx-production.conf`, que además cierra
+el origen con `geo $realip_remote_addr` (el par **antes** de la reescritura) y
+`if ($from_cloudflare = 0) { return 403; }`. Sin esa última línea, quien llegue directo
+a la IP del servidor puede inventar `CF-Connecting-IP` y estrenar cupo en cada intento.
+
 ## Decididas en la Fase 3 (provisionales hasta cerrar la Fase 0)
 
 | Decisión | Elegida | Motivo | Si cambia |

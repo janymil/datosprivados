@@ -9,7 +9,7 @@ import path from "node:path";
 import { restoreDatabase } from "./restore-db.mjs";
 
 export function latestBackup(dir) {
-  const files = fs.readdirSync(dir).filter((name) => /^datosprivados-.*\.db\.gz$/.test(name));
+  const files = fs.readdirSync(dir).filter((name) => /^datosprivados-.*\.db\.gz(\.enc)?$/.test(name));
   if (!files.length) throw new Error(`No hay respaldos en ${dir}`);
   return files.map((name) => ({ name, mtime: fs.statSync(path.join(dir, name)).mtimeMs })).sort((a, b) => b.mtime - a.mtime)[0].name;
 }

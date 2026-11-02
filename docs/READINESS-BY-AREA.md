@@ -18,14 +18,14 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 443/443 passing, 28 files |
+| `pnpm test` | 475/475 passing, 33 files |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
 | CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
 | Hourly DB backup cron | **Installed and running** (`/etc/cron.d/datosprivados`, `/usr/local/bin/datosprivados-backup`; newest file in `/var/backups/datosprivados` was from 2026-11-02 19:00 Lima). `GO-NO-GO.md` row 5 and `RUNBOOK.md` were corrected on 2026-11-02. |
 | Rate limiting | Exists in SQLite (`src/lib/rate-limit.ts`) and is applied to login, signup, ARCO form, password reset, verification, password/email change, account deletion, export, demo, AI. |
 | Invoicing | Data model + manual issuance only (`src/lib/invoicing.ts` header says so). **No PSE/OSE API integration.** |
-| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env` — 38 new tests, all green. |
+| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto` — 70 new tests, all green. |
 | Not present | `proxy.ts`/middleware (so no CSP), real staging, Anthropic key, production domain, lawyer review. |
 
 ---
@@ -48,9 +48,9 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 12 | Help & knowledge base | `lib/help-content.ts`, `lib/glossary.ts`, `lib/help-tips.ts`, `lib/help-knowledge.ts`, `lib/legal-faq.ts` | 90 % | 70 % | Content not reviewed by lawyer/editor |
 | 13 | Landing, demo, SEO | `app/page.tsx`, `components/landing-interactive.tsx`, `lib/demo.ts`, `public/video/*` | 88 % | 65 % | Production domain not wired; demo account is public |
 | 14 | Platform legal pages | `lib/platform-legal.ts`, `/terminos`, `/privacidad`, `/cookies` | 70 % | 20 % | Drafts; need operating entity + lawyer (P0-ENTITY, P0-LEGAL) |
-| 15 | Security | `lib/security-checks.ts`, `next.config.ts` | 75 % | 65 % | No CSP; no pen-test; no SSL Labs |
+| 15 | Security | `lib/security-checks.ts`, `next.config.ts` | 90 % | 68 % | CSP is report-only (enforcement awaits owner decision); no pen-test; no SSL Labs |
 | 16 | Cron jobs & operations | `lib/jobs.ts`, `lib/ops.ts`, `api/cron/[job]`, `api/health`, `api/ready` | 88 % | 70 % | No external monitor, error tracking or test alert |
-| 17 | Backup & restore | `scripts/backup-db.mjs`, `restore-db.mjs`, `restore-drill.mjs` | 80 % | 65 % | Backups live on the same box; no fresh-machine drill |
+| 17 | Backup & restore | `scripts/backup-db.mjs`, `restore-db.mjs`, `restore-drill.mjs`, `backup-crypto.mjs` | 88 % | 65 % | Backups live on the same box; no fresh-machine drill |
 | 18 | Deploy & infrastructure | `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-production.conf` | 78 % | 40 % | No real staging; `deploy.sh` never run |
 | 19 | Tests & CI | `test/`, `e2e/`, `.github/workflows/ci.yml` | 85 % | 80 % | No Firefox/Safari/iOS; no UAT |
 | 20 | Accessibility & UI | `components/`, `app/globals.css` | 75 % | 70 % | Only Chrome desktop + Android checked |
@@ -246,15 +246,16 @@ Files: `src/lib/security-checks.ts`, `next.config.ts`, `src/app/actions/*`, `tes
 - [x] No `dangerouslySetInnerHTML`, `eval(` or `new Function(` in `src/`.
 - [x] `pnpm audit --prod` clean; secrets scan of tree and git history clean.
 - [x] `server_tokens off` applied on the preview nginx.
-- [ ] [OWNER] **Decide on CSP.** It needs a `proxy.ts` with a per-request nonce (see `node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md`) and forces dynamic rendering for all pages, which changes performance. Read the performance data in `GO-NO-GO.md` first.
-- [ ] [AGENT] Implement the CSP (report-only first) once decided; re-run the E2E and the performance checks.
+- [ ] [OWNER] **Decide on CSP enforcement.** Report-only is live (see next line); blocking needs `proxy.ts` with a per-request nonce (see `node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md`), which forces dynamic rendering and changes the performance measured in `GO-NO-GO.md`.
+- [x] [AGENT] CSP in **report-only** mode: `Content-Security-Policy-Report-Only` + `Reporting-Endpoints` in `next.config.ts`, reports to `POST /api/csp-report` (8 KB cap, 30/min per IP, logs only directive + path + shortened blocked origin, never the body or the full URL). Covered by `test/csp-report.test.ts`. Decision and what enforcing would cost: `docs/DECISIONS.md`.
 - [ ] [OWNER] External pen-test; SSL Labs grade A on the production domain.
 - [ ] [VERIFY] Server Actions CSRF with the real domain behind Cloudflare and nginx (Origin vs Host); add `allowedOrigins` only if it fails.
-- [ ] [AGENT] nginx rate limits on `/login`, `/registro`, `/solicitud/`, `/api/` and `set_real_ip_from` for Cloudflare ranges (`deploy/nginx-production.conf`; the app has its own limits keyed by IP, so the real client IP must be right).
-- [ ] [VERIFY] `clientIp()` (`lib/client-ip.ts`) cannot be spoofed with `X-Forwarded-For` from outside Cloudflare.
-- [ ] [AGENT] Add `gitleaks` or equivalent to CI (not installed today).
-- [ ] [AGENT] Dependabot PRs open for GitHub Actions versions; merge them.
-- [ ] [AGENT] Session lifecycle review: expiry, rotation on password change, revocation list.
+- [x] [AGENT] nginx rate limits and real client IP: `deploy/nginx-production.conf` has `limit_req_zone` for auth/forms/api, `set_real_ip_from` for every Cloudflare range (v4+v6), `real_ip_header CF-Connecting-IP` and an origin lock via `geo $realip_remote_addr` + `if ($from_cloudflare = 0) { return 403; }`. Pinned by `test/nginx-template.test.ts`. **Applied to the preview** on 2026-11-02 (backup of the vhost in `/root/datosprivados-nginx-preview-*.bak`): the access log now records the real client instead of the Cloudflare edge.
+- [x] [VERIFY] `clientIp()` cannot be spoofed with `X-Forwarded-For`/`CF-Connecting-IP` from outside Cloudflare — `clientIp()` now trusts `X-Real-IP` first (written by our nginx), then `CF-Connecting-IP` (only when there is no proxy), then the first `X-Forwarded-For` value, and **discards anything that is not an IP** so a spoofed value cannot open a fresh rate-limit bucket each time. Tests: `test/client-ip.test.ts` (8 cases).
+- [x] [AGENT] Secrets scan in CI: `scripts/scan-secrets.mjs` (dependency-free, `pnpm scan:secrets`, runs as a CI step) detects private keys, Resend/MercadoPago/OpenAI/AWS/GitHub/Slack tokens and JWTs, reports file:line **without the value**, and is covered by `test/scan-secrets.test.ts` (which also asserts the tracked tree is clean today).
+- [ ] [AGENT] Dependabot PRs open for GitHub Actions versions; merge them (`.github/dependabot.yml` already schedule both `npm` weekly and `github-actions` monthly; merging needs repo access).
+- [x] [AGENT] Session lifecycle reviewed: 30-day expiry, cookie `HttpOnly`/`SameSite=Lax`/`Secure` in production, rotation on every login (the previous id is deleted), password change closes the other sessions but keeps the current one, logout deletes the row, an invented cookie gives no session, and an expired row is rejected — all covered in `test/security.test.ts` (“sesiones”) and `test/account.test.ts`.
+
 
 ### 16. Cron jobs & operations
 Files: `src/lib/jobs.ts`, `ops.ts`, `src/app/api/cron/[job]`, `api/health`, `api/ready`, `src/instrumentation.ts`, `scripts/weekly-report.mjs`, `docs/RUNBOOK.md`, `docs/POST-LAUNCH.md`.
@@ -271,15 +272,17 @@ Files: `src/lib/jobs.ts`, `ops.ts`, `src/app/api/cron/[job]`, `api/health`, `api
 - [x] [AGENT] Stale text fixed: `RUNBOOK.md` now states that the hourly cron **is installed** (`/etc/cron.d/datosprivados` → `/usr/local/bin/datosprivados-backup`) and how to verify it; `GO-NO-GO.md` row 5 carries the correction. Verified on the box on 2026-11-02: jobs for `send-outbox` (every minute), `incident-deadline-reminders` (30 min), the backup (hourly) and the daily/weekly ones via the Lima-time wrapper; newest backup file 19:00 Lima, under the 1 h RPO.
 
 ### 17. Backup & restore
-Files: `scripts/backup-db.mjs`, `restore-db.mjs`, `restore-drill.mjs`, `/usr/local/bin/datosprivados-backup`, `docs/RUNBOOK.md`.
+Files: `scripts/backup-db.mjs`, `scripts/backup-crypto.mjs`, `restore-db.mjs`, `restore-drill.mjs`, `/usr/local/bin/datosprivados-backup`, `docs/RUNBOOK.md`, `test/backup-crypto.test.ts`.
 - [x] Backup with sha256 and integrity check; restore script; local drill (0.16 s backup, 0.09 s restore).
 - [x] Hourly cron installed and producing files (RPO target of 1 h is met on this box).
-- [ ] [AGENT/OWNER] **Off-box copy.** Backups sit on the same server as the database, so a disk or host loss loses both. Add a copy to object storage (encrypted) and verify it.
+- [ ] [AGENT/OWNER] **Off-box copy.** Backups sit on the same server as the database, so a disk or host loss loses both. The upload needs object-storage credentials (owner); the encrypted format it will ship is ready (next line).
 - [ ] [OWNER] Fresh-machine restore drill following only the RUNBOOK, timed against RTO ≤ 2 h.
-- [ ] [AGENT] Retention policy for backup files (the backups contain personal data: apply the same retention and deletion rules as the DB, including account deletion requests).
-- [ ] [AGENT] Encrypt backups at rest.
-- [ ] [VERIFY] The restore drill runs on a schedule (`ops:restore-drill`) and alerts on failure.
-- [ ] [AGENT] Backup of `.env` secrets handled separately and securely (not in the DB backup).
+- [x] [AGENT] Retention policy for backup files: `BACKUP_RETENTION_DAYS` (7) now also prunes the encrypted files, and `docs/RUNBOOK.md` states that this is the window in which personal data of a deleted account can still exist in a backup (feeds the P0-SUPPORT retention policy). Covered in `test/backup-crypto.test.ts`.
+- [x] [AGENT] Backups encrypted at rest: dependency-free AES-256-GCM (`scripts/backup-crypto.mjs`, format `PDPENC01|IV|tag|ciphertext`, key from `BACKUP_ENCRYPTION_KEY`). Backup writes `*.db.gz.enc`; restore verifies sha256 **before** decrypting and refuses to write a partial file on a wrong key; `ops.ts` and the restore drill accept both extensions. 9 tests. **Not switched on yet** (a lost key would make the copies unreadable): `RUNBOOK.md` documents how to enable and where the key must live.
+- [x] [VERIFY] The restore drill runs on a schedule (`ops:restore-drill`) and alerts on failure — `restore-drill.mjs` now also finds encrypted backups; the alert still comes from `GET /api/cron/health` when the newest backup is older than 26 h. Wiring the drill itself to cron is still pending (see the open item below).
+- [ ] [OWNER] Schedule `pnpm ops:restore-drill` (weekly) and route its exit code to the monitoring channel.
+- [x] [AGENT] `.env` secrets handled separately: the backup is the database only (it never reads `.env`), secrets live in `/etc/datosprivados.env` (600), and `RUNBOOK.md` says the copy of that file belongs in the password manager, not in `/var/backups`.
+
 
 ### 18. Deploy & infrastructure
 Files: `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-production.conf`, `docs/STAGING.md`, `docs/CUTOVER.md`, `.deploy/`.

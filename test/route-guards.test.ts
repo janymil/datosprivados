@@ -39,6 +39,7 @@ const PUBLIC_FILES: Record<string, string> = {
   "api/cron/[job]/route.ts": "bearer CRON_SECRET (ver authorized())",
   "api/mail/webhook/route.ts": "webhook firmado del proveedor de correo",
   "api/mercadopago/webhook/route.ts": "webhook con firma de MercadoPago",
+  "api/csp-report/route.ts": "avisos de la CSP que manda el navegador: anónimo por diseño, con tope de tamaño y límite por IP",
 };
 
 /** Acciones públicas por diseño (no hay sesión cuando se llaman). */
