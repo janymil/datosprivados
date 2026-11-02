@@ -49,7 +49,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 13 | Landing, demo, SEO | `app/page.tsx`, `components/landing-interactive.tsx`, `lib/demo.ts`, `public/video/*` | 88 % | 65 % | Production domain not wired; demo account is public |
 | 14 | Platform legal pages | `lib/platform-legal.ts`, `/terminos`, `/privacidad`, `/cookies` | 70 % | 20 % | Drafts; need operating entity + lawyer (P0-ENTITY, P0-LEGAL) |
 | 15 | Security | `lib/security-checks.ts`, `next.config.ts` | 90 % | 68 % | CSP is report-only (enforcement awaits owner decision); no pen-test; no SSL Labs |
-| 16 | Cron jobs & operations | `lib/jobs.ts`, `lib/ops.ts`, `api/cron/[job]`, `api/health`, `api/ready` | 88 % | 70 % | No external monitor, error tracking or test alert |
+| 16 | Cron jobs & operations | `lib/jobs.ts`, `lib/ops.ts`, `api/cron/[job]`, `api/health`, `api/ready` | 92 % | 70 % | No external monitor or error tracking (self-alerting job ready, needs activation) |
 | 17 | Backup & restore | `scripts/backup-db.mjs`, `restore-db.mjs`, `restore-drill.mjs`, `backup-crypto.mjs` | 88 % | 65 % | Backups live on the same box; no fresh-machine drill |
 | 18 | Deploy & infrastructure | `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-production.conf` | 78 % | 40 % | No real staging; `deploy.sh` never run |
 | 19 | Tests & CI | `test/`, `e2e/`, `.github/workflows/ci.yml` | 85 % | 80 % | No Firefox/Safari/iOS; no UAT |
@@ -258,17 +258,19 @@ Files: `src/lib/security-checks.ts`, `next.config.ts`, `src/app/actions/*`, `tes
 
 
 ### 16. Cron jobs & operations
-Files: `src/lib/jobs.ts`, `ops.ts`, `src/app/api/cron/[job]`, `api/health`, `api/ready`, `src/instrumentation.ts`, `scripts/weekly-report.mjs`, `docs/RUNBOOK.md`, `docs/POST-LAUNCH.md`.
+Files: `src/lib/jobs.ts`, `ops.ts`, `src/app/api/cron/[job]`, `api/health`, `api/ready`, `src/instrumentation.ts`, `scripts/weekly-report.mjs`, `docs/RUNBOOK.md`, `docs/POST-LAUNCH.md`, `deploy/logrotate-datosprivados.conf`.
 - [x] Real cron installed (`/etc/cron.d/datosprivados`, wrapper converts to Lima time because Ubuntu cron has no `CRON_TZ`).
-- [x] Jobs: `send-outbox`, `incident-deadline-reminders`, `purge-old-data`, `expire-sessions`, `billing-sync`, `holidays-check`, health; bearer `CRON_SECRET`.
-- [x] `GET /api/cron/health` checks the backup directory.
+- [x] Jobs: `send-outbox`, `arco-deadline-reminders`, `incident-deadline-reminders`, `purge-old-data`, `expire-sessions`, `billing-sync`, `document-staleness-notice`, `lapsed-account-notices`, `holidays-check`, `ops-alert`; bearer `CRON_SECRET`.
+- [x] `GET /api/cron/health` checks the backup directory and runs `dbIntegrity()` (`quick_check` + WAL checkpoint).
 - [x] Weekly report and post-launch review scripts (`ops:weekly`).
 - [ ] [OWNER] External uptime monitor on `/api/health` and `/api/ready`, plus a paging channel (P6-OBS).
 - [ ] [OWNER] Error tracking account (Sentry or similar) and a deliberate test alert fired and received.
-- [ ] [AGENT] Wire `instrumentation.ts` to the chosen error tracker.
-- [ ] [AGENT] The cron host has no MTA, so job output is lost; failures only go to syslog. Add alerting (via `ops_alert` email or the monitor) when a job fails or misses its window.
-- [ ] [VERIFY] Every job is idempotent and safe to run twice; add tests where missing.
-- [ ] [AGENT] Structured logs with request IDs (`lib/log.ts`) and log rotation.
+- [ ] [AGENT] Wire `instrumentation.ts` to the chosen error tracker — `onRequestError` already emits a scrubbed JSON line with `digest`/route/method, so it is a ~5-line bridge once the vendor is chosen (owner decision).
+- [x] [AGENT] Alerting when a job fails or misses its window: `ops-alert` job (every 15 min once activated) recomputes `operationalAlerts()` —overdue jobs, stuck outbox, failed webhooks, stale backup, full disk— and sends **one** `ops_alert` email per hour to `ALERT_EMAIL`; any job that throws enqueues an immediate `ops_alert` (one per job and hour) from `runJob`'s error path, so a failure no longer dies in syslog. Cron line left commented on the box with the activation step in `RUNBOOK.md` (an older build 404s on an unknown job). Tests: `test/jobs.test.ts` (“auto-monitorización”).
+- [x] [VERIFY] Every job is idempotent and safe to run twice — `test/jobs.test.ts` runs **all** jobs twice and asserts the outbox does not grow; `ops-alert` dedupes by hour.
+- [x] [AGENT] Structured logs and rotation: every job run now logs `job_ok`/`job_failed` with the same `id` stored in `job_runs` (correlates log line ↔ execution) plus duration; `deploy/logrotate-datosprivados.conf` rotates PM2/app logs weekly (8 copies, compressed).
+- [ ] [AGENT] Request IDs per HTTP request (not just per job) — needs a `proxy.ts`/middleware, i.e. the same owner decision as the CSP nonce (area 15). Until then, `onRequestError` gives route + digest.
+- [x] [AGENT] Stale text fixed: `RUNBOOK.md` now states that the hourly cron **is installed** (`/etc/cron.d/datosprivados` → `/usr/local/bin/datosprivados-backup`) and how to verify it; `GO-NO-GO.md` row 5 carries the correction. Verified on the box on 2026-11-02: jobs for `send-outbox` (every minute), `incident-deadline-reminders` (30 min), the backup (hourly) and the daily/weekly ones via the Lima-time wrapper; newest backup file 19:00 Lima, under the 1 h RPO.
 - [x] [AGENT] Stale text fixed: `RUNBOOK.md` now states that the hourly cron **is installed** (`/etc/cron.d/datosprivados` → `/usr/local/bin/datosprivados-backup`) and how to verify it; `GO-NO-GO.md` row 5 carries the correction. Verified on the box on 2026-11-02: jobs for `send-outbox` (every minute), `incident-deadline-reminders` (30 min), the backup (hourly) and the daily/weekly ones via the Lima-time wrapper; newest backup file 19:00 Lima, under the 1 h RPO.
 
 ### 17. Backup & restore

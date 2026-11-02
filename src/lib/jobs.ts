@@ -9,6 +9,7 @@ import { getPreapproval, isMercadoPagoConfigured } from "./mercadopago";
 import { documentFreshness } from "./document-freshness";
 import { listBanks, listDocuments, listProviders } from "./data";
 import { enqueueEmail, processOutbox, stuckOutboxCount } from "./mail";
+import { logEvent } from "./log";
 import { notifyCompany } from "./notify";
 import { planName } from "./plans";
 
@@ -261,6 +262,37 @@ const JOBS = {
     return { accounts, signups, outbox: Number(outbox.changes), job_runs: Number(runs.changes), webhook_events: Number(events.changes), ai_usage: Number(usage.changes) };
   },
 
+  /**
+   * Auto-monitorización (P6-OBS): si una tarea se atrasó, hay correos atascados,
+   * webhooks fallando, el respaldo envejeció o el disco se llenó, avisa a
+   * `ALERT_EMAIL` y lo deja en el registro estructurado.
+   *
+   * Existe porque el host del cron no tiene MTA (la salida solo va a syslog) y
+   * todavía no hay monitor externo: sin esta tarea, un fallo se descubre por
+   * casualidad. Un correo por hora como máximo con todas las alertas juntas.
+   */
+  async "ops-alert"({ now }: JobContext): Promise<JobResult> {
+    // Import diferido: `ops.ts` ya importa `jobsHealth` de este módulo; así no se
+    // cierra el ciclo al cargar los módulos.
+    const { operationalAlerts } = await import("./ops");
+    const alerts = operationalAlerts(now);
+    if (!alerts.length) return { alertas: 0, enviado: 0 };
+    for (const alert of alerts) logEvent("warn", "ops_alert", { code: alert.code, message: alert.message });
+
+    const to = process.env.ALERT_EMAIL?.trim();
+    if (!to) return { alertas: alerts.length, enviado: 0, falta: "ALERT_EMAIL" };
+    const sent = enqueueEmail({
+      to,
+      template: "ops_alert",
+      payload: {
+        subject: `DatosPrivados: ${alerts.length} alerta(s) operativa(s)`,
+        message: alerts.map((alert) => `· ${alert.message}`).join("\n"),
+      },
+      dedupeKey: `ops-alert:${now.toISOString().slice(0, 13)}`,
+    });
+    return { alertas: alerts.length, enviado: sent ? 1 : 0 };
+  },
+
   /** Verifica que los dos próximos años tengan feriados cargados y avisa cuáles siguen sin decreto confirmado. */
   "holidays-check"({ now }: JobContext): JobResult {
     const year = Number(limaToday(now).slice(0, 4));
@@ -297,6 +329,7 @@ export const JOB_MAX_AGE_HOURS: Record<JobName, number> = {
   "document-staleness-notice": 8 * 24,
   "lapsed-account-notices": 26,
   "purge-old-data": 26,
+  "ops-alert": 1,
   "holidays-check": 8 * 24,
 };
 
@@ -314,16 +347,44 @@ export async function runJob(job: JobName, now = new Date()): Promise<RunOutcome
   if (running) return { job, status: "locked" };
 
   const id = newId();
+  const started = Date.now();
   db.prepare("INSERT INTO job_runs (id, job, started_at) VALUES (?, ?, ?)").run(id, job, now.toISOString());
   try {
     const detail = await JOBS[job]({ now });
     db.prepare("UPDATE job_runs SET finished_at = ?, ok = 1, detail = ? WHERE id = ?").run(new Date().toISOString(), JSON.stringify(detail), id);
+    // `id` es el mismo que queda en job_runs: permite cruzar registro y ejecución.
+    logEvent("info", "job_ok", { job, id, ms: Date.now() - started });
     return { job, status: "ok", detail };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     db.prepare("UPDATE job_runs SET finished_at = ?, ok = 0, error = ? WHERE id = ?").run(new Date().toISOString(), message.slice(0, 500), id);
     console.error(`[jobs] ${job} falló:`, error);
+    logEvent("error", "job_failed", { job, id, message });
+    alertJobFailure(job, id, message, now);
     return { job, status: "error", error: message };
+  }
+}
+
+/**
+ * Aviso inmediato de una tarea fallida. Sin esto, el fallo solo quedaría en
+ * syslog (el host del cron no tiene MTA). Un correo por tarea y hora.
+ */
+function alertJobFailure(job: JobName, runId: string, message: string, now: Date) {
+  const to = process.env.ALERT_EMAIL?.trim();
+  if (!to) return;
+  try {
+    enqueueEmail({
+      to,
+      template: "ops_alert",
+      payload: {
+        subject: `DatosPrivados: la tarea ${job} falló`,
+        message: `${message.slice(0, 300)}\n\nEjecución: ${runId} (tabla job_runs).`,
+      },
+      dedupeKey: `job-failed:${job}:${now.toISOString().slice(0, 13)}`,
+    });
+  } catch (error) {
+    // Si ni siquiera se puede encolar, queda el log; nunca se enmascara el fallo original.
+    console.error("[jobs] no se pudo encolar el aviso de fallo:", error);
   }
 }
 

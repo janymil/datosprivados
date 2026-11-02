@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mp = vi.hoisted(() => ({ preapprovals: new Map<string, unknown>() }));
 
@@ -242,6 +242,75 @@ describe("candado, registro y salud", () => {
     expect(jobsHealth(new Date(NOW.getTime() + 30 * HOUR)).jobs.find((j) => j.job === "send-outbox")?.overdue).toBe(true);
   });
 });
+
+describe("auto-monitorización (ops-alert)", () => {
+  const previous = process.env.ALERT_EMAIL;
+  beforeEach(() => {
+    process.env.ALERT_EMAIL = "ops@datosprivados.pe";
+  });
+  afterEach(() => {
+    process.env.ALERT_EMAIL = previous;
+  });
+
+  it("avisa a ALERT_EMAIL cuando una tarea se atrasa, una sola vez por hora", async () => {
+    // Ninguna tarea ha corrido: todas están atrasadas.
+    expect((await runJob("ops-alert", NOW)).status).toBe("ok");
+    const alerts = outbox("ops_alert");
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0].to_email).toBe("ops@datosprivados.pe");
+    const payload = JSON.parse(alerts[0].payload) as { subject: string; message: string };
+    expect(payload.subject).toContain("alerta");
+    expect(payload.message).toContain("no corre a tiempo");
+
+    // Dentro de la misma hora no repite.
+    await runJob("ops-alert", new Date(NOW.getTime() + 10 * 60_000));
+    expect(outbox("ops_alert")).toHaveLength(1);
+  });
+
+  it("sin ALERT_EMAIL no intenta enviar y lo dice en el detalle", async () => {
+    process.env.ALERT_EMAIL = "";
+    const result = await runJob("ops-alert", NOW);
+    expect(result.status).toBe("ok");
+    expect(result.status === "ok" && result.detail).toMatchObject({ enviado: 0, falta: "ALERT_EMAIL" });
+    expect(outbox("ops_alert")).toHaveLength(0);
+  });
+
+  it("con todo en orden no manda nada", async () => {
+    for (const job of JOB_NAMES) await runJob(job, NOW);
+    getDb().prepare("UPDATE job_runs SET finished_at = ? WHERE ok = 1").run(NOW.toISOString());
+    getDb().exec("DELETE FROM email_outbox");
+    const result = await runJob("ops-alert", NOW);
+    expect(result.status === "ok" && result.detail).toMatchObject({ alertas: 0 });
+    expect(outbox()).toHaveLength(0);
+  });
+
+  it("una tarea que falla avisa igual: no depende de syslog ni de un monitor externo", async () => {
+    const db = getDb();
+    // Fallo determinista: la tarea toca `sessions`, que aquí no existe.
+    db.exec("ALTER TABLE sessions RENAME TO sessions_off");
+    try {
+      const outcome = await runJob("expire-sessions", NOW);
+      expect(outcome.status).toBe("error");
+    } finally {
+      db.exec("ALTER TABLE sessions_off RENAME TO sessions");
+    }
+    const alerts = outbox("ops_alert");
+    expect(alerts).toHaveLength(1);
+    const payload = JSON.parse(alerts[0].payload) as { subject: string; message: string };
+    expect(payload.subject).toContain("expire-sessions");
+    expect(payload.message).toContain("job_runs");
+
+    // Reintentar el mismo fallo en la misma hora no duplica el aviso.
+    db.exec("ALTER TABLE sessions RENAME TO sessions_off");
+    try {
+      await runJob("expire-sessions", new Date(NOW.getTime() + 5 * 60_000));
+    } finally {
+      db.exec("ALTER TABLE sessions_off RENAME TO sessions");
+    }
+    expect(outbox("ops_alert")).toHaveLength(1);
+  });
+});
+
 
 describe("ruta /api/cron", () => {
   const SECRET = "secreto-de-prueba-0123456789";

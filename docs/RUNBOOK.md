@@ -77,6 +77,37 @@ BACKUP_ENCRYPTION_KEY=... node scripts/restore-db.mjs /var/backups/datosprivados
   viven en `/etc/datosprivados.env` (600) y su copia de seguridad va al gestor de
   contraseñas, no a `/var/backups`. Si se rota uno, se rota allí y se reinicia PM2.
 
+## Tareas programadas
+
+El cron del sistema dispara `POST /api/cron/<tarea>` con el bearer de `CRON_SECRET`
+(envoltorio `/usr/local/bin/datosprivados-cron`; tabla `/etc/cron.d/datosprivados`).
+Cada ejecución queda en `job_runs` (con `id`, detalle, error y duración) y se registra
+en una línea JSON (`job_ok` / `job_failed`) con ese mismo `id`.
+
+### Auto-monitorización (`ops-alert`)
+
+No hay monitor externo todavía, y el host del cron no tiene MTA (su salida solo va a
+syslog). Para no depender de que alguien mire: la tarea `ops-alert` revisa lo mismo que
+`GET /api/cron/health` —tareas atrasadas, correos atascados, webhooks fallidos, respaldo
+viejo, disco lleno— y manda **un correo por hora** a `ALERT_EMAIL` con todas las alertas
+juntas. Además, cualquier tarea que lance una excepción encola un aviso inmediato
+(`ops_alert`, uno por tarea y hora) sin esperar a la siguiente pasada.
+
+- **Activación en el servidor** (una vez, después de desplegar una versión que incluya la
+  tarea): en `/etc/cron.d/datosprivados`, quitar el `#` de la línea
+  `# */15 * * * *  root /usr/local/bin/datosprivados-cron ops-alert`.
+  Se deja comentada a propósito: un build anterior responde 404 a una tarea que no conoce.
+- Requiere `ALERT_EMAIL` en `/etc/datosprivados.env`. Sin destinatario, la tarea deja el
+  aviso en el registro estructurado y responde `falta: "ALERT_EMAIL"`.
+- Comprobación manual: `datosprivados-cron ops-alert` (y `datosprivados-cron health`).
+
+### Registros y rotación
+
+Los eventos van a stdout como una línea JSON (`src/lib/log.ts`), sin cuerpos de petición
+ni datos personales (los correos se sustituyen por `[correo]`). PM2 los escribe en
+`/root/.pm2/logs/`; copia `deploy/logrotate-datosprivados.conf` a `/etc/logrotate.d/`
+para rotarlos (semanal, 8 copias, comprimido).
+
 ## Calendario de plazos (feriados)
 
 Los plazos legales (ARCO: 10 y 20 días hábiles) se cuentan con `businessDaysBetween`, que
