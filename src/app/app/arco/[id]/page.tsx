@@ -7,6 +7,7 @@ import { formatDate, formatDateTime, limaToday } from "@/lib/format";
 import { ArcoResponseForm } from "@/components/arco-response-form";
 import { PageHeader, StatusPill } from "@/components/ui";
 import { Term } from "@/components/help";
+import { HolidayDisclaimer } from "@/components/legal-notes";
 
 export const metadata = { title: "Solicitud ARCO" };
 
@@ -180,6 +181,7 @@ export default async function ArcoDetailPage({
                 <dd className="font-mono font-medium text-sage">S/ 0 (Gratuito por ley)</dd>
               </div>
             </dl>
+            <HolidayDisclaimer className="mt-4 border-t border-line pt-3" />
           </section>
 
           <section className="border border-line bg-paper p-6">

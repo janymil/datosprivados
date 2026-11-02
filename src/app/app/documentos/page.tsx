@@ -32,6 +32,7 @@ import { GuideBox, Term } from "@/components/help";
 import { SubmitButton } from "@/components/submit-button";
 import { Toast } from "@/components/toast";
 import { companyIdentityLine, appUrl } from "@/lib/documents";
+import { TemplateNotice } from "@/components/legal-notes";
 import { publishBlockers } from "@/lib/document-publish";
 
 export const metadata = { title: "Documentos" };
@@ -88,6 +89,8 @@ export default async function DocumentsPage({
       </Link>
 
       {ok && <Toast message="Documento actualizado con tus últimos datos." />}
+
+      <TemplateNotice />
 
       <section className="card p-6 md:p-7">
         <div className="flex flex-wrap items-center gap-2.5">
@@ -336,6 +339,7 @@ function DocumentsOverview({ company, regenerated }: { company: Company; regener
 
   return (
     <div className="space-y-7">
+      <TemplateNotice />
       {regeneratedCount !== undefined && Number.isFinite(regeneratedCount) && (
         <Toast
           message={

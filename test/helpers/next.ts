@@ -24,6 +24,10 @@ export const nextNavigationMock = () => ({
   redirect: (url: string) => {
     throw new Error(`REDIRECT:${url}`);
   },
+  /** `notFound()` también corta la ejecución; se reconoce por el mensaje. */
+  notFound: () => {
+    throw new Error("NOT_FOUND");
+  },
 });
 
 /** Congela el reloj (Date.now / new Date) hasta llamar a `restore()`. */

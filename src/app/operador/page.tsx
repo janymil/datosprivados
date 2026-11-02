@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireOperator } from "@/lib/operator";
 import { listPendingInvoices, formatSol } from "@/lib/invoicing";
 import { listPendingTransfers } from "@/lib/transfers";
@@ -95,6 +96,18 @@ export default async function OperatorPage({ searchParams }: { searchParams: Pro
             </li>
           ))}
         </ul>
+      </section>
+
+      <section>
+        <h2 className="font-display text-2xl">Calendario de plazos</h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          Los plazos en días hábiles (ARCO: 10 y 20) descuentan fines de semana y feriados.
+        </p>
+        <p className="mt-3">
+          <Link href="/operador/feriados" className="btn btn-ghost btn-sm">
+            Editar feriados y días no laborables
+          </Link>
+        </p>
       </section>
     </main>
   );

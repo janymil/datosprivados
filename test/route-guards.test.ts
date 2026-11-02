@@ -84,6 +84,11 @@ function exportedFunctions(source: string): Array<{ name: string; body: string }
   }));
 }
 
+/** Módulos de Server Actions: los que empiezan con la directiva "use server". */
+function actionModules(): string[] {
+  return files(APP_ROOT).filter((file) => /^\s*["']use server["'];?/m.test(fs.readFileSync(file, "utf8").slice(0, 200)));
+}
+
 
 describe("guardias de sesión", () => {
   const routes = files(APP_ROOT).filter((file) => !relative(file).includes("actions/"));
@@ -121,10 +126,11 @@ describe("guardias de sesión", () => {
   });
 
   it("toda Server Action llama a una guardia, salvo las públicas", () => {
-    const actionDir = path.join(APP_ROOT, "actions");
     const unguarded: string[] = [];
     let checked = 0;
-    for (const file of files(actionDir)) {
+    // No solo `actions/`: cualquier módulo con "use server" es un endpoint público
+    // (por ejemplo `operador/actions.ts` o `operador/feriados/actions.ts`).
+    for (const file of actionModules()) {
       for (const fn of exportedFunctions(fs.readFileSync(file, "utf8"))) {
         checked += 1;
         if (PUBLIC_ACTIONS[fn.name]) continue;
@@ -136,8 +142,7 @@ describe("guardias de sesión", () => {
   });
 
   it("las acciones públicas de la lista siguen existiendo con ese nombre", () => {
-    const actionDir = path.join(APP_ROOT, "actions");
-    const names = files(actionDir).flatMap((file) => exportedFunctions(fs.readFileSync(file, "utf8")).map((fn) => fn.name));
+    const names = actionModules().flatMap((file) => exportedFunctions(fs.readFileSync(file, "utf8")).map((fn) => fn.name));
     for (const [name, reason] of Object.entries(PUBLIC_ACTIONS)) {
       expect(names.includes(name), `${name} (${reason}) ya no existe: ajusta la lista`).toBe(true);
     }

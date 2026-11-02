@@ -18,6 +18,9 @@ debug.log
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
 
+# graphify knowledge graph — regenerable, not committed (run `graphify extract .`).
+/graphify-out/
+
 # Respaldos locales de la base (copiar fuera del servidor).
 backups/
 test/.tmp/

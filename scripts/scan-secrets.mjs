@@ -28,6 +28,7 @@ export const PATTERNS = [
 /** Archivos con valores ficticios a propósito (patrón → motivo). */
 export const ALLOW = [
   { file: "docs/MERCADOPAGO-SANDBOX.md", reason: "credenciales de sandbox documentadas; el archivo no se versiona" },
+  { file: "test/scan-secrets.test.ts", reason: "valores inventados que la propia prueba usa para comprobar la detección" },
 ];
 
 const SKIP = /^(?:pnpm-lock\.yaml|node_modules\/|\.next\/|playwright-report\/|test-results\/|\.deploy\/)/;

@@ -10,6 +10,7 @@ import { GuideBox, Term } from "@/components/help";
 import { CopyButton } from "@/components/copy-button";
 import { SubmitButton } from "@/components/submit-button";
 import { appUrl } from "@/lib/documents";
+import { HolidayDisclaimer } from "@/components/legal-notes";
 
 export const metadata = { title: "Solicitudes ARCO" };
 
@@ -127,6 +128,8 @@ export default async function ArcoPage({
           </>
         }
       />
+
+      <HolidayDisclaimer className="max-w-[70ch]" />
 
       <GuideBox
         title="¿Qué son los Derechos ARCO y cuántos días tengo para responder?"

@@ -40,7 +40,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 4 | Billing (MercadoPago) | `lib/billing.ts`, `lib/mercadopago.ts`, `lib/subscriptions.ts`, `api/mercadopago/webhook` | 75 % | 55 % | Reject→pause→cancel never seen with real events; no prod credentials |
 | 5 | Invoicing (SUNAT) | `lib/invoicing.ts` | 50 % | 20 % | No PSE/OSE chosen; issuance is manual (P0-SUNAT) |
 | 6 | Email & notifications | `lib/mail.ts`, `lib/mail-templates.ts`, `lib/notify.ts` | 85 % | 25 % | No domain / SPF / DKIM / DMARC; never sent to a real inbox |
-| 7 | Compliance documents | `lib/documents.ts`, `lib/sector-legal.ts`, `lib/document-freshness.ts`, `lib/document-catalog.ts`, `/p/[slug]` | 85 % | 40 % | Templates never lawyer-reviewed (P0-LEGAL) |
+| 7 | Compliance documents | `lib/documents.ts`, `lib/sector-legal.ts`, `lib/document-freshness.ts`, `lib/document-catalog.ts`, `components/legal-notes.tsx`, `/p/[slug]` | 90 % | 40 % | Templates never lawyer-reviewed (P0-LEGAL) |
 | 8 | ARCO requests | `actions/arco.ts`, `solicitud/[slug]`, `app/arco/*` | 80 % | 65 % | Requester/owner email delivery unproven; no captcha |
 | 9 | Incidents (48 h) | `app/app/incidentes/*`, `lib/incident-criteria.ts` | 75 % | 65 % | Pre-deadline alerts depend on email |
 | 10 | Data banks & SIPDP | `app/app/bancos/*`, `lib/bank-sheet.ts`, `lib/bank-presets.ts` | 90 % | 85 % | Platform's own banks unregistered (P0-OWN-BANKS) |
@@ -153,7 +153,7 @@ Files: `src/lib/mail.ts` (Resend over HTTP, outbox), `mail-templates.ts` (19+ te
 - [ ] [AGENT] Optional weekly digest.
 
 ### 7. Compliance documents
-Files: `src/lib/documents.ts` (1.5k lines), `sector-legal.ts` (1k lines), `document-catalog.ts`, `document-freshness.ts` (`TEMPLATE_VERSIONS`), `document-publish.ts`, `src/app/p/[slug]`, `src/app/app/documentos`.
+Files: `src/lib/documents.ts` (1.5k lines), `sector-legal.ts` (1k lines), `document-catalog.ts`, `document-freshness.ts` (`TEMPLATE_VERSIONS`), `document-publish.ts`, `src/app/p/[slug]`, `src/app/app/documentos`, `src/components/legal-notes.tsx`, `src/app/operador/feriados/*`.
 - [x] 14 document kinds, sector-specific content, immutable `document_versions`, public page serves the published version.
 - [x] Publishing blocked while `[…]` placeholders are unfilled; version history in UI; staleness detection.
 - [x] XSS tests on names and addresses (`test/xss.test.ts`).
@@ -161,8 +161,8 @@ Files: `src/lib/documents.ts` (1.5k lines), `sector-legal.ts` (1k lines), `docum
 - [ ] [AGENT] Apply lawyer feedback in `documents.ts`/`sector-legal.ts` and **bump `TEMPLATE_VERSIONS`** for every changed template so customers are prompted to regenerate.
 - [ ] [VERIFY] Print stylesheet on Chrome, Firefox and Safari.
 - [ ] [AGENT] Server-side PDF generation (optional).
-- [ ] [AGENT] Regional-holiday disclaimer where deadlines are shown; admin UI for the `holidays` table (SQL only today).
-- [ ] [AGENT] Prominent in-product notice that documents are templates, not legal advice, until reviewed.
+- [x] [AGENT] Holiday disclaimer where deadlines are shown and a real admin UI for the `holidays` table: `HolidayDisclaimer` appears on `/app/arco` and `/app/arco/[id]` (regional holidays and decree non-working days are not subtracted automatically), and `/operador/feriados` (operator-only, linked from `/operador`) lists a year, adds/corrects a date and removes one — each row shows `calculado` vs `decreto`. Actions log `holiday_set`/`holiday_removed`. Covered by `test/holidays.test.ts` (add → compute skips the day → remove → compute restores; invalid date/name rejected; non-operator gets 404).
+- [x] [AGENT] Prominent in-product notice that documents are templates, not legal advice, until reviewed — `TemplateNotice` at the top of `/app/documentos` (overview **and** single-document view), pointing to the help article. Until the lawyer signs off (P0-LEGAL) this is the honest framing: generated from a template, not legal advice.
 - [ ] [AGENT] Split `documents.ts` (1.5k lines) by document kind if it becomes the review bottleneck.
 
 ### 8. ARCO requests

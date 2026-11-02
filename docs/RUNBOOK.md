@@ -77,6 +77,22 @@ BACKUP_ENCRYPTION_KEY=... node scripts/restore-db.mjs /var/backups/datosprivados
   viven en `/etc/datosprivados.env` (600) y su copia de seguridad va al gestor de
   contraseñas, no a `/var/backups`. Si se rota uno, se rota allí y se reinicia PM2.
 
+## Calendario de plazos (feriados)
+
+Los plazos legales (ARCO: 10 y 20 días hábiles) se cuentan con `businessDaysBetween`, que
+descuenta fines de semana y las fechas de la tabla `holidays` (sembrada 2025–2032 con los
+feriados nacionales calculados).
+
+- **Se edita en la app**: `/operador/feriados` (solo `OPERATOR_EMAILS`). Añade los días no
+  laborables que declare un decreto supremo y corrige lo que cambie; cada fila muestra si es
+  `calculado` o `decreto`.
+- El cambio afecta a los plazos **que se calculen desde ese momento**. Una solicitud ARCO ya
+  recibida conserva la fecha límite con la que entró: no se recalcula hacia atrás.
+- Si un año nuevo no aparece, basta con abrir la base una vez (`migrate()` siembra los años que
+  falten) o cargar las fechas a mano desde la pantalla.
+- Los feriados regionales y los días no laborables locales **no** se descuentan solos; la app
+  avisa de eso junto a cada plazo.
+
 ## Despliegue
 
 El preview corre con PM2 (`datosprivados`) sobre `next start -p 3000 -H 127.0.0.1`. `next build` escribe en `.next/`, que es

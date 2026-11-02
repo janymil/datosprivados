@@ -1313,6 +1313,20 @@ function peruHolidays(year: number): Set<string> {
   return new Set(calculatedHolidays(year).map((holiday) => holiday.date));
 }
 
+export type Holiday = { date: string; name: string; source: string };
+
+/**
+ * Feriados cargados, por fecha. Sin año, todos (para la pantalla del operador);
+ * con año, los de ese año (los plazos solo miran el año en curso).
+ */
+export function listHolidays(year?: number): Holiday[] {
+  const db = getDb();
+  const rows = year
+    ? db.prepare("SELECT date, name, source FROM holidays WHERE date LIKE ? ORDER BY date").all(`${year}-%`)
+    : db.prepare("SELECT date, name, source FROM holidays ORDER BY date").all();
+  return rows as unknown as Holiday[];
+}
+
 /** Alta o corrección de un feriado (decreto supremo que declara un día no laborable). */
 export function setHoliday(date: string, name: string, source = "decreto") {
   getDb()
