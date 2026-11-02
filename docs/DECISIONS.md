@@ -23,6 +23,63 @@ usar credenciales de MercadoPago de producción y fijar el dominio definitivo.
 | Periodo inicial | Se concede una vez por suscripción, solo si no hay pagos aprobados de ella ni periodo vigente | Evita que re-autorizar una suscripción vencida regale un mes. | — |
 | Cuenta demo (sin prueba gratuita) | **Solo lectura.** Los documentos se muestran como vista previa recortada **en el servidor** (≈900 caracteres + títulos de las secciones); copiar, descargar, imprimir y exportar están bloqueados; no escribe, no publica, no contrata, no usa IA y su formulario ARCO público no guarda solicitudes | No hay prueba de 14 días porque se podían copiar los documentos y cancelar. Quien se registra puede crear usuario y empresa, pero para generar documentos debe pagar. La demo no debe regalar el texto. | Si se quisiera una demo interactiva con escritura, usar una base separada y seguir sin entregar el texto completo. |
 
+## Cuándo se pasa a Postgres (disparador escrito)
+
+La base es SQLite endurecida y un solo proceso (Fase 1). No hay fecha: hay tres
+disparadores medibles. Al cruzar cualquiera de ellos, se migra; antes, no.
+
+| Disparador | Cómo se mide | Por qué obliga |
+|---|---|---|
+| **Más de una instancia** de la app | PM2/cluster con `instances > 1`, o un segundo servidor | SQLite admite un escritor y el archivo no se comparte por red sin corromperse. Los límites de intentos y las sesiones viven en la misma base: con dos procesos, cada uno tendría su cupo. |
+| **Contención de escritura sostenida** | `SQLITE_BUSY` en `job_runs`/`webhook_events` (el `busy_timeout` es de 5 s) o latencia de escritura creciente en `/api/health` | Un escritor bloquea a los demás; con la cola de correo y los webhooks escribiendo a la vez, el tiempo de espera se nota en las pantallas. |
+| **Tamaño o crecimiento** | La base supera ~2 GB o el respaldo horario deja de caber en la ventana de una hora | El respaldo es una copia completa; el tiempo de copia y el de restauración (RTO ≤ 2 h) crecen con el archivo. |
+
+**Qué cuesta el cambio.** `db.ts` y `data.ts` son **síncronos** (`prepare().get()/.all()/.run()`),
+y desde ahí los usan todas las pantallas y acciones: pasar a un cliente asíncrono
+obliga a volver `async` ambos módulos y a propagar `await` por cada llamador
+(las acciones ya son `async`, las páginas de servidor también, pero no todos los
+helpers). Además hay que traducir:
+
+- `migrate()` con `PRAGMA table_info` → migraciones versionadas reales (hoy `SCHEMA_VERSION` en `db.ts`);
+- índices parciales (`uq_payments_payment_id`, `uq_invoices_number`) y `INSERT OR IGNORE` → equivalentes en Postgres;
+- el candado de `job_runs`, `rate_limits` y el «claim» atómico de `email_outbox` → `SELECT … FOR UPDATE SKIP LOCKED` o equivalentes;
+- el respaldo (`scripts/backup-db.mjs`, `VACUUM INTO` + gzip + sha256) → `pg_dump` y un plan de restauración nuevo.
+
+Pruebas que hoy dependen de SQLite y habría que adaptar: `test/db-migrations.test.ts`,
+`test/db-indexes.test.ts` (planes de consulta) y los helpers de `test/helpers/db.ts`.
+Por eso el disparador se escribe **antes** de necesitarlo: mientras no se cruce,
+el trabajo rinde más en otras áreas.
+
+## Verificación del esquema y de los índices
+
+`SCHEMA_VERSION` en `src/lib/db.ts` sube con cada migración. `test/db-migrations.test.ts`
+comprueba que abrir la base dos veces no la cambie, que una base de la versión
+anterior llegue al esquema actual sin perder datos y que reejecutar las
+migraciones sobre una conexión abierta no rompa nada. `test/db-indexes.test.ts`
+fija con `EXPLAIN QUERY PLAN` que las consultas calientes usen índice y que
+ninguna tabla con `company_id` quede sin índice por empresa.
+
+## Verificación de correo: qué bloquea (y qué no)
+
+El correo se confirma con el enlace que se envía al registrarse (`auth_tokens`, 48 h,
+un solo uso). Hasta confirmarlo **no se puede publicar la Política de Privacidad**
+en `/p/[slug]`; todo lo demás —entrar, generar y editar documentos, descargar,
+pagar, registrar bancos, responder ARCO— sigue disponible.
+
+| Pregunta | Decisión | Motivo |
+|---|---|---|
+| ¿Por qué publicar y no otra cosa? | Es el único acto que expone la empresa en una URL abierta y activa el formulario ARCO público | Las solicitudes ARCO se avisan al correo de la cuenta y el plazo de 10 días hábiles corre igual: publicar con un correo que nadie lee crea un incumplimiento silencioso |
+| ¿Por qué no bloquear la respuesta a una solicitud ARCO? | No se bloquea | Frenar una respuesta legal por un correo sin confirmar es peor que el riesgo que evita |
+| ¿Y la exportación, el pago o la eliminación? | No se bloquean | Son derechos del titular de la cuenta (acceso, supresión) y el pago no depende del correo |
+| ¿Qué pasa si el enlace no llega? | Ajustes → «Reenviar el enlace» (3 por hora y por usuario, 10 por IP y hora) | No se puede depender de un correo que quizá no llegue: el usuario ve el estado y puede reintentar |
+| Implementación | `emailVerificationGate()` en `src/lib/account.ts`, aplicado en `togglePublishAction` (`src/app/actions/documents.ts`) | Único punto de entrada de la publicación; la base no decide políticas |
+| Efecto en la demo | Ninguno: la demo no escribe ni publica | Ya es de solo lectura |
+
+Las cuentas que se crearon antes de existir la verificación (desarrollo, y las
+pruebas) no se marcan como verificadas: la base de producción se estrena con esta
+versión, así que no hay clientes en esa situación. Si algún día hubiera que
+perdonar la verificación a una cuenta concreta: `UPDATE users SET email_verified_at = ... WHERE id = ...`.
+
 ## Decididas en la Fase 3 (provisionales hasta cerrar la Fase 0)
 
 | Decisión | Elegida | Motivo | Si cambia |

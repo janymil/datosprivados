@@ -1,6 +1,7 @@
 import type { Company, DataBank, Provider } from "./db";
 import { isAbroad, toolCategory } from "./provider-catalog";
 import { formatDate } from "./format";
+import { siteUrl } from "./site";
 import {
   isSensitiveBank,
   odpDeadline,
@@ -40,12 +41,11 @@ export function legalBasisLabel(value: string) {
 }
 
 /**
- * Host público del producto. En producción se configura con
+ * Host público del producto. Única fuente: `siteUrl()` (`lib/site.ts`), que lee
  * `NEXT_PUBLIC_APP_URL`; si queda vacío se usa el dominio comercial.
  */
 export function appUrl() {
-  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  return configured ? configured.replace(/\/+$/, "") : "https://datosprivados.pe";
+  return siteUrl();
 }
 
 function sentence(value: string) {

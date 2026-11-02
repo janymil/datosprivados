@@ -173,6 +173,25 @@ function userWithCompany(where: string, value: string) {
     .get(value) as unknown as UserWithCompany | undefined;
 }
 
+export type VerificationGate = { ok: true } | { ok: false; email: string };
+
+/**
+ * Qué impide el correo sin confirmar: **publicar documentos**.
+ *
+ * Publicar expone la razón social de la empresa en una URL abierta y activa el
+ * formulario ARCO público, cuyas solicitudes se avisan al correo de la cuenta.
+ * Si ese correo está mal escrito, la empresa publica sin poder enterarse de las
+ * solicitudes (y el plazo de 10 días hábiles corre igual). Todo lo demás —crear,
+ * generar, editar, descargar, pagar— sigue disponible sin confirmar.
+ */
+export function emailVerificationGate(userId: string): VerificationGate {
+  const row = getDb().prepare("SELECT email, email_verified_at FROM users WHERE id = ?").get(userId) as
+    | { email: string; email_verified_at: string | null }
+    | undefined;
+  if (!row) return { ok: false, email: "" };
+  return row.email_verified_at ? { ok: true } : { ok: false, email: row.email };
+}
+
 export function sendVerificationEmail(userId: string): boolean {
   const user = userWithCompany("u.id = ?", userId);
   if (!user || user.billing_status === "demo" || user.email_verified_at) return false;

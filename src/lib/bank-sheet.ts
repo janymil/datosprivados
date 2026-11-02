@@ -1,6 +1,7 @@
 import type { Company, DataBank } from "./db";
 import { companyShortId, legalBasisLabel } from "./documents";
 import { formatDate } from "./format";
+import { siteUrl } from "./site";
 
 /**
  * Ficha del banco de datos con los campos numerados como el formulario oficial
@@ -63,5 +64,5 @@ Inscripción gratuita en el RNPDP / Portal SIPDP (MINJUSDH) · Ley N.° 29733 y 
 ${rows}
 
 Estado: ${bank.status === "registrado" ? "Inscrito en el SIPDP" : "Borrador por inscribir"}
-Generado con DatosPrivados · datosprivados.pe`;
+Generado con DatosPrivados · ${siteUrl().replace(/^https?:\/\//, "")}`;
 }

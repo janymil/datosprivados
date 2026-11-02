@@ -46,7 +46,8 @@ import { jar } from "./helpers/next";
 const PASSWORD = "contraseña-larga-1";
 
 function withPassword(overrides = {}) {
-  const made = makeActiveCompany(overrides);
+  // Sin correo confirmado: estas pruebas cubren el enlace de verificación.
+  const made = makeActiveCompany(overrides, { email_verified_at: null });
   getDb().prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hashPassword(PASSWORD), made.userId);
   return made;
 }

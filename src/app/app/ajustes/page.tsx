@@ -286,7 +286,7 @@ export default async function SettingsPage({
           </p>
           <h2 className="mt-2 font-display text-2xl tracking-[-0.02em]">Lleva tu expediente contigo</h2>
           <p className="mt-2 text-[15.5px] leading-relaxed text-paper/80">
-            Descarga un JSON con tu empresa, bancos de datos, solicitudes ARCO, incidentes y documentos.
+            Descarga un ZIP con tus documentos en texto, tus tablas en CSV y el JSON completo; o solo el JSON.
             Sirve como respaldo o para entregarlo a tu abogado.
           </p>
           <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -294,8 +294,11 @@ export default async function SettingsPage({
               <span className="text-sm text-paper/70">No disponible en la demostración.</span>
             ) : (
               <>
+                <a href="/cuenta/exportar/zip" className="btn btn-ghost btn-sm border-paper/40 text-paper hover:bg-paper hover:text-ink">
+                  Descargar expediente (.zip)
+                </a>
                 <a href="/cuenta/exportar" className="btn btn-ghost btn-sm border-paper/40 text-paper hover:bg-paper hover:text-ink">
-                  Descargar expediente (.json)
+                  Solo el JSON
                 </a>
                 <Link href="/cuenta" className="text-sm text-paper/70 underline hover:text-paper">
                   Eliminar mi cuenta

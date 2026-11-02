@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, nowIso } from "@/lib/db";
 import { requireActiveSession } from "@/lib/auth";
+import { emailVerificationGate } from "@/lib/account";
 import { generateAndSaveDocument, listBanks, listDocuments, listProviders, logActivity, publishDocument, unpublishDocument } from "@/lib/data";
 import { documentTitle, isDocumentKind } from "@/lib/document-catalog";
 import { documentFreshness } from "@/lib/document-freshness";
@@ -56,11 +57,15 @@ export async function regenerateOutdatedAction() {
 }
 
 export async function togglePublishAction(formData: FormData) {
-  const { company } = await requireActiveSession();
+  const { company, user } = await requireActiveSession();
   // Solo la Política de Privacidad tiene enlace público.
   const kind = "politica";
   const publish = text(formData, "publish") === "1";
   if (publish) {
+    // Publicar expone la empresa y activa el formulario ARCO: sin correo confirmado,
+    // las solicitudes llegarían a una dirección que nadie lee (ver DECISIONS.md).
+    const gate = emailVerificationGate(user.id);
+    if (!gate.ok) redirect(`/app/documentos?tab=${kind}&error=correo`);
     const result = publishDocument(company.id, kind);
     if (!result.ok) redirect(`/app/documentos?tab=${kind}&error=${result.reason}`);
     logActivity(company.id, "documento", `Publicaste la versión ${result.version} de tu Política de Privacidad.`);

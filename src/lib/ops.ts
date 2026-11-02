@@ -31,6 +31,31 @@ export function dbCheck(): { ok: boolean; error?: string } {
   }
 }
 
+export type DbIntegrity = { ok: boolean; checkpointed: number; error?: string };
+
+/**
+ * Integridad del archivo SQLite y traslado del WAL al archivo principal.
+ *
+ * `quick_check` recorre las páginas de la base, así que se llama desde el monitor
+ * autenticado (`GET /api/cron/health`), no desde `/api/health`: ese endpoint lo
+ * sondea cualquiera y debe seguir siendo barato.
+ * `wal_checkpoint(PASSIVE)` no bloquea a los escritores; si hay uno activo, la
+ * siguiente pasada termina el trabajo.
+ */
+export function dbIntegrity(): DbIntegrity {
+  try {
+    const db = getDb();
+    const rows = db.prepare("PRAGMA quick_check").all() as Array<Record<string, unknown>>;
+    const problems = rows.map((row) => String(Object.values(row)[0] ?? "")).filter((value) => value !== "ok");
+    const checkpoint = db.prepare("PRAGMA wal_checkpoint(PASSIVE)").get() as { checkpointed?: number } | undefined;
+    const result: DbIntegrity = { ok: problems.length === 0, checkpointed: Number(checkpoint?.checkpointed ?? 0) };
+    if (problems.length) result.error = problems.join("; ").slice(0, 200);
+    return result;
+  } catch (error) {
+    return { ok: false, checkpointed: 0, error: error instanceof Error ? error.message.slice(0, 200) : "error" };
+  }
+}
+
 /** Presencia (no valor) de las integraciones. */
 export function configPresence() {
   return {

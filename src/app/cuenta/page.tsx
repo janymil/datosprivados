@@ -50,15 +50,21 @@ export default async function AccountPage() {
         <h2 className="font-display text-2xl tracking-[-0.02em]">Descargar todo</h2>
         <p className="mt-2 max-w-[62ch] text-[15.5px] leading-relaxed text-ink-soft">
           Un archivo JSON con tu empresa, bancos de datos, solicitudes ARCO, incidentes, documentos con todas sus
-          versiones, herramientas, evidencias, actividad y pagos.
+          versiones, herramientas, evidencias, actividad y pagos. Si lo quieres para leer o entregar, baja el ZIP: trae
+          lo mismo más los documentos en texto y las tablas en CSV.
         </p>
-        <div className="mt-4">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           {demo ? (
             <p className="text-sm text-ink-soft">La exportación no está disponible en la cuenta de demostración.</p>
           ) : (
-            <a href="/cuenta/exportar" className="btn btn-primary btn-sm">
-              Descargar mis datos (.json)
-            </a>
+            <>
+              <a href="/cuenta/exportar/zip" className="btn btn-primary btn-sm">
+                Descargar expediente (.zip)
+              </a>
+              <a href="/cuenta/exportar" className="btn btn-ghost btn-sm">
+                Descargar datos (.json)
+              </a>
+            </>
           )}
         </div>
       </section>

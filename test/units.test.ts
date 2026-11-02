@@ -23,7 +23,7 @@ describe("RUC", () => {
 });
 
 describe("checkEnvironment", () => {
-  const prod = { NODE_ENV: "production", NEXT_PUBLIC_APP_URL: "https://x.pe", COOKIE_SECURE: "1", DECOLECTA_API_TOKEN: "t" } as NodeJS.ProcessEnv;
+  const prod = { NODE_ENV: "production", NEXT_PUBLIC_APP_URL: "https://x.pe", COOKIE_SECURE: "1", DECOLECTA_API_TOKEN: "t", CRON_SECRET: "0123456789abcdef" } as NodeJS.ProcessEnv;
   it("no exige nada fuera de producción", () => {
     expect(checkEnvironment({ NODE_ENV: "development" } as NodeJS.ProcessEnv).errors).toEqual([]);
   });

@@ -454,7 +454,7 @@ function initSchema(db: DatabaseSync) {
  * cacheada en `globalThis` (en `next dev` la conexión sobrevive a los recargos
  * en caliente y `initSchema` no vuelve a correr).
  */
-const SCHEMA_VERSION = 13;
+const SCHEMA_VERSION = 14;
 
 function migrate(db: DatabaseSync) {
   const companyColumns = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
@@ -818,6 +818,17 @@ function migrate(db: DatabaseSync) {
            updated_at, CASE WHEN published = 1 THEN updated_at END
     FROM documents
   `);
+  // v14: índices de las consultas que se repiten en cada carga del panel.
+  // `activity` se lee por empresa y fecha (portada del panel), `rate_limits` se
+  // poda por ventana cada vez que se abre una nueva y `users` se recorre por
+  // empresa al exportar y al eliminar la cuenta: sin índice, las tres recorrían
+  // la tabla entera.
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_activity_company ON activity(company_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_rate_limits_window ON rate_limits(window_start);
+    CREATE INDEX IF NOT EXISTS idx_users_company ON users(company_id);
+  `);
+
   seedHolidays(db);
 }
 

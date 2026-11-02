@@ -69,7 +69,10 @@ export function checkEnvironment(env: NodeJS.ProcessEnv = process.env): { errors
     warnings.push("Sin MAIL_WEBHOOK_SECRET: los rebotes y quejas del correo no se procesan.");
   }
   if (!env.CRON_SECRET || env.CRON_SECRET.length < 16) {
-    warnings.push("CRON_SECRET ausente o menor de 16 caracteres: las tareas programadas (/api/cron) rechazan toda petición.");
+    // Sin secreto, /api/cron rechaza todo: no salen correos (restablecer contraseña,
+    // avisos de plazo), no se cierran sesiones y no se reconcilia el cobro. Es un
+    // error de arranque, igual que quedarse sin verificación de RUC.
+    errors.push("CRON_SECRET es obligatorio en producción (mínimo 16 caracteres): sin él no corren las tareas programadas.");
   }
 
   return { errors, warnings };

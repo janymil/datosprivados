@@ -19,10 +19,20 @@ DATOSPRIVADOS_DB=/ruta/absoluta/datosprivados.db node scripts/backup-db.mjs /var
 node scripts/restore-db.mjs /var/backups/datosprivados/datosprivados-AAAAMMDD-HHMMSS.db.gz /ruta/nueva/datosprivados.db
 ```
 
-Cron sugerido (cada hora; **aún no instalado**): `0 * * * * cd /var/www/datosprivados && DATOSPRIVADOS_DB=... node scripts/backup-db.mjs /var/backups/datosprivados >> /var/log/datosprivados-backup.log 2>&1`
+Cron instalado (2026-10-31, corregido el 2026-11-02): `/etc/cron.d/datosprivados` llama a
+`/usr/local/bin/datosprivados-backup` cada hora. El envoltorio convierte la hora a Lima porque el cron de
+Ubuntu no admite `CRON_TZ`, y guarda el archivo con marca de tiempo en `/var/backups/datosprivados`
+(rotación por `BACKUP_RETENTION_DAYS`, 7 días por defecto). Comprobación: el archivo más nuevo debe tener
+menos de una hora y `GET /api/cron/health` alerta si el último pasa de 26 h (`BACKUP_DIR`).
 
-Falta para cumplir el objetivo de la Fase 1: copia **fuera del servidor y cifrada** (age/gpg + S3/B2/R2) y una alerta si el
-último respaldo tiene más de 26 h. Hoy los respaldos solo quedan en el mismo disco.
+Equivalente manual (para una prueba o para otra máquina):
+
+```bash
+0 * * * * cd /var/www/datosprivados && DATOSPRIVADOS_DB=... node scripts/backup-db.mjs /var/backups/datosprivados >> /var/log/datosprivados-backup.log 2>&1
+```
+
+Falta para cumplir el objetivo de la Fase 1: copia **fuera del servidor y cifrada** (age/gpg + S3/B2/R2) y un
+simulacro en una máquina nueva. Hoy los respaldos solo quedan en el mismo disco.
 
 Simulacro hecho (2026-10-31): respaldo de la base del preview → restauración en ruta nueva → mismas filas en companies, users,
 data_banks, arco_requests, incidents, documents, sessions. Un archivo alterado se rechaza por sha256.

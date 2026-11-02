@@ -175,6 +175,13 @@ export default async function DocumentsPage({
           </div>
         )}
 
+        {canPublish && error === "correo" && (
+          <div className="mt-4 border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-[15px] leading-relaxed">
+            <strong>Confirma tu correo antes de publicar.</strong> El enlace público recibe solicitudes ARCO que se
+            avisan a tu correo. Abre el enlace que te enviamos al registrarte o{" "}
+            <Link href="/app/ajustes" className="link-underline">reenvíalo desde Ajustes</Link>.
+          </div>
+        )}
         {canPublish && (error === "pendientes" || blockers.length > 0) && (
           <div className="mt-4 border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-[15px] leading-relaxed">
             <strong>No se puede publicar todavía:</strong> el texto tiene campos sin completar. Complétalos en{" "}

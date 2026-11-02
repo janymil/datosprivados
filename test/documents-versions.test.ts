@@ -145,6 +145,27 @@ describe("acciones", () => {
     const log = getDb().prepare("SELECT message FROM activity WHERE company_id = ? AND kind = 'documento'").all(companyId) as { message: string }[];
     expect(log.some((l) => l.message.includes("Publicaste la versión"))).toBe(true);
   });
+
+  it("sin el correo confirmado no se publica, y sí tras confirmarlo", async () => {
+    const { companyId, userId } = makeActiveCompany({ address: "Av. Real 1" }, { email_verified_at: null });
+    jar.store.clear();
+    await createSession(userId);
+    const form = (values: Record<string, string>) => {
+      const data = new FormData();
+      for (const [k, v] of Object.entries(values)) data.set(k, v);
+      return data;
+    };
+    await expect(generateDocumentAction(form({ kind: "politica" }))).rejects.toThrow("REDIRECT:");
+
+    // Con el documento listo, la única traba es el correo.
+    await expect(togglePublishAction(form({ publish: "1" }))).rejects.toThrow("REDIRECT:/app/documentos?tab=politica&error=correo");
+    expect(getDocument(companyId, "politica")!.published).toBe(0);
+
+    // Confirmar el correo desde el enlace desbloquea la publicación en el mismo intento siguiente.
+    getDb().prepare("UPDATE users SET email_verified_at = ? WHERE id = ?").run(new Date().toISOString(), userId);
+    await expect(togglePublishAction(form({ publish: "1" }))).rejects.toThrow("REDIRECT:/app/documentos?tab=politica");
+    expect(getDocument(companyId, "politica")!.published).toBe(1);
+  });
 });
 
 describe("campos sin completar", () => {

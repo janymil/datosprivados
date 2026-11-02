@@ -1,7 +1,7 @@
 import { getDb, newId, nowIso, type Company } from "@/lib/db";
 
 /** Crea una empresa con cuenta de administrador lista para usar. Devuelve sus ids. */
-export function makeCompany(overrides: Partial<Company> = {}) {
+export function makeCompany(overrides: Partial<Company> = {}, user: { email_verified_at?: string | null } = {}) {
   const db = getDb();
   const id = overrides.id ?? newId();
   const now = nowIso();
@@ -58,9 +58,11 @@ export function makeCompany(overrides: Partial<Company> = {}) {
   );
 
   const userId = newId();
+  // Las cuentas de prueba se crean con el correo ya confirmado (lo normal tras
+  // registrarse y abrir el enlace); la verificación se prueba aparte pasando null.
   db.prepare(
-    "INSERT INTO users (id, company_id, name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, 'x', 'admin', ?)"
-  ).run(userId, id, "Responsable", base.email, now);
+    "INSERT INTO users (id, company_id, name, email, password_hash, role, email_verified_at, created_at) VALUES (?, ?, ?, ?, 'x', 'admin', ?, ?)"
+  ).run(userId, id, "Responsable", base.email, user.email_verified_at === undefined ? now : user.email_verified_at, now);
 
   return { companyId: id, userId, email: base.email };
 }
@@ -72,8 +74,8 @@ export function getCompanyRow(companyId: string) {
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Empresa con suscripción vigente: la que usan las pruebas de acciones. */
-export function makeActiveCompany(overrides: Partial<Company> = {}) {
-  return makeCompany({ billing_status: "active", paid_until: new Date(Date.now() + 30 * DAY_MS).toISOString(), ...overrides });
+export function makeActiveCompany(overrides: Partial<Company> = {}, user: { email_verified_at?: string | null } = {}) {
+  return makeCompany({ billing_status: "active", paid_until: new Date(Date.now() + 30 * DAY_MS).toISOString(), ...overrides }, user);
 }
 
 export function getCompany(companyId: string): Company {

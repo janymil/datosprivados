@@ -3,6 +3,9 @@ import { computeCompliance } from "@/lib/compliance";
 import { TEMPLATE_VERSIONS, documentFreshness, fingerprint, serializeBuiltFrom } from "@/lib/document-freshness";
 import { generateAndSaveDocument, listBanks, listDocuments, listProviders } from "@/lib/data";
 import { DOCUMENT_TABS, buildDocument } from "@/lib/document-catalog";
+import { appUrl } from "@/lib/documents";
+import { bankSheetText } from "@/lib/bank-sheet";
+import { siteUrl } from "@/lib/site";
 
 const DOCUMENT_KINDS = DOCUMENT_TABS.map((tab) => tab.key);
 import { getDb, type DocumentRow } from "@/lib/db";
@@ -255,4 +258,38 @@ describe("constructores de documentos", () => {
       frozen.restore();
     }
   });
+describe("dominio configurado", () => {
+  it("los documentos y la ficha de banco usan NEXT_PUBLIC_APP_URL, no un dominio fijo", () => {
+    const original = process.env.NEXT_PUBLIC_APP_URL;
+    process.env.NEXT_PUBLIC_APP_URL = "https://staging.datosprivados.test/";
+    try {
+      const { companyId } = makeActiveCompany({ sector: "Tienda online / e-commerce" });
+      makeBank(companyId);
+      const company = getCompany(companyId);
+
+      const policy = buildDocument("politica", company, listBanks(companyId), []);
+      expect(policy).toContain("https://staging.datosprivados.test");
+      expect(policy).not.toContain("https://datosprivados.pe");
+
+      const sheet = bankSheetText(company, listBanks(companyId)[0]);
+      expect(sheet).toContain("staging.datosprivados.test");
+      expect(sheet).not.toContain("· datosprivados.pe");
+    } finally {
+      if (original === undefined) delete process.env.NEXT_PUBLIC_APP_URL;
+      else process.env.NEXT_PUBLIC_APP_URL = original;
+    }
+  });
+
+  it("sin NEXT_PUBLIC_APP_URL cae al dominio comercial", () => {
+    const original = process.env.NEXT_PUBLIC_APP_URL;
+    delete process.env.NEXT_PUBLIC_APP_URL;
+    try {
+      expect(siteUrl()).toBe("https://datosprivados.pe");
+      expect(appUrl()).toBe("https://datosprivados.pe");
+    } finally {
+      if (original !== undefined) process.env.NEXT_PUBLIC_APP_URL = original;
+    }
+  });
+});
+
 });
