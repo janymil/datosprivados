@@ -53,7 +53,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 17 | Backup & restore | `scripts/backup-db.mjs`, `restore-db.mjs`, `restore-drill.mjs`, `backup-crypto.mjs` | 88 % | 65 % | Backups live on the same box; no fresh-machine drill |
 | 18 | Deploy & infrastructure | `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-production.conf` | 78 % | 40 % | No real staging; `deploy.sh` never run |
 | 19 | Tests & CI | `test/`, `e2e/`, `.github/workflows/ci.yml` | 85 % | 80 % | No Firefox/Safari/iOS; no UAT |
-| 20 | Accessibility & UI | `components/`, `app/globals.css` | 75 % | 70 % | Only Chrome desktop + Android checked |
+| 20 | Accessibility & UI | `components/`, `app/globals.css` | 80 % | 70 % | Only Chrome desktop + Android checked |
 
 **Reading:** areas 1, 3, 10, 19 are strong. Areas 6, 7, 11, 14 have finished code but are blocked by non-code inputs. Areas 4, 5, 15, 17, 18 still need real engineering or ops work.
 
@@ -315,7 +315,7 @@ Files: `src/components/*` (34 files), `src/components/ui.tsx` (`Field`), `src/ap
 - [ ] [VERIFY] Keyboard-only walkthrough and screen reader pass (NVDA/VoiceOver) on signup, ARCO form and document publishing.
 - [ ] [VERIFY] Firefox, Safari, iOS Safari rendering (shared with area 19).
 - [ ] [AGENT] Color contrast audit in both themes if a dark theme exists.
-- [ ] [AGENT] Empty, loading and error states for each screen (`loading.tsx` is absent per the roadmap; confirm and add where the panel is slow).
+- [x] [AGENT] Empty, loading and error states: `EmptyState` in the shared UI, `error.tsx`/`global-error.tsx`/`not-found.tsx` at the root, and a panel-wide `src/app/app/loading.tsx` (`PanelSkeleton`) that shows the page shape and announces `role="status"` + “Cargando…” while the dynamic page queries the DB. `.animate-pulse` is now also disabled under `prefers-reduced-motion`. Test: `test/loading-states.test.ts`.
 - [ ] [AGENT] Print layouts for documents and the bank sheet (shared with area 7).
 - [ ] [AGENT] Mobile layouts for tables (ARCO inbox, banks).
 

@@ -311,7 +311,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .rise,
   .spin-slow,
-  .pulse-dot {
+  .pulse-dot,
+  .animate-pulse {
     animation: none;
   }
   html {
