@@ -165,7 +165,9 @@ export default async function SettingsPage({
                       </span>
                     </span>
                     <span className="text-sm text-ink-soft">
-                      {number ? (
+                      {invoice?.status === "credit_note_pending" ? (
+                        `Factura ${number} · nota de crédito en trámite`
+                      ) : number ? (
                         invoice?.pdf_url ? (
                           <a href={invoice.pdf_url} target="_blank" rel="noopener noreferrer" className="link-underline font-medium text-ink">
                             Factura {number}

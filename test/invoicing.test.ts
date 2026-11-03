@@ -8,6 +8,8 @@ vi.mock("@/lib/mercadopago", async (importOriginal) => {
 import { getDb } from "@/lib/db";
 import { addMonths, billingLabel, nextPaidUntil, recordRefund, recordSubscriptionCharge } from "@/lib/billing";
 import { getInvoiceByPayment, isSafePdfUrl, markInvoiceIssued, splitIgv } from "@/lib/invoicing";
+import { closeCreditNote, listCreditNotes } from "@/lib/invoicing";
+import { PLANS } from "@/lib/plans";
 import { confirmTransferPaid, getPendingTransfer, requestTransfer } from "@/lib/transfers";
 import { isOperatorEmail } from "@/lib/operator";
 import { getCompanyRow, makeCompany } from "./helpers/db";
@@ -39,9 +41,19 @@ describe("IGV", () => {
   it("separa base e IGV de un precio con IGV incluido", () => {
     expect(splitIgv(19)).toEqual({ base: 16.1, igv: 2.9, total: 19 });
     expect(splitIgv(390)).toEqual({ base: 330.51, igv: 59.49, total: 390 });
-    for (const price of [19, 39, 190, 390]) {
+  });
+
+  it("para cada precio del catálogo, base + IGV suma el total al céntimo", () => {
+    // Se leen los precios reales: si cambia la lista, esta prueba lo cubre sola.
+    const prices = Object.values(PLANS).flatMap((plan) => [plan.prices.monthly, plan.prices.yearly]);
+    expect(prices.length).toBeGreaterThanOrEqual(4);
+    for (const price of prices) {
       const { base, igv, total } = splitIgv(price);
-      expect(Math.round((base + igv) * 100) / 100).toBe(total);
+      expect(Math.round((base + igv) * 100) / 100, String(price)).toBe(total);
+      expect(total, String(price)).toBe(Math.round(price * 100) / 100);
+      // El IGV es el 18 % de la base, con el redondeo al céntimo.
+      expect(Math.round(igv * 100), String(price)).toBe(Math.round(base * 0.18 * 100));
+      expect(base + igv - total, String(price)).toBeLessThan(0.005);
     }
   });
 });
@@ -114,12 +126,40 @@ describe("reembolso", () => {
     expect(getCompanyRow(companyId).paid_until).toBe(after);
   });
 
-  it("si la factura ya se emitió, avisa que falta la nota de crédito", () => {
+  it("si la factura ya se emitió, queda en la cola de nota de crédito del operador", () => {
     const companyId = subscribed();
     recordSubscriptionCharge({ companyId, subscriptionId: S("sub"), paymentId: S("pay"), amount: 19 });
     const payment = getDb().prepare("SELECT id FROM payments WHERE payment_id = ?").get(S("pay")) as { id: string };
-    markInvoiceIssued(getInvoiceByPayment(payment.id)!.id, { series: "F001", number: String(100 + run), pdfUrl: "" });
+    const invoiceId = getInvoiceByPayment(payment.id)!.id;
+    expect(markInvoiceIssued(invoiceId, { series: "F001", number: String(100 + run), pdfUrl: "" }).ok).toBe(true);
+
     expect(recordRefund({ providerPaymentId: S("pay") })).toMatchObject({ refunded: true, needsCreditNote: true });
+
+    // No se anula sola: la SUNAT exige la nota de crédito, y la emite una persona.
+    const invoice = getInvoiceByPayment(payment.id)!;
+    expect(invoice.status).toBe("credit_note_pending");
+    expect(invoice.series).toBe("F001"); // se conserva para poder referenciarla
+
+    const queue = listCreditNotes();
+    expect(queue.some((row) => row.id === invoiceId)).toBe(true);
+
+    // El operador la emite en la SUNAT y la cierra aquí.
+    expect(closeCreditNote(invoiceId)).toEqual({ ok: true });
+    expect(getInvoiceByPayment(payment.id)!.status).toBe("void");
+    expect(listCreditNotes().some((row) => row.id === invoiceId)).toBe(false);
+    expect(closeCreditNote(invoiceId)).toMatchObject({ ok: false });
+  });
+
+  it("un reembolso repetido no vuelve a mover la factura", () => {
+    const companyId = subscribed();
+    recordSubscriptionCharge({ companyId, subscriptionId: S("sub"), paymentId: S("pay"), amount: 19 });
+    const payment = getDb().prepare("SELECT id FROM payments WHERE payment_id = ?").get(S("pay")) as { id: string };
+    const invoiceId = getInvoiceByPayment(payment.id)!.id;
+    markInvoiceIssued(invoiceId, { series: "F001", number: String(200 + run), pdfUrl: "" });
+
+    recordRefund({ providerPaymentId: S("pay") });
+    expect(recordRefund({ providerPaymentId: S("pay") }).refunded).toBe(false);
+    expect(getInvoiceByPayment(payment.id)!.status).toBe("credit_note_pending");
   });
 });
 

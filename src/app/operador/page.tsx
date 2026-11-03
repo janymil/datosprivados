@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { requireOperator } from "@/lib/operator";
-import { listPendingInvoices, formatSol } from "@/lib/invoicing";
+import { listPendingInvoices, formatSol, listCreditNotes } from "@/lib/invoicing";
 import { listPendingTransfers } from "@/lib/transfers";
 import { formatDate } from "@/lib/format";
-import { issueInvoiceAction, confirmTransferAction } from "./actions";
+import { issueInvoiceAction, confirmTransferAction, closeCreditNoteAction } from "./actions";
 
 export const metadata = { title: "Operador", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -12,6 +12,7 @@ export default async function OperatorPage({ searchParams }: { searchParams: Pro
   await requireOperator();
   const { ok, error } = await searchParams;
   const invoices = listPendingInvoices();
+  const creditNotes = listCreditNotes();
   const transfers = listPendingTransfers();
 
   return (
@@ -63,6 +64,35 @@ export default async function OperatorPage({ searchParams }: { searchParams: Pro
                 </label>
                 <button type="submit" className="btn btn-primary btn-sm">
                   Registrar y enviar
+                </button>
+              </form>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section>
+        <h2 className="font-display text-2xl">Notas de crédito por emitir ({creditNotes.length})</h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          Son facturas ya emitidas cuyo pago se reembolsó. Emite la nota de crédito en la SUNAT (o en tu PSE/OSE) y
+          márcala aquí: no se anulan solas porque la SUNAT exige la nota.
+        </p>
+        {creditNotes.length === 0 && <p className="mt-4 text-sm text-ink-soft">No hay notas de crédito pendientes.</p>}
+        <ul className="mt-4 space-y-4">
+          {creditNotes.map((invoice) => (
+            <li key={invoice.id} className="card border-l-3 border-ochre p-5">
+              <p className="font-medium">
+                {invoice.company_name} · RUC {invoice.company_ruc}
+              </p>
+              <p className="text-sm text-ink-soft">{invoice.description}</p>
+              <p className="mt-1 font-mono text-xs uppercase tracking-[0.08em] text-ink-soft">
+                Factura {invoice.series}-{invoice.number} · Base {formatSol(invoice.base_amount)} · IGV{" "}
+                {formatSol(invoice.igv_amount)} · Total {formatSol(invoice.total)} · {formatDate(invoice.created_at)}
+              </p>
+              <form action={closeCreditNoteAction} className="mt-4">
+                <input type="hidden" name="id" value={invoice.id} />
+                <button type="submit" className="btn btn-primary btn-sm">
+                  Ya emití la nota de crédito
                 </button>
               </form>
             </li>

@@ -19,7 +19,7 @@ import { PLANS, isPlanId, termLabel, isBillingTerm } from "./plans";
 
 export const IGV_RATE = 0.18;
 
-export type InvoiceStatus = "pending" | "issued" | "void";
+export type InvoiceStatus = "pending" | "issued" | "void" | "credit_note_pending";
 
 export type InvoiceRow = {
   id: string;
@@ -130,6 +130,49 @@ export function listPendingInvoices() {
        WHERE i.status = 'pending' ORDER BY i.created_at`
     )
     .all() as unknown as Array<InvoiceRow & { payment_status: string; payment_provider: string }>;
+}
+
+/**
+ * Comprobantes ya emitidos cuyo pago se reembolsó: hace falta una **nota de
+ * crédito** en la SUNAT. Quedan aquí hasta que el operador la emita y confirme.
+ */
+export function listCreditNotes() {
+  return getDb()
+    .prepare(
+      `SELECT i.*, p.status AS payment_status, p.provider AS payment_provider, p.amount AS payment_amount,
+              c.name AS company_name, c.ruc AS company_ruc
+       FROM invoices i
+       JOIN payments p ON p.id = i.payment_id
+       JOIN companies c ON c.id = i.company_id
+       WHERE i.status = 'credit_note_pending' ORDER BY i.created_at`
+    )
+    .all() as unknown as Array<InvoiceRow & { payment_status: string; payment_provider: string; payment_amount: number; company_name: string; company_ruc: string }>;
+}
+
+/**
+ * Marca un comprobante emitido como «pendiente de nota de crédito» (su pago se
+ * reembolsó). No se anula sola: una factura ya emitida ante la SUNAT solo se
+ * corrige con una nota de crédito, y eso lo hace una persona. Conserva serie y
+ * número para que la nota pueda referenciarlos.
+ */
+export function markCreditNotePending(paymentRowId: string): boolean {
+  const invoice = getInvoiceByPayment(paymentRowId);
+  if (invoice?.status !== "issued") return false;
+  const db = getDb();
+  db.prepare("UPDATE invoices SET status = 'credit_note_pending' WHERE id = ? AND status = 'issued'").run(invoice.id);
+  logActivity(invoice.company_id, "pago", `El pago de la factura ${invoice.series}-${invoice.number} se reembolsó: hay que emitir una nota de crédito.`);
+  return true;
+}
+
+/** Cierra la nota de crédito: el operador ya la emitió en la SUNAT y el comprobante queda anulado. */
+export function closeCreditNote(invoiceId: string): { ok: true } | { ok: false; error: string } {
+  const db = getDb();
+  const invoice = db.prepare("SELECT * FROM invoices WHERE id = ?").get(invoiceId) as unknown as InvoiceRow | undefined;
+  if (!invoice) return { ok: false, error: "Comprobante no encontrado." };
+  if (invoice.status !== "credit_note_pending") return { ok: false, error: "Ese comprobante no está pendiente de nota de crédito." };
+  db.prepare("UPDATE invoices SET status = 'void' WHERE id = ? AND status = 'credit_note_pending'").run(invoiceId);
+  logActivity(invoice.company_id, "pago", `Emitimos la nota de crédito de la factura ${invoice.series}-${invoice.number}.`);
+  return { ok: true };
 }
 
 export type IssueResult = { ok: true } | { ok: false; error: string };

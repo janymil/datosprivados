@@ -136,6 +136,20 @@ export function operationalAlerts(now = new Date(), env: Record<string, string |
   const used = diskUsedPercent(env.DATOSPRIVADOS_DB ? path.dirname(env.DATOSPRIVADOS_DB) : process.cwd());
   if (used !== null && used > 80) alerts.push({ code: "disk_full", message: `Disco al ${used} % (límite 80 %).` });
 
+  // Reembolsos con factura emitida: la nota de crédito es una obligación ante la SUNAT
+  // y no debe quedarse en una línea de la actividad.
+  const staleCreditNotes = (
+    db
+      .prepare("SELECT COUNT(*) AS n FROM invoices WHERE status = 'credit_note_pending' AND created_at <= ?")
+      .get(new Date(now.getTime() - 3 * 24 * 3_600_000).toISOString()) as { n: number }
+  ).n;
+  if (staleCreditNotes > 0) {
+    alerts.push({
+      code: "credit_note_pending",
+      message: `${staleCreditNotes} factura(s) reembolsada(s) llevan más de 3 días sin nota de crédito. Emítelas en /operador.`,
+    });
+  }
+
   // Gasto de IA del día: el tope mensual ya existe; esto avisa antes de agotarlo.
   const dailyLimit = dailyAlertThresholdUsd(env);
   if (dailyLimit > 0) {

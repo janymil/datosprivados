@@ -18,14 +18,14 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 533/533 passing, 40 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 536/536 passing, 40 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
 | CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
 | Hourly DB backup cron | **Installed and running** (`/etc/cron.d/datosprivados`, `/usr/local/bin/datosprivados-backup`; newest file in `/var/backups/datosprivados` was from 2026-11-02 19:00 Lima). `GO-NO-GO.md` row 5 and `RUNBOOK.md` were corrected on 2026-11-02. |
 | Rate limiting | Exists in SQLite (`src/lib/rate-limit.ts`) and is applied to login, signup, ARCO form, password reset, verification, password/email change, account deletion, export, demo, AI. |
 | Invoicing | Data model + manual issuance only (`src/lib/invoicing.ts` header says so). **No PSE/OSE API integration.** |
-| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook`, `ai-policy`, `form-pow`, `print-styles` — 128 new tests, all green. |
+| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook`, `ai-policy`, `form-pow`, `print-styles`, credit-note flow — 131 new tests, all green. |
 | Not present | `proxy.ts`/middleware (so no CSP), real staging, Anthropic key, production domain, lawyer review. |
 
 ---
@@ -38,7 +38,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 2 | Auth & accounts | `lib/auth.ts`, `actions/auth.ts`, `actions/account.ts` | 93 % | 75 % | Email delivery unproven (verification now gates publishing) |
 | 3 | Multi-tenancy & authorization | `requireSession`, `test/authz.test.ts`, `test/tenancy.test.ts` | 96 % | 90 % | No roles beyond `admin` |
 | 4 | Billing (MercadoPago) | `lib/billing.ts`, `lib/mercadopago.ts`, `lib/subscriptions.ts`, `api/mercadopago/webhook` | 82 % | 55 % | Reject→pause→cancel never seen with real events; no prod credentials |
-| 5 | Invoicing (SUNAT) | `lib/invoicing.ts` | 50 % | 20 % | No PSE/OSE chosen; issuance is manual (P0-SUNAT) |
+| 5 | Invoicing (SUNAT) | `lib/invoicing.ts` | 72 % | 20 % | No PSE/OSE chosen; nothing can be issued without the operating entity (P0-SUNAT, P0-ENTITY) |
 | 6 | Email & notifications | `lib/mail.ts`, `lib/mail-templates.ts`, `lib/notify.ts` | 85 % | 25 % | No domain / SPF / DKIM / DMARC; never sent to a real inbox |
 | 7 | Compliance documents | `lib/documents.ts`, `lib/sector-legal.ts`, `lib/document-freshness.ts`, `lib/document-catalog.ts`, `components/legal-notes.tsx`, `/p/[slug]` | 90 % | 40 % | Templates never lawyer-reviewed (P0-LEGAL) |
 | 8 | ARCO requests | `actions/arco.ts`, `solicitud/[slug]`, `app/arco/*`, `lib/form-pow.ts` | 88 % | 65 % | Requester/owner email delivery unproven (P0-DOMAIN) |
@@ -127,17 +127,17 @@ Files: `src/lib/billing.ts`, `mercadopago.ts`, `subscriptions.ts`, `plans.ts`, `
 - [ ] [AGENT] **Security:** `docs/MERCADOPAGO-SANDBOX.md` contains sandbox tokens and test passwords and is untracked. Redact or rotate before it is ever committed (remote `origin` is on GitHub).
 
 ### 5. Invoicing (SUNAT)
-Files: `src/lib/invoicing.ts`, `test/invoicing.test.ts`.
+Files: `src/lib/invoicing.ts`, `test/invoicing.test.ts`, `src/app/operador/page.tsx` (+`feriados`), `src/app/app/ajustes/page.tsx`, `src/lib/billing.ts`, `test/ops.test.ts`.
 - [x] An approved payment creates a `pending` invoice with buyer RUC, name, address and IGV split (prices include 18 % IGV).
 - [x] The operator records series, number and PDF link by hand; the customer is emailed.
 - [ ] [OWNER] Choose the invoicing route: PSE/OSE with an API vs. manual SUNAT portal (P0-SUNAT). Confirm IGV treatment of S/ 19 / 39 / 190 / 390.
 - [ ] [OWNER] Operating entity with RUC (P0-ENTITY) — nothing can be issued without it.
 - [ ] [AGENT] After the provider is chosen: adapter that moves `pending` → `issued` via API, with retries and failure state.
-- [ ] [AGENT] Collect RUC/razón social/fiscal address at checkout and validate (area 2 RUC work).
-- [ ] [AGENT] Credit note / void flow (`void` status exists; confirm what triggers it, e.g. refunds).
-- [ ] [AGENT] Show invoice numbers and PDFs in Ajustes payment list; confirm.
-- [ ] [VERIFY] Rounding: `splitIgv` cases for every plan price, base + IGV = total to the cent.
-- [ ] [AGENT] Operator alert when an invoice stays `pending` too long (SUNAT has issuance deadlines — confirm exact rule with the accountant).
+- [x] [AGENT] Fiscal data at checkout: the invoice is built from `companies.ruc`, `companies.name` and `companies.address`, i.e. the RUC validated with SUNAT at signup (`isValidRuc` + `checkCompanyRuc`) and re-verified when the company changes its RUC; the buyer address is the fiscal address returned by SUNAT. Pinned by the invoice-creation test.
+- [x] [AGENT] Credit note / void flow: `voidPendingInvoice` still voids an invoice that was not issued yet when its payment is refunded; for an **already issued** invoice the refund now moves it to `credit_note_pending` (`markCreditNotePending`) keeping series and number, the operator gets a **“Notas de crédito por emitir”** queue in `/operador` with a one-click close (`closeCreditNote` → `void`), the customer sees “nota de crédito en trámite” in Ajustes, and `operationalAlerts` fires `credit_note_pending` after 3 days so it cannot rot. Tests: `test/invoicing.test.ts` (“reembolso”) and `test/ops.test.ts`.
+- [x] [AGENT] Invoice numbers and PDFs are listed in Ajustes (`listInvoicesForCompany` + `invoiceNumber`, PDF link only when it is https), now including the credit-note state.
+- [x] [VERIFY] Rounding: `splitIgv` is now checked against **every price in `PLANS`** (monthly and yearly, read from the catalogue so it cannot drift): base + IGV = total to the cent and IGV = 18 % of the base.
+- [x] [AGENT] Operator alert when an invoice stays `pending`: `billing-reconcile` already mails `ALERT_EMAIL` for invoices pending more than 3 days (with a `dedupeKey` per day); the credit-note queue adds its own 3-day alert. Both feed `ops-alert`.
 
 ### 6. Email & notifications
 Files: `src/lib/mail.ts` (Resend over HTTP, outbox), `mail-templates.ts` (19+ templates), `notify.ts`, `api/mail/webhook`, cron `send-outbox`.

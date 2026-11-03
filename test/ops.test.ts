@@ -59,6 +59,34 @@ describe("alertas operativas", () => {
     expect(operationalAlerts(NOW, { BACKUP_DIR: dir }).map((a) => a.code)).not.toContain("backup_old");
     db.prepare("DELETE FROM webhook_events").run();
   });
+
+  it("avisa de una factura reembolsada que lleva días sin nota de crédito", () => {
+    const db = getDb();
+    const companyId = newId();
+    const paymentId = newId();
+    db.prepare(
+      "INSERT INTO companies (id, name, ruc, sector, slug, email, created_at) VALUES (?, 'Ops S.A.C.', '20604567891', 'Otro', ?, 'ops@example.com', ?)"
+    ).run(companyId, `ops-${companyId.slice(0, 8)}`, NOW.toISOString());
+    db.prepare(
+      "INSERT INTO payments (id, company_id, plan, term, amount, status, provider, payment_id, created_at) VALUES (?, ?, 'basico', 'monthly', 19, 'refunded', 'mercadopago', ?, ?)"
+    ).run(paymentId, companyId, `mp-${paymentId.slice(0, 8)}`, NOW.toISOString());
+    const invoiceId = newId();
+    db.prepare(
+      `INSERT INTO invoices (id, company_id, payment_id, status, doc_type, buyer_ruc, buyer_name, description, base_amount, igv_amount, total, currency, series, number, created_at)
+       VALUES (?, ?, ?, 'credit_note_pending', 'factura', '20604567891', 'Ops S.A.C.', 'Suscripción', 16.1, 2.9, 19, 'PEN', 'F001', '9001', ?)`
+    ).run(invoiceId, companyId, paymentId, new Date(NOW.getTime() - 5 * 24 * 3_600_000).toISOString());
+
+    const alert = operationalAlerts(NOW, {}).find((item) => item.code === "credit_note_pending");
+    expect(alert?.message).toContain("nota de crédito");
+
+    // Recién creada (dentro de los 3 días) todavía no alerta.
+    db.prepare("UPDATE invoices SET created_at = ? WHERE id = ?").run(new Date(NOW.getTime() - 3_600_000).toISOString(), invoiceId);
+    expect(operationalAlerts(NOW, {}).some((item) => item.code === "credit_note_pending")).toBe(false);
+
+    db.prepare("DELETE FROM invoices WHERE id = ?").run(invoiceId);
+    db.prepare("DELETE FROM payments WHERE id = ?").run(paymentId);
+    db.prepare("DELETE FROM companies WHERE id = ?").run(companyId);
+  });
 });
 
 describe("registro estructurado", () => {

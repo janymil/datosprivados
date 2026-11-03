@@ -3,7 +3,7 @@ import "server-only";
 import { getDb, newId, nowIso, type Company } from "./db";
 import { logActivity } from "./data";
 import { notifyCompany } from "./notify";
-import { createInvoiceForPayment, getInvoiceByPayment, voidPendingInvoice } from "./invoicing";
+import { createInvoiceForPayment, getInvoiceByPayment, markCreditNotePending, voidPendingInvoice } from "./invoicing";
 import {
   PLANS,
   isBillingTerm,
@@ -420,11 +420,14 @@ export function recordRefund(input: { providerPaymentId: string }) {
 
   const invoice = getInvoiceByPayment(payment.id);
   if (invoice?.status === "pending") voidPendingInvoice(payment.id);
+  // Una factura ya emitida no se anula sola: la SUNAT exige una nota de crédito y
+  // eso lo emite una persona. Queda en la cola del operador hasta que la cierre.
+  const needsCreditNote = markCreditNotePending(payment.id);
   logActivity(
     company.id,
     "pago",
-    invoice?.status === "issued"
-      ? `Reembolsamos S/ ${payment.amount.toFixed(2)}. La factura ${invoice.series}-${invoice.number} requiere una nota de crédito.`
+    needsCreditNote
+      ? `Reembolsamos S/ ${payment.amount.toFixed(2)}. La factura ${invoice?.series}-${invoice?.number} requiere una nota de crédito (ver /operador).`
       : `Reembolsamos S/ ${payment.amount.toFixed(2)} y descontamos el periodo que cubría.`
   );
   notifyCompany(
@@ -433,5 +436,5 @@ export function recordRefund(input: { providerPaymentId: string }) {
     { plan: isPlanId(payment.plan) ? PLANS[payment.plan].name : payment.plan, amount: `S/ ${payment.amount.toFixed(2)}` },
     { dedupeKey: `refund:${payment.id}` }
   );
-  return { refunded: true, needsCreditNote: invoice?.status === "issued" };
+  return { refunded: true, needsCreditNote };
 }
