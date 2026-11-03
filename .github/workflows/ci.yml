@@ -36,7 +36,7 @@ jobs:
           # suite pruebe de verdad ese modo.
           CSP_ENFORCE: "1"
       - name: Guardar la compilación para E2E
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: next-build
           path: .next
@@ -64,7 +64,7 @@ jobs:
       - run: pnpm exec playwright test
         env:
           CI: "true"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
