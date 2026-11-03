@@ -18,8 +18,8 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 588/588 passing, 45 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
-| `pnpm exec playwright test` | 101/101 across chromium (journey + quality + perf), mobile-chrome, firefox, webkit and axe (19 axe: 8 public + 11 panel; 2 perf budgets) — the suite builds with `CSP_ENFORCE=1`, so it also proves the blocking CSP |
+| `pnpm test` | 593/593 passing, 46 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm exec playwright test` | 101/101 across chromium (journey + quality + perf), mobile-chrome, firefox, webkit and axe (19 axe: 8 public + 11 panel; 2 perf budgets: LCP 1872 ms / CLS 0.008 on the landing) — the suite builds with `CSP_ENFORCE=1`, so it also proves the blocking CSP |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
 | CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
@@ -152,7 +152,7 @@ Files: `src/lib/mail.ts` (Resend over HTTP, outbox), `mail-templates.ts` (19+ te
 - [ ] [VERIFY] Bounce/complaint webhook with a real signed event; address becomes suppressed.
 - [x] [AGENT] Accessibility check of HTML mail: `test/mail-a11y.test.ts` renders 9 representative templates and asserts a **non-empty plain-text part**, no `undefined`/`null`, `<html lang="es">`, `role="presentation"` on the layout tables, **no `<img>`** (so no missing `alt`), escaped payload values (no `<script>`/inline HTML from customer data) and an absolute CTA link. It computes WCAG contrast for every colour pair in the generated HTML and **found a real defect**: the footer was `#777` on white = 4.48:1, just under AA — changed to `#666` (5.6:1). Test now fails if any pair drops below 4.5:1.
 - [x] [AGENT] Alert when the outbox has dead-lettered messages: `operationalAlerts` now counts `email_outbox` rows with `status = 'dead'` regardless of age (they are never retried) and raises `outbox_dead`, which the `ops-alert` job mails to `ALERT_EMAIL`. Test in `test/ops.test.ts`.
-- [ ] [AGENT] Optional weekly digest.
+- [x] [AGENT] Optional weekly digest, **off by default**: `WEEKLY_DIGEST=1` enables the `weekly-digest` job, which sends each active company one mail listing only what is pending (ARCO unanswered — flagging those out of time, incidents not closed, stale documents, banks not registered in the SIPDP). A company with nothing pending gets no mail; one mail per company per week via `dedupeKey`; it goes to the data-responsible address; the template is **non-essential**, so it respects the account's opt-out. While the flag is off the job is a no-op *and* `jobsHealth` skips it, so an unused feature can never turn `/api/health` red or fire “job not run” alerts. Tests: `test/digest.test.ts` (4), cron line documented in `RUNBOOK.md`.
 
 ### 7. Compliance documents
 Files: `src/lib/documents.ts` (1.5k lines), `sector-legal.ts` (1k lines), `document-catalog.ts`, `document-freshness.ts` (`TEMPLATE_VERSIONS`), `document-publish.ts`, `src/app/p/[slug]`, `src/app/app/documentos`, `src/components/legal-notes.tsx`, `src/app/operador/feriados/*`.
@@ -305,7 +305,7 @@ Files: `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-produc
 
 ### 19. Tests & CI
 Files: `test/` (42 files), `e2e/` (journey + quality + axe specs, mock server), `playwright.config.ts`, `vitest.config.mts`, `.github/workflows/ci.yml`.
-- [x] 588 unit/integration tests in 45 files, E2E 101/101 (chromium journey + quality + perf, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
+- [x] 593 unit/integration tests in 46 files, E2E 101/101 (chromium journey + quality + perf, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
 - [x] CI bug fixed: tests no longer depend on a pre-existing `test/.tmp`.
 - [x] [AGENT] Firefox and WebKit projects in `playwright.config.ts` (quality spec: headers, basic a11y, no horizontal overflow, legal footer) and CI now installs `chromium firefox webkit`. **Run locally on 2026-11-03: 30/30 green** (16 Firefox + 14 WebKit). The full journey stays Chromium-only so CI doesn't triple in time. Note: `playwright install` on this box needed a retry without `--with-deps` (the apt phase stalled); the browsers are cached in `~/.cache/ms-playwright`.
 - [x] [AGENT] Coverage report with a floor: `@vitest/coverage-v8` + `pnpm test:coverage` (now the CI step). Measured 2026-11-02 on the core modules — `billing`, `auth`, `jobs`, `mail`, `account`, `invoicing`, `rate-limit`, `client-ip`, `mercadopago` and `backup-crypto` — **90.9 % statements / 84.0 % branches / 91.9 % functions / 94.0 % lines** (re-measured 2026-11-03), with thresholds 80/80/80/70 that fail the build if they drop. The weakest file was `mercadopago.ts` (56 % statements); `test/mercadopago.test.ts` took it to 96 % statements and 100 % functions/lines, so D-1 in `docs/DEFECTS.md` is closed.

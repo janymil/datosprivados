@@ -306,6 +306,52 @@ const JOBS = {
     };
   },
 
+  /**
+   * Resumen semanal por cuenta (opcional, apagado por defecto: `WEEKLY_DIGEST=1`).
+   * Solo cuenta lo que está pendiente; si no hay nada, no se manda correo.
+   */
+  "weekly-digest"({ now }: JobContext): JobResult {
+    const week = Math.floor(now.getTime() / (7 * DAY));
+    const today = limaToday(now);
+    const db = getDb();
+    let sent = 0;
+    let skipped = 0;
+    for (const company of activeCompanies()) {
+      const openArco = db
+        .prepare("SELECT COUNT(*) AS n FROM arco_requests WHERE company_id = ? AND status IN ('nuevo','en_proceso')")
+        .get(company.id) as { n: number };
+      const overdueArco = db
+        .prepare("SELECT COUNT(*) AS n FROM arco_requests WHERE company_id = ? AND status IN ('nuevo','en_proceso') AND due_at < ?")
+        .get(company.id, today) as { n: number };
+      const openIncidents = db
+        .prepare("SELECT COUNT(*) AS n FROM incidents WHERE company_id = ? AND status != 'cerrado'")
+        .get(company.id) as { n: number };
+      const banks = listBanks(company.id);
+      const providers = listProviders(company.id);
+      const staleDocs = listDocuments(company.id).filter((doc) => documentFreshness(doc, company, banks, providers).stale).length;
+      const unregisteredBanks = banks.filter((bank) => bank.status !== "registrado").length;
+
+      const pending: string[] = [];
+      if (openArco.n) pending.push(`${openArco.n} solicitud(es) ARCO sin responder${overdueArco.n ? `, ${overdueArco.n} fuera de plazo` : ""}`);
+      if (openIncidents.n) pending.push(`${openIncidents.n} incidente(s) sin cerrar`);
+      if (staleDocs) pending.push(`${staleDocs} documento(s) desactualizado(s)`);
+      if (unregisteredBanks) pending.push(`${unregisteredBanks} banco(s) de datos sin inscribir en el SIPDP`);
+
+      if (!pending.length) {
+        skipped += 1;
+        continue;
+      }
+      const ok = notifyCompany(
+        company,
+        "weekly_digest",
+        { pending: pending.join(" | ") },
+        { to: "responsable", dedupeKey: `weekly-digest:${company.id}:${week}` }
+      );
+      if (ok) sent += 1;
+    }
+    return { sent, al_dia: skipped };
+  },
+
   /** Verifica que los dos próximos años tengan feriados cargados y avisa cuáles siguen sin decreto confirmado. */
   "holidays-check"({ now }: JobContext): JobResult {
     const year = Number(limaToday(now).slice(0, 4));
@@ -344,8 +390,19 @@ export const JOB_MAX_AGE_HOURS: Record<JobName, number> = {
   "purge-old-data": 26,
   "ops-alert": 1,
   "demo-reset": 8 * 24,
+  "weekly-digest": 8 * 24,
   "holidays-check": 8 * 24,
 };
+
+/**
+ * Tareas opcionales: existen en el código, pero solo se esperan (y solo hacen algo)
+ * si la bandera está encendida. Así una función apagada no puede poner `/api/health`
+ * en rojo ni disparar alertas por «no ejecutada».
+ */
+export function jobEnabled(job: JobName, env: NodeJS.ProcessEnv = process.env): boolean {
+  if (job === "weekly-digest") return env.WEEKLY_DIGEST === "1";
+  return true;
+}
 
 export type RunOutcome =
   | { job: JobName; status: "ok"; detail: JobResult }
@@ -355,6 +412,8 @@ export type RunOutcome =
 /** Ejecuta una tarea con candado y registro en `job_runs`. */
 export async function runJob(job: JobName, now = new Date()): Promise<RunOutcome> {
   const db = getDb();
+  // Tarea apagada: no se ejecuta, pero tampoco se registra un fallo (no lo es).
+  if (!jobEnabled(job)) return { job, status: "ok", detail: { saltado: "desactivada" } };
   const running = db
     .prepare("SELECT 1 FROM job_runs WHERE job = ? AND finished_at IS NULL AND started_at > ?")
     .get(job, new Date(now.getTime() - LOCK_TTL_MS).toISOString());
@@ -416,7 +475,7 @@ export type JobHealth = {
 export function jobsHealth(now = new Date(), since?: Date): JobHealth {
   const db = getDb();
   const origin = since ?? new Date(now.getTime() - 365 * DAY);
-  const jobs = JOB_NAMES.map((job) => {
+  const jobs = JOB_NAMES.filter((job) => jobEnabled(job)).map((job) => {
     const ok = db.prepare("SELECT finished_at FROM job_runs WHERE job = ? AND ok = 1 ORDER BY finished_at DESC LIMIT 1").get(job) as { finished_at: string } | undefined;
     const failed = db.prepare("SELECT error FROM job_runs WHERE job = ? AND ok = 0 ORDER BY started_at DESC LIMIT 1").get(job) as { error: string } | undefined;
     const reference = ok ? new Date(ok.finished_at) : origin;

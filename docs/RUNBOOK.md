@@ -263,6 +263,7 @@ considera de un proceso muerto.
 | `document-staleness-notice` | semanal | Un aviso por empresa con documentos desactualizados (opcional para la empresa). |
 | `expire-sessions` | diario | Sesiones, tokens y límites de intentos vencidos. |
 | `holidays-check` | semanal | Asegura feriados de este año y el siguiente; informa los años aún sin decreto confirmado. |
+| `weekly-digest` | semanal (opcional) | Resumen por empresa con lo que quedó pendiente (ARCO sin responder, incidentes abiertos, documentos desactualizados, bancos sin inscribir). **Apagado por defecto**: solo hace algo con `WEEKLY_DIGEST=1`, y mientras esté apagado no se le exige a `/api/health`. Una cuenta al día no recibe correo. |
 
 ### Instalación (2026-11-01, este servidor)
 
@@ -301,6 +302,10 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # semanales (lunes, hora de Lima)
 0 * * * *       root /usr/local/bin/datosprivados-cron document-staleness-notice --at 05:00 --dow 1
 0 * * * *       root /usr/local/bin/datosprivados-cron holidays-check            --at 05:30 --dow 1
+
+# resumen semanal: solo si WEEKLY_DIGEST=1 en el entorno del servicio. La línea de
+# cron puede estar puesta con la bandera apagada (la tarea no hace nada y no falla).
+0 * * * *       root /usr/local/bin/datosprivados-cron weekly-digest             --at 06:00 --dow 1
 ```
 
 Dos trampas al escribir la tabla: los `%` deben escaparse (`\%`) o el cron los convierte en saltos de línea, y `$CRON_SECRET`

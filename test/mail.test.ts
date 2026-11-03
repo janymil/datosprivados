@@ -25,6 +25,7 @@ const SAMPLE: Record<MailTemplate, MailPayload> = {
   incident_opened: { title: "Fuga de correos", dueAt: "2 nov 2026, 10:00", company: "Casa Verde" },
   incident_deadline: { title: "Fuga de correos", dueAt: "2 nov 2026, 10:00", hours: 12, company: "Casa Verde" },
   document_outdated: { count: 3, company: "Casa Verde" },
+  weekly_digest: { pending: "2 solicitud(es) ARCO sin responder | 1 banco(s) de datos sin inscribir en el SIPDP", company: "Casa Verde" },
   lapsed_notice: { deleteOn: "30 de enero de 2027", stage: 1, company: "Casa Verde" },
   email_changed: { newEmail: "nuevo@casaverde.pe", company: "Casa Verde" },
   account_deleted: { company: "Casa Verde" },
@@ -44,7 +45,7 @@ describe("plantillas", () => {
   it("hay un ejemplo por cada plantilla (que no se quede una sin probar)", () => {
     const templates = Object.keys(SAMPLE) as MailTemplate[];
     for (const template of templates) expect(() => renderMail(template, SAMPLE[template])).not.toThrow();
-    expect(templates).toHaveLength(22);
+    expect(templates).toHaveLength(23);
   });
 
   it.each(Object.keys(SAMPLE) as MailTemplate[])("%s: asunto, texto y HTML sin fugas de variables", (template) => {
@@ -75,9 +76,9 @@ describe("plantillas", () => {
     expect(ack.text).toContain("Casa Verde");
   });
 
-  it("solo el aviso de documentos desactualizados es opcional", () => {
+  it("solo el aviso de documentos desactualizados y el resumen semanal son opcionales", () => {
     const optional = (Object.keys(SAMPLE) as MailTemplate[]).filter((t) => !isEssential(t));
-    expect(optional).toEqual(["document_outdated"]);
+    expect(optional).toEqual(["document_outdated", "weekly_digest"]);
   });
 });
 

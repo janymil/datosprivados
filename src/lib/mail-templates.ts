@@ -27,6 +27,7 @@ export type MailTemplate =
   | "incident_opened"
   | "incident_deadline"
   | "document_outdated"
+  | "weekly_digest"
   | "lapsed_notice"
   | "email_changed"
   | "account_deleted"
@@ -56,6 +57,7 @@ const ESSENTIAL: Record<MailTemplate, boolean> = {
   incident_opened: true,
   incident_deadline: true,
   document_outdated: false,
+  weekly_digest: false,
   lapsed_notice: true,
   email_changed: true,
   account_deleted: true,
@@ -359,6 +361,24 @@ export function renderMail(template: MailTemplate, payload: MailPayload): Render
         },
         company
       );
+    case "weekly_digest": {
+      // Resumen semanal: solo se envían los puntos con algo pendiente (el trabajo
+      // decide no mandar nada si la cuenta está al día).
+      need("pending");
+      const pending = String(payload.pending)
+        .split("|")
+        .map((line) => line.trim())
+        .filter(Boolean);
+      return layout(
+        {
+          subject: pending.length === 1 ? "Tu resumen semanal: 1 punto pendiente" : `Tu resumen semanal: ${pending.length} puntos pendientes`,
+          paragraphs: ["Esto es lo que quedó pendiente esta semana en tu expediente de protección de datos:", ...pending.map((line) => `• ${line}`)],
+          action: { label: "Entrar al panel", url: "/app" },
+          footerNote: "Recibes este resumen porque tu cuenta está activa. Puedes desactivarlo en Ajustes.",
+        },
+        company
+      );
+    }
     case "lapsed_notice":
       need("deleteOn", "stage");
       return layout(
