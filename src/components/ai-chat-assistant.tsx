@@ -12,6 +12,8 @@ type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  /** Aviso que se muestra bajo una respuesta del modelo (no es asesoría legal). */
+  disclaimer?: string;
 };
 
 const QUICK_PROMPTS = [
@@ -84,6 +86,7 @@ export function AiChatAssistant({
             id: newMessageId("a"),
             role: "assistant",
             content: res.answer,
+            disclaimer: res.disclaimer,
           },
         ]);
       } catch {
@@ -191,6 +194,11 @@ export function AiChatAssistant({
               ) : (
                 <div className="text-[15px] leading-relaxed">
                   <DocBody content={m.content} />
+                  {m.disclaimer && (
+                    <p className="mt-3 border-t border-line pt-2 font-mono text-[11px] uppercase leading-relaxed tracking-[0.04em] text-ink-soft">
+                      {m.disclaimer}
+                    </p>
+                  )}
                 </div>
               )}
             </div>

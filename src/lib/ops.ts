@@ -5,6 +5,7 @@ import path from "node:path";
 import { getDb } from "./db";
 import { mailProvider, stuckOutboxCount } from "./mail";
 import { jobsHealth } from "./jobs";
+import { dailyAlertThresholdUsd, dailySpendUsd } from "./ai-guard";
 
 /**
  * Comprobaciones de salud (P6-OBS). `dbCheck` y `readiness` alimentan los endpoints
@@ -134,6 +135,18 @@ export function operationalAlerts(now = new Date(), env: Record<string, string |
 
   const used = diskUsedPercent(env.DATOSPRIVADOS_DB ? path.dirname(env.DATOSPRIVADOS_DB) : process.cwd());
   if (used !== null && used > 80) alerts.push({ code: "disk_full", message: `Disco al ${used} % (límite 80 %).` });
+
+  // Gasto de IA del día: el tope mensual ya existe; esto avisa antes de agotarlo.
+  const dailyLimit = dailyAlertThresholdUsd(env);
+  if (dailyLimit > 0) {
+    const spent = dailySpendUsd(now);
+    if (spent >= dailyLimit) {
+      alerts.push({
+        code: "ai_spend_daily",
+        message: `La IA lleva ${spent.toFixed(2)} USD hoy (umbral diario ${dailyLimit} USD). Revisa el uso en /operador o ajusta AI_DAILY_ALERT_USD.`,
+      });
+    }
+  }
 
   return alerts;
 }

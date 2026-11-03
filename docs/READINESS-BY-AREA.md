@@ -18,14 +18,14 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 506/506 passing, 37 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 517/517 passing, 38 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
 | CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
 | Hourly DB backup cron | **Installed and running** (`/etc/cron.d/datosprivados`, `/usr/local/bin/datosprivados-backup`; newest file in `/var/backups/datosprivados` was from 2026-11-02 19:00 Lima). `GO-NO-GO.md` row 5 and `RUNBOOK.md` were corrected on 2026-11-02. |
 | Rate limiting | Exists in SQLite (`src/lib/rate-limit.ts`) and is applied to login, signup, ARCO form, password reset, verification, password/email change, account deletion, export, demo, AI. |
 | Invoicing | Data model + manual issuance only (`src/lib/invoicing.ts` header says so). **No PSE/OSE API integration.** |
-| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook` — 101 new tests, all green. |
+| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook`, `ai-policy` — 112 new tests, all green. |
 | Not present | `proxy.ts`/middleware (so no CSP), real staging, Anthropic key, production domain, lawyer review. |
 
 ---
@@ -44,7 +44,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 8 | ARCO requests | `actions/arco.ts`, `solicitud/[slug]`, `app/arco/*` | 80 % | 65 % | Requester/owner email delivery unproven; no captcha |
 | 9 | Incidents (48 h) | `app/app/incidentes/*`, `lib/incident-criteria.ts` | 75 % | 65 % | Pre-deadline alerts depend on email |
 | 10 | Data banks & SIPDP | `app/app/bancos/*`, `lib/bank-sheet.ts`, `lib/bank-presets.ts` | 90 % | 85 % | Platform's own banks unregistered (P0-OWN-BANKS) |
-| 11 | AI assistant | `lib/ai.ts`, `lib/llm.ts`, `lib/anonymizer.ts`, `lib/ai-guard.ts`, `actions/ai.ts` | 80 % | 40 % | No vendor/key/DPA decided (P0-AI-VENDOR) |
+| 11 | AI assistant | `lib/ai.ts`, `lib/llm.ts`, `lib/anonymizer.ts`, `lib/ai-guard.ts`, `lib/ai-policy.ts`, `actions/ai.ts` | 92 % | 40 % | No vendor/key/DPA decided (P0-AI-VENDOR) |
 | 12 | Help & knowledge base | `lib/help-content.ts`, `lib/glossary.ts`, `lib/help-tips.ts`, `lib/help-knowledge.ts`, `lib/help-review.ts`, `lib/legal-faq.ts` | 96 % | 70 % | Content not reviewed by lawyer/editor |
 | 13 | Landing, demo, SEO | `app/page.tsx`, `components/landing-interactive.tsx`, `lib/demo.ts`, `public/video/*` | 88 % | 65 % | Production domain not wired; demo account is public |
 | 14 | Platform legal pages | `lib/platform-legal.ts`, `/terminos`, `/privacidad`, `/cookies` | 70 % | 20 % | Drafts; need operating entity + lawyer (P0-ENTITY, P0-LEGAL) |
@@ -195,17 +195,18 @@ Files: `src/app/app/bancos/*`, `src/lib/bank-sheet.ts`, `src/lib/bank-presets.ts
 - [ ] [AGENT] Cross-border transfer fields (`transfers.ts`) reviewed against the current rules.
 
 ### 11. AI assistant
-Files: `src/lib/ai.ts` (1.2k lines), `llm.ts`, `anonymizer.ts`, `ai-guard.ts`, `src/app/actions/ai.ts`, `src/app/app/asistente`, `test/ai-controls.test.ts`, `test/ai-evals/`.
+Files: `src/lib/ai.ts` (1.2k lines), `llm.ts`, `anonymizer.ts`, `ai-guard.ts`, `ai-policy.ts`, `src/app/actions/ai.ts`, `src/app/app/asistente`, `test/ai-controls.test.ts`, `test/ai-policy.test.ts`, `test/ai-evals/`.
 - [x] Quotas and per-minute rate limit; anonymization before sending; tested with a simulated LLM.
 - [ ] [OWNER] Choose vendor(s), region and contract with DPA and no-training terms (P0-AI-VENDOR). Disclose as sub-processors and as a cross-border transfer in area 14.
 - [ ] [OWNER] Provide a production key (none for Anthropic; the OpenAI key was never tested end to end).
 - [ ] [VERIFY] Real call per feature: success, timeout, 429, malformed output, empty output.
 - [ ] [AGENT] Run `test/ai-evals/` against the real model and record pass rates; set a minimum.
-- [ ] [VERIFY] Anonymizer on real Peruvian data patterns (DNI, RUC, phone, address, names); check for leakage in logs.
-- [ ] [AGENT] Cost ceiling and an alert on spend per day (feeds area 16).
-- [ ] [AGENT] Demo company is on plan `pro`: confirm demo AI usage is capped so it cannot burn the budget (area 13).
-- [ ] [AGENT] Disclaimers on AI output; refuse or redirect legal-advice requests.
-- [ ] [AGENT] Prompt-injection tests via user-supplied text (document fields, ARCO text) that reaches prompts.
+- [x] [VERIFY] Anonymizer on real Peruvian data patterns (DNI, RUC, phone, address, names) — covered by `test/security.test.ts` (“ninguna PII llega al modelo” over DNI/RUC/phone/address/e-mail). Logs cannot leak the text: `ai_usage` stores only feature, model, token counts, latency and `ok`; `logEvent` scrubs e-mails and refuses fields that look personal.
+- [x] [AGENT] Cost ceiling and daily spend alert: the monthly cap (`AI_MONTHLY_BUDGET_USD`) still switches the AI off, and now `dailySpendUsd()` + `dailyAlertThresholdUsd()` (20 % of the monthly budget, or `AI_DAILY_ALERT_USD`) feed an `ai_spend_daily` alert into `operationalAlerts`, which the `ops-alert` job mails once an hour. Tests in `test/ai-policy.test.ts` (Lima day cut-off, threshold, alert fired).
+- [x] [AGENT] Demo company cannot burn the budget: every AI action returns the “IA desactivada en la demostración” message before any gate or model call (`src/app/actions/ai.ts`).
+- [x] [AGENT] Disclaimers and refusal of legal advice: `runAnonymizedLegalChat` applies `aiPolicy()` **before** calling the model — legal advice/representation → redirects to a lawyer, hiding data from the ANPD or falsifying records → refuses and offers the compliant path. Model answers carry `AI_DISCLAIMER` (“no es asesoría legal”), rendered under each answer in the chat. Tests: 11 in `test/ai-policy.test.ts`.
+- [x] [AGENT] Prompt-injection tests via user-supplied text: the user message and every previous turn go inside `<datos_usuario>` markers (closing tags stripped by `untrusted()`), the system prompt states that block is data and never instructions, and the tests assert an injection is contained in the block, cannot close it, never reaches the system prompt, and does not defeat anonymization.
+
 
 ### 12. Help & knowledge base
 Files: `src/lib/help-content.ts` (974 lines), `glossary.ts`, `help-tips.ts`, `help-knowledge.ts` (feeds the assistant), `help-review.ts`, `legal-faq.ts`, `src/app/app/ayuda/*`, `components/help-search.tsx`, `test/help.test.ts`, `test/help-review.test.ts`.

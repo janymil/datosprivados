@@ -78,6 +78,35 @@ export function budgetExceeded(now = new Date()): boolean {
   return true;
 }
 
+/** Primer instante del día en curso, hora de Lima (UTC-5, sin horario de verano). */
+export function limaDayStart(now = new Date()): string {
+  const lima = new Date(now.getTime() - 5 * 3_600_000);
+  return new Date(Date.UTC(lima.getUTCFullYear(), lima.getUTCMonth(), lima.getUTCDate(), 5)).toISOString();
+}
+
+/** Gasto estimado de hoy (USD), con los mismos precios que el mensual. */
+export function dailySpendUsd(now = new Date()): number {
+  const row = getDb()
+    .prepare("SELECT COALESCE(SUM(input_tokens), 0) AS i, COALESCE(SUM(output_tokens), 0) AS o FROM ai_usage WHERE created_at >= ?")
+    .get(limaDayStart(now)) as { i: number; o: number };
+  const priceIn = Number(process.env.AI_PRICE_IN_USD_PER_MTOK) || 3;
+  const priceOut = Number(process.env.AI_PRICE_OUT_USD_PER_MTOK) || 15;
+  return (row.i * priceIn + row.o * priceOut) / 1_000_000;
+}
+
+/**
+ * Umbral diario de gasto de IA. Por defecto el 20 % del presupuesto mensual (así
+ * un día desbocado se ve antes de agotar el mes); `AI_DAILY_ALERT_USD` lo fija a mano.
+ * 0 o sin presupuesto = sin aviso diario.
+ */
+export function dailyAlertThresholdUsd(env: Record<string, string | undefined> = process.env): number {
+  const explicit = Number(env.AI_DAILY_ALERT_USD);
+  if (Number.isFinite(explicit) && explicit > 0) return explicit;
+  const monthly = Number(env.AI_MONTHLY_BUDGET_USD);
+  if (!Number.isFinite(monthly) || monthly <= 0) return 0;
+  return Math.round(monthly * 0.2 * 100) / 100;
+}
+
 /**
  * ¿Puede esta empresa usar la IA ahora? Solo comprueba; no consume el cupo por minuto
  * (usa `consumeAiRate` al llamar). Orden: interruptor, presupuesto, consentimiento, cuota.
