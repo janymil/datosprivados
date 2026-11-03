@@ -52,6 +52,39 @@ archivo estático. Nota: los `.mp4` no se sirven con range requests desde Cloudf
 cuando están cacheados de borde a menos que el origen los soporte; aquí el origen los
 soporta (`Accept-Ranges`), así que la reproducción con salto sigue funcionando.
 
+## CSP: encender y apagar el bloqueo
+
+La política vive en `next.config.ts` y sale de dos maneras:
+
+- **Por defecto** (sin `CSP_ENFORCE`): `Content-Security-Policy-Report-Only`. No bloquea;
+  las violaciones llegan a `POST /api/csp-report` y quedan en el log como `csp_violation`.
+- **Con `CSP_ENFORCE=1`**: `Content-Security-Policy`. La misma política, pero bloquea.
+
+**Importante:** `headers()` se evalúa al **compilar**, no al arrancar. Las cabeceras
+quedan en `.next/routes-manifest.json`. Encender o apagar la bandera exige recompilar:
+
+```bash
+# encender (staging primero)
+CSP_ENFORCE=1 pnpm build && pm2 reload datosprivados
+
+# comprobar que la cabecera cambió
+curl -sI https://<dominio>/ | grep -i 'content-security-policy'
+#   con bloqueo:      Content-Security-Policy: default-src 'self'; ...
+#   en observación:   Content-Security-Policy-Report-Only: default-src 'self'; ...
+
+# apagar (revertir): volver a compilar sin la variable
+pnpm build && pm2 reload datosprivados
+```
+
+Qué mirar después de encenderla: en la consola del navegador (`Refused to ...`) o en
+`journalctl -u datosprivados | grep csp_violation`. Si aparece un bloqueo legítimo
+—algo que la app necesita— lo correcto es ampliar la directiva concreta, no apagar la
+CSP entera.
+
+La suite E2E corre siempre con `CSP_ENFORCE=1` (`pnpm test:e2e` y el job de CI): si una
+pantalla dependiera de un recurso que la política corta, el recorrido falla antes de
+llegar a producción.
+
 ## Respaldos
 
 ```bash

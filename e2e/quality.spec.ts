@@ -15,6 +15,11 @@ for (const path of PUBLIC_PAGES) {
       expect(h["strict-transport-security"]).toMatch(/max-age=\d{7,}/);
       expect(h["referrer-policy"]).toBe("strict-origin-when-cross-origin");
       expect(h["x-powered-by"]).toBeUndefined();
+      // La suite corre con CSP_ENFORCE=1: la política bloqueante debe estar y no
+      // debe venir la de observación (mandar las dos sería ambiguo).
+      expect(h["content-security-policy"]).toContain("default-src 'self'");
+      expect(h["content-security-policy"]).toContain("frame-ancestors 'none'");
+      expect(h["content-security-policy-report-only"]).toBeUndefined();
     });
 
     test("accesibilidad básica y sin desborde horizontal", async ({ page }) => {

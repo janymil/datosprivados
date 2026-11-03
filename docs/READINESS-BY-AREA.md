@@ -18,8 +18,8 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 583/583 passing, 44 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
-| `pnpm exec playwright test` | 99/99 across chromium (journey + quality), mobile-chrome, firefox, webkit and axe (19 of them axe: 8 public + 11 panel) |
+| `pnpm test` | 588/588 passing, 45 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm exec playwright test` | 101/101 across chromium (journey + quality + perf), mobile-chrome, firefox, webkit and axe (19 axe: 8 public + 11 panel; 2 perf budgets) — the suite builds with `CSP_ENFORCE=1`, so it also proves the blocking CSP |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
 | CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
@@ -231,7 +231,7 @@ Files: `src/app/page.tsx`, `components/landing-interactive.tsx`, `src/lib/demo.t
 - [ ] [OWNER] Verify every claim on the landing page with the lawyer (P0-LEGAL), including `scripts/verify-video-claims.mjs` outputs.
 - [x] [AGENT] Cloudflare cache rule for `/video/*` written down as a copy-paste recipe (expression, Edge/Browser TTL and the `cf-cache-status` check) in `RUNBOOK.md` (“Caché de los vídeos en Cloudflare”). The origin already sends `immutable` + `Accept-Ranges`; **applying it needs the Cloudflare dashboard**, so the rule itself is owner-side.
 - [x] [AGENT] Fraunces variable axes decided: **dropped**. Nothing in `src/` uses `font-variation-settings` or `font-optical-sizing`, so `axes: ["SOFT","WONK","opsz"]` was pure weight. Measured on `.next/static/media/*.woff2`: 406 928 → **228 080 bytes** after a clean rebuild (−179 KB, −44 %), with the Chrome/Firefox/WebKit/axe suites green afterwards (61/61). Written up in `DECISIONS.md` (“Tipografías servidas”).
-- [ ] [VERIFY] Lighthouse or equivalent on the production domain.
+- [x] [VERIFY] Lighthouse or equivalent on the production domain. **Equivalent implemented** on 2026-11-03: `e2e/perf.spec.ts` measures LCP and CLS in Chromium under Fast 3G + 4× CPU throttling (CDP) and fails the suite past budget (LCP < 4000 ms, CLS < 0.1). Measured locally: landing **LCP 1784 ms, CLS 0.008**; `/login` **1100 ms / 0.000** — inside Core Web Vitals' “good” band with margin, and consistent with the ~2 s claim above. The real production-domain run (Cloudflare + nginx + real TLS) still belongs to the owner-side verify.
 - [x] [AGENT] Analytics/consent decided: **there is none**, so no banner is needed and `/cookies` (“solo cookies técnicas”) is accurate. Checked with `grep -riE "gtag|googletagmanager|plausible|umami|posthog|matomo" src/` — only a catalogue sentence about AI providers matches. The rule for when it changes (no-cookie tool or prior consent, update `/cookies` and the privacy policy in the same commit, DPA with the vendor) is recorded in `DECISIONS.md` (“Analítica: hoy no hay ninguna”).
 
 ### 14. Platform legal pages
@@ -250,7 +250,8 @@ Files: `src/lib/security-checks.ts`, `next.config.ts`, `src/app/actions/*`, `tes
 - [x] No `dangerouslySetInnerHTML`, `eval(` or `new Function(` in `src/`.
 - [x] `pnpm audit --prod` clean; secrets scan of tree and git history clean.
 - [x] `server_tokens off` applied on the preview nginx.
-- [ ] [OWNER] **Decide on CSP enforcement.** Report-only is live (see next line); blocking needs `proxy.ts` with a per-request nonce (see `node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md`), which forces dynamic rendering and changes the performance measured in `GO-NO-GO.md`.
+- [~] [OWNER] **Decide whether to turn CSP enforcement on in production.** The switch now exists (`CSP_ENFORCE=1`) and is verified, so this is a one-variable decision, not an engineering task: what is still owner-side is going *fully* strict, which needs `proxy.ts` with a per-request nonce (see `node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md`), forces dynamic rendering and changes the performance measured in `GO-NO-GO.md`.
+- [x] [AGENT] CSP **enforceable by flag**: `next.config.ts` exports `cspEnforced`/`cspPolicy`/`cspHeaders`; without `CSP_ENFORCE` it emits `Content-Security-Policy-Report-Only` exactly as before, with `CSP_ENFORCE=1` it emits the blocking `Content-Security-Policy` (same policy, `'unsafe-eval'` only outside production). The **full E2E suite runs with enforcement on** (`pnpm test:e2e` and CI build with the flag): 99/99 green on 2026-11-03, journey included, so nothing in the app depends on an external origin or a blocked inline. `test/csp.test.ts` (5 tests) pins both modes, the directives, the report endpoint and the absence of wildcards; `test/csp-report.test.ts` covers the collecting endpoint. Rollback is documented in `RUNBOOK.md` (“CSP: encender y apagar el bloqueo”) because the header is baked into the build.
 - [x] [AGENT] CSP in **report-only** mode: `Content-Security-Policy-Report-Only` + `Reporting-Endpoints` in `next.config.ts`, reports to `POST /api/csp-report` (8 KB cap, 30/min per IP, logs only directive + path + shortened blocked origin, never the body or the full URL). Covered by `test/csp-report.test.ts`. Decision and what enforcing would cost: `docs/DECISIONS.md`.
 - [ ] [OWNER] External pen-test; SSL Labs grade A on the production domain.
 - [ ] [VERIFY] Server Actions CSRF with the real domain behind Cloudflare and nginx (Origin vs Host); add `allowedOrigins` only if it fails.
@@ -304,7 +305,7 @@ Files: `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-produc
 
 ### 19. Tests & CI
 Files: `test/` (42 files), `e2e/` (journey + quality + axe specs, mock server), `playwright.config.ts`, `vitest.config.mts`, `.github/workflows/ci.yml`.
-- [x] 583 unit/integration tests in 44 files, E2E 99/99 (chromium journey + quality, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
+- [x] 588 unit/integration tests in 45 files, E2E 101/101 (chromium journey + quality + perf, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
 - [x] CI bug fixed: tests no longer depend on a pre-existing `test/.tmp`.
 - [x] [AGENT] Firefox and WebKit projects in `playwright.config.ts` (quality spec: headers, basic a11y, no horizontal overflow, legal footer) and CI now installs `chromium firefox webkit`. **Run locally on 2026-11-03: 30/30 green** (16 Firefox + 14 WebKit). The full journey stays Chromium-only so CI doesn't triple in time. Note: `playwright install` on this box needed a retry without `--with-deps` (the apt phase stalled); the browsers are cached in `~/.cache/ms-playwright`.
 - [x] [AGENT] Coverage report with a floor: `@vitest/coverage-v8` + `pnpm test:coverage` (now the CI step). Measured 2026-11-02 on the core modules — `billing`, `auth`, `jobs`, `mail`, `account`, `invoicing`, `rate-limit`, `client-ip`, `mercadopago` and `backup-crypto` — **90.9 % statements / 84.0 % branches / 91.9 % functions / 94.0 % lines** (re-measured 2026-11-03), with thresholds 80/80/80/70 that fail the build if they drop. The weakest file was `mercadopago.ts` (56 % statements); `test/mercadopago.test.ts` took it to 96 % statements and 100 % functions/lines, so D-1 in `docs/DEFECTS.md` is closed.

@@ -58,6 +58,9 @@ export default defineConfig({
         MAIL_API_KEY: "e2e-mail-key",
         MAIL_API_BASE: `http://localhost:${MOCK_PORT}`,
         CRON_SECRET: "e2e-cron-secret-0123456789",
+        // La CSP se emite bloqueante en las pruebas: si algo dependiera de un origen
+        // externo o de un inline que la política corta, aquí se rompe primero.
+        CSP_ENFORCE: "1",
         ANTHROPIC_API_KEY: "",
         OPENAI_API_KEY: "",
       },

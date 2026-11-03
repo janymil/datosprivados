@@ -31,6 +31,10 @@ jobs:
       - run: pnpm build
         env:
           NEXT_PUBLIC_APP_URL: https://ci.example.com
+          # Las cabeceras de `headers()` se hornean en el build: la compilación que
+          # consume el job de E2E tiene que salir con la CSP bloqueante para que la
+          # suite pruebe de verdad ese modo.
+          CSP_ENFORCE: "1"
       - name: Guardar la compilación para E2E
         uses: actions/upload-artifact@v4
         with:

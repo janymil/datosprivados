@@ -13,7 +13,7 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "test:e2e": "next build && playwright test",
+    "test:e2e": "CSP_ENFORCE=1 next build && playwright test",
     "audit:prod": "pnpm audit --prod",
     "scan:secrets": "node scripts/scan-secrets.mjs",
     "ops:weekly": "node scripts/weekly-report.mjs",
