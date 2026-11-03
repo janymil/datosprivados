@@ -3,6 +3,7 @@
 # prueba de humo y reversión automática a la compilación anterior si algo falla.
 #
 # Uso: scripts/deploy.sh            (variables: PM2_APP, PORT, SMOKE_PATHS, BACKUP_DIR)
+#      scripts/deploy.sh --check    (solo comprueba requisitos: no cambia nada)
 #
 # La compilación se hace en .deploy/build (copia del código, node_modules enlazado), así el proceso
 # en marcha sigue sirviendo .next hasta el cambio. El corte dura lo que tarda el intercambio de carpetas
@@ -15,8 +16,74 @@ PORT="${PORT:-3000}"
 SMOKE_PATHS="${SMOKE_PATHS:-/ /demo}"
 BACKUP_DIR="${BACKUP_DIR:-$APP_DIR/backups}"
 BUILD_DIR="$APP_DIR/.deploy/build"
+MIN_FREE_MB=2048
 
 log() { printf '[deploy %s] %s\n' "$(date '+%H:%M:%S')" "$*"; }
+
+CHECK_ONLY=false
+for arg in "$@"; do
+  case "$arg" in
+    --check) CHECK_ONLY=true ;;
+    *)
+      printf 'Argumento desconocido: %s\n\nUso: %s [--check]\n' "$arg" "${BASH_SOURCE[0]}" >&2
+      exit 2
+      ;;
+  esac
+done
+
+# Requisitos que, si faltan, hacen fracasar el despliegue a media noche. Se comprueban
+# antes de tocar nada: instalar dependencias, respaldar, compilar e intercambiar .next
+# deja el sitio a medio actualizar si el fallo aparece en el paso 3.
+preflight() {
+  local missing=0 free_kb free_mb
+  for tool in node pnpm rsync curl pm2; do
+    if command -v "$tool" >/dev/null 2>&1; then
+      log "ok     $tool"
+    else
+      log "FALTA  $tool (no está en PATH)"
+      missing=1
+    fi
+  done
+  if [[ -f "$APP_DIR/package.json" ]]; then
+    log "ok     package.json en $APP_DIR"
+  else
+    log "FALTA  package.json en $APP_DIR"
+    missing=1
+  fi
+  if mkdir -p "$BACKUP_DIR" 2>/dev/null && [[ -w "$BACKUP_DIR" ]]; then
+    log "ok     respaldos escribibles en $BACKUP_DIR"
+  else
+    log "FALTA  permiso de escritura en $BACKUP_DIR"
+    missing=1
+  fi
+  free_kb="$(df -Pk "$APP_DIR" | awk 'NR==2 {print $4}')"
+  free_mb=$(( ${free_kb:-0} / 1024 ))
+  if [[ "$free_mb" -ge "$MIN_FREE_MB" ]]; then
+    log "ok     espacio libre: ${free_mb} MB"
+  else
+    log "POCO   espacio libre: ${free_mb} MB (se piden ${MIN_FREE_MB} MB para la copia y el build)"
+    missing=1
+  fi
+  if pm2 describe "$PM2_APP" >/dev/null 2>&1; then
+    log "ok     la app $PM2_APP existe en pm2"
+  else
+    log "FALTA  la app $PM2_APP en pm2 (pm2 start ecosystem...) o PM2_APP equivocado"
+    missing=1
+  fi
+  return "$missing"
+}
+
+if $CHECK_ONLY; then
+  log "modo --check: solo se comprueban requisitos, no se cambia nada"
+  if preflight; then
+    log "todo listo para desplegar"
+    exit 0
+  fi
+  log "faltan requisitos: NO se despliega"
+  exit 1
+fi
+
+preflight || { log "faltan requisitos: NO se despliega"; exit 1; }
 
 smoke_test() {
   for path in $SMOKE_PATHS; do

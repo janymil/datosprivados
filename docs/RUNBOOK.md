@@ -183,6 +183,22 @@ ni datos personales (los correos se sustituyen por `[correo]`). PM2 los escribe 
 `/root/.pm2/logs/`; copia `deploy/logrotate-datosprivados.conf` a `/etc/logrotate.d/`
 para rotarlos (semanal, 8 copias, comprimido).
 
+### Despliegue: comprobar antes de desplegar
+
+`scripts/deploy.sh` instala, respalda, compila en una copia, intercambia `.next`, reinicia
+PM2 y hace prueba de humo con reversión automática. Como nunca se ha ejecutado en un
+servidor real, antes de cada despliegue conviene pasar el modo de comprobación:
+
+```bash
+bash scripts/deploy.sh --check   # no cambia nada; sale 0 si todo está en su sitio
+```
+
+Comprueba que estén `node`, `pnpm`, `rsync`, `curl` y `pm2`, que exista el
+`package.json` en el directorio esperado, que el directorio de respaldos sea escribible,
+que haya al menos 2 GB libres y que la app `$PM2_APP` exista en PM2. Sale 1 enumerando
+lo que falta, y un despliegue real **se detiene antes de tocar nada** si esa lista no
+está completa. Cubierto por `test/deploy-script.test.ts`.
+
 ### Rendimiento bajo carga (antes de cada release)
 
 `pnpm ops:loadtest` (`scripts/loadtest.mjs`, sin dependencias) habla con un servidor ya
