@@ -126,6 +126,18 @@ export function operationalAlerts(now = new Date(), env: Record<string, string |
   const stuck = stuckOutboxCount(60, now);
   if (stuck > 0) alerts.push({ code: "outbox_backlog", message: `${stuck} correos sin salir hace más de una hora.` });
 
+  // Correo muerto: el proveedor lo rechazó definitivamente (rebote duro, dirección
+  // inválida). Se cuentan todos, sin importar la edad, porque no se reintentan solos.
+  const dead = (
+    db.prepare("SELECT COUNT(*) AS n FROM email_outbox WHERE status = 'dead'").get() as { n: number }
+  ).n;
+  if (dead > 0) {
+    alerts.push({
+      code: "outbox_dead",
+      message: `${dead} correo(s) quedaron en la lista de descartados: revisa las direcciones y la bandeja en /app/ajustes.`,
+    });
+  }
+
   const backupDir = env.BACKUP_DIR?.trim();
   if (backupDir) {
     const age = backupAgeHours(backupDir, now);

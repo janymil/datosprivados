@@ -2,10 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DEMO_EMAIL, requireSession } from "@/lib/auth";
 import { isCompanyActive } from "@/lib/billing";
-import { getStats, listBanks, listDocuments, listIncidents, listRequests, listProviders, listEvidence } from "@/lib/data";
+import { getStats, listBanks, listDocuments, listIncidents, listRequests, listProviders, listEvidence, overdueIncidents } from "@/lib/data";
 import { computeCompliance } from "@/lib/compliance";
 import { logoutAction } from "@/app/actions/auth";
 import { AppNav } from "@/components/app-nav";
+import { OverdueIncidentsBanner } from "@/components/overdue-incidents-banner";
 import { PageHelpLink } from "@/components/page-help-link";
 import { AiChatAssistant } from "@/components/ai-chat-assistant";
 import { aiMode } from "@/lib/ai";
@@ -21,6 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!isCompanyActive(company)) redirect("/pago");
   const isDemo = user.email === DEMO_EMAIL;
   const stats = getStats(company.id);
+  const overdue = overdueIncidents(company.id).map((incident) => incident.id);
   const compliance = computeCompliance({
     company,
     banks: listBanks(company.id),
@@ -130,6 +132,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </div>
             )}
             <PageHelpLink />
+            <OverdueIncidentsBanner incidentIds={overdue} />
             {children}
           </div>
         </main>

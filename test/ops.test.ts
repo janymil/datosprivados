@@ -2,11 +2,15 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
 import { getDb, newId } from "@/lib/db";
 import { backupAgeHours, dbCheck, operationalAlerts, readiness } from "@/lib/ops";
+import { overdueIncidents } from "@/lib/data";
+import { OverdueIncidentsBanner } from "@/components/overdue-incidents-banner";
 import { logEvent, scrubText } from "@/lib/log";
 import { GET as healthGet } from "@/app/api/health/route";
 import { GET as readyGet } from "@/app/api/ready/route";
+import { makeActiveCompany, makeIncident } from "./helpers/db";
 
 const NOW = new Date("2026-11-04T17:00:00Z");
 
@@ -40,6 +44,29 @@ describe("salud", () => {
   });
 });
 
+describe("incidentes pasados de plazo", () => {
+  it("lista solo los que vencieron sin notificación registrada", () => {
+    const { companyId } = makeActiveCompany();
+    const past = new Date(NOW.getTime() - 2 * 3_600_000).toISOString();
+    const future = new Date(NOW.getTime() + 20 * 3_600_000).toISOString();
+
+    const overdueId = makeIncident(companyId, { due_at: past });
+    makeIncident(companyId, { due_at: past, notified_at: past }); // ya notificado
+    makeIncident(companyId, { due_at: past, status: "cerrado" }); // cerrado
+    makeIncident(companyId, { due_at: future }); // aún en plazo
+
+    expect(overdueIncidents(companyId, NOW).map((incident) => incident.id)).toEqual([overdueId]);
+  });
+
+  it("el aviso del panel aparece solo con incidentes vencidos", () => {
+    expect(renderToStaticMarkup(OverdueIncidentsBanner({ incidentIds: [] }))).toBe("");
+    const html = renderToStaticMarkup(OverdueIncidentsBanner({ incidentIds: ["a", "b"] }));
+    expect(html).toContain('role="alert"');
+    expect(html).toContain("2 incidentes pasados el plazo de 48 horas");
+    expect(html).toContain("/app/incidentes");
+  });
+});
+
 describe("alertas operativas", () => {
   it("avisa de webhooks fallidos, respaldo viejo y ausencia de respaldos", () => {
     const db = getDb();
@@ -70,6 +97,7 @@ describe("alertas operativas", () => {
     db.prepare(
       "INSERT INTO payments (id, company_id, plan, term, amount, status, provider, payment_id, created_at) VALUES (?, ?, 'basico', 'monthly', 19, 'refunded', 'mercadopago', ?, ?)"
     ).run(paymentId, companyId, `mp-${paymentId.slice(0, 8)}`, NOW.toISOString());
+
     const invoiceId = newId();
     db.prepare(
       `INSERT INTO invoices (id, company_id, payment_id, status, doc_type, buyer_ruc, buyer_name, description, base_amount, igv_amount, total, currency, series, number, created_at)
@@ -86,6 +114,16 @@ describe("alertas operativas", () => {
     db.prepare("DELETE FROM invoices WHERE id = ?").run(invoiceId);
     db.prepare("DELETE FROM payments WHERE id = ?").run(paymentId);
     db.prepare("DELETE FROM companies WHERE id = ?").run(companyId);
+  });
+
+  it("avisa de los correos descartados, sin importar su antigüedad", () => {
+    const db = getDb();
+    db.prepare(
+      "INSERT INTO email_outbox (id, company_id, to_email, template, payload, status, next_attempt_at, created_at) VALUES (?, NULL, 'rebotado@example.com', 'welcome', '{}', 'dead', ?, ?)"
+    ).run(newId(), NOW.toISOString(), NOW.toISOString());
+    const alert = operationalAlerts(NOW, {}).find((item) => item.code === "outbox_dead");
+    expect(alert?.message).toContain("descartados");
+    db.prepare("DELETE FROM email_outbox WHERE status = 'dead'").run();
   });
 });
 

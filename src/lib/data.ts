@@ -80,6 +80,20 @@ export function getIncident(companyId: string, id: string): Incident | undefined
   );
 }
 
+/**
+ * Incidentes cuyo plazo de 48 h venció sin que se registre la notificación a la
+ * autoridad (área 9). Alimenta el aviso dentro del panel, además del correo.
+ */
+export function overdueIncidents(companyId: string, now = new Date()): Incident[] {
+  return all<Incident>(
+    `SELECT * FROM incidents
+     WHERE company_id = ? AND notified_at IS NULL AND status != 'cerrado' AND due_at < ?
+     ORDER BY due_at ASC`,
+    companyId,
+    now.toISOString()
+  );
+}
+
 export function listDocuments(companyId: string): DocumentRow[] {
   return all<DocumentRow>(
     "SELECT * FROM documents WHERE company_id = ? ORDER BY kind ASC",
