@@ -126,7 +126,7 @@ Files: `src/lib/billing.ts`, `mercadopago.ts`, `subscriptions.ts`, `plans.ts`, `
 - [ ] [OWNER] Production credentials, merchant account under the operating entity (P0-ENTITY).
 - [ ] [OWNER] Confirm pricing/limits and trial policy (P0-PRICING).
 - [ ] [OWNER] Refund/cancellation policy and Código del Consumidor auto-renewal disclosure (with area 14).
-- [ ] [AGENT] **Security:** `docs/MERCADOPAGO-SANDBOX.md` contains sandbox tokens and test passwords and is untracked. Redact or rotate before it is ever committed (remote `origin` is on GitHub).
+- [x] [AGENT] **Security:** `docs/MERCADOPAGO-SANDBOX.md` — **corrected on 2026-11-03: the file is tracked** (it came in with `07babf1`; the earlier note said “untracked”). The contents were checked rather than assumed: every credential is a placeholder truncated with `…` (`TEST-5481905782596403-…`, `<APP_USR-…>`, `<secreto>`), the only long literals are the sandbox app *name* and one `preapproval` id (`1ef40d72…`, an object id, not a credential), and `node scripts/scan-secrets.mjs` reports **sin hallazgos**. Nothing needs rotating. Rule going forward: values in that file stay truncated; the real ones live only in `.env`.
 
 ### 5. Invoicing (SUNAT)
 Files: `src/lib/invoicing.ts`, `test/invoicing.test.ts`, `src/app/operador/page.tsx` (+`feriados`), `src/app/app/ajustes/page.tsx`, `src/lib/billing.ts`, `test/ops.test.ts`.
@@ -194,7 +194,7 @@ Files: `src/app/app/bancos/*`, `src/lib/bank-sheet.ts`, `src/lib/bank-presets.ts
 - [ ] [OWNER] Register the platform's own banks in SIPDP: users, billing, technical logs, ARCO requesters held as processor (P0-OWN-BANKS); appoint the platform's data contact.
 - [ ] [VERIFY] Bank sheet fields against the current SIPDP form with the lawyer.
 - [x] [AGENT] Export of the bank sheet to a printable/PDF format — **already existed**: `/app/bancos/[id]/ficha` renders the sheet inside `article.print-page` with a `PrintButton` labelled “Imprimir / Guardar PDF” (`src/app/app/bancos/[id]/ficha/page.tsx`), and `@media print` hides the toolbar (`.no-print`). Pinned by `test/print-styles.test.ts`, so a refactor can't silently drop it.
-- [ ] [AGENT] Cross-border transfer fields (`transfers.ts`) reviewed against the current rules.
+- [~] [AGENT] Cross-border transfer fields — **the checklist pointed at the wrong file** (`transfers.ts` is bank-transfer *payments*). The real fields were checked: `data_banks.transfers` (`si`/`no`) drives section **VI. Flujo transfronterizo** of the bank sheet (`bank-sheet.ts`) and the per-bank line of the policy (`documents.ts` §6); `providers.country` + `transfer_status` (`no_aplica`/`pendiente`/`comunicado`) + `dpa_status` drive the processor list and the processing agreement, and the policy text cites art. 18/20 of DS 016-2024-JUS and the RNPDP notification (art. 21.2). What is left is the lawyer's confirmation that the wording matches the current rules (P0-LEGAL), not code.
 
 ### 11. AI assistant
 Files: `src/lib/ai.ts` (1.2k lines), `llm.ts`, `anonymizer.ts`, `ai-guard.ts`, `ai-policy.ts`, `src/app/actions/ai.ts`, `src/app/app/asistente`, `test/ai-controls.test.ts`, `test/ai-policy.test.ts`, `test/ai-evals/`.
