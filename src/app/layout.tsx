@@ -13,7 +13,8 @@ const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-fraunces",
   display: "swap",
-  axes: ["SOFT", "WONK", "opsz"],
+  // Sin `axes`: el sitio nunca usa font-variation-settings ni optical sizing, y
+  // pedir SOFT/WONK/opsz solo engorda el archivo. Decisión en docs/DECISIONS.md.
 });
 
 const plex = IBM_Plex_Mono({

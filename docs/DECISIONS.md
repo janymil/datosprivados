@@ -104,7 +104,39 @@ el origen con `geo $realip_remote_addr` (el par **antes** de la reescritura) y
 `if ($from_cloudflare = 0) { return 403; }`. Sin esa última línea, quien llegue directo
 a la IP del servidor puede inventar `CF-Connecting-IP` y estrenar cupo en cada intento.
 
-## Formulario ARCO público: prueba de trabajo en vez de captcha
+## Tipografías servidas: solo los ejes que se usan
+
+`layout.tsx` carga Archivo, Fraunces e IBM Plex Mono con `next/font/google`. Fraunces se
+pedía con `axes: ["SOFT", "WONK", "opsz"]`, pero **el sitio nunca usa
+`font-variation-settings` ni `font-optical-sizing`**: ningún CSS ni componente toca esos
+ejes (`grep -r "font-variation-settings" src/` no devuelve nada). Pedirlos solo engorda
+el archivo que descarga cada visitante.
+
+Medido el 2026-11-03 sobre `.next/static/media/*.woff2` con `du -cb`:
+
+| Configuración | Bytes servidos |
+|---|---|
+| Con `axes: ["SOFT", "WONK", "opsz"]` | 406 928 |
+| Sin `axes` (actual) | **228 080** |
+
+−179 KB (−44 %) sin ningún cambio visual, porque los valores por defecto de esos ejes
+son los que ya se veían. Si algún día se quiere jugar con la tipografía (por ejemplo,
+`font-variation-settings: "SOFT" 50`), hay que volver a declarar el eje: sin él el
+navegador lo ignora en silencio.
+
+## Analítica: hoy no hay ninguna
+
+No se carga ninguna herramienta de analítica ni de terceros en el cliente
+(`grep -riE "gtag|googletagmanager|plausible|umami|posthog|matomo" src/` solo encuentra
+la entrada de catálogo de proveedores de IA, que es texto informativo). Por eso la
+política de cookies no menciona cookies de medición y no hay banner.
+
+Si se añade analítica, **antes** hay que: (1) elegirla sin cookies o con consentimiento
+previo, (2) actualizar `/cookies` y la política de privacidad en el mismo commit,
+(3) revisar que no envíe datos personales a un tercero sin contrato (P0-ENTITY/LEGAL).
+Mientras no exista, esta página es cierta: solo cookies técnicas.
+
+
 
 | Pregunta | Decisión | Motivo |
 |---|---|---|

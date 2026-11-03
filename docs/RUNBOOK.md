@@ -21,6 +21,37 @@ Pendiente en producción: aplicar esa plantilla (bloquea IPs fuera de Cloudflare
 Si se aplica el cierre del origen, comprobar antes que ningún monitor ni webhook entra
 por la IP directa.
 
+## Caché de los vídeos en Cloudflare
+
+Los vídeos de la portada pesan ~23 MB y **no cambian nunca**: `next.config.ts` ya los
+sirve con `Cache-Control: public, max-age=31536000, immutable` y `Accept-Ranges: bytes`.
+Falta que el borde de Cloudflare los cachee, porque si no cada visitante los pide al
+origen (una sola instancia PM2).
+
+Crear una **Cache Rule** (Caching → Cache Rules) con estos valores, en este orden:
+
+| Campo | Valor |
+|---|---|
+| Si | `starts_with(http.request.uri.path, "/video/")` |
+| Caché elegible | Sí |
+| Edge TTL | *Ignore cache-control* → 1 año |
+| Browser TTL | *Respect origin* (ya manda `immutable`) |
+| Cache Key | por defecto (la URL) |
+
+Después del cambio, comprobar con dos peticiones seguidas:
+
+```bash
+curl -sI https://<dominio>/video/<archivo>.mp4 | grep -i 'cf-cache-status\|cache-control'
+# primera vez: cf-cache-status: MISS (o REVALIDATED)
+# segunda vez: cf-cache-status: HIT
+```
+
+Los `.mp4` deben ser servidos con `Content-Type: video/mp4`; si el borde devuelve
+`application/octet-stream` es que la regla está cacheando la ruta de la app en lugar del
+archivo estático. Nota: los `.mp4` no se sirven con range requests desde Cloudflare
+cuando están cacheados de borde a menos que el origen los soporte; aquí el origen los
+soporta (`Accept-Ranges`), así que la reproducción con salto sigue funcionando.
+
 ## Respaldos
 
 ```bash
