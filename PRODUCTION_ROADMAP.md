@@ -151,6 +151,25 @@ Phase 6  Production cutover & launch
 Phase 7  Post-launch operations
 ```
 
+### Estado de las fases al 2026-11-03
+
+Esta es la foto del día; las notas «Status» dentro de cada fase son el registro de
+cuando se escribieron y no se reescriben.
+
+| Fase | Estado | Evidencia / qué falta |
+|---|---|---|
+| 0 · Decisiones y base legal | **Abierta** | Depende del propietario: entidad operadora, abogado, dominio, banco propio en SIPDP. Los borradores que se pudieron preparar están en `docs/DECISIONS.md`, `kaptia-compliance/` y `docs/NOTIFICACION-ANPD.md`. |
+| 1 · Seguridad, datos e infraestructura | **Hecha y commiteada** | `pnpm test` 583/583, typecheck y lint limpios, `next build` correcto; migraciones, índices, tenencia y cabeceras cubiertos por pruebas. Sin desplegar a producción (no hay staging real). |
+| 2 · Arnés de pruebas y CI | **Hecha y commiteada** | `.github/workflows/ci.yml` con audit, typecheck/lint/test, build y E2E (chromium, firefox, webkit, axe: 99/99 en local). Cobertura con suelo 80/80/80/70. |
+| 3 · Producto completo | **Hecha y commiteada** | Documentos con versiones, avisos ARCO/incidentes, controles de IA, ayuda con búsqueda, exportación JSON + ZIP. Lo que falta es contenido revisado por el abogado, no código. |
+| 4 · Cobro y facturación | **Parcial** | Circuito de cobro con webhooks firmados, idempotencia y conciliación probados con servidor simulado; **falta el sandbox real con eventos reales** y el PSE/OSE de SUNAT (bloqueado por Fase 0). |
+| 5 · Staging, carga y aceptación | **Abierta** | No hay staging con dominio real ni monitor externo; el UAT con MYPE no se ha hecho. Hay prueba de carga (`pnpm ops:loadtest`) y simulacro de restauración en local. |
+| 6 · Cutover y lanzamiento | **Abierta** | Depende de 0, 4 y 5. `docs/CUTOVER.md` está escrito pero nunca ejecutado. |
+| 7 · Operación posterior | **Abierta** | Depende de 6. |
+
+El detalle fino, área por área y casilla por casilla, está en
+`docs/READINESS-BY-AREA.md` (esa es la fuente de verdad, no esta tabla).
+
 ---
 
 ### PHASE 0 — Decisions and legal foundation (owner: the human; agent prepares drafts)
