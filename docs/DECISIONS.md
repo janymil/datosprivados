@@ -126,6 +126,14 @@ son los que ya se veían. Si algún día se quiere jugar con la tipografía (por
 `font-variation-settings: "SOFT" 50`), hay que volver a declarar el eje: sin él el
 navegador lo ignora en silencio.
 
+## Acceso SSH: con contraseña, por decisión del propietario
+
+| Pregunta | Decisión | Motivo |
+|---|---|---|
+| ¿Se entra al servidor con contraseña? | **Sí.** `root` y `jan` pueden entrar con contraseña y con clave | Es como el propietario entra al servidor. El 2026-11-03 se endureció a solo claves y **se revirtió el mismo día**: lo dejaba fuera. Cómo se administra la máquina es decisión suya, no del agente |
+| ¿Qué hay que saber? | Que la configuración **parece** cerrada: `sshd_config` y `60-cloudimg-settings.conf` dicen `PasswordAuthentication no`, pero `sshd_config.d/50-cloud-init.conf` dice `yes` y se incluye en la línea 12; sshd se queda con el primer valor, así que el efectivo es `yes`. Solo se ve con `sshd -T` | Para que nadie edite el archivo equivocado ni crea que está cerrado porque el archivo lo dice |
+| ¿Y la fuerza bruta? | **Sin mitigar**: `fail2ban` no está instalado y `auth.log` acumula decenas de miles de «Failed password». Instalarlo está recomendado y **no cambia la forma de entrar** (banea IPs, no usuarios) | Detrás del login está la base con datos personales: ver `docs/INCIDENTE-INTERNO-2026-11-03.md`. La recomendación queda escrita; aplicarla es del propietario |
+
 ## Analítica: hoy no hay ninguna
 
 No se carga ninguna herramienta de analítica ni de terceros en el cliente

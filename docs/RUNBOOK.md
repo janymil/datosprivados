@@ -23,34 +23,58 @@ por la IP directa.
 
 ## Acceso al servidor (SSH)
 
-**Solo con clave.** Desde el 2026-11-03 `/etc/ssh/sshd_config.d/00-datosprivados.conf`
-manda (ordena primero, y sshd se queda con el **primer** valor que encuentra):
+**Hoy el acceso por contraseña está permitido y así se queda: es como el propietario entra
+al servidor** (decisión del 2026-11-03, en `docs/DECISIONS.md`). Las claves también
+funcionan (`root` y `jan` tienen la suya).
 
-```
-PasswordAuthentication no
-KbdInteractiveAuthentication no
-PermitRootLogin prohibit-password
-```
-
-Antes parecía cerrado —`sshd_config` y `60-cloudimg-settings.conf` decían `no`— pero
-`50-cloud-init.conf` dice `yes` y, al ir incluido antes, ganaba: **el acceso por
-contraseña estaba abierto** en un servidor expuesto a Internet (había 19 885 intentos
-fallidos registrados). Comprobación:
+Lo que hay que saber, y que costó encontrar: **la configuración miente**. `sshd_config` y
+`60-cloudimg-settings.conf` dicen `PasswordAuthentication no`, pero
+`/etc/ssh/sshd_config.d/50-cloud-init.conf` dice `yes` y se incluye en la línea 12; sshd se
+queda con el **primer** valor que encuentra, así que el efectivo es `yes`. Por eso no basta
+leer los archivos:
 
 ```bash
 sshd -T | grep -E '^passwordauthentication|^permitrootlogin|^pubkeyauthentication'
-# passwordauthentication no · permitrootlogin without-password · pubkeyauthentication yes
+# passwordauthentication yes · permitrootlogin yes · pubkeyauthentication yes
 ```
 
-- `root` y `jan` entran con su clave (`~/.ssh/authorized_keys`). `ubuntu` y `postgres`
-  tienen la contraseña bloqueada.
-- **Si alguien entraba como `ubuntu` o `jan` con contraseña, ya no puede**: es el punto
-  del cambio. Para revertir (no recomendado): borrar el archivo `00-…` y
-  `systemctl reload ssh`.
-- `fail2ban` **no está instalado** (`systemctl is-enabled fail2ban` → `not-found`).
-  Recomendado instalarlo y dejar el jail `sshd` activo; hoy no hace falta para el
-  ataque de diccionario porque ya no hay contraseñas que adivinar, pero reduce el ruido
-  y protege cualquier servicio nuevo.
+Si algún día se quiere cerrar la contraseña, el archivo que **sí** manda es uno que ordene
+antes (`/etc/ssh/sshd_config.d/00-*.conf`), no editar `sshd_config`. Se probó y se revirtió
+el 2026-11-03: `root` se quedaba sin poder entrar con contraseña.
+
+**Mitigación recomendada mientras haya contraseña** (no cambia cómo entras, no toca el
+login):
+
+```bash
+apt-get install -y fail2ban          # jail sshd por defecto: banea por IP tras varios fallos
+systemctl enable --now fail2ban
+fail2ban-client status sshd
+```
+
+Hoy `fail2ban` **no está instalado** y `/var/log/auth.log` acumula decenas de miles de
+«Failed password». Instalarlo no impide entrar con contraseña; solo corta a quien la
+adivina. Y una contraseña larga y única para `root`/`jan` sigue siendo la primera línea.
+
+## Acceso al servidor: por contraseña, a sabiendas
+
+**Decidido por el propietario el 2026-11-03.** El servidor admite acceso SSH con
+contraseña (`root` y `jan`) además de con clave, porque es así como el propietario entra.
+Se probó el endurecimiento a solo claves y **se revirtió el mismo día**: dejaba al
+propietario sin su forma de entrar.
+
+Lo que la decisión implica, escrito para que nadie lo redescubra en seis meses:
+
+- La configuración **parece** cerrada y no lo está: `sshd_config` y
+  `60-cloudimg-settings.conf` dicen `PasswordAuthentication no`, pero
+  `/etc/ssh/sshd_config.d/50-cloud-init.conf` dice `yes` y se incluye antes; sshd se queda
+  con el primer valor. Lo efectivo se comprueba solo con `sshd -T`.
+- Contra la fuerza bruta no hay nada instalado (`fail2ban` ausente) y el registro acumula
+  decenas de miles de intentos fallidos. Instalarlo **no cambia la forma de entrar**: solo
+  banea IPs que fallan. Es la mitigación recomendada y no se ha instalado por decisión del
+  propietario.
+- Si la contraseña es larga y única, el riesgo es bajo; si se comparte o es corta, este es
+  el punto más débil de todo el despliegue, porque detrás está la base con datos
+  personales (ver `docs/INCIDENTE-INTERNO-2026-11-03.md`).
 
 ## Que un entorno de pruebas no entre en Google
 

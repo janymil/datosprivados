@@ -71,7 +71,7 @@ expuesto era de demostración, no de clientes. No es prueba de inexistencia.
 | `data/` a `700`; base, `-wal` y `-shm` a `600` | `sudo -u nobody test -r` → denegado; `/api/health` → 200 |
 | 130 respaldos a `600` | `ls -l` → todos `-rw-------` |
 | `backup-db.mjs` hace `chmod 600` del respaldo y su `.sha256` al escribirlos | prueba en `test/backup-crypto.test.ts` |
-| `/etc/ssh/sshd_config.d/00-datosprivados.conf`: `PasswordAuthentication no`, `KbdInteractiveAuthentication no`, `PermitRootLogin prohibit-password` | `sshd -t` OK y `sshd -T` → `passwordauthentication no`, claves intactas |
+| `/etc/ssh/sshd_config.d/00-datosprivados.conf`: `PasswordAuthentication no`, `KbdInteractiveAuthentication no`, `PermitRootLogin prohibit-password` | **Probado y revertido el mismo día por decisión del propietario**: es como entra al servidor. Estado actual: `sshd -T` → `passwordauthentication yes`, `permitrootlogin yes`, claves intactas. Riesgo aceptado y documentado en `docs/DECISIONS.md` |
 | Registro de ambos fallos con severidad S1/S3 | `docs/DEFECTS.md` |
 
 Copias previas de lo tocado: `/root/sshd_config.bak-*` y `/root/datosprivados-vhost.bak-*`.
@@ -83,7 +83,8 @@ Copias previas de lo tocado: `/root/sshd_config.bak-*` y `/root/datosprivados-vh
    jurídica y conviene dejarla por escrito. Material: este documento.
 2. **¿Se conservan las tres solicitudes ARCO de prueba?** Si alguna es de una persona real,
    hay que tratarla como dato personal y valorar su borrado.
-3. **`fail2ban`**: instalarlo y dejar el jail `sshd` activo (hoy no está instalado).
+3. **`fail2ban`**: instalarlo y dejar el jail `sshd` activo (hoy no está instalado). **Es la única mitigación compatible con la decisión de mantener la contraseña**: no cambia cómo entra nadie, solo corta a quien intenta adivinar. No se ha instalado por decisión del propietario.
 4. **Cuenta `jan`**: confirmar si sigue siendo necesaria; si no, darla de baja.
+5. **Contraseña de `root`/`jan`**: larga y única, y no compartida. Con la contraseña abierta y sin `fail2ban`, es la línea que separa Internet de la base de datos.
 5. **Producción**: arrancar con estos valores desde el primer día. Están escritos en
    `docs/RUNBOOK.md` («Acceso al servidor (SSH)» y «Respaldos»).
