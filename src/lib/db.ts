@@ -1317,6 +1317,39 @@ export function seedHolidays(db: DatabaseSync) {
   }
 }
 
+/**
+ * Reafirma la cuenta de demostración (tarea `demo-reset`).
+ *
+ * La demo es pública (`/demo` entra sin contraseña), comparte la base con los
+ * clientes reales y no debe generar correos, cobros ni uso de IA. Si un fallo
+ * dejara residuos, esto los borra y devuelve el contenido de ejemplo a su sitio.
+ * No toca pagos: si apareciera uno, se informa para que lo revise una persona
+ * (borrarlo podría romper la contabilidad y los comprobantes).
+ */
+export function resetDemoCompany(): { found: boolean; outbox: number; aiUsage: number; payments: number; documents: number } {
+  const db = getDb();
+  const demo = db.prepare("SELECT id FROM companies WHERE id = 'casa-verde'").get() as { id: string } | undefined;
+  if (!demo) return { found: false, outbox: 0, aiUsage: 0, payments: 0, documents: 0 };
+
+  db.prepare(
+    `UPDATE companies SET billing_status = 'demo', subscription_status = 'demo', plan = 'pro',
+       paid_until = NULL, mail_optout = 1, ai_consent_at = NULL, deleted_at = NULL,
+       pending_subscription_id = NULL, pending_plan = NULL, pending_term = NULL
+     WHERE id = 'casa-verde'`
+  ).run();
+
+  const outbox = Number(db.prepare("DELETE FROM email_outbox WHERE company_id = 'casa-verde'").run().changes);
+  const aiUsage = Number(db.prepare("DELETE FROM ai_usage WHERE company_id = 'casa-verde'").run().changes);
+  const payments = (db.prepare("SELECT COUNT(*) AS n FROM payments WHERE company_id = 'casa-verde'").get() as { n: number }).n;
+
+  const company = db.prepare("SELECT * FROM companies WHERE id = 'casa-verde'").get() as unknown as Company;
+  const banks = db.prepare("SELECT * FROM data_banks WHERE company_id = 'casa-verde'").all() as unknown as DataBank[];
+  ensureDemoDocuments(db, company, banks);
+  const documents = (db.prepare("SELECT COUNT(*) AS n FROM documents WHERE company_id = 'casa-verde'").get() as { n: number }).n;
+
+  return { found: true, outbox, aiUsage, payments, documents };
+}
+
 /** Feriados del año: de la tabla `holidays`; si el año no está cargado, calculados por regla. */
 function peruHolidays(year: number): Set<string> {
   const rows = getDb().prepare("SELECT date FROM holidays WHERE date LIKE ?").all(`${year}-%`) as { date: string }[];

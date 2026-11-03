@@ -20,6 +20,7 @@ vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 import { getDb } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { demoPreview } from "@/lib/demo";
+import { runJob } from "@/lib/jobs";
 import { generateDocumentAction, togglePublishAction } from "@/app/actions/documents";
 import { saveBankAction } from "@/app/actions/company";
 import { createArcoRequestAction, respondArcoAction } from "@/app/actions/arco";
@@ -73,6 +74,60 @@ describe("la cuenta demo es de solo lectura", () => {
     ).rejects.toThrow("REDIRECT:/solicitud/casa-verde?error=demo");
     expect(count("SELECT COUNT(*) n FROM arco_requests WHERE company_id = 'casa-verde'")).toBe(before);
   });
+
+describe("la demo no dispara nada fuera de sí misma", () => {
+  const demoCount = (table: string) => count(`SELECT COUNT(*) n FROM ${table} WHERE company_id = 'casa-verde'`);
+
+  it("ninguna acción deja correos ni uso de IA a nombre de la demo", async () => {
+    await loginAsDemo();
+    const before = { outbox: demoCount("email_outbox"), ai: demoCount("ai_usage"), pagos: demoCount("payments") };
+
+    await expect(saveBankAction(form({ name: "Nuevo banco" }))).rejects.toThrow("REDIRECT:");
+    await expect(generateDocumentAction(form({ kind: "politica" }))).rejects.toThrow("REDIRECT:");
+    await expect(startSubscriptionAction(form({ plan: "pro", term: "monthly" }))).rejects.toThrow("REDIRECT:");
+    await expect(runBankAiWizardAction("tengo una tienda")).resolves.toMatchObject({ ok: false });
+
+    expect({ outbox: demoCount("email_outbox"), ai: demoCount("ai_usage"), pagos: demoCount("payments") }).toEqual(before);
+  });
+
+  it("la tarea demo-reset reafirma la cuenta y borra cualquier residuo", async () => {
+    const db = getDb();
+    // Se simula un fallo: alguien dejó la demo «activa», con IA aceptada y con un
+    // correo y una llamada de IA encolados a su nombre.
+    db.prepare("UPDATE companies SET billing_status = 'active', ai_consent_at = ?, mail_optout = 0 WHERE id = 'casa-verde'").run("2026-11-01T10:00:00.000Z");
+    db.prepare(
+      "INSERT INTO email_outbox (id, company_id, to_email, template, payload, status, next_attempt_at, created_at) VALUES (?, 'casa-verde', 'x@y.pe', 'welcome', '{}', 'pending', ?, ?)"
+    ).run("residuo-1", "2026-11-01T10:00:00.000Z", "2026-11-01T10:00:00.000Z");
+    db.prepare(
+      "INSERT INTO ai_usage (id, company_id, feature, model, input_tokens, output_tokens, latency_ms, ok, created_at) VALUES ('residuo-2', 'casa-verde', 'chat', 'test', 10, 10, 5, 1, '2026-11-01T10:00:00.000Z')"
+    ).run();
+
+    const outcome = await runJob("demo-reset", new Date("2026-11-02T10:00:00Z"));
+    expect(outcome.status).toBe("ok");
+    expect(outcome.status === "ok" && outcome.detail).toMatchObject({ demo: "reafirmada", outbox_borrados: 1, ia_borrados: 1 });
+
+    const row = db.prepare("SELECT billing_status, subscription_status, ai_consent_at, mail_optout FROM companies WHERE id = 'casa-verde'").get() as {
+      billing_status: string;
+      subscription_status: string;
+      ai_consent_at: string | null;
+      mail_optout: number;
+    };
+    expect(row).toEqual({ billing_status: "demo", subscription_status: "demo", ai_consent_at: null, mail_optout: 1 });
+    expect(demoCount("email_outbox")).toBe(0);
+    expect(demoCount("ai_usage")).toBe(0);
+    // El contenido de ejemplo sigue ahí.
+    expect(demoCount("documents")).toBeGreaterThan(3);
+  });
+
+  it("demo-reset es idempotente: correrla otra vez no cambia nada", async () => {
+    const first = await runJob("demo-reset", new Date("2026-11-02T10:00:00Z"));
+    const second = await runJob("demo-reset", new Date("2026-11-02T10:05:00Z"));
+    expect(second.status).toBe("ok");
+    expect(second.status === "ok" && second.detail).toMatchObject({ outbox_borrados: 0, ia_borrados: 0, demo: "reafirmada" });
+    expect(first.status === "ok" && first.detail).toMatchObject({ demo: "reafirmada" });
+  });
+});
+
 });
 
 describe("demoPreview", () => {

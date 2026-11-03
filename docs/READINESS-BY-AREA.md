@@ -18,14 +18,14 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 527/527 passing, 39 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 530/530 passing, 39 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
 | CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
 | Hourly DB backup cron | **Installed and running** (`/etc/cron.d/datosprivados`, `/usr/local/bin/datosprivados-backup`; newest file in `/var/backups/datosprivados` was from 2026-11-02 19:00 Lima). `GO-NO-GO.md` row 5 and `RUNBOOK.md` were corrected on 2026-11-02. |
 | Rate limiting | Exists in SQLite (`src/lib/rate-limit.ts`) and is applied to login, signup, ARCO form, password reset, verification, password/email change, account deletion, export, demo, AI. |
 | Invoicing | Data model + manual issuance only (`src/lib/invoicing.ts` header says so). **No PSE/OSE API integration.** |
-| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook`, `ai-policy`, `form-pow` — 122 new tests, all green. |
+| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook`, `ai-policy`, `form-pow` — 125 new tests, all green. |
 | Not present | `proxy.ts`/middleware (so no CSP), real staging, Anthropic key, production domain, lawyer review. |
 
 ---
@@ -46,14 +46,14 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 10 | Data banks & SIPDP | `app/app/bancos/*`, `lib/bank-sheet.ts`, `lib/bank-presets.ts` | 90 % | 85 % | Platform's own banks unregistered (P0-OWN-BANKS) |
 | 11 | AI assistant | `lib/ai.ts`, `lib/llm.ts`, `lib/anonymizer.ts`, `lib/ai-guard.ts`, `lib/ai-policy.ts`, `actions/ai.ts` | 92 % | 40 % | No vendor/key/DPA decided (P0-AI-VENDOR) |
 | 12 | Help & knowledge base | `lib/help-content.ts`, `lib/glossary.ts`, `lib/help-tips.ts`, `lib/help-knowledge.ts`, `lib/help-review.ts`, `lib/legal-faq.ts` | 96 % | 70 % | Content not reviewed by lawyer/editor |
-| 13 | Landing, demo, SEO | `app/page.tsx`, `components/landing-interactive.tsx`, `lib/demo.ts`, `public/video/*` | 88 % | 65 % | Production domain not wired; demo account is public |
+| 13 | Landing, demo, SEO | `app/page.tsx`, `components/landing-interactive.tsx`, `lib/demo.ts`, `public/video/*` | 92 % | 65 % | Production domain not wired (P0-DOMAIN); landing claims await lawyer |
 | 14 | Platform legal pages | `lib/platform-legal.ts`, `/terminos`, `/privacidad`, `/cookies` | 70 % | 20 % | Drafts; need operating entity + lawyer (P0-ENTITY, P0-LEGAL) |
 | 15 | Security | `lib/security-checks.ts`, `next.config.ts` | 90 % | 68 % | CSP is report-only (enforcement awaits owner decision); no pen-test; no SSL Labs |
 | 16 | Cron jobs & operations | `lib/jobs.ts`, `lib/ops.ts`, `api/cron/[job]`, `api/health`, `api/ready` | 92 % | 70 % | No external monitor or error tracking (self-alerting job ready, needs activation) |
 | 17 | Backup & restore | `scripts/backup-db.mjs`, `restore-db.mjs`, `restore-drill.mjs`, `backup-crypto.mjs` | 88 % | 65 % | Backups live on the same box; no fresh-machine drill |
 | 18 | Deploy & infrastructure | `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-production.conf` | 78 % | 40 % | No real staging; `deploy.sh` never run |
 | 19 | Tests & CI | `test/`, `e2e/`, `.github/workflows/ci.yml` | 92 % | 80 % | No Firefox/Safari/iOS; no UAT |
-| 20 | Accessibility & UI | `components/`, `app/globals.css` | 80 % | 70 % | Only Chrome desktop + Android checked |
+| 20 | Accessibility & UI | `components/`, `app/globals.css` | 84 % | 70 % | Only Chrome desktop + Android checked |
 
 **Reading:** areas 1, 3, 10, 19 are strong. Areas 6, 7, 11, 14 have finished code but are blocked by non-code inputs. Areas 4, 5, 15, 17, 18 still need real engineering or ops work.
 
@@ -225,7 +225,7 @@ Files: `src/app/page.tsx`, `components/landing-interactive.tsx`, `src/lib/demo.t
 - [x] LCP mobile 4G about 1.8–2.1 s; videos `preload="none"`; page transfers about 244 KB.
 - [x] [AGENT] Hardcoded host removed from the generated artefacts: `documents.ts` `appUrl()` and `bank-sheet.ts` now go through `siteUrl()` (`lib/site.ts`, the single `NEXT_PUBLIC_APP_URL` reader); `layout.tsx` `metadataBase`, `robots.ts`, `sitemap.ts` and `ai.ts` already did. Test: `test/domain.test.ts` (“dominio configurado”) sets a staging host and asserts the generated policy and bank sheet contain it and never `datosprivados.pe`. Still literal on purpose: the support address (`hola@datosprivados.pe`), the demo/seed e-mails and the marketing copy in `landing-interactive.tsx`/`explainer-video.tsx` — they are product identity, not routing.
 - [ ] [OWNER] Production domain live (P0-DOMAIN); verify canonical, OG tags and sitemap on it.
-- [ ] [AGENT] Demo hardening: the demo company is shared and its credentials are public. Confirm it is reset periodically, is isolated from real customers' data and cannot trigger email, billing or paid AI.
+- [x] [AGENT] Demo hardening: the demo company is shared and its credentials are public. **Verified, not assumed** — `test/demo.test.ts` proves it is read-only (bank/document/publish/ARCO actions all bounce to `/app?demo=lectura`), cannot buy or cancel a plan, cannot use AI (the action returns the demo notice), its public ARCO form saves nothing, and **no e-mail, payment or `ai_usage` row is created** while exercising all of those. On top of that, the new **`demo-reset`** job (Sundays 03:30 Lima) re-asserts `billing_status=demo` / no AI consent / `mail_optout=1`, deletes stray outbox or AI rows for `casa-verde` and re-seeds its sample documents; a demo payment is reported, never deleted. Isolation from real customers is by read-only behaviour on a shared DB (recorded in `DECISIONS.md` as a known deviation).
 - [ ] [OWNER] Verify every claim on the landing page with the lawyer (P0-LEGAL), including `scripts/verify-video-claims.mjs` outputs.
 - [ ] [AGENT] Cloudflare cache rules for `/video/*` (the app already sends `immutable`).
 - [ ] [AGENT] Decide on the Fraunces font variable axes (118 KB).
@@ -321,7 +321,7 @@ Files: `src/components/*` (34 files), `src/components/ui.tsx` (`Field`), `src/ap
 - [ ] [AGENT] Color contrast audit in both themes if a dark theme exists.
 - [x] [AGENT] Empty, loading and error states: `EmptyState` in the shared UI, `error.tsx`/`global-error.tsx`/`not-found.tsx` at the root, and a panel-wide `src/app/app/loading.tsx` (`PanelSkeleton`) that shows the page shape and announces `role="status"` + “Cargando…” while the dynamic page queries the DB. `.animate-pulse` is now also disabled under `prefers-reduced-motion`. Test: `test/loading-states.test.ts`.
 - [ ] [AGENT] Print layouts for documents and the bank sheet (shared with area 7).
-- [ ] [AGENT] Mobile layouts for tables (ARCO inbox, banks).
+- [x] [AGENT] Mobile layouts for tables: the ARCO inbox renders a card list (`ul.md:hidden`) on phones and the table only from `md` up (`hidden md:block overflow-x-auto`); banks, documents and the bank sheet are card/definition layouts rather than tables, so nothing needs horizontal scrolling on a 360 px screen (checked in the markup). Not re-checked on a real device — that stays under the “keyboard/browser walkthrough” item.
 
 ---
 

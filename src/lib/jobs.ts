@@ -1,6 +1,6 @@
 import "server-only";
 
-import { businessDaysBetween, calculatedHolidays, getDb, newId, seedHolidays, type Company } from "./db";
+import { businessDaysBetween, calculatedHolidays, getDb, newId, resetDemoCompany, seedHolidays, type Company } from "./db";
 import { deleteAccount } from "./account";
 import { formatDate, formatDateTime, limaToday } from "./format";
 import { isCompanyActive, markSubscriptionStatus, planFromCompany } from "./billing";
@@ -293,6 +293,19 @@ const JOBS = {
     return { alertas: alerts.length, enviado: sent ? 1 : 0 };
   },
 
+  /** Reafirma la demo pública: solo lectura, sin correos, sin cobros y sin IA. */
+  "demo-reset"(): JobResult {
+    const result = resetDemoCompany();
+    if (!result.found) return { demo: "no existe" };
+    return {
+      demo: "reafirmada",
+      outbox_borrados: result.outbox,
+      ia_borrados: result.aiUsage,
+      pagos: result.payments,
+      documentos: result.documents,
+    };
+  },
+
   /** Verifica que los dos próximos años tengan feriados cargados y avisa cuáles siguen sin decreto confirmado. */
   "holidays-check"({ now }: JobContext): JobResult {
     const year = Number(limaToday(now).slice(0, 4));
@@ -330,6 +343,7 @@ export const JOB_MAX_AGE_HOURS: Record<JobName, number> = {
   "lapsed-account-notices": 26,
   "purge-old-data": 26,
   "ops-alert": 1,
+  "demo-reset": 8 * 24,
   "holidays-check": 8 * 24,
 };
 

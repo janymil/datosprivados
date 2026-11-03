@@ -101,6 +101,17 @@ juntas. Además, cualquier tarea que lance una excepción encola un aviso inmedi
   aviso en el registro estructurado y responde `falta: "ALERT_EMAIL"`.
 - Comprobación manual: `datosprivados-cron ops-alert` (y `datosprivados-cron health`).
 
+### La cuenta de demostración
+
+`/demo` entra sin contraseña a la empresa `casa-verde`, que es de **solo lectura** y
+comparte la base con los clientes reales. No escribe, no publica, no contrata, no usa IA
+y su formulario ARCO público no guarda solicitudes. Para que siga así aunque un fallo
+deje residuos, la tarea **`demo-reset`** (domingos 03:30 Lima) reafirma el estado
+(`billing_status=demo`, sin consentimiento de IA, `mail_optout=1`), borra correos y uso
+de IA a su nombre y vuelve a sembrar sus documentos de ejemplo. Si apareciera un **pago**
+de la demo, no lo borra: lo informa en el detalle de la ejecución para que lo revise una
+persona (borrarlo rompería la contabilidad).
+
 ### Registros y rotación
 
 Los eventos van a stdout como una línea JSON (`src/lib/log.ts`), sin cuerpos de petición
