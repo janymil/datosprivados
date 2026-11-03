@@ -295,22 +295,44 @@ considera de un proceso muerto.
 | `holidays-check` | semanal | Asegura feriados de este año y el siguiente; informa los años aún sin decreto confirmado. |
 | `weekly-digest` | semanal (opcional) | Resumen por empresa con lo que quedó pendiente (ARCO sin responder, incidentes abiertos, documentos desactualizados, bancos sin inscribir). **Apagado por defecto**: solo hace algo con `WEEKLY_DIGEST=1`, y mientras esté apagado no se le exige a `/api/health`. Una cuenta al día no recibe correo. |
 
-### Instalación (2026-11-01, este servidor)
+### Instalación (este servidor; versionado en `deploy/` desde 2026-11-03)
 
-Tres piezas, todas fuera del repositorio:
+Las piezas de fuera del repositorio, ahora **también en el repo** (antes solo existían en
+esta máquina: si se perdía, había que reescribirlas de memoria):
 
-- `/usr/local/bin/datosprivados-cron <tarea>|health [--at HH:MM] [--dow 1-7]` — lee `CRON_SECRET` de `/etc/datosprivados.env`
-  (600) o del `.env` del repo, hace la petición con `curl` y registra los fallos en syslog (`logger -t datosprivados-cron`).
-  El cron de este servidor no tiene MTA (`No MTA installed, discarding output`): la salida por stdout se pierde, por eso los
-  errores van a syslog.
-- `/usr/local/bin/datosprivados-backup` — respaldo horario con `scripts/backup-db.mjs` en `/var/backups/datosprivados`, que es
-  el `BACKUP_DIR` que vigila `GET /api/cron/health`.
-- `/etc/cron.d/datosprivados` — la tabla. **No lleva el secreto**, porque `/etc/cron.d` es legible por todos.
+- `deploy/datosprivados-cron.sh` → `/usr/local/bin/datosprivados-cron` (755). Lee `CRON_SECRET` de
+  `/etc/datosprivados.env` (600) o del `.env` del repo, hace la petición con `curl` y registra los
+  fallos en syslog **y** en stderr.
+- `deploy/cron.d-datosprivados` → `/etc/cron.d/datosprivados` (644). **No lleva el secreto**, porque
+  `/etc/cron.d` es legible por todos.
+- `/usr/local/bin/datosprivados-backup` — respaldo horario con `scripts/backup-db.mjs` en
+  `/var/backups/datosprivados`, que es el `BACKUP_DIR` que vigila `GET /api/cron/health`.
 
-**Horas: el cron de Ubuntu (3.0pl1) no soporta `CRON_TZ`.** Interpreta el horario en la zona del sistema —aquí `Europe/Berlin`,
-con horario de verano— y su manual recomienda comprobar la hora dentro del script. Por eso las tareas diarias y semanales se
-disparan **cada hora** y el wrapper decide en hora de Lima con `--at` (y `--dow 1..7` para las semanales, 1 = lunes). Lo que va
-por intervalo (cada minuto, cada 30 min, cada hora) no depende de la zona horaria.
+```bash
+install -m 755 deploy/datosprivados-cron.sh /usr/local/bin/datosprivados-cron
+install -m 644 deploy/cron.d-datosprivados  /etc/cron.d/datosprivados
+datosprivados-cron health; echo $?     # 0 = HTTP 200 y todas las tareas a tiempo
+```
+
+`test/deploy-artifacts.test.ts` compara estas copias con las instaladas cuando existen (en CI se
+salta), así que una edición a mano en el servidor se detecta como deriva.
+
+**Horas: el cron de Ubuntu (3.0pl1) no soporta `CRON_TZ`.** Interpreta el horario en la zona del
+sistema —aquí `Europe/Berlin`, con horario de verano— y su manual recomienda comprobar la hora
+dentro del script. Por eso las tareas diarias y semanales se disparan **cada hora** y el wrapper
+decide en hora de Lima con `--at` (y `--dow 1..7` para las semanales, 1 = lunes). Lo que va por
+intervalo (cada minuto, cada 30 min, cada hora) no depende de la zona horaria.
+
+> **`--at` solo admite `HH:00`.** El cron dispara en el minuto 0, así que `--at 06:15` no se cumple
+> nunca: el 2026-11-03 se descubrió que cuatro tareas (`billing-sync` 06:15, `lapsed-account-notices`
+> 06:30, `holidays-check` 05:30, `demo-reset` 03:30) **no se habían ejecutado jamás** y el health
+> llevaba días en rojo. Ahora el wrapper rechaza esas horas con exit 4 y un test falla si alguien
+> vuelve a escribirlas.
+
+Agregar una tarea nueva: (1) la tarea en `src/lib/jobs.ts`, (2) su edad máxima en
+`JOB_MAX_AGE_HOURS`, (3) la línea en `deploy/cron.d-datosprivados` con `--at HH:00`, (4) instalar el
+archivo. El test de `deploy/` falla si el nombre no existe en el código o si una tarea obligatoria
+se queda sin línea.
 
 ```cron
 SHELL=/bin/bash

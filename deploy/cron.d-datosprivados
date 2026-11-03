@@ -1,0 +1,40 @@
+# Tareas programadas de DatosPrivados (docs/RUNBOOK.md). Versión del repositorio
+# (deploy/cron.d-datosprivados); se instala en /etc/cron.d/datosprivados.
+#
+# Horas: este servidor esta en Europe/Berlin y el cron de Ubuntu (3.0pl1) NO soporta CRON_TZ, asi
+# que las tareas diarias y semanales se disparan cada hora y el wrapper decide en hora de Lima con
+# --at / --dow (ver /usr/local/bin/datosprivados-cron).
+#
+# --at SOLO admite HH:00: el cron dispara en el minuto 0, asi que "06:15" no se cumple nunca.
+# El 2026-11-03 se corrigieron cuatro lineas que estaban en :15, :30 y :30 (billing-sync,
+# lapsed-account-notices, holidays-check y demo-reset no habian corrido ni una vez).
+#
+# El secreto NO vive aqui: /etc/cron.d es legible por todos; el wrapper lo lee de
+# /etc/datosprivados.env (600) o del .env del repo.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# --- por intervalo ---------------------------------------------------------
+* * * * *       root /usr/local/bin/datosprivados-cron send-outbox
+*/30 * * * *    root /usr/local/bin/datosprivados-cron incident-deadline-reminders
+# Auto-monitorizacion de tareas, respaldos, correos y disco -> ALERT_EMAIL.
+# Se activa cuando el build desplegado incluye la tarea `ops-alert` (el preview del
+# 2026-11-03 corria un build anterior y respondia 404): quitar el "#" tras desplegar.
+# */15 * * * *  root /usr/local/bin/datosprivados-cron ops-alert
+0 * * * *       root /usr/local/bin/datosprivados-backup
+
+# --- diarias: cada hora; el wrapper ejecuta solo en la hora indicada (Lima) ---
+0 * * * *       root /usr/local/bin/datosprivados-cron purge-old-data          --at 03:00
+0 * * * *       root /usr/local/bin/datosprivados-cron expire-sessions         --at 04:00
+0 * * * *       root /usr/local/bin/datosprivados-cron billing-reconcile       --at 06:00
+0 * * * *       root /usr/local/bin/datosprivados-cron billing-sync            --at 07:00
+0 * * * *       root /usr/local/bin/datosprivados-cron arco-deadline-reminders --at 08:00
+0 * * * *       root /usr/local/bin/datosprivados-cron lapsed-account-notices  --at 09:00
+
+# --- semanales: cada hora; el wrapper ejecuta solo el dia indicado (Lima) ---
+0 * * * *       root /usr/local/bin/datosprivados-cron document-staleness-notice --at 05:00 --dow 1
+0 * * * *       root /usr/local/bin/datosprivados-cron holidays-check            --at 06:00 --dow 1
+# Resumen semanal opcional: solo actua con WEEKLY_DIGEST=1 en el entorno del servicio.
+# 0 * * * *     root /usr/local/bin/datosprivados-cron weekly-digest             --at 10:00 --dow 1
+# demo-reset: se activa cuando el build desplegado incluye la tarea (igual que ops-alert).
+# 0 * * * *     root /usr/local/bin/datosprivados-cron demo-reset                --at 02:00 --dow 7
