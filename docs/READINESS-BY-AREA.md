@@ -18,7 +18,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 599/599 passing, 47 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 619/619 passing, 48 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm exec playwright test` | 101/101 across chromium (journey + quality + perf), mobile-chrome, firefox, webkit and axe (19 axe: 8 public + 11 panel; 2 perf budgets: LCP 1872 ms / CLS 0.008 on the landing) — the suite builds with `CSP_ENFORCE=1`, so it also proves the blocking CSP |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
@@ -297,6 +297,7 @@ Files: `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-produc
 - [ ] [OWNER] Create real staging: domain, separate DB, certificate (`docs/STAGING.md`).
 - [~] [VERIFY] Run `scripts/deploy.sh` once on staging, including a rollback. **Half done on 2026-11-03**: the script now has a `--check` mode and was **run for real on this box** — all nine preconditions green (`node`, `pnpm`, `rsync`, `curl`, `pm2`, `package.json`, writable backup dir, 67 GB free, app `datosprivados` present in pm2), exit 0. `test/deploy-script.test.ts` (6 tests) pins the syntax, the dry-run purity (a `--check` creates no `.deploy`/`.next` and never reaches install/backup/build), the failure paths (wrong directory, app missing in pm2, unknown argument = exit 2) and that a real run **aborts before touching anything** when preconditions fail. What is still missing is the real staging target and an actual execute-then-rollback.
 - [ ] [OWNER] Production domain, Cloudflare zone, certificate, canonical host (P0-DOMAIN).
+- [x] [AGENT] Ops scripts covered by tests: `test/ops-scripts.test.ts` (20 tests) runs `node --check` on `reset-db`, `perf-seed`, `loadtest`, `weekly-report`, `verify-video-claims`, `backup-db`, `restore-db`, `restore-drill` and `scan-secrets`, and exercises the destructive ones for their **brakes**, not their speed: `reset-db` refuses to delete without `--yes`, refuses with `NODE_ENV=production`, honours `DATOSPRIVADOS_DB`, refuses paths outside the project without `--force`, and `--dry-run`/unknown-arg behave. `perf-seed` still refuses a DB whose file name is the real one, and `loadtest` now explains the usage instead of a `TypeError` when the URL is missing. `reset-db` was a latent S2 (see `docs/DEFECTS.md`).
 - [x] [AGENT] Production `.env.example` complete and matching `lib/env.ts` validation; fail fast on missing variables — `test/env.test.ts` (2026-11-02, 15 tests): every `process.env.*` read by `src/**` must appear in `.env.example` (only `NODE_ENV`/`NEXT_RUNTIME` exempt), each production hazard produces a boot error, and `instrumentation.ts` still throws on errors. `CRON_SECRET` was a warning and is now an **error** in production: without it no email, reminders, session expiry or billing reconciliation run.
 - [ ] [VERIFY] Zero-downtime or acceptable-downtime deploy with the single PM2 instance; document the expected blip.
 - [ ] [OWNER] Capacity: the box is shared with other apps (`deepseek-harness`, `micita`). Decide on a dedicated host before real customers. One Node process serves about 70 panel renders per second.
@@ -305,7 +306,7 @@ Files: `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-produc
 
 ### 19. Tests & CI
 Files: `test/` (42 files), `e2e/` (journey + quality + axe specs, mock server), `playwright.config.ts`, `vitest.config.mts`, `.github/workflows/ci.yml`.
-- [x] 599 unit/integration tests in 47 files, E2E 101/101 (chromium journey + quality + perf, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
+- [x] 619 unit/integration tests in 48 files, E2E 101/101 (chromium journey + quality + perf, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
 - [x] CI bug fixed: tests no longer depend on a pre-existing `test/.tmp`.
 - [x] [AGENT] Firefox and WebKit projects in `playwright.config.ts` (quality spec: headers, basic a11y, no horizontal overflow, legal footer) and CI now installs `chromium firefox webkit`. **Run locally on 2026-11-03: 30/30 green** (16 Firefox + 14 WebKit). The full journey stays Chromium-only so CI doesn't triple in time. Note: `playwright install` on this box needed a retry without `--with-deps` (the apt phase stalled); the browsers are cached in `~/.cache/ms-playwright`.
 - [x] [AGENT] Coverage report with a floor: `@vitest/coverage-v8` + `pnpm test:coverage` (now the CI step). Measured 2026-11-02 on the core modules — `billing`, `auth`, `jobs`, `mail`, `account`, `invoicing`, `rate-limit`, `client-ip`, `mercadopago` and `backup-crypto` — **90.9 % statements / 84.0 % branches / 91.9 % functions / 94.0 % lines** (re-measured 2026-11-03), with thresholds 80/80/80/70 that fail the build if they drop. The weakest file was `mercadopago.ts` (56 % statements); `test/mercadopago.test.ts` took it to 96 % statements and 100 % functions/lines, so D-1 in `docs/DEFECTS.md` is closed.

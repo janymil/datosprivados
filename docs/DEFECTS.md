@@ -38,6 +38,7 @@ haya S1/S2 abiertos.
 
 | Fecha | Sev | Qué | Arreglo |
 |---|---|---|---|
+| 2026-11-03 | S2 | `scripts/reset-db.mjs` borraba `data/datosprivados.db` **sin pedir confirmación, ignorando `DATOSPRIVADOS_DB` y sin mirar `NODE_ENV`**: en un servidor con la base en la ruta por defecto (`/var/www/datosprivados/data/...`, que es el valor por defecto de la app) un solo comando borraba producción, y si la base estaba en otra ruta el script decía «no hay nada» dejando creer que había reiniciado | Ahora exige `--yes`, se niega con `NODE_ENV=production` aunque lo lleve, respeta `DATOSPRIVADOS_DB`, no borra fuera del proyecto sin `--force`, tiene `--dry-run` y argumentos desconocidos son exit 2. `test/ops-scripts.test.ts` fija cada freno |
 | 2026-11-03 | S3 | Bordes de campos a 2,0:1: `.input` y `.btn-ghost` se identifican solo por `--line-strong` (#b8aa90), y WCAG 1.4.11 pide 3:1 | `--line-strong: #97855f` (3,2:1 sobre papel y 3,5:1 sobre el relleno del campo); lo detectó `test/color-contrast.test.ts` |
 | 2026-11-03 | S3 | Distintivos de aviso en ocre a 3,2:1 (`text-ochre` sobre `bg-ochre/10`) en 8 componentes | token `--ochre-dark: #7d5713` (5,8:1) y `text-ochre` → `text-ochre-dark`; el ocre de marca queda para rellenos y bordes |
 | 2026-11-03 | S3 | Etiquetas de grupo del menú lateral a 3,7:1 (`text-ink-soft/70`, 11 px) | `text-ink-soft` sólido (7,2:1); también en el estado inactivo de criterios de incidente y en el placeholder del buscador de ayuda |

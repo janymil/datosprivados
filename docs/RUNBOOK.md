@@ -183,6 +183,20 @@ ni datos personales (los correos se sustituyen por `[correo]`). PM2 los escribe 
 `/root/.pm2/logs/`; copia `deploy/logrotate-datosprivados.conf` a `/etc/logrotate.d/`
 para rotarlos (semanal, 8 copias, comprimido).
 
+### Base local: reiniciar (solo desarrollo)
+
+```bash
+node scripts/reset-db.mjs --dry-run   # dice qué borraría
+node scripts/reset-db.mjs --yes       # borra; el próximo arranque vuelve a sembrar la demo
+```
+
+Desde 2026-11-03 el script **no borra sin `--yes`**, se niega con `NODE_ENV=production`
+(aunque lleves `--yes`: en producción se restaura un respaldo), respeta
+`DATOSPRIVADOS_DB` en lugar de borrar `./data/...` por costumbre, y no toca nada fuera
+del directorio del proyecto salvo con `--force`. Antes borraba el archivo por defecto
+sin preguntar: en un servidor con la base en la ruta por defecto, un comando borraba
+producción. Cubierto por `test/ops-scripts.test.ts`.
+
 ### Despliegue: comprobar antes de desplegar
 
 `scripts/deploy.sh` instala, respalda, compila en una copia, intercambia `.next`, reinicia

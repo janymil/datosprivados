@@ -5,7 +5,18 @@ import http from "node:http";
 import https from "node:https";
 
 const args = process.argv.slice(2);
-const url = new URL(args.shift());
+if (!args.length || args[0].startsWith("-")) {
+  console.error('Uso: node scripts/loadtest.mjs <url> [-c 50] [-d 10] [-m GET] [-H "Nombre: valor"]... [-b cuerpo]');
+  process.exit(2);
+}
+const rawUrl = args.shift();
+let url;
+try {
+  url = new URL(rawUrl);
+} catch {
+  console.error(`URL inválida: ${rawUrl}\nUso: node scripts/loadtest.mjs <url> [-c 50] [-d 10] ...`);
+  process.exit(2);
+}
 const opt = { c: 50, d: 10, m: "GET", b: undefined, headers: {} };
 while (args.length) {
   const flag = args.shift();
