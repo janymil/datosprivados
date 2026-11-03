@@ -18,7 +18,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 629/629 passing, 49 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 630/630 passing, 49 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm exec playwright test` | 101/101 across chromium (journey + quality + perf), mobile-chrome, firefox, webkit and axe (19 axe: 8 public + 11 panel; 2 perf budgets: LCP 1872 ms / CLS 0.008 on the landing) — the suite builds with `CSP_ENFORCE=1`, so it also proves the blocking CSP |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
@@ -199,7 +199,7 @@ Files: `src/app/app/bancos/*`, `src/lib/bank-sheet.ts`, `src/lib/bank-presets.ts
 ### 11. AI assistant
 Files: `src/lib/ai.ts` (1.2k lines), `llm.ts`, `anonymizer.ts`, `ai-guard.ts`, `ai-policy.ts`, `src/app/actions/ai.ts`, `src/app/app/asistente`, `test/ai-controls.test.ts`, `test/ai-policy.test.ts`, `test/ai-evals/`.
 - [x] Quotas and per-minute rate limit; anonymization before sending; tested with a simulated LLM.
-- [ ] [OWNER] Choose vendor(s), region and contract with DPA and no-training terms (P0-AI-VENDOR). Disclose as sub-processors and as a cross-border transfer in area 14.
+- [ ] [OWNER] Choose vendor(s), region and contract with DPA and no-training terms (P0-AI-VENDOR). Disclose as sub-processors and as a cross-border transfer in area 14. **Verified on the server 2026-11-03:** the preview has `OPENAI_API_KEY` but **no** `OPENAI_MODEL`, so `activeProvider()` returns null and every AI feature answers in basic mode — no personal data is leaving the server today. That is a fact to keep in mind when the vendor is chosen: adding `OPENAI_MODEL` alone would switch real calls on.
 - [ ] [OWNER] Provide a production key (none for Anthropic; the OpenAI key was never tested end to end).
 - [ ] [VERIFY] Real call per feature: success, timeout, 429, malformed output, empty output.
 - [ ] [AGENT] Run `test/ai-evals/` against the real model and record pass rates; set a minimum.
@@ -306,7 +306,7 @@ Files: `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-produc
 
 ### 19. Tests & CI
 Files: `test/` (42 files), `e2e/` (journey + quality + axe specs, mock server), `playwright.config.ts`, `vitest.config.mts`, `.github/workflows/ci.yml`.
-- [x] 629 unit/integration tests in 49 files, E2E 101/101 (chromium journey + quality + perf, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
+- [x] 630 unit/integration tests in 49 files, E2E 101/101 (chromium journey + quality + perf, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
 - [x] CI bug fixed: tests no longer depend on a pre-existing `test/.tmp`.
 - [x] [AGENT] Firefox and WebKit projects in `playwright.config.ts` (quality spec: headers, basic a11y, no horizontal overflow, legal footer) and CI now installs `chromium firefox webkit`. **Run locally on 2026-11-03: 30/30 green** (16 Firefox + 14 WebKit). The full journey stays Chromium-only so CI doesn't triple in time. Note: `playwright install` on this box needed a retry without `--with-deps` (the apt phase stalled); the browsers are cached in `~/.cache/ms-playwright`.
 - [x] [AGENT] Coverage report with a floor: `@vitest/coverage-v8` + `pnpm test:coverage` (now the CI step). Measured 2026-11-02 on the core modules — `billing`, `auth`, `jobs`, `mail`, `account`, `invoicing`, `rate-limit`, `client-ip`, `mercadopago` and `backup-crypto` — **90.9 % statements / 84.0 % branches / 91.9 % functions / 94.0 % lines** (re-measured 2026-11-03), with thresholds 80/80/80/70 that fail the build if they drop. The weakest file was `mercadopago.ts` (56 % statements); `test/mercadopago.test.ts` took it to 96 % statements and 100 % functions/lines, so D-1 in `docs/DEFECTS.md` is closed.

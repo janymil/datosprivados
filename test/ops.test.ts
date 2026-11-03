@@ -4,7 +4,7 @@ import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { getDb, newId } from "@/lib/db";
-import { backupAgeHours, dbCheck, operationalAlerts, readiness } from "@/lib/ops";
+import { backupAgeHours, configPresence, dbCheck, operationalAlerts, readiness } from "@/lib/ops";
 import { overdueIncidents } from "@/lib/data";
 import { OverdueIncidentsBanner } from "@/components/overdue-incidents-banner";
 import { logEvent, scrubText } from "@/lib/log";
@@ -59,6 +59,22 @@ describe("salud", () => {
     vi.stubEnv("MERCADOPAGO_WEBHOOK_SECRET", "s");
     vi.stubEnv("CRON_SECRET", "x".repeat(20));
     expect(readiness().ok).toBe(true);
+    vi.unstubAllEnvs();
+  });
+
+  it("«hay IA» significa que la app puede llamar a un modelo, no que exista una clave suelta", () => {
+    // El preview tenía OPENAI_API_KEY sin OPENAI_MODEL: la app estaba en modo básico y
+    // /api/health decía `llm: true` igualmente (descubierto el 2026-11-03).
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
+    vi.stubEnv("OPENAI_API_KEY", "sk-de-prueba");
+    vi.stubEnv("OPENAI_MODEL", "");
+    expect(configPresence().llm).toBe(false);
+
+    vi.stubEnv("OPENAI_MODEL", "gpt-4o-mini");
+    expect(configPresence().llm).toBe(true);
+
+    vi.stubEnv("AI_DISABLED", "1");
+    expect(configPresence().llm).toBe(false); // apagada a propósito tampoco es «hay IA»
     vi.unstubAllEnvs();
   });
 });

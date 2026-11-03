@@ -6,6 +6,7 @@ import { getDb } from "./db";
 import { mailProvider, stuckOutboxCount } from "./mail";
 import { jobsHealth } from "./jobs";
 import { dailyAlertThresholdUsd, dailySpendUsd } from "./ai-guard";
+import { isLlmConfigured } from "./llm";
 
 /**
  * Comprobaciones de salud (P6-OBS). `dbCheck` y `readiness` alimentan los endpoints
@@ -62,7 +63,12 @@ export function configPresence() {
   return {
     mail: mailProvider() === "resend",
     mercadopago: Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN?.trim() && process.env.MERCADOPAGO_WEBHOOK_SECRET?.trim()),
-    llm: Boolean(process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY),
+    // "Hay IA" significa que la app **puede llamar a un modelo**, no que exista una
+    // clave suelta: con OPENAI_API_KEY pero sin OPENAI_MODEL (o con el interruptor
+    // apagado, o el circuito abierto) las funciones de IA responden en modo básico.
+    // Antes esta línea era `Boolean(ANTHROPIC_API_KEY || OPENAI_API_KEY)` y el 2026-11-03
+    // el preview decía `llm: true` sin poder llamar a nadie.
+    llm: isLlmConfigured(),
     cron: Boolean(process.env.CRON_SECRET && process.env.CRON_SECRET.length >= 16),
   };
 }
