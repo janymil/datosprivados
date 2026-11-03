@@ -21,6 +21,37 @@ Pendiente en producción: aplicar esa plantilla (bloquea IPs fuera de Cloudflare
 Si se aplica el cierre del origen, comprobar antes que ningún monitor ni webhook entra
 por la IP directa.
 
+## Acceso al servidor (SSH)
+
+**Solo con clave.** Desde el 2026-11-03 `/etc/ssh/sshd_config.d/00-datosprivados.conf`
+manda (ordena primero, y sshd se queda con el **primer** valor que encuentra):
+
+```
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin prohibit-password
+```
+
+Antes parecía cerrado —`sshd_config` y `60-cloudimg-settings.conf` decían `no`— pero
+`50-cloud-init.conf` dice `yes` y, al ir incluido antes, ganaba: **el acceso por
+contraseña estaba abierto** en un servidor expuesto a Internet (había 19 885 intentos
+fallidos registrados). Comprobación:
+
+```bash
+sshd -T | grep -E '^passwordauthentication|^permitrootlogin|^pubkeyauthentication'
+# passwordauthentication no · permitrootlogin without-password · pubkeyauthentication yes
+```
+
+- `root` y `jan` entran con su clave (`~/.ssh/authorized_keys`). `ubuntu` y `postgres`
+  tienen la contraseña bloqueada.
+- **Si alguien entraba como `ubuntu` o `jan` con contraseña, ya no puede**: es el punto
+  del cambio. Para revertir (no recomendado): borrar el archivo `00-…` y
+  `systemctl reload ssh`.
+- `fail2ban` **no está instalado** (`systemctl is-enabled fail2ban` → `not-found`).
+  Recomendado instalarlo y dejar el jail `sshd` activo; hoy no hace falta para el
+  ataque de diccionario porque ya no hay contraseñas que adivinar, pero reduce el ruido
+  y protege cualquier servicio nuevo.
+
 ## Que un entorno de pruebas no entre en Google
 
 Comprobado el 2026-11-03: el preview respondía `Allow: /` en `robots.txt`, **no** mandaba
