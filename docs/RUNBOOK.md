@@ -108,6 +108,21 @@ ni datos personales (los correos se sustituyen por `[correo]`). PM2 los escribe 
 `/root/.pm2/logs/`; copia `deploy/logrotate-datosprivados.conf` a `/etc/logrotate.d/`
 para rotarlos (semanal, 8 copias, comprimido).
 
+### Rendimiento bajo carga (antes de cada release)
+
+`pnpm ops:loadtest` (`scripts/loadtest.mjs`, sin dependencias) habla con un servidor ya
+levantado. Receta contra staging o un `next start` local con datos de ejemplo:
+
+```bash
+node scripts/perf-seed.mjs                      # base de pruebas con volumen realista
+pnpm build && pnpm start &                      # o el proceso de staging
+pnpm ops:loadtest http://127.0.0.1:3000/app -c 50 -d 20 -H "Cookie: pdp_session=<id>"
+```
+
+Los números de referencia están en `docs/GO-NO-GO.md` sección «Rendimiento» (p95 y
+capacidad). Se corre antes de cada release y en staging, no en CI: necesita un servidor
+vivo y una base sembrada, y los tiempos de un runner compartido no son comparables.
+
 ## Calendario de plazos (feriados)
 
 Los plazos legales (ARCO: 10 y 20 días hábiles) se cuentan con `businessDaysBetween`, que

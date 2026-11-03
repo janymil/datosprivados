@@ -26,7 +26,8 @@ jobs:
         run: pnpm scan:secrets
       - run: pnpm typecheck
       - run: pnpm lint
-      - run: pnpm test
+      - name: Pruebas con suelo de cobertura
+        run: pnpm test:coverage
       - run: pnpm build
         env:
           NEXT_PUBLIC_APP_URL: https://ci.example.com

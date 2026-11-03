@@ -52,7 +52,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 16 | Cron jobs & operations | `lib/jobs.ts`, `lib/ops.ts`, `api/cron/[job]`, `api/health`, `api/ready` | 92 % | 70 % | No external monitor or error tracking (self-alerting job ready, needs activation) |
 | 17 | Backup & restore | `scripts/backup-db.mjs`, `restore-db.mjs`, `restore-drill.mjs`, `backup-crypto.mjs` | 88 % | 65 % | Backups live on the same box; no fresh-machine drill |
 | 18 | Deploy & infrastructure | `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-production.conf` | 78 % | 40 % | No real staging; `deploy.sh` never run |
-| 19 | Tests & CI | `test/`, `e2e/`, `.github/workflows/ci.yml` | 85 % | 80 % | No Firefox/Safari/iOS; no UAT |
+| 19 | Tests & CI | `test/`, `e2e/`, `.github/workflows/ci.yml` | 92 % | 80 % | No Firefox/Safari/iOS; no UAT |
 | 20 | Accessibility & UI | `components/`, `app/globals.css` | 80 % | 70 % | Only Chrome desktop + Android checked |
 
 **Reading:** areas 1, 3, 10, 19 are strong. Areas 6, 7, 11, 14 have finished code but are blocked by non-code inputs. Areas 4, 5, 15, 17, 18 still need real engineering or ops work.
@@ -303,12 +303,12 @@ Files: `test/` (21 files), `e2e/` (journey + quality specs, mock server), `playw
 - [x] 405 unit/integration tests, E2E 31/31 (desktop Chrome + Pixel 7), CI green, `pnpm audit` job.
 - [x] CI bug fixed: tests no longer depend on a pre-existing `test/.tmp`.
 - [ ] [AGENT] Add Firefox and WebKit projects to `playwright.config.ts` (`pnpm exec playwright install firefox webkit`).
-- [ ] [AGENT] Coverage report with a floor on `lib/billing.ts`, `auth.ts`, `jobs.ts`, `mail.ts`.
-- [ ] [AGENT] Add the "every route has a guard" test from area 3 and the "company_id on every query" test from area 1.
+- [x] [AGENT] Coverage report with a floor: `@vitest/coverage-v8` + `pnpm test:coverage` (now the CI step). Measured 2026-11-02 on the core modules — `billing`, `auth`, `jobs`, `mail`, `account`, `invoicing`, `rate-limit`, `client-ip`, `mercadopago` and `backup-crypto` — **87.7 % statements / 79.2 % branches / 84.9 % functions / 90.3 % lines**, with thresholds 80/70/80/80 that fail the build if they drop. Per-file numbers are in the coverage table; the weakest (mercadopago, 56 %) is logged as D-1 in `docs/DEFECTS.md`.
+- [x] [AGENT] Tests that every route has a guard (area 3) and that no `company_id` query forgets the tenant (area 1).
 - [ ] [OWNER] UAT with 3–5 real MYPE owners; record defects.
-- [ ] [AGENT] Keep a living defect list so the "zero S1/S2 open" gate (GO-NO-GO row 3) can be verified instead of assumed.
+- [x] [AGENT] Living defect list so the “zero S1/S2 open” gate (GO-NO-GO row 3) can be verified instead of assumed: `docs/DEFECTS.md` with severities, how to reproduce, the closed-item log (two S1/S2 already recorded and fixed) and a “known by design” table that maps to the owner inputs.
 - [ ] [AGENT] Merge Dependabot PRs for CI actions; pin new action versions.
-- [ ] [AGENT] Run the load test (`scripts/loadtest.mjs`) in CI or before each release against a seeded DB.
+- [x] [AGENT] Load test before each release: `pnpm ops:loadtest` (`scripts/loadtest.mjs`, dependency-free) with the seeded-DB recipe in `docs/RUNBOOK.md` (“Rendimiento bajo carga”). Deliberately not in CI: it needs a live server and a seeded DB, and a shared runner's timings aren't comparable.
 
 ### 20. Accessibility & UI
 Files: `src/components/*` (34 files), `src/components/ui.tsx` (`Field`), `src/app/globals.css`, `e2e/quality.spec.ts`.

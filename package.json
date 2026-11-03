@@ -10,13 +10,15 @@
     "start": "next start --port 3000",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "lint": "eslint .",
     "test:e2e": "next build && playwright test",
     "audit:prod": "pnpm audit --prod",
     "scan:secrets": "node scripts/scan-secrets.mjs",
     "ops:weekly": "node scripts/weekly-report.mjs",
-    "ops:restore-drill": "node scripts/restore-drill.mjs"
+    "ops:restore-drill": "node scripts/restore-drill.mjs",
+    "ops:loadtest": "node scripts/loadtest.mjs"
   },
   "dependencies": {
     "next": "16.4.3",
@@ -29,6 +31,7 @@
     "@types/node": "24.10.1",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
+    "@vitest/coverage-v8": "5.0.5",
     "eslint": "10.14.0",
     "eslint-config-next": "16.4.3",
     "playwright": "^1.64.1",
