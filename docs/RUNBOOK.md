@@ -21,6 +21,29 @@ Pendiente en producción: aplicar esa plantilla (bloquea IPs fuera de Cloudflare
 Si se aplica el cierre del origen, comprobar antes que ningún monitor ni webhook entra
 por la IP directa.
 
+## Que un entorno de pruebas no entre en Google
+
+Comprobado el 2026-11-03: el preview respondía `Allow: /` en `robots.txt`, **no** mandaba
+`X-Robots-Tag` y su `sitemap.xml` anunciaba el dominio de preview — es decir, era
+indexable. Un preview indexado sobrevive al lanzamiento: Google conserva la copia con los
+textos legales en borrador y compite con el dominio real.
+
+Dos formas de cerrarlo, y conviene usar las dos:
+
+1. **Inmediato, solo para ese vhost** (no requiere recompilar): pegar
+   `deploy/nginx-preview-noindex.conf` dentro del bloque `server { }` del preview
+   (`add_header X-Robots-Tag "noindex, nofollow" always;`), `nginx -t` y recargar.
+   Aplicado al preview el 2026-11-03; copia previa del vhost en
+   `/root/datosprivados-vhost.bak-*`. Comprobación:
+   `curl -sI https://<preview>/ | grep -i x-robots-tag`.
+2. **En el build**: `NEXT_PUBLIC_NOINDEX=1 pnpm build` hace que `robots.txt` responda
+   `Disallow: /` (sin sitemap) y que todas las páginas lleven `robots: noindex`. Sirve
+   para cualquier entorno, pero exige recompilar, así que se aplica en el próximo
+   despliegue del preview.
+
+Producción **no** lleva ninguna de las dos: `deploy/nginx-production.conf` no tiene el
+encabezado y una prueba (`test/seo-indexing.test.ts`) falla si alguien se lo copia.
+
 ## Estado verificado del preview (2026-11-03)
 
 Comprobado en la máquina, no deducido de la documentación:
@@ -33,7 +56,7 @@ Comprobado en la máquina, no deducido de la documentación:
 | Informe semanal (`node scripts/weekly-report.mjs`) | funciona con datos reales; señaló correctamente una solicitud **ARCO vencida** (`ARCO-2026-0011`, plazo 2026-10-12) y 2 webhooks fallidos **de las pruebas de sandbox del 2026-11-01** (IDs falsos `999999999`/`123456789` → 404 de MercadoPago; comportamiento correcto, caen fuera de la ventana de 7 días) |
 | Feriados en la base | 2025–2032, 16 por año (el `holidays-check` ausente no había causado daño todavía) |
 | PM2 | `datosprivados` online, 0 reinicios; disco al 32 % |
-| Cabeceras públicas (`curl -I https://datosprivados.registio.app`) | 200, `nosniff`, `X-Frame-Options: DENY`, HSTS, `Referrer-Policy`, `Permissions-Policy`; `server_tokens off` está en `/etc/nginx/nginx.conf` (global), no en el vhost; `/login` responde `private, no-cache, no-store`; `cf-cache-status: DYNAMIC` (Cloudflare no cachea HTML, así que un despliegue no sirve HTML viejo) |
+| Cabeceras públicas (`curl -I https://datosprivados.registio.app`) | 200, `nosniff`, `X-Frame-Options: DENY`, HSTS, `Referrer-Policy`, `Permissions-Policy`, **`X-Robots-Tag: noindex, nofollow`** (añadido el 2026-11-03); `server_tokens off` está en `/etc/nginx/nginx.conf` (global), no en el vhost; `/login` responde `private, no-cache, no-store`; `cf-cache-status: DYNAMIC` (Cloudflare no cachea HTML, así que un despliegue no sirve HTML viejo) |
 | `logrotate` | instalado en `/etc/logrotate.d/datosprivados`, `--debug` sin errores |
 
 **El build desplegado es anterior a HEAD.** Consecuencias, para que nadie las atribuya a un

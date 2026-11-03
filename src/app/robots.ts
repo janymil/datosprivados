@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
-import { siteUrl } from "@/lib/site";
+import { noindex, siteUrl } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
-  return {
+  const base = {
     rules: {
       userAgent: "*",
       allow: "/",
@@ -11,4 +11,10 @@ export default function robots(): MetadataRoute.Robots {
     },
     sitemap: `${siteUrl()}/sitemap.xml`,
   };
+
+  // Un entorno de pruebas no debe entrar en Google: si se indexa un preview con los
+  // textos legales en borrador, el resultado sigue ahí cuando abra el dominio real.
+  // Se activa con NEXT_PUBLIC_NOINDEX=1 al COMPILAR (ver docs/RUNBOOK.md).
+  if (noindex()) return { rules: { userAgent: "*", disallow: "/" } };
+  return base;
 }

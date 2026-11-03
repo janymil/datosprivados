@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Fraunces, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-import { siteUrl } from "@/lib/site";
+import { noindex, siteUrl } from "@/lib/site";
 
 const archivo = Archivo({
   subsets: ["latin"],
@@ -26,6 +26,9 @@ const plex = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
+  // En un entorno de pruebas (NEXT_PUBLIC_NOINDEX=1) nada debe indexarse; en producción
+  // no se define y los buscadores entran con normalidad.
+  ...(noindex() ? { robots: { index: false, follow: false } } : {}),
   title: {
     default: "DatosPrivados — Ley 29733 para MYPE, consultorios y profesionales del Perú",
     template: "%s · DatosPrivados",

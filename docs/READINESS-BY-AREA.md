@@ -18,7 +18,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 630/630 passing, 49 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 635/635 passing, 50 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm exec playwright test` | 101/101 across chromium (journey + quality + perf), mobile-chrome, firefox, webkit and axe (19 axe: 8 public + 11 panel; 2 perf budgets: LCP 1872 ms / CLS 0.008 on the landing) — the suite builds with `CSP_ENFORCE=1`, so it also proves the blocking CSP |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
@@ -223,7 +223,7 @@ Files: `src/lib/help-content.ts` (974 lines), `glossary.ts`, `help-tips.ts`, `he
 
 ### 13. Landing, demo, SEO
 Files: `src/app/page.tsx`, `components/landing-interactive.tsx`, `src/lib/demo.ts`, `src/app/demo/*`, `public/video/*` (23 MB), `robots.ts`, `sitemap.ts`, `AUDITORIA_PORTADA.md`, `COMPARACION_VIDEO.md`.
-- [x] `robots.ts`, `sitemap.ts`, `error.tsx`, `global-error.tsx`, `not-found.tsx` exist.
+- [x] `robots.ts`, `sitemap.ts`, `error.tsx`, `global-error.tsx`, `not-found.tsx` exist. **Added 2026-11-03:** they existed but nothing kept a *preview* out of search — the preview answered `Allow: /`, had no `X-Robots-Tag` and advertised its own sitemap, so it was indexable (a preview indexed today outlives the launch and competes with the real domain). Two mechanisms now, both tested in `test/seo-indexing.test.ts`: `X-Robots-Tag: noindex, nofollow` on the preview vhost (`deploy/nginx-preview-noindex.conf`, applied and verified live) and `NEXT_PUBLIC_NOINDEX=1` at build time, which turns `robots.txt` into `Disallow: /` and the metadata into `robots: noindex`. Production carries neither, and a test fails if the header is ever copied into the production template.
 - [x] LCP mobile 4G about 1.8–2.1 s; videos `preload="none"`; page transfers about 244 KB.
 - [x] [AGENT] Hardcoded host removed from the generated artefacts: `documents.ts` `appUrl()` and `bank-sheet.ts` now go through `siteUrl()` (`lib/site.ts`, the single `NEXT_PUBLIC_APP_URL` reader); `layout.tsx` `metadataBase`, `robots.ts`, `sitemap.ts` and `ai.ts` already did. Test: `test/domain.test.ts` (“dominio configurado”) sets a staging host and asserts the generated policy and bank sheet contain it and never `datosprivados.pe`. Still literal on purpose: the support address (`hola@datosprivados.pe`), the demo/seed e-mails and the marketing copy in `landing-interactive.tsx`/`explainer-video.tsx` — they are product identity, not routing.
 - [ ] [OWNER] Production domain live (P0-DOMAIN); verify canonical, OG tags and sitemap on it.
@@ -306,7 +306,7 @@ Files: `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-produc
 
 ### 19. Tests & CI
 Files: `test/` (42 files), `e2e/` (journey + quality + axe specs, mock server), `playwright.config.ts`, `vitest.config.mts`, `.github/workflows/ci.yml`.
-- [x] 630 unit/integration tests in 49 files, E2E 101/101 (chromium journey + quality + perf, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
+- [x] 635 unit/integration tests in 50 files, E2E 101/101 (chromium journey + quality + perf, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
 - [x] CI bug fixed: tests no longer depend on a pre-existing `test/.tmp`.
 - [x] [AGENT] Firefox and WebKit projects in `playwright.config.ts` (quality spec: headers, basic a11y, no horizontal overflow, legal footer) and CI now installs `chromium firefox webkit`. **Run locally on 2026-11-03: 30/30 green** (16 Firefox + 14 WebKit). The full journey stays Chromium-only so CI doesn't triple in time. Note: `playwright install` on this box needed a retry without `--with-deps` (the apt phase stalled); the browsers are cached in `~/.cache/ms-playwright`.
 - [x] [AGENT] Coverage report with a floor: `@vitest/coverage-v8` + `pnpm test:coverage` (now the CI step). Measured 2026-11-02 on the core modules — `billing`, `auth`, `jobs`, `mail`, `account`, `invoicing`, `rate-limit`, `client-ip`, `mercadopago` and `backup-crypto` — **90.9 % statements / 84.0 % branches / 91.9 % functions / 94.0 % lines** (re-measured 2026-11-03), with thresholds 80/80/80/70 that fail the build if they drop. The weakest file was `mercadopago.ts` (56 % statements); `test/mercadopago.test.ts` took it to 96 % statements and 100 % functions/lines, so D-1 in `docs/DEFECTS.md` is closed.
