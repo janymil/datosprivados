@@ -18,14 +18,14 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 530/530 passing, 39 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 533/533 passing, 40 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
 | CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
 | Hourly DB backup cron | **Installed and running** (`/etc/cron.d/datosprivados`, `/usr/local/bin/datosprivados-backup`; newest file in `/var/backups/datosprivados` was from 2026-11-02 19:00 Lima). `GO-NO-GO.md` row 5 and `RUNBOOK.md` were corrected on 2026-11-02. |
 | Rate limiting | Exists in SQLite (`src/lib/rate-limit.ts`) and is applied to login, signup, ARCO form, password reset, verification, password/email change, account deletion, export, demo, AI. |
 | Invoicing | Data model + manual issuance only (`src/lib/invoicing.ts` header says so). **No PSE/OSE API integration.** |
-| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook`, `ai-policy`, `form-pow` — 125 new tests, all green. |
+| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook`, `ai-policy`, `form-pow`, `print-styles` — 128 new tests, all green. |
 | Not present | `proxy.ts`/middleware (so no CSP), real staging, Anthropic key, production domain, lawyer review. |
 
 ---
@@ -53,7 +53,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 17 | Backup & restore | `scripts/backup-db.mjs`, `restore-db.mjs`, `restore-drill.mjs`, `backup-crypto.mjs` | 88 % | 65 % | Backups live on the same box; no fresh-machine drill |
 | 18 | Deploy & infrastructure | `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-production.conf` | 78 % | 40 % | No real staging; `deploy.sh` never run |
 | 19 | Tests & CI | `test/`, `e2e/`, `.github/workflows/ci.yml` | 92 % | 80 % | No Firefox/Safari/iOS; no UAT |
-| 20 | Accessibility & UI | `components/`, `app/globals.css` | 84 % | 70 % | Only Chrome desktop + Android checked |
+| 20 | Accessibility & UI | `components/`, `app/globals.css` | 88 % | 70 % | Only Chrome desktop + Android checked |
 
 **Reading:** areas 1, 3, 10, 19 are strong. Areas 6, 7, 11, 14 have finished code but are blocked by non-code inputs. Areas 4, 5, 15, 17, 18 still need real engineering or ops work.
 
@@ -320,7 +320,7 @@ Files: `src/components/*` (34 files), `src/components/ui.tsx` (`Field`), `src/ap
 - [ ] [VERIFY] Firefox, Safari, iOS Safari rendering (shared with area 19).
 - [ ] [AGENT] Color contrast audit in both themes if a dark theme exists.
 - [x] [AGENT] Empty, loading and error states: `EmptyState` in the shared UI, `error.tsx`/`global-error.tsx`/`not-found.tsx` at the root, and a panel-wide `src/app/app/loading.tsx` (`PanelSkeleton`) that shows the page shape and announces `role="status"` + “Cargando…” while the dynamic page queries the DB. `.animate-pulse` is now also disabled under `prefers-reduced-motion`. Test: `test/loading-states.test.ts`.
-- [ ] [AGENT] Print layouts for documents and the bank sheet (shared with area 7).
+- [x] [AGENT] Print layouts: `@media print` in `globals.css` (`.no-print` hidden, `.print-page` without border/shadow/padding), used by the public policy `/p/[slug]` (PrintButton “Descargar PDF” + `print-page` on the article) and by the bank sheet `/app/bancos/[id]/ficha` (PrintButton “Imprimir / Guardar PDF” + `no-print` toolbar). The panel's document view relies on copy/“descargar .txt” plus that public print layout; `test/print-styles.test.ts` pins the CSS and both usages so a refactor can't drop them. Visual check in Firefox/Safari still belongs to the browser walkthrough item.
 - [x] [AGENT] Mobile layouts for tables: the ARCO inbox renders a card list (`ul.md:hidden`) on phones and the table only from `md` up (`hidden md:block overflow-x-auto`); banks, documents and the bank sheet are card/definition layouts rather than tables, so nothing needs horizontal scrolling on a 360 px screen (checked in the markup). Not re-checked on a real device — that stays under the “keyboard/browser walkthrough” item.
 
 ---
