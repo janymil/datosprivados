@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const ctx = vi.hoisted(() => ({ store: new Map<string, string>(), ip: "198.51.100.7" }));
@@ -69,7 +70,14 @@ describe("desafío de la prueba de trabajo", () => {
     const challenge = createChallenge()!;
     const counter = solveChallenge(challenge.salt, challenge.difficulty)!;
     expect(verifyChallenge({ ...challenge, counter: String(counter) })).toEqual({ ok: true });
-    expect(verifyChallenge({ ...challenge, counter: String(counter + 1) }).ok).toBe(false);
+
+    // No sirve `counter + 1`: con dificultad 8 una de cada 256 soluciones vecinas
+    // también cumple (el rojo intermitente que tuvo esta prueba). Se busca una que
+    // no cumpla, que es lo que de verdad se quiere comprobar.
+    const bitsOf = (value: number) => leadingZeroBits(crypto.createHash("sha256").update(`${challenge.salt}${value}`).digest());
+    let failing = counter + 1;
+    while (bitsOf(failing) >= challenge.difficulty) failing += 1;
+    expect(verifyChallenge({ ...challenge, counter: String(failing) })).toEqual({ ok: false, reason: "dificultad" });
   });
 
   it("rechaza una firma alterada, un formato inválido y un desafío vencido", () => {

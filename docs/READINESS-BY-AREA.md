@@ -14,11 +14,11 @@ This file is a *view* over the other docs, not a replacement. When this file and
 - Checklist legend: `[x]` done and verified · `[ ]` open · tag `[AGENT]` = can be done in the repo · `[OWNER]` = needs the human / a third party (legal entity, lawyer, DNS, paid accounts, real people) · `[VERIFY]` = a check to run, not code to write.
 - Do not tick a box without running its check. Do not mark an `[OWNER]` item done on the owner's behalf.
 
-### Verified facts at time of writing (2026-11-02)
+### Verified facts at time of writing (2026-11-03)
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 564/564 passing, 42 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 574/574 passing, 43 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm exec playwright test` | 77/77 across chromium (journey + quality), mobile-chrome, firefox, webkit and axe |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
@@ -53,8 +53,8 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 16 | Cron jobs & operations | `lib/jobs.ts`, `lib/ops.ts`, `api/cron/[job]`, `api/health`, `api/ready` | 92 % | 70 % | No external monitor or error tracking (self-alerting job ready, needs activation) |
 | 17 | Backup & restore | `scripts/backup-db.mjs`, `restore-db.mjs`, `restore-drill.mjs`, `backup-crypto.mjs` | 88 % | 65 % | Backups live on the same box; no fresh-machine drill |
 | 18 | Deploy & infrastructure | `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-production.conf` | 78 % | 40 % | No real staging; `deploy.sh` never run |
-| 19 | Tests & CI | `test/`, `e2e/`, `.github/workflows/ci.yml` | 92 % | 80 % | No Firefox/Safari/iOS; no UAT |
-| 20 | Accessibility & UI | `components/`, `app/globals.css` | 88 % | 70 % | Only Chrome desktop + Android checked |
+| 19 | Tests & CI | `test/`, `e2e/`, `.github/workflows/ci.yml` | 94 % | 80 % | No iOS device and no UAT |
+| 20 | Accessibility & UI | `components/`, `app/globals.css` | 93 % | 75 % | axe covers the public screens only (D-2); no screen-reader walkthrough |
 
 **Reading:** areas 1, 3, 10, 19 are strong. Areas 6, 7, 11, 14 have finished code but are blocked by non-code inputs. Areas 4, 5, 15, 17, 18 still need real engineering or ops work.
 
@@ -121,6 +121,7 @@ Files: `src/lib/billing.ts`, `mercadopago.ts`, `subscriptions.ts`, `plans.ts`, `
 - [ ] [VERIFY] Sandbox run of: rejected payment → paused → cancelled, with real events, confirming local state at each step.
 - [~] [VERIFY] Signature manifest and `cancelled`/`canceled` spelling re-checked against the live MercadoPago docs on 2026-11-02: the event names and their GET endpoints (`subscription_preapproval` → `/preapproval/[id]`, `subscription_authorized_payment` → `/authorized_payments/[id]`) and the `canceled` spelling that MP sends for payments are confirmed; the code already accepts both spellings. The literal manifest string could not be quoted from the docs page through the fetcher, so the definitive check is still a **real signed sandbox event** (follows from the open sandbox item).
 - [x] [VERIFY] Webhook idempotency, replays and out-of-order delivery — `test/webhook.test.ts` (8 tests, signed requests through the real route): a repeated event records both deliveries but activates once and never extends `paid_until` twice; a charge arriving **before** its authorization confirms the subscription first and keeps the payment; a repeated charge does not extend the period again; a pause keeps the paid period; another tenant's subscription is ignored; a forged signature returns 401 with no event row and no state change; oversized bodies get 413.
+- [x] [AGENT] Failure modes of the MercadoPago client are tested against a real HTTP server (`test/mercadopago.test.ts`, closes D-1): 4xx/5xx with the detail truncated to 400 chars, missing token, a response without a pay URL, cancellation retrying `cancelled`→`canceled`, encoded ids and a closed socket.
 - [x] [AGENT] Dunning checked: `payment_failed` is sent from the webhook when a charge is rejected (deduped per event), `renewal_soon`/`subscription_expiring` go out before the period ends, and `lapsed_notice` covers 30 d, 60 d and 7 days before deletion. Gap worth knowing: there is no same-day “your access ended” mail — the first notice after expiry is at 30 days, preceded by the 7-day warning.
 - [ ] [OWNER] Production credentials, merchant account under the operating entity (P0-ENTITY).
 - [ ] [OWNER] Confirm pricing/limits and trial policy (P0-PRICING).
@@ -302,11 +303,11 @@ Files: `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-produc
 - [x] [AGENT] `kaptia-compliance/` resolved: it is another product's dossier. Kept as reference but marked with `kaptia-compliance/README.md` (not product code, never imported, not in the build or the export ZIP) so nobody mistakes it for a spec of this app.
 
 ### 19. Tests & CI
-Files: `test/` (21 files), `e2e/` (journey + quality specs, mock server), `playwright.config.ts`, `vitest.config.mts`, `.github/workflows/ci.yml`.
-- [x] 405 unit/integration tests, E2E 31/31 (desktop Chrome + Pixel 7), CI green, `pnpm audit` job.
+Files: `test/` (42 files), `e2e/` (journey + quality + axe specs, mock server), `playwright.config.ts`, `vitest.config.mts`, `.github/workflows/ci.yml`.
+- [x] 574 unit/integration tests in 42 files, E2E 77/77 (chromium journey + quality, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
 - [x] CI bug fixed: tests no longer depend on a pre-existing `test/.tmp`.
 - [x] [AGENT] Firefox and WebKit projects in `playwright.config.ts` (quality spec: headers, basic a11y, no horizontal overflow, legal footer) and CI now installs `chromium firefox webkit`. **Run locally on 2026-11-03: 30/30 green** (16 Firefox + 14 WebKit). The full journey stays Chromium-only so CI doesn't triple in time. Note: `playwright install` on this box needed a retry without `--with-deps` (the apt phase stalled); the browsers are cached in `~/.cache/ms-playwright`.
-- [x] [AGENT] Coverage report with a floor: `@vitest/coverage-v8` + `pnpm test:coverage` (now the CI step). Measured 2026-11-02 on the core modules — `billing`, `auth`, `jobs`, `mail`, `account`, `invoicing`, `rate-limit`, `client-ip`, `mercadopago` and `backup-crypto` — **87.7 % statements / 79.2 % branches / 84.9 % functions / 90.3 % lines**, with thresholds 80/70/80/80 that fail the build if they drop. Per-file numbers are in the coverage table; the weakest (mercadopago, 56 %) is logged as D-1 in `docs/DEFECTS.md`.
+- [x] [AGENT] Coverage report with a floor: `@vitest/coverage-v8` + `pnpm test:coverage` (now the CI step). Measured 2026-11-02 on the core modules — `billing`, `auth`, `jobs`, `mail`, `account`, `invoicing`, `rate-limit`, `client-ip`, `mercadopago` and `backup-crypto` — **90.9 % statements / 84.0 % branches / 91.9 % functions / 94.0 % lines** (re-measured 2026-11-03), with thresholds 80/80/80/70 that fail the build if they drop. The weakest file was `mercadopago.ts` (56 % statements); `test/mercadopago.test.ts` took it to 96 % statements and 100 % functions/lines, so D-1 in `docs/DEFECTS.md` is closed.
 - [x] [AGENT] Tests that every route has a guard (area 3) and that no `company_id` query forgets the tenant (area 1).
 - [ ] [OWNER] UAT with 3–5 real MYPE owners; record defects.
 - [x] [AGENT] Living defect list so the “zero S1/S2 open” gate (GO-NO-GO row 3) can be verified instead of assumed: `docs/DEFECTS.md` with severities, how to reproduce, the closed-item log (two S1/S2 already recorded and fixed) and a “known by design” table that maps to the owner inputs.
@@ -318,7 +319,7 @@ Files: `src/components/*` (34 files), `src/components/ui.tsx` (`Field`), `src/ap
 - [x] Labels associated with inputs (`Field` uses `<label htmlFor>` and `aria-describedby`); basic a11y checks on desktop Chrome and Pixel 7.
 - [x] [AGENT] Automated axe checks: `e2e/axe.spec.ts` runs `@axe-core/playwright` with the WCAG 2.1 A/AA tag set over the eight public screens (landing, login, signup, terms, privacy, cookies, forgot, reset) in a dedicated `axe` project. **It found two real defects on the landing page**: `bg-sage/15 text-sage` badges at 4.4:1 (below AA) — fixed to `text-ink`, and the same pattern pre-emptively fixed in `consent-ai-auditor` and `business-doc-advisor`. Run locally on 2026-11-03: **8/8 green**. Panel screens still need a logged-in fixture before axe can cover them.
 - [ ] [VERIFY] Keyboard-only walkthrough and screen reader pass (NVDA/VoiceOver) on signup, ARCO form and document publishing.
-- [ ] [VERIFY] Firefox, Safari, iOS Safari rendering (shared with area 19).
+- [~] [VERIFY] Firefox, Safari, iOS Safari rendering (shared with area 19). Firefox and WebKit (Safari's engine) are automated since 2026-11-03 (30/30 green); a real iOS Safari on a phone still needs a person.
 - [ ] [AGENT] Color contrast audit in both themes if a dark theme exists.
 - [x] [AGENT] Empty, loading and error states: `EmptyState` in the shared UI, `error.tsx`/`global-error.tsx`/`not-found.tsx` at the root, and a panel-wide `src/app/app/loading.tsx` (`PanelSkeleton`) that shows the page shape and announces `role="status"` + “Cargando…” while the dynamic page queries the DB. `.animate-pulse` is now also disabled under `prefers-reduced-motion`. Test: `test/loading-states.test.ts`.
 - [x] [AGENT] Print layouts: `@media print` in `globals.css` (`.no-print` hidden, `.print-page` without border/shadow/padding), used by the public policy `/p/[slug]` (PrintButton “Descargar PDF” + `print-page` on the article) and by the bank sheet `/app/bancos/[id]/ficha` (PrintButton “Imprimir / Guardar PDF” + `no-print` toolbar). The panel's document view relies on copy/“descargar .txt” plus that public print layout; `test/print-styles.test.ts` pins the CSS and both usages so a refactor can't drop them. Visual check in Firefox/Safari still belongs to the browser walkthrough item.
