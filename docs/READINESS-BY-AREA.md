@@ -19,6 +19,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | Check | Result |
 |---|---|
 | `pnpm test` | 564/564 passing, 42 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm exec playwright test` | 77/77 across chromium (journey + quality), mobile-chrome, firefox, webkit and axe |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
 | CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
@@ -94,7 +95,7 @@ Files: `src/lib/auth.ts`, `src/app/actions/auth.ts`, `src/app/actions/account.ts
 - [x] Rate limits on login, signup, reset, verification, password/email change, delete, export.
 - [x] Password reset (single use, 1 h, hashed), change password (closes other sessions), change email (confirmed from new address), delete account (re-auth + `ELIMINAR`, cancels MercadoPago first), JSON export.
 - [x] Minimum password 10 characters.
-- [x] [AGENT] Email verification now gates **publishing the public policy** (`emailVerificationGate` in `account.ts` + `togglePublishAction`), decided and justified in `DECISIONS.md` (“Verificación de correo: qué bloquea”). Publishing is the only act that exposes the company on an open URL and switches on the public ARCO form; ARCO replies, payment and export stay unblocked on purpose. Test: `test/documents-versions.test.ts`.
+- [x] [AGENT] Email verification now gates **publishing the public policy** (`emailVerificationGate` in `account.ts` + `togglePublishAction`), decided and justified in `DECISIONS.md` (“Verificación de correo: qué bloquea”). Publishing is the only act that exposes the company on an open URL and switches on the public ARCO form; ARCO replies, payment and export stay unblocked on purpose. Unit test: `test/documents-versions.test.ts`; **end-to-end**: the journey now opens the real verification link from the captured e-mail, clicks “Confirmar”, and only then publishes.
 - [x] [AGENT] RUC validation beyond “11 digits” was already done and is now verified: `isValidRuc` (prefix + módulo-11 checksum) runs before the SUNAT call in both `signupAction` and `updateCompanyAction`, with `checkCompanyRuc` failing closed. Covered by `test/ruc-lookup.test.ts`.
 - [x] [AGENT] ZIP export (`/cuenta/exportar/zip`): own dependency-free ZIP writer (`lib/zip.ts`), bundle builder (`lib/export-files.ts`) with `LEEME.txt`, `empresa.txt`, documents as text, history, CSV tables and the full JSON. Validated by `test/zip.test.ts` and by `unzip -t`. PDF keeps being the print stylesheet (areas 7/20), not a server-side generator.
 - [ ] [OWNER] Retention policy for lapsed/cancelled accounts (P0-SUPPORT); `purge-old-data` is 90 days pending that decision.
@@ -304,7 +305,7 @@ Files: `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-produc
 Files: `test/` (21 files), `e2e/` (journey + quality specs, mock server), `playwright.config.ts`, `vitest.config.mts`, `.github/workflows/ci.yml`.
 - [x] 405 unit/integration tests, E2E 31/31 (desktop Chrome + Pixel 7), CI green, `pnpm audit` job.
 - [x] CI bug fixed: tests no longer depend on a pre-existing `test/.tmp`.
-- [ ] [AGENT] Add Firefox and WebKit projects to `playwright.config.ts` (`pnpm exec playwright install firefox webkit`).
+- [x] [AGENT] Firefox and WebKit projects in `playwright.config.ts` (quality spec: headers, basic a11y, no horizontal overflow, legal footer) and CI now installs `chromium firefox webkit`. **Run locally on 2026-11-03: 30/30 green** (16 Firefox + 14 WebKit). The full journey stays Chromium-only so CI doesn't triple in time. Note: `playwright install` on this box needed a retry without `--with-deps` (the apt phase stalled); the browsers are cached in `~/.cache/ms-playwright`.
 - [x] [AGENT] Coverage report with a floor: `@vitest/coverage-v8` + `pnpm test:coverage` (now the CI step). Measured 2026-11-02 on the core modules — `billing`, `auth`, `jobs`, `mail`, `account`, `invoicing`, `rate-limit`, `client-ip`, `mercadopago` and `backup-crypto` — **87.7 % statements / 79.2 % branches / 84.9 % functions / 90.3 % lines**, with thresholds 80/70/80/80 that fail the build if they drop. Per-file numbers are in the coverage table; the weakest (mercadopago, 56 %) is logged as D-1 in `docs/DEFECTS.md`.
 - [x] [AGENT] Tests that every route has a guard (area 3) and that no `company_id` query forgets the tenant (area 1).
 - [ ] [OWNER] UAT with 3–5 real MYPE owners; record defects.
@@ -315,7 +316,7 @@ Files: `test/` (21 files), `e2e/` (journey + quality specs, mock server), `playw
 ### 20. Accessibility & UI
 Files: `src/components/*` (34 files), `src/components/ui.tsx` (`Field`), `src/app/globals.css`, `e2e/quality.spec.ts`.
 - [x] Labels associated with inputs (`Field` uses `<label htmlFor>` and `aria-describedby`); basic a11y checks on desktop Chrome and Pixel 7.
-- [ ] [AGENT] Automated axe checks on every main screen (panel, documents, banks, ARCO, incidents, assistant, help).
+- [x] [AGENT] Automated axe checks: `e2e/axe.spec.ts` runs `@axe-core/playwright` with the WCAG 2.1 A/AA tag set over the eight public screens (landing, login, signup, terms, privacy, cookies, forgot, reset) in a dedicated `axe` project. **It found two real defects on the landing page**: `bg-sage/15 text-sage` badges at 4.4:1 (below AA) — fixed to `text-ink`, and the same pattern pre-emptively fixed in `consent-ai-auditor` and `business-doc-advisor`. Run locally on 2026-11-03: **8/8 green**. Panel screens still need a logged-in fixture before axe can cover them.
 - [ ] [VERIFY] Keyboard-only walkthrough and screen reader pass (NVDA/VoiceOver) on signup, ARCO form and document publishing.
 - [ ] [VERIFY] Firefox, Safari, iOS Safari rendering (shared with area 19).
 - [ ] [AGENT] Color contrast audit in both themes if a dark theme exists.

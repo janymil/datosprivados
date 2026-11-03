@@ -136,7 +136,7 @@ export function ConsentAiAuditor({
               <span
                 className={`rounded-full px-3 py-0.5 font-mono text-xs font-bold uppercase ${
                   result.verdict === "cumple"
-                    ? "bg-sage/15 text-sage"
+                    ? "bg-sage/15 text-ink"
                     : result.verdict === "observado"
                       ? "bg-ochre/15 text-ochre"
                       : "bg-crimson/15 text-crimson"

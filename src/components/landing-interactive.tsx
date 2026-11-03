@@ -455,7 +455,7 @@ export function InteractivePricing() {
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-[3px] border border-line-strong bg-paper p-4">
         <div className="flex flex-wrap items-center gap-3">
           <span className="font-display text-lg font-medium text-ink">Elige cómo prefieres pagar:</span>
-          <span className="rounded-full bg-sage/15 px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.08em] text-sage">
+          <span className="rounded-full bg-sage/15 px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.08em] text-ink">
             El plan anual ahorra 2 meses
           </span>
         </div>

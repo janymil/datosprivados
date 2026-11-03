@@ -25,6 +25,13 @@ export default defineConfig({
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     // Android Chrome (Pixel 7): solo las pruebas de calidad; el recorrido completo ya corre en escritorio.
     { name: "mobile-chrome", use: { ...devices["Pixel 7"] }, testMatch: "**/quality.spec.ts" },
+    // Firefox y WebKit (motor de Safari): las páginas públicas y sus cabeceras, para no
+    // descubrir en producción que algo solo funciona en Chrome. El recorrido completo
+    // (registro, pago, documentos) sigue solo en Chromium para no triplicar el tiempo de CI.
+    { name: "firefox", use: { ...devices["Desktop Firefox"] }, testMatch: "**/quality.spec.ts" },
+    { name: "webkit", use: { ...devices["Desktop Safari"] }, testMatch: "**/quality.spec.ts" },
+    // axe: reglas WCAG sobre las mismas pantallas públicas. Solo en Chromium (axe analiza el DOM, no el motor).
+    { name: "axe", use: { ...devices["Desktop Chrome"] }, testMatch: "**/axe.spec.ts" },
   ],
   webServer: [
     {

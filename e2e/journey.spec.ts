@@ -82,6 +82,17 @@ test("recorrido completo: de la suscripción al vencimiento", async ({ page, bro
     });
   });
 
+  await test.step("confirmar el correo desde el enlace enviado (publicar lo exige)", async () => {
+    await flushMail();
+    const mail = (await sentMail()).filter((item) => item.to === EMAIL && /Confirma tu correo/.test(item.subject)).pop();
+    expect(mail, "no llegó el correo de verificación").toBeTruthy();
+    await page.goto(linkIn(mail!.text));
+    await page.getByRole("button", { name: "Confirmar" }).click();
+    // El destino es /login?verificado=1, que con la sesión abierta devuelve al panel.
+    await page.waitForURL(/\/app/);
+    expect(sql("SELECT email_verified_at FROM users WHERE email = ?", EMAIL)[0].email_verified_at).toBeTruthy();
+  });
+
   await test.step("onboarding crea bancos y documentos iniciales", async () => {
     await page.goto("/bienvenida");
     await page.getByRole("button", { name: "Tienda online / e-commerce" }).click();
@@ -171,6 +182,8 @@ test("recorrido completo: de la suscripción al vencimiento", async ({ page, bro
     await submit(page, /Registrar/);
     await page.waitForURL(/\/app\/incidentes\/[^/]+$/);
     await submit(page, /notificad|Notifiqué|Marcar/i);
+    // La acción vuelve a la misma URL: se espera al estado, no al reloj.
+    await expect(page.getByText("Notificado a la ANPD").first()).toBeVisible();
     const [incident] = sql(`SELECT status, notified_at, criteria FROM incidents WHERE ${OWN}`);
     expect(incident.criteria).toBe("datos_sensibles");
     expect(incident.status).toBe("notificado");
@@ -211,13 +224,22 @@ test("recorrido completo: de la suscripción al vencimiento", async ({ page, bro
   await test.step("con la cuenta vencida aún se pueden descargar todos los datos", async () => {
     await page.goto("/cuenta");
     await expect(page.getByRole("heading", { name: "Mis datos" })).toBeVisible();
-    const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: /Descargar mis datos/ }).click()]);
+    const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: /Descargar datos/ }).click()]);
     expect(download.suggestedFilename()).toBe(`expediente-${slug}.json`);
     const data = JSON.parse(await fs.readFile((await download.path())!, "utf8"));
     expect(data.company.ruc).toBe(RUC);
     expect(data.arco_requests).toHaveLength(1);
     expect(data.document_versions.length).toBeGreaterThanOrEqual(2);
     expect(JSON.stringify(data)).not.toContain("password_hash");
+  });
+
+  await test.step("el ZIP del expediente también se descarga", async () => {
+    const [zip] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: /Descargar expediente/ }).click()]);
+    expect(zip.suggestedFilename()).toMatch(/^expediente-.*\.zip$/);
+    const bytes = await fs.readFile((await zip.path())!);
+    expect(bytes.length).toBeGreaterThan(1000);
+    // Firma de archivo ZIP (PK\x03\x04).
+    expect(bytes.subarray(0, 4).toString("latin1")).toBe("PK\u0003\u0004");
   });
 
   await test.step("olvidé mi contraseña: el enlace del correo permite elegir una nueva", async () => {
