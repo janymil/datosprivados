@@ -25,6 +25,25 @@ describe("salud", () => {
     delete process.env.MERCADOPAGO_ACCESS_TOKEN;
   });
 
+  it("los endpoints públicos no dicen qué integraciones están configuradas", async () => {
+    // `config: { mail, mercadopago, llm, cron }` era un mapa gratis de qué está apagado
+    // (p. ej. que el correo no está configurado). Ahora solo queda un booleano agregado
+    // en /api/ready; el desglose vive en /api/cron/health, que exige el secreto.
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("MAIL_PROVIDER", "");
+    const health = JSON.parse(await (await healthGet()).text());
+    expect(health).not.toHaveProperty("config");
+    expect(health.checks).toEqual({ db: true });
+
+    const ready = await readyGet();
+    const readyBody = await ready.text();
+    expect(ready.status).toBe(503); // falta el correo
+    expect(JSON.parse(readyBody)).not.toHaveProperty("config");
+    expect(JSON.parse(readyBody).checks).toEqual({ db: true, config: false });
+    expect(readyBody).not.toMatch(/mail|mercadopago|llm/i); // ni el desglose ni los nombres
+    vi.unstubAllEnvs();
+  });
+
   it("la prueba de escritura no deja filas ni transacciones abiertas", () => {
     expect(dbCheck().ok).toBe(true);
     expect(dbCheck().ok).toBe(true);

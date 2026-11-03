@@ -451,10 +451,21 @@ los años cuyos feriados siguen siendo `calculado` (sin decreto confirmado): en 
 
 ## Salud y alertas (Fase 6)
 
-- `GET /api/health` (público, sin secretos): 200 si la base lee y escribe; 503 si no. Para el monitor externo.
-- `GET /api/ready` (público): además, en producción exige correo, MercadoPago y `CRON_SECRET`.
-- `GET /api/cron/health` (Bearer `CRON_SECRET`): tareas atrasadas, correos atascados > 1 h, ≥ `ALERT_WEBHOOK_FAILURES` webhooks fallidos en 24 h,
-  respaldo de más de 26 h en `BACKUP_DIR`, disco > 80 %. Devuelve `alerts: [{code, message}]` y 503 si hay alguna.
+**Qué vigilar y qué no.** Hay dos endpoints y se parecen lo suficiente como para
+confundirlos:
+
+| Endpoint | Para qué | Qué devuelve |
+|---|---|---|
+| `GET /api/health` | **el monitor externo (uptime)** | 200 si la base lee y escribe, 503 si no. Solo `ok`, `checks.db` y `uptime_s`. Ni secretos ni datos, y **tampoco** qué integraciones están configuradas (antes lo publicaba: le decía a cualquiera que el correo estaba apagado) |
+| `GET /api/ready` | **puerta de pre-lanzamiento** | además, en producción exige correo, MercadoPago y `CRON_SECRET`. Devuelve `checks.config` como un booleano agregado, sin decir cuál falta |
+| `GET /api/cron/health` (Bearer `CRON_SECRET`) | **el detalle para el operador** | tareas atrasadas, correos atascados > 1 h, ≥ `ALERT_WEBHOOK_FAILURES` webhooks fallidos en 24 h, respaldo de más de 26 h en `BACKUP_DIR`, disco > 80 %; `alerts: [{code, message}]` y 503 si hay alguna |
+
+> **No apuntes el monitor a `/api/ready`.** Como exige el correo configurado, hoy
+> responde **503** en el preview (comprobado el 2026-11-03) y seguirá en 503 en producción
+> hasta que Resend esté configurado: un monitor ahí pitaría sin parar y taparía las caídas
+> de verdad. `/api/ready` es una lista de comprobación antes de abrir al público, no un
+> latido.
+
 - Errores de servidor: `pm2 logs datosprivados | grep request_error` (JSON con `digest`, ruta y método; sin cuerpos ni correos).
 - Pase a producción: `docs/CUTOVER.md`. Plantilla de nginx: `deploy/nginx-production.conf`.
 

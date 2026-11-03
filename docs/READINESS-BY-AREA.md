@@ -18,7 +18,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 628/628 passing, 49 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 629/629 passing, 49 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm exec playwright test` | 101/101 across chromium (journey + quality + perf), mobile-chrome, firefox, webkit and axe (19 axe: 8 public + 11 panel; 2 perf budgets: LCP 1872 ms / CLS 0.008 on the landing) — the suite builds with `CSP_ENFORCE=1`, so it also proves the blocking CSP |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
@@ -266,7 +266,7 @@ Files: `src/lib/security-checks.ts`, `next.config.ts`, `src/app/actions/*`, `tes
 Files: `src/lib/jobs.ts`, `ops.ts`, `src/app/api/cron/[job]`, `api/health`, `api/ready`, `src/instrumentation.ts`, `scripts/weekly-report.mjs`, `docs/RUNBOOK.md`, `docs/POST-LAUNCH.md`, `deploy/logrotate-datosprivados.conf`.
 - [x] Real cron installed (`/etc/cron.d/datosprivados`, wrapper converts to Lima time because Ubuntu cron has no `CRON_TZ`). **Corrected on 2026-11-03:** the previous tick claimed the daily and weekly jobs ran "via the Lima-time wrapper", and that was false — see the S1 in `docs/DEFECTS.md`. The wrapper compares `HH:MM` exactly and cron fires at minute `0`, so `billing-sync` (06:15), `lapsed-account-notices` (06:30), `holidays-check` (05:30) and `demo-reset` (03:30) **had never run**. Hours are now all `HH:00` and spread out, the wrapper refuses an unreachable `--at` with exit 4, and the health endpoint went from `healthy: false` (two jobs overdue) to **`healthy: true`** on the box after running the two manually.
 - [x] Jobs: `send-outbox`, `arco-deadline-reminders`, `incident-deadline-reminders`, `purge-old-data`, `expire-sessions`, `billing-sync`, `document-staleness-notice`, `lapsed-account-notices`, `holidays-check`, `ops-alert`; bearer `CRON_SECRET`.
-- [x] `GET /api/cron/health` checks the backup directory and runs `dbIntegrity()` (`quick_check` + WAL checkpoint).
+- [x] `GET /api/cron/health` checks the backup directory and runs `dbIntegrity()` (`quick_check` + WAL checkpoint). The three health endpoints now have distinct jobs and no longer overlap: `/api/health` is the uptime target (only `ok`, `checks.db`, `uptime_s` — **it used to publish which integrations were configured**, telling anonymous callers that mail was off), `/api/ready` is a pre-launch gate (`checks.config` as one aggregate boolean), and `/api/cron/health` holds the operator detail behind the secret. Tests: `test/ops.test.ts`; the monitor guidance is in `RUNBOOK.md` (“Salud y alertas”), including why pointing a monitor at `/api/ready` would page forever.
 - [x] Weekly report and post-launch review scripts (`ops:weekly`). **Verified against live data on 2026-11-03** (`node scripts/weekly-report.mjs`): it flagged the one overdue ARCO request on the preview (`ARCO-2026-0011`, due 2026-10-12) and two webhook failures that turned out to be sandbox test payloads from 2026-11-01 with fake ids (`999999999`, `123456789` → MercadoPago 404, handled correctly). The environment state and the build drift are written up in `RUNBOOK.md` (“Estado verificado del preview”).
 - [ ] [OWNER] External uptime monitor on `/api/health` and `/api/ready`, plus a paging channel (P6-OBS).
 - [ ] [OWNER] Error tracking account (Sentry or similar) and a deliberate test alert fired and received.
@@ -306,7 +306,7 @@ Files: `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-produc
 
 ### 19. Tests & CI
 Files: `test/` (42 files), `e2e/` (journey + quality + axe specs, mock server), `playwright.config.ts`, `vitest.config.mts`, `.github/workflows/ci.yml`.
-- [x] 628 unit/integration tests in 49 files, E2E 101/101 (chromium journey + quality + perf, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
+- [x] 629 unit/integration tests in 49 files, E2E 101/101 (chromium journey + quality + perf, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
 - [x] CI bug fixed: tests no longer depend on a pre-existing `test/.tmp`.
 - [x] [AGENT] Firefox and WebKit projects in `playwright.config.ts` (quality spec: headers, basic a11y, no horizontal overflow, legal footer) and CI now installs `chromium firefox webkit`. **Run locally on 2026-11-03: 30/30 green** (16 Firefox + 14 WebKit). The full journey stays Chromium-only so CI doesn't triple in time. Note: `playwright install` on this box needed a retry without `--with-deps` (the apt phase stalled); the browsers are cached in `~/.cache/ms-playwright`.
 - [x] [AGENT] Coverage report with a floor: `@vitest/coverage-v8` + `pnpm test:coverage` (now the CI step). Measured 2026-11-02 on the core modules — `billing`, `auth`, `jobs`, `mail`, `account`, `invoicing`, `rate-limit`, `client-ip`, `mercadopago` and `backup-crypto` — **90.9 % statements / 84.0 % branches / 91.9 % functions / 94.0 % lines** (re-measured 2026-11-03), with thresholds 80/80/80/70 that fail the build if they drop. The weakest file was `mercadopago.ts` (56 % statements); `test/mercadopago.test.ts` took it to 96 % statements and 100 % functions/lines, so D-1 in `docs/DEFECTS.md` is closed.
