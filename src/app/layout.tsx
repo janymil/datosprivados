@@ -30,28 +30,29 @@ export const metadata: Metadata = {
   // no se define y los buscadores entran con normalidad.
   ...(noindex() ? { robots: { index: false, follow: false } } : {}),
   title: {
-    default: "DatosPrivados — Ley 29733 para MYPE, consultorios y profesionales del Perú",
+    default: "DatosPrivados — Software de cumplimiento de la Ley 29733 para empresas",
     template: "%s · DatosPrivados",
   },
   description:
-    "Registra tus bancos de datos, publica tu política, atiende solicitudes ARCO y documenta incidentes. Cumplimiento de la Ley 29733 para MYPE, consultorios y profesionales en Perú.",
+    "Inscribe tus bancos de datos, genera tu política de privacidad y documento de seguridad, atiende solicitudes ARCO y documenta incidentes. Cumplimiento de la Ley 29733 para pequeñas y medianas empresas del Perú.",
   keywords: [
     "Ley 29733",
+    "DS 016-2024-JUS",
     "protección de datos personales Perú",
     "ANPD",
-    "bancos de datos",
-    "ARCO",
-    "MYPE",
-    "consultorio",
-    "clínica",
-    "compliance",
+    "inscribir banco de datos personales",
+    "SIPDP",
+    "derechos ARCO",
+    "oficial de datos personales",
+    "software de cumplimiento",
   ],
   openGraph: {
     title: "DatosPrivados — La Ley 29733, en orden",
     description:
-      "El panel de cumplimiento para MYPE, consultorios y profesionales del Perú: bancos de datos, ARCO, incidentes y documentos.",
+      "El panel de cumplimiento para pequeñas y medianas empresas del Perú: bancos de datos, documentos, solicitudes ARCO e incidentes.",
     locale: "es_PE",
     type: "website",
+    siteName: "DatosPrivados",
   },
 };
 

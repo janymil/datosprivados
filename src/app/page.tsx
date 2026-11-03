@@ -8,15 +8,25 @@ import {
   FileIcon,
   InboxIcon,
   LockIcon,
-  Logo,
   ShieldIcon,
   SparklesIcon,
 } from "@/components/icons";
 import { PromoVideo } from "@/components/promo-video";
 import { InteractivePricing, InteractiveSegments } from "@/components/landing-interactive";
+import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { GUIDES } from "@/lib/guides";
+import { JsonLd } from "@/components/json-ld";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 
 export const metadata = {
-  title: "DatosPrivados — Ley 29733 en simple para tu negocio o consultorio en Perú",
+  ...pageMetadata({
+    title: "DatosPrivados — Software de cumplimiento de la Ley 29733 para empresas",
+    description:
+      "Inscribe tus bancos de datos en el SIPDP, genera la política de privacidad y el documento de seguridad, controla los plazos ARCO y los incidentes de 48 horas. Para pequeñas y medianas empresas del Perú.",
+    path: "/",
+  }),
+  // Sin plantilla «%s · DatosPrivados»: el título de la portada ya lleva la marca.
+  title: { absolute: "DatosPrivados — Software de cumplimiento de la Ley 29733 para empresas" },
 };
 
 function Seal({ label = "Al día" }: { label?: string }) {
@@ -40,51 +50,6 @@ function Seal({ label = "Al día" }: { label?: string }) {
   );
 }
 
-function Header() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur-md">
-      <div className="container-page flex min-h-[72px] flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3">
-        <Link href="/" className="flex items-center gap-3" aria-label="DatosPrivados, inicio">
-          <Logo />
-        </Link>
-
-        <nav className="hidden items-center gap-6 text-[15px] font-medium md:flex" aria-label="Principal">
-          <a href="#obligaciones" className="text-ink-soft transition-colors hover:text-ink">
-            Qué exige la ley
-          </a>
-          <a href="#rubros" className="text-ink-soft transition-colors hover:text-ink">
-            Tu rubro
-          </a>
-          <a href="#pasos" className="text-ink-soft transition-colors hover:text-ink">
-            Cómo funciona
-          </a>
-          <a href="#precios" className="text-ink-soft transition-colors hover:text-ink">
-            Precios
-          </a>
-          <a href="#preguntas" className="text-ink-soft transition-colors hover:text-ink">
-            Preguntas
-          </a>
-        </nav>
-
-        <div className="ml-auto flex items-center gap-2.5">
-          <Link
-            href="/login"
-            className="btn btn-ghost btn-sm shrink-0 whitespace-nowrap px-3 text-[13px] sm:px-4 sm:text-sm"
-          >
-            Entrar
-          </Link>
-          <Link
-            href="/registro"
-            className="btn btn-primary btn-sm shrink-0 whitespace-nowrap px-3 text-[13px] sm:px-4 sm:text-sm"
-          >
-            Crear cuenta
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
-
 function Hero() {
   const rows: Array<[string, string, "ok" | "danger"]> = [
     ["Bancos de datos en SIPDP", "3 de 4", "danger"],
@@ -101,26 +66,27 @@ function Hero() {
       <div className="container-page relative grid gap-14 py-14 md:py-20 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-10 lg:py-22">
         <div>
           <h1 className="max-w-[19ch] font-display text-[2.6rem] leading-[1.02] tracking-[-0.035em] sm:text-[3.3rem] lg:text-[3.85rem]">
-            ¿Atiendes pacientes, clientes o trabajadores?{" "}
-            <em className="text-crimson">La ley ya te aplica.</em>
+            Tu empresa guarda datos de clientes y trabajadores.{" "}
+            <em className="text-crimson">¿Podrías demostrar que cumples?</em>
           </h1>
 
           <p className="rise d3 mt-6 max-w-[50ch] text-[17.5px] leading-relaxed text-ink-soft sm:text-[18.5px]">
-            Si guardas datos de personas, la <strong>Ley 29733</strong> te pide 7 cosas. Te decimos cuáles y te las
-            dejamos listas, sin lenguaje de abogados.
+            La <strong>Ley 29733</strong> y su reglamento exigen bancos de datos inscritos, documentos vigentes y plazos
+            controlados. DatosPrivados arma el expediente de tu empresa y lo mantiene al día, con evidencia fechada para
+            una fiscalización de la ANPD.
           </p>
 
           <div className="rise d4 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <a href="#obligaciones" className="btn btn-primary h-13 px-7 text-base">
-              Ver qué me exige
+            <Link href="/diagnostico" className="btn btn-primary h-13 px-7 text-base">
+              Diagnóstico gratuito
               <ArrowRightIcon className="h-4 w-4" />
-            </a>
+            </Link>
             <Link href="/demo" prefetch={false} className="btn btn-ghost h-13 px-7 text-base">
               Probar la demo
             </Link>
           </div>
 
-          <p className="rise d5 mt-5 text-sm text-ink-soft">Demo sin registro · planes desde S/ 19 al mes</p>
+          <p className="rise d5 mt-5 text-sm text-ink-soft">Diagnóstico en 3 minutos · demo sin registro · para empresas con planilla</p>
         </div>
 
         <div className="rise d3 relative mx-auto w-full max-w-[460px] lg:mr-0">
@@ -194,32 +160,32 @@ const ONCE: Obligation[] = [
   {
     icon: DatabaseIcon,
     title: "Inscribir tus bancos de datos",
-    law: "Cada lista de personas (clientes, trabajadores, cámaras) va al registro del Estado (SIPDP). Es gratis.",
-    help: "Te sugerimos las listas de tu rubro y te damos la ficha lista para copiar.",
+    law: "Cada banco (clientes, colaboradores, cámaras, proveedores) se inscribe en el SIPDP. Es gratis.",
+    help: "Proponemos los bancos de tu sector con la ficha redactada, lista para copiar.",
   },
   {
     icon: FileIcon,
     title: "Publicar tu Política de Privacidad",
-    law: "Tus clientes deben poder leer qué haces con sus datos.",
-    help: "La armamos con tus datos y te damos un enlace para tu web o WhatsApp.",
+    law: "Clientes, postulantes y usuarios deben poder leer qué haces con sus datos.",
+    help: "Se genera con tus bancos inscritos y se publica con enlace propio y control de versiones.",
   },
   {
     icon: CheckIcon,
     title: "Pedir consentimiento",
-    law: "Antes de enviar publicidad o tratar datos de salud.",
-    help: "Textos listos para formularios, WhatsApp y correos.",
+    law: "Para publicidad, datos de salud, biometría o datos de menores.",
+    help: "Textos para formularios, contratos, WhatsApp y correo, con revisor de casillas.",
   },
   {
     icon: ShieldIcon,
     title: "Tener un Documento de Seguridad",
-    law: "Manual interno de quién accede a qué y cómo se protege. No se publica.",
-    help: "Lo generamos y marcas las medidas que ya aplicas.",
+    law: "Quién accede a qué, cómo se protege y cuánto se conserva. Lo pide la ANPD.",
+    help: "Se genera con las medidas de tu sector y marcas las que ya aplicas.",
   },
   {
     icon: LockIcon,
     title: "Firmar confidencialidad",
-    law: "Con tu equipo y los proveedores que ven datos.",
-    help: "Formatos listos para imprimir y firmar.",
+    law: "Con tu personal y con los proveedores que tratan datos por ti.",
+    help: "Aviso para trabajadores, confidencialidad y cláusulas de encargo.",
   },
 ];
 
@@ -227,14 +193,14 @@ const WHEN: Obligation[] = [
   {
     icon: InboxIcon,
     title: "Responder pedidos ARCO",
-    law: "Si alguien pide ver, corregir o borrar sus datos: 10 a 20 días hábiles.",
-    help: "Formulario público, reloj con feriados del Perú y respuesta lista.",
+    law: "Si alguien pide ver, corregir o borrar sus datos: de 8 a 20 días hábiles.",
+    help: "Formulario público con ticket, plazos con feriados del Perú y plantillas de respuesta.",
   },
   {
     icon: AlertIcon,
     title: "Avisar incidentes graves",
     law: "Si se filtran o pierden datos: aviso a la ANPD en 48 horas.",
-    help: "Te decimos si debes avisar y te damos el borrador.",
+    help: "Reloj de 48 horas, criterios de notificación y borrador para la ANPD.",
   },
 ];
 
@@ -265,7 +231,7 @@ function Obligations() {
     <section id="obligaciones" className="scroll-mt-20 border-b border-line bg-paper-2">
       <div className="container-page py-16 md:py-24">
         <h2 className="max-w-[24ch] font-display text-[2.25rem] leading-[1.03] tracking-[-0.03em] md:text-[2.8rem]">
-          Lo que la ley te exige, en 7 puntos.
+          Lo que la ley exige a tu empresa, en 7 puntos.
         </h2>
         <p className="mt-4 max-w-[60ch] text-base leading-relaxed text-ink-soft">
           Cinco se hacen una sola vez. Los otros dos, solo cuando pasa algo. En verde, lo que hace DatosPrivados por ti.
@@ -273,7 +239,7 @@ function Obligations() {
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[1.25fr_1fr]">
           <div className="card p-6 md:p-7">
-            <p className="label-mono">Una sola vez · ~30 minutos</p>
+            <p className="label-mono">Base del expediente · se mantiene al día</p>
             <ul className="mt-1 divide-y divide-line">
               {ONCE.map((item, index) => (
                 <ObligationItem key={item.title} item={item} n={index + 1} />
@@ -294,7 +260,7 @@ function Obligations() {
             <div className="border-l-3 border-crimson bg-crimson/[0.06] px-5 py-4">
               <p className="font-display text-xl leading-tight">Multas de S/ 2,750 a S/ 550,000</p>
               <p className="mt-1 text-[15px] leading-relaxed text-ink-soft">
-                De 0.5 a 100 UIT si la ANPD fiscaliza y falta alguno de estos puntos. No importa el tamaño del negocio.
+                De 0.5 a 100 UIT si la ANPD fiscaliza y falta alguno de estos puntos. La ley no exime a ninguna empresa por su tamaño.
               </p>
             </div>
 
@@ -314,10 +280,14 @@ function Segments() {
     <section id="rubros" className="scroll-mt-20 border-b border-line">
       <div className="container-page py-16 md:py-24">
         <h2 className="max-w-[24ch] font-display text-[2.25rem] leading-[1.03] tracking-[-0.03em] md:text-[2.8rem]">
-          ¿Qué bancos de datos tiene tu negocio?
+          ¿Qué bancos de datos tiene tu empresa?
         </h2>
         <p className="mt-4 max-w-[56ch] text-base leading-relaxed text-ink-soft">
-          Elige tu rubro y mira las listas de personas que te toca declarar en el SIPDP.
+          Elige tu sector y mira los bancos que normalmente se declaran en el SIPDP.{" "}
+          <Link href="/sectores" className="link-underline text-ink">
+            Ver el detalle por sector
+          </Link>
+          .
         </p>
 
         <InteractiveSegments />
@@ -334,7 +304,7 @@ function VideoSection() {
 
         <div>
           <h2 className="max-w-[20ch] font-display text-[2.25rem] leading-[1.04] tracking-[-0.03em] md:text-[2.8rem]">
-            ¿Nunca escuchaste de esta ley?
+            Así empieza una multa.
           </h2>
           <p className="mt-4 max-w-[46ch] text-base leading-relaxed text-paper/75">
             Mira en 1:42 cómo un video de cámaras terminó en una multa de 21 UIT, y qué hacer para que no te pase.
@@ -357,21 +327,21 @@ function VideoSection() {
 const STEPS = [
   {
     n: "1",
-    title: "Elige tu rubro",
+    title: "Elige tu sector",
     time: "10 min",
-    body: "Te proponemos las listas típicas de tu negocio. Desmarcas lo que no aplique.",
+    body: "Proponemos los bancos de datos típicos de tu empresa. Desmarcas lo que no aplique.",
   },
   {
     n: "2",
     title: "Revisa y publica",
     time: "20 min",
-    body: "Política, consentimientos, documento de seguridad y ficha SIPDP, ya llenos con tus datos.",
+    body: "Política, consentimientos, documento de seguridad, cláusulas y fichas SIPDP, generados con tus datos.",
   },
   {
     n: "3",
-    title: "Atiende avisos",
-    time: "Cuando pase algo",
-    body: "Te avisamos si llega un pedido ARCO o vence un plazo. Todo queda registrado como prueba.",
+    title: "Mantén el expediente",
+    time: "Continuo",
+    body: "Te avisamos si llega una solicitud ARCO, vence un plazo o hay un incidente. Todo queda fechado como evidencia.",
   },
 ];
 
@@ -400,7 +370,7 @@ function HowItWorks() {
 
         <p className="mt-6 flex items-center gap-2 text-[15px] text-ink-soft">
           <SparklesIcon className="h-4 w-4 text-crimson" />
-          ¿Dudas en el camino? El asistente con IA te responde en simple.
+          ¿Dudas en el camino? El asistente con IA responde sobre la ley y sobre tu propio expediente.
         </p>
       </div>
     </section>
@@ -412,10 +382,10 @@ function Pricing() {
     <section id="precios" className="scroll-mt-20 border-b border-line">
       <div className="container-page py-16 md:py-24">
         <h2 className="font-display text-[2.25rem] leading-[1.03] tracking-[-0.03em] md:text-[2.8rem]">
-          Cuesta menos que media hora de abogado.
+          Cuesta menos que una hora de consultoría.
         </h2>
         <p className="mt-4 max-w-[56ch] text-base leading-relaxed text-ink-soft">
-          Sin contratos amarrados. El registro en el SIPDP del Estado es gratis.
+          Sin contratos de permanencia. El registro en el SIPDP del Estado es gratis.
         </p>
 
         <InteractivePricing />
@@ -431,20 +401,20 @@ function Pricing() {
 function Faq() {
   const questions = [
     {
-      q: "Soy un consultorio, una bodega o tengo RUC 10. ¿Me aplica?",
-      a: "Sí. Aplica a cualquier negocio que guarde datos de personas, sin importar su tamaño. Si manejas historias clínicas, el cuidado es mayor porque son datos sensibles.",
+      q: "Somos una empresa pequeña. ¿Nos aplica la ley?",
+      a: "Sí. La Ley 29733 aplica a cualquier empresa que trate datos de personas, sin importar su tamaño. Si tienes trabajadores en planilla ya tienes al menos un banco de datos, y casi siempre con datos sensibles como descansos médicos.",
     },
     {
       q: "¿Qué es un «banco de datos»?",
-      a: "Cualquier lista o archivo con datos de personas: tu Excel de clientes, la agenda de WhatsApp, la planilla o las grabaciones de tus cámaras. No tiene nada que ver con un banco financiero.",
+      a: "Cualquier conjunto de datos de personas que la empresa usa para una finalidad: la base de clientes del ERP o CRM, la planilla y los legajos, los CVs recibidos o las grabaciones de las cámaras. No tiene nada que ver con un banco financiero.",
     },
     {
-      q: "¿Sirve si solo vendo por WhatsApp, Instagram o TikTok?",
-      a: "Sí. Te damos un enlace para tu política y tu formulario ARCO, listo para tu biografía o tu catálogo de WhatsApp Business.",
+      q: "¿Necesitamos un Oficial de Datos Personales?",
+      a: "Solo si tratas datos sensibles o grandes volúmenes como parte de tu actividad. Si te aplica, las medianas empresas están obligadas desde noviembre de 2026 y las pequeñas desde noviembre de 2027. DatosPrivados mantiene el expediente que ese oficial necesita.",
     },
     {
       q: "¿Esto reemplaza a mi abogado?",
-      a: "No. Es una herramienta de gestión y los documentos son borradores. Para datos sensibles a gran escala o casos complejos, hazlos revisar.",
+      a: "No. Es una herramienta de gestión y los documentos son borradores de trabajo. Tu abogado o consultor puede revisarlos sobre una base ordenada, en vez de empezar de cero.",
     },
   ];
 
@@ -489,10 +459,10 @@ function FinalCta() {
       <div className="container-page relative grid gap-10 py-16 md:py-20 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
         <div>
           <h2 className="max-w-[19ch] font-display text-[2.4rem] leading-[1.02] tracking-[-0.03em] md:text-[3.2rem]">
-            Mira cómo se ve un negocio en orden.
+            Mira cómo se ve una empresa en orden.
           </h2>
           <p className="mt-5 max-w-[50ch] text-base leading-relaxed text-paper/80">
-            Entra a la demo sin registrarte y recorre los 7 puntos con un negocio de ejemplo.
+            Entra a la demo sin registrarte y recorre los 7 puntos con una empresa de ejemplo.
           </p>
         </div>
         <div className="flex flex-col gap-3 lg:items-end">
@@ -516,81 +486,73 @@ function FinalCta() {
   );
 }
 
-function Footer() {
+function GuidesBand() {
   return (
-    <footer className="bg-paper-2">
-      <div className="container-page py-12">
-        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
-          <div>
-            <Logo />
-            <p className="mt-4 max-w-[34ch] text-[15px] leading-relaxed text-ink-soft">
-              Cumplimiento en simple de la Ley 29733 y el DS 016-2024-JUS para MYPE, consultorios y
-              profesionales del Perú.
-            </p>
-            <p className="mt-4 font-mono text-xs uppercase tracking-[0.12em] text-ink-soft">
-              Lima, Perú · 2026
-            </p>
-          </div>
-
-          <div>
-            <p className="label-mono">Producto</p>
-            <ul className="mt-4 space-y-2.5 text-[15px] text-ink-soft">
-              <li><a href="#obligaciones" className="hover:text-ink">Qué exige la ley</a></li>
-              <li><a href="#rubros" className="hover:text-ink">Plantillas por rubro</a></li>
-              <li><a href="#precios" className="hover:text-ink">Precios</a></li>
-              <li><Link href="/demo" prefetch={false} className="hover:text-ink">Demo interactiva</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <p className="label-mono">Normativa peruana</p>
-            <ul className="mt-4 space-y-2.5 text-[15px] text-ink-soft">
-              <li><a href="#preguntas" className="hover:text-ink">Preguntas frecuentes</a></li>
-              <li><span>Ley N.° 29733 (LPDP)</span></li>
-              <li><span>Reglamento DS N.° 016-2024-JUS</span></li>
-              <li><span>Portal SIPDP — MINJUSDH</span></li>
-            </ul>
-          </div>
-
-          <div>
-            <p className="label-mono">Contacto</p>
-            <ul className="mt-4 space-y-2.5 text-[15px] text-ink-soft">
-              <li><a href="mailto:hola@datosprivados.pe" className="hover:text-ink">hola@datosprivados.pe</a></li>
-              <li><Link href="/login" className="hover:text-ink">Ingresar a mi cuenta</Link></li>
-              <li><Link href="/registro" className="hover:text-ink">Crear una cuenta</Link></li>
-              <li><Link href="/terminos" className="hover:text-ink">Términos y condiciones</Link></li>
-              <li><Link href="/privacidad" className="hover:text-ink">Política de privacidad</Link></li>
-              <li><Link href="/cookies" className="hover:text-ink">Cookies</Link></li>
-            </ul>
-          </div>
+    <section id="guias" className="scroll-mt-20 border-b border-line">
+      <div className="container-page py-16 md:py-20">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h2 className="max-w-[24ch] font-display text-[2.25rem] leading-[1.03] tracking-[-0.03em] md:text-[2.8rem]">
+            Guías de la Ley 29733 para empresas
+          </h2>
+          <Link href="/guias" className="link-underline text-[15px] font-medium">
+            Ver todas las guías
+          </Link>
         </div>
-
-        <div className="mt-10 flex flex-col gap-4 border-t border-line pt-6 text-sm leading-relaxed text-ink-soft md:flex-row md:items-start md:justify-between">
-          <p className="max-w-[76ch]">
-            © 2026 DatosPrivados. DatosPrivados es una herramienta tecnológica de gestión y educación
-            sobre la Ley 29733, no un estudio jurídico. Los documentos generados son borradores de
-            trabajo que recomendamos validar con un abogado.
-          </p>
-          <p className="font-mono text-xs uppercase tracking-[0.12em]">Hecho en Perú para MYPEs y consultorios</p>
-        </div>
+        <ul className="mt-8 grid gap-4 md:grid-cols-3">
+          {GUIDES.slice(0, 6).map((guide) => (
+            <li key={guide.slug}>
+              <Link href={`/guias/${guide.slug}`} className="card block h-full p-5 hover:border-ink">
+                <p className="font-display text-lg leading-tight">{guide.h1}</p>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-ink-soft">{guide.description}</p>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
-    </footer>
+    </section>
   );
 }
 
+const ORGANIZATION_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      name: "DatosPrivados",
+      url: absoluteUrl("/"),
+      email: "hola@datosprivados.pe",
+      areaServed: "PE",
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: "DatosPrivados",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      inLanguage: "es-PE",
+      description:
+        "Software de cumplimiento de la Ley 29733 de Protección de Datos Personales del Perú: bancos de datos, documentos, solicitudes ARCO e incidentes.",
+      url: absoluteUrl("/"),
+    },
+  ],
+};
+
 export default function LandingPage() {
   return (
-    <main>
-      <Header />
-      <Hero />
-      <Obligations />
-      <Segments />
-      <VideoSection />
-      <HowItWorks />
-      <Pricing />
-      <Faq />
-      <FinalCta />
-      <Footer />
-    </main>
+    <>
+      <SiteHeader />
+      <JsonLd data={ORGANIZATION_LD} />
+      <main>
+        <Hero />
+        <Obligations />
+        <Segments />
+        <VideoSection />
+        <HowItWorks />
+        <Pricing />
+        <GuidesBand />
+        <Faq />
+        <FinalCta />
+      </main>
+      <SiteFooter />
+    </>
   );
 }

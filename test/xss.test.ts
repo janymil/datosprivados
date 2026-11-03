@@ -4,6 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { DocBody } from "@/components/doc-body";
+import { JsonLd } from "@/components/json-ld";
 import { buildPrivacyPolicy, buildSecurityDocument } from "@/lib/documents";
 import { getCompany, makeCompany } from "./helpers/db";
 
@@ -48,11 +49,22 @@ describe("guardas estáticas", () => {
     });
   }
 
+  // Única excepción: el componente de JSON-LD. Solo recibe objetos que arma el propio
+  // código y escapa «<» para que nada pueda cerrar la etiqueta (ver la prueba de abajo).
+  const JSON_LD = path.join(SRC, "components", "json-ld.tsx");
+
   it("no hay dangerouslySetInnerHTML ni eval en el código de la app", () => {
     const offenders = walk(SRC).filter((file) => {
+      if (file === JSON_LD) return /\beval\(|new Function\(/.test(fs.readFileSync(file, "utf8"));
       const text = fs.readFileSync(file, "utf8");
       return /dangerouslySetInnerHTML|\beval\(|new Function\(/.test(text);
     });
     expect(offenders).toEqual([]);
+  });
+
+  it("el JSON-LD no puede cerrar la etiqueta <script>", () => {
+    const html = renderToStaticMarkup(createElement(JsonLd, { data: { name: "</script><script>alert(1)</script>" } }));
+    expect(html.match(/<script/g)).toHaveLength(1);
+    expect(html).toContain("\\u003c/script>");
   });
 });

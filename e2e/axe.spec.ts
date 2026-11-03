@@ -11,7 +11,22 @@ import { expect, test, type Page } from "@playwright/test";
  * solo con teclado, que siguen pendientes de una persona.
  */
 
-const PAGES = ["/", "/login", "/registro", "/terminos", "/privacidad", "/cookies", "/olvide", "/restablecer"];
+const PAGES = [
+  "/",
+  "/login",
+  "/registro",
+  "/terminos",
+  "/privacidad",
+  "/cookies",
+  "/olvide",
+  "/restablecer",
+  "/guias",
+  "/guias/inscribir-banco-de-datos-personales",
+  "/sectores/clinicas-y-centros-medicos",
+  "/glosario",
+  "/plantillas",
+  "/diagnostico",
+];
 
 // Pantallas del panel. Se entra con la cuenta demo (GET /demo inicia sesión y vuelve
 // a /app): así axe cubre el panel sin repetir en cada prueba un alta y un pago.

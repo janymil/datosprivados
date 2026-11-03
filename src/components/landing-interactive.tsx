@@ -41,21 +41,21 @@ const SEGMENTS: Segment[] = [
     id: "consultorio",
     sector: "policlinico",
     badge: "Salud",
-    title: "Consultorio médico, policlínico o centro de salud",
+    title: "Clínica, policlínico o centro médico",
     summary:
       "Historias clínicas, recetas, citas y datos de salud de tus pacientes. Son datos sensibles: la ANPD los mira con lupa.",
     banks: ["Pacientes e historias", "Trabajadores", "Cámaras", "Proveedores"],
     tip: "Pide consentimiento expreso y por escrito para datos de salud. La plantilla incluye el texto listo.",
   },
   {
-    id: "dental",
-    sector: "dental",
-    badge: "Salud",
-    title: "Consultorio dental u odontología",
+    id: "financiera",
+    sector: "prestamos",
+    badge: "Finanzas",
+    title: "Financiera, cooperativa o casa de préstamos",
     summary:
-      "Fichas, radiografías, fotos clínicas y tratamientos. También son datos sensibles y exigen consentimiento escrito.",
-    banks: ["Pacientes", "Trabajadores", "Cámaras"],
-    tip: "Las fotos de antes y después son datos de salud: no las uses en publicidad sin autorización aparte.",
+      "Ingresos, historial crediticio, debida diligencia y decisiones de crédito. Protección de datos y prevención de lavado se cruzan en cada expediente.",
+    banks: ["Créditos y debida diligencia", "Clientes", "Trabajadores", "Cámaras"],
+    tip: "Consultar centrales de riesgo exige la autorización del titular: guárdala junto a la solicitud.",
   },
   {
     id: "farmacia",
@@ -88,14 +88,14 @@ const SEGMENTS: Segment[] = [
     tip: "Vender el pedido no te autoriza a meter al cliente en una lista de ofertas por WhatsApp.",
   },
   {
-    id: "bodega",
-    sector: "bodega",
-    badge: "Comercio",
-    title: "Bodega, mercado o tienda de barrio",
+    id: "inmobiliaria",
+    sector: "inmobiliaria",
+    badge: "Inmobiliaria",
+    title: "Inmobiliaria o constructora",
     summary:
-      "Clientes, proveedores, boletas y cámaras. Es el caso típico de MYPE que cree que la ley «no le aplica».",
-    banks: ["Clientes", "Proveedores", "Reclamaciones", "Cámaras"],
-    tip: "Tu Excel de clientes y tu carpeta de boletas son bancos de datos. Inscribirlos cuesta S/ 0.",
+      "Prospectos de ferias y portales, sustento de ingresos de compradores, contratistas y cámaras de obra.",
+    banks: ["Clientes y prospectos", "Trabajadores", "Proveedores", "Cámaras"],
+    tip: "Una base de prospectos comprada no trae el consentimiento para enviarles publicidad.",
   },
   {
     id: "estudio",
@@ -103,7 +103,7 @@ const SEGMENTS: Segment[] = [
     badge: "Servicios",
     title: "Estudio contable, abogados o agencia",
     summary:
-      "Datos de clientes, planillas, expedientes y contactos comerciales. Muchas veces tratas datos por encargo de otro negocio.",
+      "Datos de clientes, planillas, expedientes y contactos comerciales. Muchas veces tratas datos por encargo de otra empresa.",
     banks: ["Clientes", "Trabajadores", "Proveedores"],
     tip: "Si tratas datos por encargo, firma la cláusula de encargado que está en Documentos.",
   },
@@ -147,7 +147,7 @@ export function InteractiveSegments() {
     <div className="mt-10 grid gap-5 lg:grid-cols-[0.92fr_1.08fr]">
       <div className="border border-line bg-paper-2 p-4 md:p-5">
         <label htmlFor="segment-select" className="label-mono">
-          Elige tu tipo de negocio
+          Elige tu sector
         </label>
         <select
           id="segment-select"
@@ -489,13 +489,10 @@ export function InteractivePricing() {
           <div className="flex items-baseline justify-between gap-2">
             <h3 className="font-display text-3xl tracking-[-0.02em]">Básico</h3>
             <span className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">
-              Para ordenar lo esencial
+              {PLANS.basico.tagline}
             </span>
           </div>
-          <p className="mt-2.5 text-base text-ink-soft">
-            Bodega, consultorio, tienda o estudio que recién empieza y quiere dejar sus documentos
-            esenciales en regla.
-          </p>
+          <p className="mt-2.5 text-base text-ink-soft">{PLANS.basico.audience}</p>
           <div className="mt-6 flex items-baseline gap-2">
             <span className="font-display text-5xl tracking-[-0.04em]">
               S/ {planPrice("basico", term)}
@@ -534,13 +531,10 @@ export function InteractivePricing() {
           <div className="flex items-baseline justify-between gap-2">
             <h3 className="font-display text-3xl tracking-[-0.02em]">Pro</h3>
             <span className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">
-              Para consultorios y equipos
+              {PLANS.pro.tagline}
             </span>
           </div>
-          <p className="mt-2.5 text-base text-ink-soft">
-            Varios profesionales, sedes o canales que quieren automatizar respuestas, fichas e
-            incidentes con IA.
-          </p>
+          <p className="mt-2.5 text-base text-ink-soft">{PLANS.pro.audience}</p>
           <div className="mt-6 flex items-baseline gap-2">
             <span className="font-display text-5xl tracking-[-0.04em]">
               S/ {planPrice("pro", term)}

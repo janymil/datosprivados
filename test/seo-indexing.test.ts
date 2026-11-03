@@ -73,3 +73,47 @@ describe("piezas de despliegue para no indexar el preview", () => {
     expect(production).not.toMatch(/noindex/i);
   });
 });
+describe("contenido público indexable", () => {
+  const internalLinks = (text: string) => [...text.matchAll(/\]\((\/[^)]*)\)/g)].map((match) => match[1]);
+
+  it("el sitemap anuncia todas las guías y sectores, sin duplicados", async () => {
+    const { default: sitemap } = await import("@/app/sitemap");
+    const { GUIDES } = await import("@/lib/guides");
+    const { INDUSTRIES } = await import("@/lib/industries");
+    const urls = sitemap().map((entry) => new URL(entry.url).pathname);
+    expect(new Set(urls).size).toBe(urls.length);
+    for (const guide of GUIDES) expect(urls).toContain(`/guias/${guide.slug}`);
+    for (const industry of INDUSTRIES) expect(urls).toContain(`/sectores/${industry.slug}`);
+    for (const page of ["/", "/guias", "/sectores", "/glosario", "/plantillas", "/diagnostico"]) expect(urls).toContain(page);
+  });
+
+  it("ninguna ruta pública nueva queda bloqueada por robots.txt", () => {
+    const disallow = (robots().rules as { disallow: string[] }).disallow;
+    for (const page of ["/guias/x", "/sectores/x", "/glosario", "/plantillas", "/diagnostico"]) {
+      expect(disallow.some((prefix) => page.startsWith(prefix)), page).toBe(false);
+    }
+  });
+
+  it("las guías enlazan solo a guías y páginas que existen", async () => {
+    const { GUIDES, getGuide } = await import("@/lib/guides");
+    const pages = new Set(["/demo", "/plantillas", "/diagnostico", "/glosario", "/registro"]);
+    for (const guide of GUIDES) {
+      for (const slug of guide.related) expect(getGuide(slug), `${guide.slug} → ${slug}`).toBeDefined();
+      const text = JSON.stringify(guide);
+      for (const link of internalLinks(text)) {
+        const ok = pages.has(link) || (link.startsWith("/guias/") && getGuide(link.slice(7)) !== undefined);
+        expect(ok, `${guide.slug} enlaza a ${link}`).toBe(true);
+      }
+    }
+  });
+
+  it("cada sector apunta a un rubro con perfil legal", async () => {
+    const { INDUSTRIES } = await import("@/lib/industries");
+    const { findSectorById } = await import("@/lib/sectors");
+    const { SECTOR_FAMILY } = await import("@/lib/sector-legal");
+    for (const industry of INDUSTRIES) {
+      expect(findSectorById(industry.sectorId), industry.slug).toBeDefined();
+      expect(SECTOR_FAMILY[industry.sectorId], industry.slug).toBeDefined();
+    }
+  });
+});
