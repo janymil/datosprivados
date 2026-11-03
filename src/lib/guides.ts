@@ -8,12 +8,17 @@
  * Admite **negritas** y [enlaces](/ruta-interna).
  */
 
+export type GuideTable = { head: string[]; rows: string[][] };
+
 export type GuideSection = {
   heading: string;
   paragraphs?: string[];
+  table?: GuideTable;
   bullets?: string[];
   steps?: string[];
 };
+
+import { SALES_BANDS } from "./sector-legal";
 
 export type Guide = {
   slug: string;
@@ -30,6 +35,29 @@ export type Guide = {
 };
 
 const UPDATED = "2026-11-03";
+
+const MONTHS = [
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "setiembre", "octubre", "noviembre", "diciembre",
+];
+
+/** «2026-11-30» → «30 de noviembre de 2026», sin pasar por Date (evita desfases de zona horaria). */
+function longDate(iso: string): string {
+  const [year, month, day] = iso.split("-").map(Number);
+  return `${day} de ${MONTHS[month - 1]} de ${year}`;
+}
+
+const BAND_NAME: Record<string, string> = {
+  grande: "Gran empresa",
+  mediana: "Mediana empresa",
+  pequena: "Pequeña empresa",
+  micro: "Microempresa",
+};
+
+/** Calendario del ODP leído de SALES_BANDS (la misma fuente que usa el panel), de la fecha más cercana a la más lejana. */
+const ODP_ROWS = [...SALES_BANDS]
+  .sort((a, b) => a.odpFrom.localeCompare(b.odpFrom))
+  .map((band) => [BAND_NAME[band.id], band.label, band.hint.split(": ")[1] ?? band.hint, longDate(band.odpFrom)]);
 
 export const GUIDES: Guide[] = [
   {
@@ -60,7 +88,7 @@ export const GUIDES: Guide[] = [
       {
         heading: "Qué datos pide la ficha de inscripción",
         paragraphs: [
-          "Antes de entrar al portal, ten a mano por cada banco la misma información que luego va en tu Política de Privacidad. Si la ficha y la política no coinciden, el expediente pierde valor ante una fiscalización.",
+          "Antes de entrar al portal, ten a mano por cada banco la misma información que luego va en tu Política de Privacidad. Si la ficha y la política no coinciden, el expediente pierde valor ante una fiscalización. Imprime el [checklist de inscripción](/plantillas/checklist-inscripcion-sipdp) y parte del [modelo de política de privacidad](/plantillas/politica-de-privacidad).",
         ],
         bullets: [
           "Nombre del banco y **finalidad** concreta (para qué usas los datos).",
@@ -132,7 +160,9 @@ export const GUIDES: Guide[] = [
           "**Grave:** 5 a 50 UIT, hasta S/ 275,000.",
           "**Muy grave:** 50 a 100 UIT, hasta S/ 550,000.",
         ],
-        paragraphs: ["Valores calculados con la UIT 2026 (S/ 5,500)."],
+        paragraphs: [
+          "Valores calculados con la UIT 2026 (S/ 5,500). Estima tu exposición con la [calculadora de multas](/herramientas/calculadora-multas-ley-29733).",
+        ],
       },
       {
         heading: "Las infracciones que más se repiten en empresas",
@@ -196,7 +226,7 @@ export const GUIDES: Guide[] = [
       {
         heading: "3. Oficial de Datos Personales",
         paragraphs: [
-          "Es obligatorio si tratas grandes volúmenes de datos o datos sensibles como parte de tu actividad, o si eres entidad pública (art. 37). El plazo depende de las ventas anuales: grandes empresas desde noviembre de 2025, **medianas desde noviembre de 2026**, pequeñas desde noviembre de 2027 y microempresas desde el 30 de noviembre de 2028. Ver [la guía del ODP](/guias/oficial-de-datos-personales).",
+          "Es obligatorio si tratas grandes volúmenes de datos o datos sensibles como parte de tu actividad, o si eres entidad pública (art. 37). El plazo depende de las ventas anuales: grandes empresas desde noviembre de 2025, **medianas desde noviembre de 2026**, pequeñas desde noviembre de 2027 y microempresas desde el 30 de noviembre de 2028. Calendario completo en [Plazos del DS 016-2024-JUS](/guias/plazos-ds-016-2024-jus); detalle del cargo en [la guía del ODP](/guias/oficial-de-datos-personales).",
         ],
       },
       {
@@ -220,7 +250,7 @@ export const GUIDES: Guide[] = [
         ],
       },
     ],
-    related: ["oficial-de-datos-personales", "incidente-de-seguridad-48-horas", "derechos-arco-plazos"],
+    related: ["plazos-ds-016-2024-jus", "oficial-de-datos-personales", "incidente-de-seguridad-48-horas"],
   },
   {
     slug: "derechos-arco-plazos",
@@ -331,6 +361,7 @@ export const GUIDES: Guide[] = [
       },
       {
         heading: "Calendario por tamaño (ventas anuales)",
+        paragraphs: ["Con las ventas de cada tamaño en [Plazos del DS 016-2024-JUS](/guias/plazos-ds-016-2024-jus)."],
         bullets: [
           "Grandes empresas (más de 2,300 UIT): desde noviembre de 2025.",
           "**Medianas empresas: desde noviembre de 2026.**",
@@ -475,6 +506,95 @@ export const GUIDES: Guide[] = [
       },
     ],
     related: ["derechos-arco-plazos", "multas-ley-29733", "ds-016-2024-jus-reglamento"],
+  },
+  {
+    slug: "plazos-ds-016-2024-jus",
+    title: "Plazos del DS 016-2024-JUS: calendario de obligaciones por tamaño",
+    h1: "Plazos del DS 016-2024-JUS: calendario de obligaciones para tu empresa",
+    description:
+      "Fechas del Oficial de Datos Personales por tamaño de empresa y plazos permanentes: 48 horas para incidentes, 8, 10 y 20 días hábiles para solicitudes ARCO.",
+    answer:
+      "El DS 016-2024-JUS se publicó el 30 de noviembre de 2024 y rige desde marzo de 2025 con obligaciones progresivas. Lo que se escalona por tamaño es el **Oficial de Datos Personales**: grandes empresas desde el 30 de noviembre de 2025, **medianas desde el 30 de noviembre de 2026**, pequeñas desde el 30 de noviembre de 2027 y microempresas desde el 30 de noviembre de 2028. El resto (inscripción, solicitudes ARCO e incidentes) no espera esas fechas.",
+    updated: UPDATED,
+    sections: [
+      {
+        heading: "Calendario del Oficial de Datos Personales",
+        paragraphs: [
+          "El Oficial de Datos Personales (art. 37) solo es obligatorio si tu actividad trata **datos sensibles** o **grandes volúmenes de datos**, o si eres entidad pública. Si te aplica, la fecha depende de tus ventas anuales, medidas en UIT (la UIT 2026 es de S/ 5,500).",
+        ],
+        table: {
+          head: ["Tamaño", "Ventas anuales", "Equivale a, aprox.", "Obligatorio desde"],
+          rows: ODP_ROWS,
+        },
+      },
+      {
+        heading: "Plazos que corren siempre",
+        paragraphs: [
+          "Estos plazos no dependen del tamaño de la empresa. Los de las solicitudes ARCO se cuentan en días hábiles desde el día siguiente de recibida la solicitud (art. 69).",
+        ],
+        table: {
+          head: ["Obligación", "Plazo", "Base"],
+          rows: [
+            ["Notificar a la ANPD un incidente de seguridad relevante", "48 horas", "Art. 34"],
+            ["Documentar todo incidente, aunque no se notifique", "Siempre", "Art. 35"],
+            ["Responder una solicitud de información", "8 días hábiles", "Art. 69"],
+            ["Rectificación, cancelación u oposición", "10 días hábiles", "Art. 69"],
+            ["Revocación del consentimiento", "10 días hábiles", "Art. 69"],
+            ["Acceso y portabilidad", "20 días hábiles", "Art. 69"],
+            ["Ampliar el plazo (salvo información): una sola vez, avisando antes de que venza", "Por el mismo periodo", "Art. 71"],
+            ["Dar de baja a quien rechaza o revoca la publicidad", "Máximo 10 días", "Art. 26.5"],
+          ],
+        },
+      },
+      {
+        heading: "Fechas del reglamento",
+        table: {
+          head: ["Fecha", "Hito"],
+          rows: [
+            ["30 de noviembre de 2024", "Publicación del DS 016-2024-JUS en El Peruano."],
+            ["Marzo de 2025", "El reglamento rige, con obligaciones progresivas."],
+            ["31 de marzo de 2025", "La inscripción de bancos de datos en el SIPDP pasa a ser gratuita y de aprobación automática."],
+          ],
+        },
+      },
+      {
+        heading: "Plazos de conservación que conviene tener a mano",
+        table: {
+          head: ["Dato", "Plazo habitual"],
+          rows: [
+            ["Comprobantes y registros de ventas", "5 años desde la operación"],
+            ["Planillas y legajos de trabajadores", "Durante el vínculo y 5 años desde el cese"],
+            ["Hojas del Libro de Reclamaciones", "Mínimo 2 años desde el reclamo"],
+            ["Grabaciones de cámaras de seguridad", "Entre 30 y 60 días"],
+          ],
+        },
+      },
+      {
+        heading: "Qué hacer según tu situación",
+        steps: [
+          "Identifica tu tamaño por ventas anuales y la fecha de la tabla que te corresponde.",
+          "Verifica si tu actividad trata datos sensibles o grandes volúmenes: ahí el Oficial de Datos Personales te obliga.",
+          "Inscribe tus bancos de datos ya: es gratis y no depende de esos calendarios ([guía](/guias/inscribir-banco-de-datos-personales)).",
+          "Ten el canal ARCO y el procedimiento de incidentes funcionando antes de que lleguen ([ARCO](/guias/derechos-arco-plazos), [incidentes](/guias/incidente-de-seguridad-48-horas)).",
+          "Estima tu exposición con la [calculadora de multas](/herramientas/calculadora-multas-ley-29733) y mide tu punto de partida con el [diagnóstico](/diagnostico).",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "¿Mi microempresa tiene plazo hasta 2028?",
+        a: "Solo para el Oficial de Datos Personales, y únicamente si tu actividad lo hace obligatorio. Inscribir tus bancos de datos, responder solicitudes ARCO y notificar incidentes no esperan a esa fecha.",
+      },
+      {
+        q: "¿Cómo sé si soy micro, pequeña o mediana empresa?",
+        a: "Por tus ventas anuales en UIT: hasta 150 UIT es micro; más de 150 y hasta 1,700, pequeña; más de 1,700 y hasta 2,300, mediana; más de 2,300, grande.",
+      },
+      {
+        q: "¿Qué pasa si incumplo un plazo?",
+        a: "Responder tarde una solicitud ARCO o no notificar un incidente cuando corresponde son infracciones leves, con multa de 0.5 a 5 UIT.",
+      },
+    ],
+    related: ["oficial-de-datos-personales", "ds-016-2024-jus-reglamento", "multas-ley-29733"],
   },
 ];
 

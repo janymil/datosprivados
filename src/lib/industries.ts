@@ -68,6 +68,22 @@ export const INDUSTRIES: Industry[] = [
     ],
   },
   {
+    slug: "tiendas-online-y-ecommerce",
+    sectorId: "ecommerce",
+    name: "Tiendas online y e-commerce",
+    title: "Protección de datos para tiendas online y e-commerce en Perú",
+    h1: "Ley 29733 para tiendas online y e-commerce",
+    description:
+      "Clientes, pasarela de pago, cookies y píxeles, publicidad y Libro de Reclamaciones virtual: lo que exige la Ley 29733 a una tienda online en Perú.",
+    intro:
+      "Una tienda online recoge datos desde el primer clic: pedidos, direcciones, pagos, cookies y píxeles de publicidad. Casi siempre usa plataformas fuera del Perú (Shopify, Meta, Google), lo que la convierte en un caso típico de transferencia internacional.",
+    concerns: [
+      "Píxeles y cookies de publicidad activados sin consentimiento previo.",
+      "Bases de clientes usadas para promociones sin permiso aparte.",
+      "Libro de Reclamaciones virtual no visible en la web.",
+    ],
+  },
+  {
     slug: "financieras-y-cooperativas",
     sectorId: "prestamos",
     name: "Financieras y cooperativas",

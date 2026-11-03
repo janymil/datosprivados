@@ -5,9 +5,9 @@ import { INDUSTRIES } from "@/lib/industries";
 import { breadcrumbLd, pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "Protección de datos por sector: clínicas, colegios, SaaS y más",
+  title: "Protección de datos por sector: clínicas, colegios, e-commerce y más",
   description:
-    "Qué bancos de datos inscribir, qué normas aplican y cuánto conservar cada dato en clínicas, colegios, software, financieras, inmobiliarias, hoteles, estudios y agencias de empleo.",
+    "Qué bancos de datos inscribir, qué normas aplican y cuánto conservar cada dato en clínicas, colegios, software, tiendas online, financieras, inmobiliarias, hoteles, estudios y agencias de empleo.",
   path: "/sectores",
 });
 

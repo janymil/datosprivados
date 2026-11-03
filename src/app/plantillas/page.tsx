@@ -38,6 +38,28 @@ export default function TemplatesPage() {
           </Link>
         </div>
 
+        <section className="mt-14">
+          <h2 className="font-display text-[1.75rem] leading-snug tracking-[-0.02em]">Descarga gratis</h2>
+          <ul className="mt-5 grid gap-4 md:grid-cols-2">
+            <li>
+              <Link href="/plantillas/politica-de-privacidad" className="card block h-full p-5 hover:border-ink">
+                <p className="font-display text-lg leading-tight">Modelo de política de privacidad</p>
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+                  El texto completo conforme a la Ley 29733, con tus datos entre corchetes.
+                </p>
+              </Link>
+            </li>
+            <li>
+              <Link href="/plantillas/checklist-inscripcion-sipdp" className="card block h-full p-5 hover:border-ink">
+                <p className="font-display text-lg leading-tight">Checklist de inscripción en el SIPDP</p>
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+                  Qué preparar antes de inscribir tus bancos de datos. Imprimible.
+                </p>
+              </Link>
+            </li>
+          </ul>
+        </section>
+
         {DOCUMENT_ACTIONS.map((action) => {
           const docs = DOCUMENT_TABS.filter((tab) => tab.action === action.key);
           if (!docs.length) return null;

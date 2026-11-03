@@ -84,19 +84,27 @@ describe("contenido público indexable", () => {
     expect(new Set(urls).size).toBe(urls.length);
     for (const guide of GUIDES) expect(urls).toContain(`/guias/${guide.slug}`);
     for (const industry of INDUSTRIES) expect(urls).toContain(`/sectores/${industry.slug}`);
-    for (const page of ["/", "/guias", "/sectores", "/glosario", "/plantillas", "/diagnostico"]) expect(urls).toContain(page);
+    for (const page of [
+      "/", "/guias", "/sectores", "/glosario", "/plantillas", "/diagnostico", "/herramientas",
+      "/herramientas/calculadora-multas-ley-29733", "/plantillas/politica-de-privacidad",
+      "/plantillas/checklist-inscripcion-sipdp",
+    ]) expect(urls).toContain(page);
   });
 
   it("ninguna ruta pública nueva queda bloqueada por robots.txt", () => {
     const disallow = (robots().rules as { disallow: string[] }).disallow;
-    for (const page of ["/guias/x", "/sectores/x", "/glosario", "/plantillas", "/diagnostico"]) {
+    for (const page of ["/guias/x", "/sectores/x", "/glosario", "/plantillas", "/diagnostico", "/herramientas/x"]) {
       expect(disallow.some((prefix) => page.startsWith(prefix)), page).toBe(false);
     }
   });
 
   it("las guías enlazan solo a guías y páginas que existen", async () => {
     const { GUIDES, getGuide } = await import("@/lib/guides");
-    const pages = new Set(["/demo", "/plantillas", "/diagnostico", "/glosario", "/registro"]);
+    const pages = new Set([
+      "/demo", "/plantillas", "/diagnostico", "/glosario", "/registro", "/herramientas",
+      "/herramientas/calculadora-multas-ley-29733", "/plantillas/politica-de-privacidad",
+      "/plantillas/checklist-inscripcion-sipdp",
+    ]);
     for (const guide of GUIDES) {
       for (const slug of guide.related) expect(getGuide(slug), `${guide.slug} → ${slug}`).toBeDefined();
       const text = JSON.stringify(guide);

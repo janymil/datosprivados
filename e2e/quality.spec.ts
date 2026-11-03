@@ -73,3 +73,31 @@ test("mientras sean borrador, los textos legales avisan y no se indexan", async 
   const html = await (await request.get("/terminos")).text();
   expect(html).toMatch(/<meta name="robots" content="noindex/);
 });
+
+test("la calculadora de multas calcula el rango con la UIT 2026", async ({ page }) => {
+  await page.goto("/herramientas/calculadora-multas-ley-29733");
+  await page.getByLabel("No inscribí mis bancos de datos en el SIPDP").check();
+  await expect(page.getByTestId("fine-result")).toContainText("S/ 2,750");
+  await expect(page.getByTestId("fine-result")).toContainText("S/ 27,500");
+  await page.getByLabel("Infracciones muy graves").fill("1");
+  await expect(page.getByTestId("fine-result")).toContainText("S/ 277,750");
+  await expect(page.getByTestId("fine-result")).toContainText("S/ 577,500");
+});
+
+test("el checklist del SIPDP cuenta los puntos marcados", async ({ page }) => {
+  await page.goto("/plantillas/checklist-inscripcion-sipdp");
+  const boxes = page.locator('input[type="checkbox"]');
+  const total = await boxes.count();
+  expect(total).toBeGreaterThan(20);
+  await expect(page.getByText(`0 de ${total} completados`)).toBeVisible();
+  await boxes.nth(0).check();
+  await expect(page.getByText(`1 de ${total} completados`)).toBeVisible();
+});
+
+test("el modelo de política de privacidad es público e indexable", async ({ page, request }) => {
+  const html = await (await request.get("/plantillas/politica-de-privacidad")).text();
+  expect(html).not.toMatch(/<meta name="robots" content="noindex/);
+  await page.goto("/plantillas/politica-de-privacidad");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Modelo de política de privacidad");
+  await expect(page.getByText("[RAZÓN SOCIAL]").first()).toBeVisible();
+});

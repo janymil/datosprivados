@@ -21,7 +21,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
+    { url: `${base}/herramientas`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/herramientas/calculadora-multas-ley-29733`, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/plantillas`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/plantillas/politica-de-privacidad`, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${base}/plantillas/checklist-inscripcion-sipdp`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/glosario`, changeFrequency: "monthly", priority: 0.6 },
   ];
 }

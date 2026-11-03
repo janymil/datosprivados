@@ -26,6 +26,12 @@ const PAGES = [
   "/glosario",
   "/plantillas",
   "/diagnostico",
+  "/herramientas",
+  "/herramientas/calculadora-multas-ley-29733",
+  "/plantillas/politica-de-privacidad",
+  "/plantillas/checklist-inscripcion-sipdp",
+  "/guias/plazos-ds-016-2024-jus",
+  "/sectores/tiendas-online-y-ecommerce",
 ];
 
 // Pantallas del panel. Se entra con la cuenta demo (GET /demo inicia sesión y vuelve

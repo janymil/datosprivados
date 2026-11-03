@@ -81,6 +81,32 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
                     <RichText text={paragraph} />
                   </p>
                 ))}
+                {section.table && (
+                  <div className="mt-4 overflow-x-auto border border-line">
+                    <table className="w-full min-w-[520px] text-left text-[15px]">
+                      <thead className="bg-paper-2">
+                        <tr>
+                          {section.table.head.map((cell) => (
+                            <th key={cell} scope="col" className="px-4 py-3 font-mono text-xs uppercase tracking-[0.08em]">
+                              {cell}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-line">
+                        {section.table.rows.map((row) => (
+                          <tr key={row.join("|")}>
+                            {row.map((cell, index) => (
+                              <td key={index} className={`px-4 py-3 align-top ${index === 0 ? "font-medium" : ""}`}>
+                                <RichText text={cell} />
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
                 {section.bullets && (
                   <ul className="mt-4 space-y-2.5">
                     {section.bullets.map((bullet) => (

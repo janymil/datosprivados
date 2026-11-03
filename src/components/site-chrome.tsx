@@ -12,14 +12,14 @@ import { JsonLd } from "@/components/json-ld";
 const NAV = [
   { href: "/guias", label: "Guías" },
   { href: "/sectores", label: "Sectores" },
+  { href: "/herramientas", label: "Herramientas" },
   { href: "/plantillas", label: "Plantillas" },
-  { href: "/diagnostico", label: "Diagnóstico" },
   { href: "/#precios", label: "Precios" },
 ];
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur-md">
+    <header className="no-print sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur-md">
       <div className="container-page flex min-h-[72px] flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3">
         <Link href="/" className="flex items-center gap-3" aria-label="DatosPrivados, inicio">
           <Logo />
@@ -54,7 +54,7 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="bg-paper-2">
+    <footer className="no-print bg-paper-2">
       <div className="container-page py-12">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
@@ -71,8 +71,11 @@ export function SiteFooter() {
             <ul className="mt-4 space-y-2.5 text-[15px] text-ink-soft">
               <li><Link href="/#obligaciones" className="hover:text-ink">Qué exige la ley</Link></li>
               <li><Link href="/sectores" className="hover:text-ink">Por sector</Link></li>
-              <li><Link href="/plantillas" className="hover:text-ink">Plantillas</Link></li>
+              <li><Link href="/herramientas/calculadora-multas-ley-29733" className="hover:text-ink">Calculadora de multas</Link></li>
               <li><Link href="/diagnostico" className="hover:text-ink">Diagnóstico gratuito</Link></li>
+              <li><Link href="/plantillas/checklist-inscripcion-sipdp" className="hover:text-ink">Checklist SIPDP</Link></li>
+              <li><Link href="/plantillas/politica-de-privacidad" className="hover:text-ink">Modelo de política de privacidad</Link></li>
+              <li><Link href="/plantillas" className="hover:text-ink">Todas las plantillas</Link></li>
               <li><Link href="/#precios" className="hover:text-ink">Precios</Link></li>
               <li><Link href="/demo" prefetch={false} className="hover:text-ink">Demo interactiva</Link></li>
             </ul>
@@ -83,6 +86,7 @@ export function SiteFooter() {
             <ul className="mt-4 space-y-2.5 text-[15px] text-ink-soft">
               <li><Link href="/guias/inscribir-banco-de-datos-personales" className="hover:text-ink">Inscribir bancos de datos</Link></li>
               <li><Link href="/guias/ds-016-2024-jus-reglamento" className="hover:text-ink">Reglamento DS 016-2024-JUS</Link></li>
+              <li><Link href="/guias/plazos-ds-016-2024-jus" className="hover:text-ink">Calendario de plazos</Link></li>
               <li><Link href="/guias/multas-ley-29733" className="hover:text-ink">Multas de la ANPD</Link></li>
               <li><Link href="/guias/derechos-arco-plazos" className="hover:text-ink">Derechos ARCO</Link></li>
               <li><Link href="/glosario" className="hover:text-ink">Glosario</Link></li>
@@ -133,7 +137,7 @@ export function ContentShell({
         <JsonLd key={index} data={data} />
       ))}
       <main>
-        <nav aria-label="Migas de pan" className="border-b border-line bg-paper-2">
+        <nav aria-label="Migas de pan" className="no-print border-b border-line bg-paper-2">
           <ol className="container-page flex flex-wrap items-center gap-1.5 py-3 font-mono text-xs uppercase tracking-[0.08em] text-ink-soft">
             {crumbs.map((crumb, index) => (
               <li key={crumb.path} className="flex items-center gap-1.5">
@@ -157,7 +161,7 @@ export function ContentShell({
 
 export function CtaBand() {
   return (
-    <section className="border-y border-line bg-ink text-paper">
+    <section className="no-print border-y border-line bg-ink text-paper">
       <div className="container-page grid gap-8 py-14 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
         <div>
           <h2 className="max-w-[22ch] font-display text-[2rem] leading-[1.05] tracking-[-0.03em] md:text-[2.5rem]">

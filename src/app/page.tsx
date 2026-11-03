@@ -15,6 +15,7 @@ import { PromoVideo } from "@/components/promo-video";
 import { InteractivePricing, InteractiveSegments } from "@/components/landing-interactive";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { GUIDES } from "@/lib/guides";
+import { TOOLS } from "@/lib/tools";
 import { JsonLd } from "@/components/json-ld";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 
@@ -486,6 +487,33 @@ function FinalCta() {
   );
 }
 
+function ToolsBand() {
+  return (
+    <section id="herramientas" className="scroll-mt-20 border-b border-line bg-paper-2">
+      <div className="container-page py-16 md:py-20">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h2 className="max-w-[24ch] font-display text-[2.25rem] leading-[1.03] tracking-[-0.03em] md:text-[2.8rem]">
+            Herramientas gratuitas
+          </h2>
+          <Link href="/herramientas" className="link-underline text-[15px] font-medium">
+            Ver todas
+          </Link>
+        </div>
+        <ul className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {TOOLS.map((tool) => (
+            <li key={tool.href}>
+              <Link href={tool.href} className="card block h-full p-5 hover:border-ink">
+                <p className="font-display text-lg leading-tight">{tool.title}</p>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-ink-soft">{tool.body}</p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
 function GuidesBand() {
   return (
     <section id="guias" className="scroll-mt-20 border-b border-line">
@@ -548,6 +576,7 @@ export default function LandingPage() {
         <VideoSection />
         <HowItWorks />
         <Pricing />
+        <ToolsBand />
         <GuidesBand />
         <Faq />
         <FinalCta />
