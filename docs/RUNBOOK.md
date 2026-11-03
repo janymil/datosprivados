@@ -137,6 +137,18 @@ llegar a producción.
 
 ## Respaldos
 
+**Permisos.** Un respaldo es la base entera. `backup-db.mjs` deja el archivo y su
+`.sha256` en **600** desde el 2026-11-03, y el directorio debe estar en **700**:
+
+```bash
+chmod 700 /var/backups/datosprivados     # nadie más entra
+ls -l /var/backups/datosprivados | head  # -rw------- en todos
+```
+
+Lo mismo la base viva: `data/` en 700 y `datosprivados.db` (con `-wal` y `-shm`) en 600.
+Antes estaban en 755/644 y cualquier usuario local podía leer los datos personales de
+todos los clientes (`sudo -u nobody test -r data/datosprivados.db` daba acceso).
+
 ```bash
 # Respaldo consistente, con la app en marcha (usa VACUUM INTO y verifica integrity_check)
 DATOSPRIVADOS_DB=/ruta/absoluta/datosprivados.db node scripts/backup-db.mjs /var/backups/datosprivados

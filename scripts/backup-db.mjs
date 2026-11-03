@@ -60,6 +60,11 @@ export function backupDatabase({ source, targetDir, retentionDays = 7, now = new
   fs.rmSync(tmpDb, { force: true });
   const sha256 = crypto.createHash("sha256").update(fs.readFileSync(outFile)).digest("hex");
   fs.writeFileSync(`${outFile}.sha256`, `${sha256}  ${path.basename(outFile)}\n`);
+  // Un respaldo es la base entera: datos personales de todos los clientes. Se deja en 600
+  // aunque el directorio ya sea 700, para que un cambio de permisos del directorio (o
+  // mover los archivos) no lo exponga al resto de usuarios de la máquina. El 2026-11-03
+  // estaban en 644 (y la base viva también).
+  for (const file of [outFile, `${outFile}.sha256`]) fs.chmodSync(file, 0o600);
 
   // Retención: se borran respaldos más viejos que el plazo, cifrados o no.
   const cutoff = now.getTime() - retentionDays * 24 * 60 * 60 * 1000;

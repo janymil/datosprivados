@@ -62,6 +62,20 @@ describe("cifrado de respaldos", () => {
 });
 
 describe("respaldo y restauración cifrados", () => {
+  it("deja el respaldo y su sha256 en 600: es la base entera con datos personales", () => {
+    // El 2026-11-03 los respaldos del servidor estaban en 644 (y la base viva también).
+    // El directorio ya era 700, pero eso no basta: un `chmod -R o+r` o mover los
+    // archivos los expondría a cualquier usuario de la máquina.
+    const dir = path.join(root, "permisos");
+    const backup = backupDatabase({ source, targetDir: dir, encryptionKey: null });
+    expect(fs.statSync(backup.file).mode & 0o777).toBe(0o600);
+    expect(fs.statSync(`${backup.file}.sha256`).mode & 0o777).toBe(0o600);
+
+    const cifrado = backupDatabase({ source, targetDir: path.join(root, "permisos-cifrado"), encryptionKey: KEY });
+    expect(fs.statSync(cifrado.file).mode & 0o777).toBe(0o600);
+    expect(fs.statSync(`${cifrado.file}.sha256`).mode & 0o777).toBe(0o600);
+  });
+
   it("el respaldo cifrado se restaura con la clave y pasa la verificación", () => {
     const dir = path.join(root, "cifrado");
     const backup = backupDatabase({ source, targetDir: dir, encryptionKey: KEY });

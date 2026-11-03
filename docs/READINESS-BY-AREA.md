@@ -18,7 +18,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 635/635 passing, 50 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 636/636 passing, 50 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm exec playwright test` | 101/101 across chromium (journey + quality + perf), mobile-chrome, firefox, webkit and axe (19 axe: 8 public + 11 panel; 2 perf budgets: LCP 1872 ms / CLS 0.008 on the landing) — the suite builds with `CSP_ENFORCE=1`, so it also proves the blocking CSP |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
@@ -280,7 +280,7 @@ Files: `src/lib/jobs.ts`, `ops.ts`, `src/app/api/cron/[job]`, `api/health`, `api
 
 ### 17. Backup & restore
 Files: `scripts/backup-db.mjs`, `scripts/backup-crypto.mjs`, `restore-db.mjs`, `restore-drill.mjs`, `/usr/local/bin/datosprivados-backup`, `docs/RUNBOOK.md`, `test/backup-crypto.test.ts`.
-- [x] Backup with sha256 and integrity check; restore script; local drill (0.16 s backup, 0.09 s restore). **Re-verified 2026-11-03 against the real hourly backup**: `node scripts/restore-drill.mjs /var/backups/datosprivados` → `ok: true`, backup 0.43 h old, restored and integrity-checked in under a second with `companies`/`users`/`payments`/`arco_requests` present.
+- [x] [AGENT] Backup with sha256 and integrity check; restore script; local drill (0.16 s backup, 0.09 s restore). **Re-verified 2026-11-03 against the real hourly backup**: `node scripts/restore-drill.mjs /var/backups/datosprivados` → `ok: true`, backup 0.43 h old, restored and integrity-checked in under a second with `companies`/`users`/`payments`/`arco_requests` present. **Permissions fixed the same day**: the backup files were 644 (inside a 700 directory, so only saved by luck) and the live database was 644 in a 755 `data/`, readable by any local user — now 600/700, with `backup-db.mjs` chmod-ing each dump and its `.sha256` to 600 as it writes them.
 - [x] Hourly cron installed and producing files (RPO target of 1 h is met on this box).
 - [ ] [AGENT/OWNER] **Off-box copy.** Backups sit on the same server as the database, so a disk or host loss loses both. The upload needs object-storage credentials (owner); the encrypted format it will ship is ready (next line).
 - [ ] [OWNER] Fresh-machine restore drill following only the RUNBOOK, timed against RTO ≤ 2 h.
@@ -306,7 +306,7 @@ Files: `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-produc
 
 ### 19. Tests & CI
 Files: `test/` (42 files), `e2e/` (journey + quality + axe specs, mock server), `playwright.config.ts`, `vitest.config.mts`, `.github/workflows/ci.yml`.
-- [x] 635 unit/integration tests in 50 files, E2E 101/101 (chromium journey + quality + perf, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
+- [x] 636 unit/integration tests in 50 files, E2E 101/101 (chromium journey + quality + perf, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
 - [x] CI bug fixed: tests no longer depend on a pre-existing `test/.tmp`.
 - [x] [AGENT] Firefox and WebKit projects in `playwright.config.ts` (quality spec: headers, basic a11y, no horizontal overflow, legal footer) and CI now installs `chromium firefox webkit`. **Run locally on 2026-11-03: 30/30 green** (16 Firefox + 14 WebKit). The full journey stays Chromium-only so CI doesn't triple in time. Note: `playwright install` on this box needed a retry without `--with-deps` (the apt phase stalled); the browsers are cached in `~/.cache/ms-playwright`.
 - [x] [AGENT] Coverage report with a floor: `@vitest/coverage-v8` + `pnpm test:coverage` (now the CI step). Measured 2026-11-02 on the core modules — `billing`, `auth`, `jobs`, `mail`, `account`, `invoicing`, `rate-limit`, `client-ip`, `mercadopago` and `backup-crypto` — **90.9 % statements / 84.0 % branches / 91.9 % functions / 94.0 % lines** (re-measured 2026-11-03), with thresholds 80/80/80/70 that fail the build if they drop. The weakest file was `mercadopago.ts` (56 % statements); `test/mercadopago.test.ts` took it to 96 % statements and 100 % functions/lines, so D-1 in `docs/DEFECTS.md` is closed.
