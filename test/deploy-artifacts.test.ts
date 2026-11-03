@@ -20,6 +20,7 @@ const repo = process.cwd();
 const deployDir = path.join(repo, "deploy");
 const cronFile = path.join(deployDir, "cron.d-datosprivados");
 const wrapperFile = path.join(deployDir, "datosprivados-cron.sh");
+const logrotateFile = path.join(deployDir, "logrotate-datosprivados.conf");
 
 /** Líneas activas (sin comentar) de la tabla de cron. */
 const activeLines = () =>
@@ -110,10 +111,35 @@ describe("cron: la tabla y el wrapper", () => {
     const installed = [
       ["/usr/local/bin/datosprivados-cron", wrapperFile],
       ["/etc/cron.d/datosprivados", cronFile],
+      ["/etc/logrotate.d/datosprivados", logrotateFile],
     ];
     for (const [live, repoCopy] of installed) {
       if (!fs.existsSync(live)) continue;
       expect(fs.readFileSync(live, "utf8"), `${live} difiere de ${path.relative(repo, repoCopy)}`).toBe(fs.readFileSync(repoCopy, "utf8"));
     }
+  });
+
+  it("el logrotate del repo pasa la prueba en seco sin errores", () => {
+    // Se salta donde no hay logrotate (CI puede no tenerlo): la comprobación es para la
+    // máquina que rota los logs. Encontró que la segunda sección fallaba cada semana
+    // por no llevar `su` («parent directory has insecure permissions»).
+    try {
+      execFileSync("logrotate", ["--version"], { stdio: "pipe" });
+    } catch {
+      return;
+    }
+
+    let output = "";
+    try {
+      output = execFileSync("logrotate", ["--debug", logrotateFile], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    } catch (error) {
+      const failure = error as { stdout?: string; stderr?: string };
+      output = `${failure.stdout ?? ""}${failure.stderr ?? ""}`;
+    }
+    const errors = output
+      .split("\n")
+      .filter((line) => /^error:/i.test(line.trim()))
+      .map((line) => line.trim());
+    expect(errors, "logrotate se quejaría de estas líneas").toEqual([]);
   });
 });

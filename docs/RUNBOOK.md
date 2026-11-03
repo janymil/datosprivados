@@ -311,6 +311,8 @@ esta máquina: si se perdía, había que reescribirlas de memoria):
 ```bash
 install -m 755 deploy/datosprivados-cron.sh /usr/local/bin/datosprivados-cron
 install -m 644 deploy/cron.d-datosprivados  /etc/cron.d/datosprivados
+install -m 644 deploy/logrotate-datosprivados.conf /etc/logrotate.d/datosprivados
+logrotate --debug /etc/logrotate.d/datosprivados   # sin líneas «error:»
 datosprivados-cron health; echo $?     # 0 = HTTP 200 y todas las tareas a tiempo
 ```
 
