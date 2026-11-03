@@ -21,6 +21,33 @@ Pendiente en producción: aplicar esa plantilla (bloquea IPs fuera de Cloudflare
 Si se aplica el cierre del origen, comprobar antes que ningún monitor ni webhook entra
 por la IP directa.
 
+## Estado verificado del preview (2026-11-03)
+
+Comprobado en la máquina, no deducido de la documentación:
+
+| Qué | Resultado |
+|---|---|
+| `datosprivados-cron health; echo $?` | **0** (`healthy: true`, ninguna tarea atrasada, `outboxStuck: 0`) — tras corregir las horas del cron (ver `DEFECTS.md`) |
+| Respaldo más reciente | del mismo día, hace < 1 h (RPO cumplido); con `.sha256` al lado |
+| Simulacro de restauración (`node scripts/restore-drill.mjs /var/backups/datosprivados`) | `ok: true`, respaldo restaurado y verificado en < 1 s, `companies/users/payments/arco_requests` presentes |
+| Informe semanal (`node scripts/weekly-report.mjs`) | funciona con datos reales; señaló correctamente una solicitud **ARCO vencida** (`ARCO-2026-0011`, plazo 2026-10-12) y 2 webhooks fallidos **de las pruebas de sandbox del 2026-11-01** (IDs falsos `999999999`/`123456789` → 404 de MercadoPago; comportamiento correcto, caen fuera de la ventana de 7 días) |
+| Feriados en la base | 2025–2032, 16 por año (el `holidays-check` ausente no había causado daño todavía) |
+| PM2 | `datosprivados` online, 0 reinicios; disco al 32 % |
+| Cabeceras públicas (`curl -I https://datosprivados.registio.app`) | 200, `nosniff`, `X-Frame-Options: DENY`, HSTS, `Referrer-Policy`, `Permissions-Policy`; `server_tokens off` está en `/etc/nginx/nginx.conf` (global), no en el vhost; `/login` responde `private, no-cache, no-store`; `cf-cache-status: DYNAMIC` (Cloudflare no cachea HTML, así que un despliegue no sirve HTML viejo) |
+| `logrotate` | instalado en `/etc/logrotate.d/datosprivados`, `--debug` sin errores |
+
+**El build desplegado es anterior a HEAD.** Consecuencias, para que nadie las atribuya a un
+fallo del código:
+
+- no envía la cabecera CSP (existe desde `8513bb2`, después del build que corre);
+- `/api/cron/ops-alert` y `/api/cron/demo-reset` devolverían **404**; por eso sus líneas quedan
+  comentadas en `deploy/cron.d-datosprivados`;
+- no están las correcciones de contraste, el gate de verificación de correo ni el resumen semanal.
+
+Para cerrar la deriva: `bash scripts/deploy.sh --check` → `bash scripts/deploy.sh`, y después
+descomentar las dos líneas (`ops-alert`, `demo-reset`) e instalar el archivo de cron. Es una acción
+del propietario: el despliegue no se ha ejecutado nunca en este servidor.
+
 ## Caché de los vídeos en Cloudflare
 
 Los vídeos de la portada pesan ~23 MB y **no cambian nunca**: `next.config.ts` ya los

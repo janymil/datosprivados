@@ -267,7 +267,7 @@ Files: `src/lib/jobs.ts`, `ops.ts`, `src/app/api/cron/[job]`, `api/health`, `api
 - [x] Real cron installed (`/etc/cron.d/datosprivados`, wrapper converts to Lima time because Ubuntu cron has no `CRON_TZ`). **Corrected on 2026-11-03:** the previous tick claimed the daily and weekly jobs ran "via the Lima-time wrapper", and that was false — see the S1 in `docs/DEFECTS.md`. The wrapper compares `HH:MM` exactly and cron fires at minute `0`, so `billing-sync` (06:15), `lapsed-account-notices` (06:30), `holidays-check` (05:30) and `demo-reset` (03:30) **had never run**. Hours are now all `HH:00` and spread out, the wrapper refuses an unreachable `--at` with exit 4, and the health endpoint went from `healthy: false` (two jobs overdue) to **`healthy: true`** on the box after running the two manually.
 - [x] Jobs: `send-outbox`, `arco-deadline-reminders`, `incident-deadline-reminders`, `purge-old-data`, `expire-sessions`, `billing-sync`, `document-staleness-notice`, `lapsed-account-notices`, `holidays-check`, `ops-alert`; bearer `CRON_SECRET`.
 - [x] `GET /api/cron/health` checks the backup directory and runs `dbIntegrity()` (`quick_check` + WAL checkpoint).
-- [x] Weekly report and post-launch review scripts (`ops:weekly`).
+- [x] Weekly report and post-launch review scripts (`ops:weekly`). **Verified against live data on 2026-11-03** (`node scripts/weekly-report.mjs`): it flagged the one overdue ARCO request on the preview (`ARCO-2026-0011`, due 2026-10-12) and two webhook failures that turned out to be sandbox test payloads from 2026-11-01 with fake ids (`999999999`, `123456789` → MercadoPago 404, handled correctly). The environment state and the build drift are written up in `RUNBOOK.md` (“Estado verificado del preview”).
 - [ ] [OWNER] External uptime monitor on `/api/health` and `/api/ready`, plus a paging channel (P6-OBS).
 - [ ] [OWNER] Error tracking account (Sentry or similar) and a deliberate test alert fired and received.
 - [ ] [AGENT] Wire `instrumentation.ts` to the chosen error tracker — `onRequestError` already emits a scrubbed JSON line with `digest`/route/method, so it is a ~5-line bridge once the vendor is chosen (owner decision).
@@ -280,7 +280,7 @@ Files: `src/lib/jobs.ts`, `ops.ts`, `src/app/api/cron/[job]`, `api/health`, `api
 
 ### 17. Backup & restore
 Files: `scripts/backup-db.mjs`, `scripts/backup-crypto.mjs`, `restore-db.mjs`, `restore-drill.mjs`, `/usr/local/bin/datosprivados-backup`, `docs/RUNBOOK.md`, `test/backup-crypto.test.ts`.
-- [x] Backup with sha256 and integrity check; restore script; local drill (0.16 s backup, 0.09 s restore).
+- [x] Backup with sha256 and integrity check; restore script; local drill (0.16 s backup, 0.09 s restore). **Re-verified 2026-11-03 against the real hourly backup**: `node scripts/restore-drill.mjs /var/backups/datosprivados` → `ok: true`, backup 0.43 h old, restored and integrity-checked in under a second with `companies`/`users`/`payments`/`arco_requests` present.
 - [x] Hourly cron installed and producing files (RPO target of 1 h is met on this box).
 - [ ] [AGENT/OWNER] **Off-box copy.** Backups sit on the same server as the database, so a disk or host loss loses both. The upload needs object-storage credentials (owner); the encrypted format it will ship is ready (next line).
 - [ ] [OWNER] Fresh-machine restore drill following only the RUNBOOK, timed against RTO ≤ 2 h.
