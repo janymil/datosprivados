@@ -18,14 +18,14 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 498/498 passing, 36 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 506/506 passing, 37 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
 | CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
 | Hourly DB backup cron | **Installed and running** (`/etc/cron.d/datosprivados`, `/usr/local/bin/datosprivados-backup`; newest file in `/var/backups/datosprivados` was from 2026-11-02 19:00 Lima). `GO-NO-GO.md` row 5 and `RUNBOOK.md` were corrected on 2026-11-02. |
 | Rate limiting | Exists in SQLite (`src/lib/rate-limit.ts`) and is applied to login, signup, ARCO form, password reset, verification, password/email change, account deletion, export, demo, AI. |
 | Invoicing | Data model + manual issuance only (`src/lib/invoicing.ts` header says so). **No PSE/OSE API integration.** |
-| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review` — 93 new tests, all green. |
+| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook` — 101 new tests, all green. |
 | Not present | `proxy.ts`/middleware (so no CSP), real staging, Anthropic key, production domain, lawyer review. |
 
 ---
@@ -37,7 +37,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 1 | Data layer | `lib/db.ts`, `lib/data.ts` | 93 % | 80 % | Single SQLite node; no horizontal scaling |
 | 2 | Auth & accounts | `lib/auth.ts`, `actions/auth.ts`, `actions/account.ts` | 93 % | 75 % | Email delivery unproven (verification now gates publishing) |
 | 3 | Multi-tenancy & authorization | `requireSession`, `test/authz.test.ts`, `test/tenancy.test.ts` | 96 % | 90 % | No roles beyond `admin` |
-| 4 | Billing (MercadoPago) | `lib/billing.ts`, `lib/mercadopago.ts`, `lib/subscriptions.ts`, `api/mercadopago/webhook` | 75 % | 55 % | Reject→pause→cancel never seen with real events; no prod credentials |
+| 4 | Billing (MercadoPago) | `lib/billing.ts`, `lib/mercadopago.ts`, `lib/subscriptions.ts`, `api/mercadopago/webhook` | 82 % | 55 % | Reject→pause→cancel never seen with real events; no prod credentials |
 | 5 | Invoicing (SUNAT) | `lib/invoicing.ts` | 50 % | 20 % | No PSE/OSE chosen; issuance is manual (P0-SUNAT) |
 | 6 | Email & notifications | `lib/mail.ts`, `lib/mail-templates.ts`, `lib/notify.ts` | 85 % | 25 % | No domain / SPF / DKIM / DMARC; never sent to a real inbox |
 | 7 | Compliance documents | `lib/documents.ts`, `lib/sector-legal.ts`, `lib/document-freshness.ts`, `lib/document-catalog.ts`, `components/legal-notes.tsx`, `/p/[slug]` | 90 % | 40 % | Templates never lawyer-reviewed (P0-LEGAL) |
@@ -118,9 +118,9 @@ Files: `src/lib/billing.ts`, `mercadopago.ts`, `subscriptions.ts`, `plans.ts`, `
 - [x] One S/ 19 payment approved in sandbox (2026-11-01).
 - [x] `billing-sync` reconciliation job exists.
 - [ ] [VERIFY] Sandbox run of: rejected payment → paused → cancelled, with real events, confirming local state at each step.
-- [ ] [VERIFY] Re-check the `x-signature` manifest format and the `cancelled`/`canceled` spelling against current MercadoPago docs (the roadmap says not to rely on memory).
-- [ ] [VERIFY] Webhook idempotency: replay the same event twice and out of order; state must not regress.
-- [ ] [AGENT] Dunning: notices for failed payment and the lapsed grace period (check what `lapsed_notice` already covers).
+- [~] [VERIFY] Signature manifest and `cancelled`/`canceled` spelling re-checked against the live MercadoPago docs on 2026-11-02: the event names and their GET endpoints (`subscription_preapproval` → `/preapproval/[id]`, `subscription_authorized_payment` → `/authorized_payments/[id]`) and the `canceled` spelling that MP sends for payments are confirmed; the code already accepts both spellings. The literal manifest string could not be quoted from the docs page through the fetcher, so the definitive check is still a **real signed sandbox event** (follows from the open sandbox item).
+- [x] [VERIFY] Webhook idempotency, replays and out-of-order delivery — `test/webhook.test.ts` (8 tests, signed requests through the real route): a repeated event records both deliveries but activates once and never extends `paid_until` twice; a charge arriving **before** its authorization confirms the subscription first and keeps the payment; a repeated charge does not extend the period again; a pause keeps the paid period; another tenant's subscription is ignored; a forged signature returns 401 with no event row and no state change; oversized bodies get 413.
+- [x] [AGENT] Dunning checked: `payment_failed` is sent from the webhook when a charge is rejected (deduped per event), `renewal_soon`/`subscription_expiring` go out before the period ends, and `lapsed_notice` covers 30 d, 60 d and 7 days before deletion. Gap worth knowing: there is no same-day “your access ended” mail — the first notice after expiry is at 30 days, preceded by the 7-day warning.
 - [ ] [OWNER] Production credentials, merchant account under the operating entity (P0-ENTITY).
 - [ ] [OWNER] Confirm pricing/limits and trial policy (P0-PRICING).
 - [ ] [OWNER] Refund/cancellation policy and Código del Consumidor auto-renewal disclosure (with area 14).
