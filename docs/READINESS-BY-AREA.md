@@ -18,14 +18,14 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 517/517 passing, 38 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 527/527 passing, 39 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
 | CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
 | Hourly DB backup cron | **Installed and running** (`/etc/cron.d/datosprivados`, `/usr/local/bin/datosprivados-backup`; newest file in `/var/backups/datosprivados` was from 2026-11-02 19:00 Lima). `GO-NO-GO.md` row 5 and `RUNBOOK.md` were corrected on 2026-11-02. |
 | Rate limiting | Exists in SQLite (`src/lib/rate-limit.ts`) and is applied to login, signup, ARCO form, password reset, verification, password/email change, account deletion, export, demo, AI. |
 | Invoicing | Data model + manual issuance only (`src/lib/invoicing.ts` header says so). **No PSE/OSE API integration.** |
-| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook`, `ai-policy` — 112 new tests, all green. |
+| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook`, `ai-policy`, `form-pow` — 122 new tests, all green. |
 | Not present | `proxy.ts`/middleware (so no CSP), real staging, Anthropic key, production domain, lawyer review. |
 
 ---
@@ -41,7 +41,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 5 | Invoicing (SUNAT) | `lib/invoicing.ts` | 50 % | 20 % | No PSE/OSE chosen; issuance is manual (P0-SUNAT) |
 | 6 | Email & notifications | `lib/mail.ts`, `lib/mail-templates.ts`, `lib/notify.ts` | 85 % | 25 % | No domain / SPF / DKIM / DMARC; never sent to a real inbox |
 | 7 | Compliance documents | `lib/documents.ts`, `lib/sector-legal.ts`, `lib/document-freshness.ts`, `lib/document-catalog.ts`, `components/legal-notes.tsx`, `/p/[slug]` | 90 % | 40 % | Templates never lawyer-reviewed (P0-LEGAL) |
-| 8 | ARCO requests | `actions/arco.ts`, `solicitud/[slug]`, `app/arco/*` | 80 % | 65 % | Requester/owner email delivery unproven; no captcha |
+| 8 | ARCO requests | `actions/arco.ts`, `solicitud/[slug]`, `app/arco/*`, `lib/form-pow.ts` | 88 % | 65 % | Requester/owner email delivery unproven (P0-DOMAIN) |
 | 9 | Incidents (48 h) | `app/app/incidentes/*`, `lib/incident-criteria.ts` | 75 % | 65 % | Pre-deadline alerts depend on email |
 | 10 | Data banks & SIPDP | `app/app/bancos/*`, `lib/bank-sheet.ts`, `lib/bank-presets.ts` | 90 % | 85 % | Platform's own banks unregistered (P0-OWN-BANKS) |
 | 11 | AI assistant | `lib/ai.ts`, `lib/llm.ts`, `lib/anonymizer.ts`, `lib/ai-guard.ts`, `lib/ai-policy.ts`, `actions/ai.ts` | 92 % | 40 % | No vendor/key/DPA decided (P0-AI-VENDOR) |
@@ -166,16 +166,16 @@ Files: `src/lib/documents.ts` (1.5k lines), `sector-legal.ts` (1k lines), `docum
 - [ ] [AGENT] Split `documents.ts` (1.5k lines) by document kind if it becomes the review bottleneck.
 
 ### 8. ARCO requests
-Files: `src/app/actions/arco.ts`, `src/app/solicitud/[slug]`, `src/app/app/arco/*`.
+Files: `src/app/actions/arco.ts`, `src/app/solicitud/[slug]`, `src/app/app/arco/*`, `src/lib/form-pow.ts`, `src/components/form-pow.tsx`, `docs/DECISIONS.md`.
 - [x] Public form with honeypot and rate limits (5 per IP per 10 min, 300 per company per hour).
 - [x] Deadlines (10 / 20 business days) with seeded holidays 2025–2032 and a `holidays-check` job.
 - [x] Owner notification and requester acknowledgement with ticket number are coded.
-- [ ] [VERIFY] End to end with real email: requester submits → owner notified → owner responds → requester notified.
-- [ ] [AGENT] Captcha or proof-of-work on the public form (Cloudflare Turnstile is the natural fit); rate limits are keyed by IP, which is weak behind shared NATs.
-- [ ] [AGENT] Attachment handling for identity proof, if required (also see evidence in area 10/12; today evidence is free text only). Decide scope.
-- [ ] [AGENT] Reminder emails before each deadline; confirm what `jobs.ts` already sends.
+- [ ] [VERIFY] End to end with real email: requester submits → owner notified → owner responds → requester notified (depends on area 6 / P0-DOMAIN).
+- [x] [AGENT] Proof-of-work on the public form instead of a captcha: `lib/form-pow.ts` (HMAC-signed challenge, 16 zero bits, 30 min TTL, single-use `salt` in `pow_challenges`, schema v15) + `components/form-pow.tsx` (Web Crypto in the browser) + verification in `createArcoRequestAction` after field validation so a typo doesn’t burn the challenge. **Off by default** (`FORM_POW=1` enables it) because the ARCO form is someone’s legal channel and must not depend on JavaScript; `checkEnvironment` warns while it is off. Tests: `test/form-pow.test.ts` (10) — solve/verify, tampered signature, expired, wrong difficulty, reuse, and the action with/without a valid solution. Decision recorded in `DECISIONS.md`.
+- [x] [AGENT] Attachment handling decided: **out of scope for v1** (identity is declared: name + DNI, reply goes to the given e-mail/phone). Attachments would add storage, virus scanning, encryption and retention of identity documents — a sensitive-data decision that depends on the retention policy (P0-SUPPORT). Recorded in `DECISIONS.md`.
+- [x] [AGENT] Reminder e-mails confirmed: the `arco-deadline-reminders` job warns 3 business days before the deadline and once when it is overdue, per request, with `dedupeKey` so it never repeats, and it writes to the responsible person (not only the account owner). Covered in `test/jobs.test.ts`.
 - [ ] [OWNER] Retention of requesters' personal data after closing a request (P0-SUPPORT).
-- [ ] [AGENT] Holiday disclaimer for regional holidays in the UI.
+- [x] [AGENT] Holiday disclaimer for regional holidays in the UI — `HolidayDisclaimer` on `/app/arco` and `/app/arco/[id]` (area 7 work, also applies here).
 
 ### 9. Incidents (48 h)
 Files: `src/app/app/incidentes/*`, `src/app/actions/incidents.ts`, `src/lib/incident-criteria.ts`, cron `incident-deadline-reminders` (every 30 min).

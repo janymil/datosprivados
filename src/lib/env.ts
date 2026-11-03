@@ -75,5 +75,11 @@ export function checkEnvironment(env: NodeJS.ProcessEnv = process.env): { errors
     errors.push("CRON_SECRET es obligatorio en producción (mínimo 16 caracteres): sin él no corren las tareas programadas.");
   }
 
+  if (env.FORM_POW !== "1") {
+    warnings.push(
+      "Sin FORM_POW=1: el formulario ARCO público depende solo de los límites por IP y el campo trampa (débiles detrás de un NAT compartido). Ver docs/DECISIONS.md."
+    );
+  }
+
   return { errors, warnings };
 }

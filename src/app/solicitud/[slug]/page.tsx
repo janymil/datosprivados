@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createArcoRequestAction } from "@/app/actions/arco";
 import { getPolicyBySlug, getCompanyBySlug, hasRequestTicket } from "@/lib/data";
+import { createChallenge, formPowEnabled } from "@/lib/form-pow";
+import { FormPow } from "@/components/form-pow";
 import { Logo } from "@/components/icons";
 import { Field } from "@/components/ui";
 import { companyIdentityLine } from "@/lib/documents";
@@ -29,6 +31,8 @@ export default async function PublicRequestPage({
   const policy = getPolicyBySlug(slug);
   // Solo se muestra la constancia de un ticket que existe para esta empresa.
   const ticket = ok && hasRequestTicket(company.id, ok) ? ok : undefined;
+  // Prueba de trabajo: apagada por defecto (`FORM_POW=1` la activa).
+  const challenge = formPowEnabled() ? createChallenge() : null;
 
   return (
     <div className="min-h-screen">
@@ -119,6 +123,7 @@ export default async function PublicRequestPage({
           ) : (
             <form action={createArcoRequestAction} className="card space-y-5 p-6 md:p-8">
               <input type="hidden" name="slug" value={slug} />
+              {challenge && <FormPow challenge={challenge} />}
               <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
 
               {error && (
@@ -127,7 +132,9 @@ export default async function PublicRequestPage({
                     ? "Recibimos muchas solicitudes desde tu conexión. Intenta de nuevo en unos minutos."
                     : error === "demo"
                       ? "Esta es una página de demostración: no se guardan solicitudes. Crea tu cuenta para tener tu propio formulario."
-                      : "Por favor completa los campos obligatorios e inténtalo de nuevo."}
+                      : error === "verificacion"
+                        ? "No pudimos verificar que el envío lo hizo una persona. Recarga la página y vuelve a enviarlo; si sigue igual, escribe a la empresa desde el correo de contacto."
+                        : "Por favor completa los campos obligatorios e inténtalo de nuevo."}
                 </p>
               )}
 

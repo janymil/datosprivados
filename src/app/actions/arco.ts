@@ -11,6 +11,7 @@ import { notifyCompany } from "@/lib/notify";
 import { enqueueEmail } from "@/lib/mail";
 import { formatDate } from "@/lib/format";
 import { takeRateLimit } from "@/lib/rate-limit";
+import { consumeChallenge, formPowEnabled, verifyChallenge } from "@/lib/form-pow";
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
@@ -53,7 +54,25 @@ export async function createArcoRequestAction(formData: FormData) {
     redirect(`/solicitud/${slug}?error=1`);
   }
 
+  // Prueba de trabajo (si está activada): se comprueba después de las validaciones
+  // para no gastar el desafío en un envío con un campo vacío.
+  let powSalt: string | null = null;
+  if (formPowEnabled()) {
+    const check = verifyChallenge({
+      salt: text(formData, "pow_salt"),
+      signature: text(formData, "pow_signature"),
+      difficulty: Number(text(formData, "pow_difficulty")),
+      expires: text(formData, "pow_expires"),
+      counter: text(formData, "pow_counter"),
+    });
+    if (!check.ok) redirect(`/solicitud/${slug}?error=verificacion`);
+    powSalt = text(formData, "pow_salt");
+  }
+
   const db = getDb();
+  // Consumo atómico del desafío: una solución sirve para un solo envío.
+  if (powSalt && !consumeChallenge(powSalt)) redirect(`/solicitud/${slug}?error=verificacion`);
+
   const id = newId();
   const received = todayLima();
   const ticket = nextTicketNumber(company.id);

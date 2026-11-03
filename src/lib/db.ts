@@ -454,7 +454,7 @@ function initSchema(db: DatabaseSync) {
  * cacheada en `globalThis` (en `next dev` la conexión sobrevive a los recargos
  * en caliente y `initSchema` no vuelve a correr).
  */
-const SCHEMA_VERSION = 14;
+const SCHEMA_VERSION = 15;
 
 function migrate(db: DatabaseSync) {
   const companyColumns = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
@@ -827,6 +827,17 @@ function migrate(db: DatabaseSync) {
     CREATE INDEX IF NOT EXISTS idx_activity_company ON activity(company_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_rate_limits_window ON rate_limits(window_start);
     CREATE INDEX IF NOT EXISTS idx_users_company ON users(company_id);
+  `);
+
+  // v15: desafíos del formulario ARCO público (prueba de trabajo). Se guardan solo
+  // las últimas 24 h: cada `salt` sirve una sola vez.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS pow_challenges (
+      salt TEXT PRIMARY KEY,
+      created_at TEXT NOT NULL,
+      used_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_pow_challenges_created ON pow_challenges(created_at);
   `);
 
   seedHolidays(db);

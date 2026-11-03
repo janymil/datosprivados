@@ -104,6 +104,16 @@ el origen con `geo $realip_remote_addr` (el par **antes** de la reescritura) y
 `if ($from_cloudflare = 0) { return 403; }`. Sin esa última línea, quien llegue directo
 a la IP del servidor puede inventar `CF-Connecting-IP` y estrenar cupo en cada intento.
 
+## Formulario ARCO público: prueba de trabajo en vez de captcha
+
+| Pregunta | Decisión | Motivo |
+|---|---|---|
+| ¿Captcha o prueba de trabajo? | **Prueba de trabajo** (hashcash) hoy; Turnstile cuando existan claves y se acepte el tercero | Los límites por IP (`5` por IP cada 10 min) son débiles tras un NAT compartido y gratis para un bot con muchas IPs. Turnstile es mejor, pero exige cuenta, claves y declararlo como sub-encargado (P0-ENTITY/LEGAL). La prueba de trabajo no necesita a nadie y ya está implementada |
+| ¿Cómo funciona? | El servidor firma `salt|dificultad|expira` (HMAC con `FORM_POW_SECRET` o, si falta, `CRON_SECRET`) y lo muestra en el formulario; el navegador busca un contador cuyo `sha256(salt+contador)` tenga N bits en cero (~0,1 s con 16 bits) y lo devuelve; el servidor comprueba firma, vigencia (30 min), dificultad y que el `salt` no se haya usado (tabla `pow_challenges`, consumo atómico) | Sin estado en el cliente, sin dependencias, sin terceros. Un `salt` vale una sola vez: una solución no se reutiliza |
+| ¿Por qué **apagada por defecto** (`FORM_POW=1` la activa)? | El formulario ARCO es la vía legal de una persona para ejercer sus derechos: no puede depender de que JavaScript funcione. Se activa en staging, se prueba en un móvil real y recién entonces en producción; `checkEnvironment` avisa en el arranque mientras siga apagada | Un fallo de PoW dejaría a gente sin poder presentar una solicitud, que es peor que el spam |
+| ¿Qué pasa si el navegador no puede resolverlo? | El componente muestra un aviso con la salida alternativa (escribir al correo de contacto de la empresa) y el servidor responde con un mensaje claro (`?error=verificacion`), nunca con un error técnico | La persona tiene que poder ejercer su derecho incluso con un dispositivo lento |
+| Adjuntos de prueba de identidad | **Fuera de alcance en v1**: la identidad se declara (nombre + DNI) y se responde al correo o teléfono consignado | Recibir adjuntos añade almacenamiento, antivirus, cifrado y retención de documentos de identidad (dato sensible); primero hay que decidir la política de retención (P0-SUPPORT) |
+
 ## Decididas en la Fase 3 (provisionales hasta cerrar la Fase 0)
 
 | Decisión | Elegida | Motivo | Si cambia |
