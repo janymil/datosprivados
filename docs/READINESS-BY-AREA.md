@@ -18,14 +18,14 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 539/539 passing, 40 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 564/564 passing, 42 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
 | CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
 | Hourly DB backup cron | **Installed and running** (`/etc/cron.d/datosprivados`, `/usr/local/bin/datosprivados-backup`; newest file in `/var/backups/datosprivados` was from 2026-11-02 19:00 Lima). `GO-NO-GO.md` row 5 and `RUNBOOK.md` were corrected on 2026-11-02. |
 | Rate limiting | Exists in SQLite (`src/lib/rate-limit.ts`) and is applied to login, signup, ARCO form, password reset, verification, password/email change, account deletion, export, demo, AI. |
 | Invoicing | Data model + manual issuance only (`src/lib/invoicing.ts` header says so). **No PSE/OSE API integration.** |
-| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook`, `ai-policy`, `form-pow`, `print-styles`, credit-note flow, incident banner — 134 new tests, all green. |
+| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook`, `ai-policy`, `form-pow`, `print-styles`, credit-note flow, incident banner, ANPD draft, mail a11y — 159 new tests, all green. |
 | Not present | `proxy.ts`/middleware (so no CSP), real staging, Anthropic key, production domain, lawyer review. |
 
 ---
@@ -39,10 +39,10 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 3 | Multi-tenancy & authorization | `requireSession`, `test/authz.test.ts`, `test/tenancy.test.ts` | 96 % | 90 % | No roles beyond `admin` |
 | 4 | Billing (MercadoPago) | `lib/billing.ts`, `lib/mercadopago.ts`, `lib/subscriptions.ts`, `api/mercadopago/webhook` | 82 % | 55 % | Reject→pause→cancel never seen with real events; no prod credentials |
 | 5 | Invoicing (SUNAT) | `lib/invoicing.ts` | 72 % | 20 % | No PSE/OSE chosen; nothing can be issued without the operating entity (P0-SUNAT, P0-ENTITY) |
-| 6 | Email & notifications | `lib/mail.ts`, `lib/mail-templates.ts`, `lib/notify.ts` | 88 % | 25 % | No domain / SPF / DKIM / DMARC; never sent to a real inbox |
+| 6 | Email & notifications | `lib/mail.ts`, `lib/mail-templates.ts`, `lib/notify.ts` | 92 % | 25 % | No domain / SPF / DKIM / DMARC; never sent to a real inbox |
 | 7 | Compliance documents | `lib/documents.ts`, `lib/sector-legal.ts`, `lib/document-freshness.ts`, `lib/document-catalog.ts`, `components/legal-notes.tsx`, `/p/[slug]` | 90 % | 40 % | Templates never lawyer-reviewed (P0-LEGAL) |
 | 8 | ARCO requests | `actions/arco.ts`, `solicitud/[slug]`, `app/arco/*`, `lib/form-pow.ts` | 88 % | 65 % | Requester/owner email delivery unproven (P0-DOMAIN) |
-| 9 | Incidents (48 h) | `app/app/incidentes/*`, `lib/incident-criteria.ts` | 82 % | 65 % | Pre-deadline alerts depend on email (in-app banner now covers the overdue case) |
+| 9 | Incidents (48 h) | `app/app/incidentes/*`, `lib/incident-criteria.ts`, `lib/incident-notice.ts` | 88 % | 65 % | Pre-deadline alerts depend on email (in-app banner covers the overdue case); 48 h wording awaits the lawyer |
 | 10 | Data banks & SIPDP | `app/app/bancos/*`, `lib/bank-sheet.ts`, `lib/bank-presets.ts` | 90 % | 85 % | Platform's own banks unregistered (P0-OWN-BANKS) |
 | 11 | AI assistant | `lib/ai.ts`, `lib/llm.ts`, `lib/anonymizer.ts`, `lib/ai-guard.ts`, `lib/ai-policy.ts`, `actions/ai.ts` | 92 % | 40 % | No vendor/key/DPA decided (P0-AI-VENDOR) |
 | 12 | Help & knowledge base | `lib/help-content.ts`, `lib/glossary.ts`, `lib/help-tips.ts`, `lib/help-knowledge.ts`, `lib/help-review.ts`, `lib/legal-faq.ts` | 96 % | 70 % | Content not reviewed by lawyer/editor |
@@ -148,7 +148,7 @@ Files: `src/lib/mail.ts` (Resend over HTTP, outbox), `mail-templates.ts` (19+ te
 - [ ] [OWNER] Final provider choice, tied to the operating entity (P0-ENTITY).
 - [ ] [VERIFY] Send every template to Gmail, Outlook and a Peruvian ISP mailbox; check spam placement and mail-tester score.
 - [ ] [VERIFY] Bounce/complaint webhook with a real signed event; address becomes suppressed.
-- [ ] [AGENT] Accessibility check of HTML mail (contrast, alt text, plain-text part).
+- [x] [AGENT] Accessibility check of HTML mail: `test/mail-a11y.test.ts` renders 9 representative templates and asserts a **non-empty plain-text part**, no `undefined`/`null`, `<html lang="es">`, `role="presentation"` on the layout tables, **no `<img>`** (so no missing `alt`), escaped payload values (no `<script>`/inline HTML from customer data) and an absolute CTA link. It computes WCAG contrast for every colour pair in the generated HTML and **found a real defect**: the footer was `#777` on white = 4.48:1, just under AA — changed to `#666` (5.6:1). Test now fails if any pair drops below 4.5:1.
 - [x] [AGENT] Alert when the outbox has dead-lettered messages: `operationalAlerts` now counts `email_outbox` rows with `status = 'dead'` regardless of age (they are never retried) and raises `outbox_dead`, which the `ops-alert` job mails to `ALERT_EMAIL`. Test in `test/ops.test.ts`.
 - [ ] [AGENT] Optional weekly digest.
 
@@ -183,7 +183,7 @@ Files: `src/app/app/incidentes/*`, `src/app/actions/incidents.ts`, `src/lib/inci
 - [x] Reminder job runs every 30 minutes.
 - [ ] [VERIFY] Reminder emails arrive in a real inbox before the deadline (area 6); simulated-clock coverage exists in `test/jobs.test.ts`.
 - [ ] [AGENT] Confirm the 48 h rule and notification content against primary sources with the lawyer (P0-LEGAL); `incident-criteria.ts` is the place to change.
-- [ ] [AGENT] Generate the notification text/draft for the authority from incident data, if not present.
+- [x] [AGENT] Notification draft for the authority built from the incident data — extracted from the page into `src/lib/incident-notice.ts` (`buildAuthorityNotice`): seven sections (responsible party, timeline with the 48 h deadline, nature/description, data categories and affected holders, consequences, containment measures, holder communication), art. 34 DS 016-2024-JUS references and the CNSD note for digital incidents. What only the responsible party knows stays as a visible `[...]` instead of a silent blank. `test/incident-notice.test.ts` (5 tests) pins the sections, the real data, the placeholder discipline (no `undefined`/`null`) and the legacy foreign-entity branch.
 - [x] [AGENT] In-app banner for overdue incidents: `overdueIncidents()` (open, `notified_at IS NULL`, `due_at` already passed) feeds `OverdueIncidentsBanner` in the panel layout, so it shows on **every** panel screen until the incident is handled — the e-mail can be missed or fail, this cannot. Tests in `test/ops.test.ts` (query filters notified/closed/future; banner renders `role="alert"` with the count and link).
 
 ### 10. Data banks & SIPDP

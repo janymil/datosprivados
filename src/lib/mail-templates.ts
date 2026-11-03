@@ -115,7 +115,7 @@ function layout(body: Body, company: string): RenderedMail {
 <tr><td style="padding:8px 28px;font-size:15px;line-height:1.55">${body.paragraphs.map((p) => `<p style="margin:0 0 14px">${escapeHtml(p)}</p>`).join("")}</td></tr>
 ${action ? `<tr><td style="padding:4px 28px 20px"><a href="${escapeHtml(action.url)}" style="display:inline-block;background:#8a1c2b;color:#ffffff;text-decoration:none;padding:11px 20px;border-radius:6px;font-size:15px">${escapeHtml(action.label)}</a></td></tr>` : ""}
 ${body.footerNote ? `<tr><td style="padding:0 28px 12px;font-size:13px;color:#555">${escapeHtml(body.footerNote)}</td></tr>` : ""}
-<tr><td style="padding:14px 28px 22px;border-top:1px solid #e3ddd2;font-size:12px;color:#777">${escapeHtml(identity)}</td></tr>
+<tr><td style="padding:14px 28px 22px;border-top:1px solid #e3ddd2;font-size:12px;color:#666">${escapeHtml(identity)}</td></tr>
 </table></td></tr></table></body></html>`;
 
   return { subject: body.subject, text, html };

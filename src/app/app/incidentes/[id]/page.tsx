@@ -12,6 +12,7 @@ import {
 } from "@/lib/incident-criteria";
 import { Countdown } from "@/components/countdown";
 import { CopyButton } from "@/components/copy-button";
+import { buildAuthorityNotice } from "@/lib/incident-notice";
 import { demoPreview, isDemoCompany } from "@/lib/demo";
 import { IncidentAiPanel } from "@/components/incident-ai-panel";
 import { SubmitButton } from "@/components/submit-button";
@@ -47,45 +48,7 @@ export default async function IncidentDetailPage({ params }: { params: Promise<{
   const mustNotify = requiresAnpdNotification(incident.criteria);
   const criteriaText = criteriaLabels(incident.criteria).join(", ") || "Ninguno";
 
-  const draft = `REPORTE DE INCIDENTE DE SEGURIDAD DE DATOS PERSONALES (PLAZO 48 HORAS)
-Dirigido a: Autoridad Nacional de Protección de Datos Personales (ANPD - MINJUSDH)
-Base legal: Ley N.° 29733 y Reglamento aprobado por Decreto Supremo N.° 016-2024-JUS (art. 34)
-(Si el incidente ocurrió en el entorno digital, notificar también al Centro Nacional de Seguridad Digital - CNSD, art. 34.5)
-
-1. IDENTIFICACIÓN DEL RESPONSABLE DEL TRATAMIENTO
-Razón Social / Nombre: ${company.name}
-${company.entity_type === "extranjera" ? `Sociedad constituida en: ${company.country || "[por completar]"}\nRepresentante en el Perú: ${company.representative_name || "[por designar]"}` : `RUC N.°: ${company.ruc}`}
-Domicilio legal: ${company.address || "[por completar]"}
-Oficial de Datos Personales / Contacto de Privacidad: ${company.dpo_name || "[por completar]"}
-Correo electrónico y teléfono de contacto: ${company.dpo_email || company.email} / ${company.phone || "[por completar]"}
-
-2. CRONOLOGÍA DEL INCIDENTE
-- Fecha y hora de detección: ${formatDateTime(incident.detected_at)} (Hora de Lima, UTC-5)
-- Fecha y hora límite (48 h): ${formatDateTime(incident.due_at)}
-- Fecha de emisión de este reporte: ${new Date().toLocaleDateString("es-PE", { timeZone: "America/Lima" })}
-- Motivo de la demora (solo si se notifica después de 48 h): [Explicar las razones o indicar "No aplica"]
-
-3. NATURALEZA Y DESCRIPCIÓN DEL INCIDENTE
-Título del evento: ${incident.title}
-Nivel de gravedad estimado: ${(SEVERITY[incident.severity] ?? incident.severity).toUpperCase()}
-Descripción de los hechos y sistemas involucrados:
-${incident.description || "[Por completar]"}
-
-4. CATEGORÍAS DE DATOS PERSONALES Y TITULARES AFECTADOS
-- Categorías de datos involucrados: ${incident.data_categories || "[Por completar]"}
-- Número estimado de personas afectadas: ${incident.affected_people || "[Por determinar]"}
-- Titulares / identificadores afectados: ${incident.affected_sample || "[Por precisar]"}
-- Criterios del art. 34.1 que se cumplen: ${criteriaText}
-
-5. POSIBLES CONSECUENCIAS PARA LOS TITULARES
-[Describir los posibles perjuicios para los titulares]
-
-6. MEDIDAS DE CONTENCIÓN Y CORRECCIÓN ADOPTADAS
-${incident.measures || "[Por completar]"}
-
-7. COMUNICACIÓN A LOS TITULARES AFECTADOS (ART. 34.3 Y 34.4, DS N.° 016-2024-JUS)
-- [SÍ: se informó / informará en lenguaje claro dentro de las 48 h / NO: no hubo afectación y el incidente fue superado por completo]
-`;
+  const draft = buildAuthorityNotice({ company, incident });
 
   const rows: [string, string][] = [
     ["Gravedad", SEVERITY[incident.severity] ?? incident.severity],
