@@ -119,7 +119,7 @@ export function GuideBox({
       id: "why" as const,
       num: "02",
       label: "¿Por qué lo exige la ley?",
-      badgeColor: "text-ochre border-ochre bg-ochre/10",
+      badgeColor: "text-ochre-dark border-ochre bg-ochre/10",
       content: why,
     },
     {

@@ -71,7 +71,7 @@ export function AppNav({
         return (
           <div key={item.href}>
             {startsGroup && (
-              <p className="mb-1.5 mt-5 px-3.5 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-soft/70">
+              <p className="mb-1.5 mt-5 px-3.5 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-soft">
                 {item.group}
               </p>
             )}

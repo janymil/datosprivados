@@ -18,8 +18,8 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 574/574 passing, 43 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
-| `pnpm exec playwright test` | 77/77 across chromium (journey + quality), mobile-chrome, firefox, webkit and axe |
+| `pnpm test` | 583/583 passing, 44 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm exec playwright test` | 99/99 across chromium (journey + quality), mobile-chrome, firefox, webkit and axe (19 of them axe: 8 public + 11 panel) |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
 | CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
@@ -54,7 +54,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 17 | Backup & restore | `scripts/backup-db.mjs`, `restore-db.mjs`, `restore-drill.mjs`, `backup-crypto.mjs` | 88 % | 65 % | Backups live on the same box; no fresh-machine drill |
 | 18 | Deploy & infrastructure | `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-production.conf` | 78 % | 40 % | No real staging; `deploy.sh` never run |
 | 19 | Tests & CI | `test/`, `e2e/`, `.github/workflows/ci.yml` | 94 % | 80 % | No iOS device and no UAT |
-| 20 | Accessibility & UI | `components/`, `app/globals.css` | 93 % | 75 % | axe covers the public screens only (D-2); no screen-reader walkthrough |
+| 20 | Accessibility & UI | `components/`, `app/globals.css` | 96 % | 78 % | No screen-reader / keyboard-only walkthrough by a person |
 
 **Reading:** areas 1, 3, 10, 19 are strong. Areas 6, 7, 11, 14 have finished code but are blocked by non-code inputs. Areas 4, 5, 15, 17, 18 still need real engineering or ops work.
 
@@ -304,7 +304,7 @@ Files: `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-produc
 
 ### 19. Tests & CI
 Files: `test/` (42 files), `e2e/` (journey + quality + axe specs, mock server), `playwright.config.ts`, `vitest.config.mts`, `.github/workflows/ci.yml`.
-- [x] 574 unit/integration tests in 42 files, E2E 77/77 (chromium journey + quality, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
+- [x] 583 unit/integration tests in 44 files, E2E 99/99 (chromium journey + quality, mobile-chrome, firefox, webkit, axe), CI green, `pnpm audit` job.
 - [x] CI bug fixed: tests no longer depend on a pre-existing `test/.tmp`.
 - [x] [AGENT] Firefox and WebKit projects in `playwright.config.ts` (quality spec: headers, basic a11y, no horizontal overflow, legal footer) and CI now installs `chromium firefox webkit`. **Run locally on 2026-11-03: 30/30 green** (16 Firefox + 14 WebKit). The full journey stays Chromium-only so CI doesn't triple in time. Note: `playwright install` on this box needed a retry without `--with-deps` (the apt phase stalled); the browsers are cached in `~/.cache/ms-playwright`.
 - [x] [AGENT] Coverage report with a floor: `@vitest/coverage-v8` + `pnpm test:coverage` (now the CI step). Measured 2026-11-02 on the core modules — `billing`, `auth`, `jobs`, `mail`, `account`, `invoicing`, `rate-limit`, `client-ip`, `mercadopago` and `backup-crypto` — **90.9 % statements / 84.0 % branches / 91.9 % functions / 94.0 % lines** (re-measured 2026-11-03), with thresholds 80/80/80/70 that fail the build if they drop. The weakest file was `mercadopago.ts` (56 % statements); `test/mercadopago.test.ts` took it to 96 % statements and 100 % functions/lines, so D-1 in `docs/DEFECTS.md` is closed.
@@ -317,7 +317,8 @@ Files: `test/` (42 files), `e2e/` (journey + quality + axe specs, mock server), 
 ### 20. Accessibility & UI
 Files: `src/components/*` (34 files), `src/components/ui.tsx` (`Field`), `src/app/globals.css`, `e2e/quality.spec.ts`.
 - [x] Labels associated with inputs (`Field` uses `<label htmlFor>` and `aria-describedby`); basic a11y checks on desktop Chrome and Pixel 7.
-- [x] [AGENT] Automated axe checks: `e2e/axe.spec.ts` runs `@axe-core/playwright` with the WCAG 2.1 A/AA tag set over the eight public screens (landing, login, signup, terms, privacy, cookies, forgot, reset) in a dedicated `axe` project. **It found two real defects on the landing page**: `bg-sage/15 text-sage` badges at 4.4:1 (below AA) — fixed to `text-ink`, and the same pattern pre-emptively fixed in `consent-ai-auditor` and `business-doc-advisor`. Run locally on 2026-11-03: **8/8 green**. Panel screens still need a logged-in fixture before axe can cover them.
+- [x] [AGENT] Automated axe checks: `e2e/axe.spec.ts` runs `@axe-core/playwright` with the WCAG 2.1 A/AA tag set over **eight public screens** (landing, login, signup, terms, privacy, cookies, forgot, reset) **and eleven panel screens** (`/app`, bancos, documentos, arco, incidentes, asistente, ayuda, ajustes, empresa, evidencias, herramientas — it signs in through `GET /demo`, so no signup/payment is repeated per test). Run on 2026-11-03: **19/19 green**, after it caught four real defects on the way: the landing badges (4.4:1), the sidebar group labels (`text-ink-soft/70`, 3.7:1), the ochre warning chips (`text-ochre` on `bg-ochre/10`, 3.2:1) and the field borders (`--line-strong`, 2.0:1 where 1.4.11 asks for 3:1).
+- [x] [AGENT] Token-level contrast guard: `test/color-contrast.test.ts` (9 tests) parses the `:root` tokens in `globals.css` and fails the build if any text colour drops below AA on `paper`/`paper-2`, if `--line-strong` drops below 3:1 against the paper or the field fill, or if a bare `text-ochre` class reappears. axe only sees the screens it visits, in E2E; this sees the palette in 30 ms.
 - [ ] [VERIFY] Keyboard-only walkthrough and screen reader pass (NVDA/VoiceOver) on signup, ARCO form and document publishing.
 - [~] [VERIFY] Firefox, Safari, iOS Safari rendering (shared with area 19). Firefox and WebKit (Safari's engine) are automated since 2026-11-03 (30/30 green); a real iOS Safari on a phone still needs a person.
 - [x] [AGENT] Color contrast in both themes: **there is only one theme**. `globals.css` defines a single set of tokens (paper/ink/sage/ochre/crimson) and nothing reads `prefers-color-scheme` or uses `dark:` variants, so a dark-mode audit would be auditing a theme that doesn't exist. Contrast is enforced by `e2e/axe.spec.ts` (WCAG AA) on the public screens; if a dark theme is ever added, it needs its own axe run.

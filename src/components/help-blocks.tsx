@@ -24,7 +24,7 @@ function Inline({ text }: { text: string }): ReactNode {
 
 const CALLOUT = {
   tip: { label: "Consejo", box: "border-sage bg-sage/[0.08]", tag: "text-sage" },
-  warn: { label: "Ojo", box: "border-ochre bg-ochre/[0.09]", tag: "text-ochre" },
+  warn: { label: "Ojo", box: "border-ochre bg-ochre/[0.09]", tag: "text-ochre-dark" },
   law: { label: "Lo que dice la norma", box: "border-ink bg-ink/[0.04]", tag: "text-ink" },
   example: { label: "Ejemplo", box: "border-crimson bg-crimson/[0.05]", tag: "text-crimson" },
 } as const;

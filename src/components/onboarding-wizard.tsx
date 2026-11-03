@@ -224,7 +224,7 @@ export function OnboardingWizard({
                   <span className="flex flex-wrap items-center gap-2 text-base font-medium">
                     {preset.question}
                     {preset.sensitive && (
-                      <span className="rounded-full bg-ochre/15 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ochre">
+                      <span className="rounded-full bg-ochre/15 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ochre-dark">
                         Puede incluir datos sensibles
                       </span>
                     )}

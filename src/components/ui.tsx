@@ -35,7 +35,7 @@ type Tone = "ok" | "warn" | "danger" | "neutral" | "info";
 
 const TONE: Record<Tone, string> = {
   ok: "border-sage/40 bg-sage/10 text-sage",
-  warn: "border-ochre/40 bg-ochre/10 text-ochre",
+  warn: "border-ochre/40 bg-ochre/10 text-ochre-dark",
   danger: "border-crimson/40 bg-crimson/10 text-crimson",
   neutral: "border-line-strong bg-ink/[0.03] text-ink-soft",
   info: "border-ink/25 bg-ink/[0.04] text-ink",
@@ -78,7 +78,7 @@ export function StatCard({
       <p className="label-mono">{label}</p>
       <p
         className={`mt-3 font-display text-[2.35rem] leading-none tracking-[-0.03em] ${
-          tone === "danger" ? "text-crimson" : tone === "warn" ? "text-ochre" : ""
+          tone === "danger" ? "text-crimson" : tone === "warn" ? "text-ochre-dark" : ""
         }`}
       >
         {value}

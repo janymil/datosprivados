@@ -107,7 +107,7 @@ export default async function IncidentDetailPage({ params }: { params: Promise<{
                       className={`inline-flex items-center gap-1.5 border px-3 py-1.5 text-sm font-medium ${
                         active
                           ? "border-crimson/50 bg-crimson/[0.08] text-crimson"
-                          : "border-line bg-paper-2 text-ink-soft/70"
+                          : "border-line bg-paper-2 text-ink-soft"
                       }`}
                     >
                       {active ? "✓" : "—"} {criterion.label}

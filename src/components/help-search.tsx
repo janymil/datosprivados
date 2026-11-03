@@ -8,7 +8,7 @@ import { SearchIcon, SparklesIcon } from "./icons";
 const KIND_LABEL = { articulo: "Artículo", pregunta: "Pregunta", glosario: "Glosario" } as const;
 const KIND_STYLE = {
   articulo: "border-crimson/40 bg-crimson/10 text-crimson",
-  pregunta: "border-ochre/40 bg-ochre/10 text-ochre",
+  pregunta: "border-ochre/40 bg-ochre/10 text-ochre-dark",
   glosario: "border-sage/40 bg-sage/10 text-sage",
 } as const;
 
@@ -75,7 +75,7 @@ export function HelpSearch({ docs }: { docs: SearchDoc[] }) {
             }
           }}
           placeholder="Escribe tu duda: «cámaras», «responder un reclamo», «cuánto cuesta»…"
-          className="min-w-0 flex-1 appearance-none bg-transparent text-[1.05rem] !outline-none placeholder:text-ink-soft/70 [&::-webkit-search-cancel-button]:hidden"
+          className="min-w-0 flex-1 appearance-none bg-transparent text-[1.05rem] !outline-none placeholder:text-ink-soft [&::-webkit-search-cancel-button]:hidden"
         />
         {query ? (
           <button

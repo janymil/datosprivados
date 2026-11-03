@@ -31,7 +31,7 @@ export function Countdown({ dueAt, initialLabel }: { dueAt: string; initialLabel
   return (
     <span
       className={`tabular-nums ${
-        state.expired ? "text-crimson" : state.urgent ? "text-ochre" : "text-ink"
+        state.expired ? "text-crimson" : state.urgent ? "text-ochre-dark" : "text-ink"
       }`}
     >
       {state.label}

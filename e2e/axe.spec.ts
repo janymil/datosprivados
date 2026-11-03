@@ -1,11 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 /**
  * Accesibilidad automatizada (área 20): axe-core recorre las pantallas públicas y
- * falla el build si aparece una violación WCAG 2.1 A/AA. Cubre lo que una prueba
- * manual se salta por cansancio: contraste, nombres accesibles, jerarquía de
- * encabezados, etiquetas de formulario y regiones.
+ * las del panel y falla el build si aparece una violación WCAG 2.1 A/AA. Cubre lo
+ * que una prueba manual se salta por cansancio: contraste, nombres accesibles,
+ * jerarquía de encabezados, etiquetas de formulario y regiones.
  *
  * No sustituye la revisión con lector de pantalla (NVDA/VoiceOver) ni la navegación
  * solo con teclado, que siguen pendientes de una persona.
@@ -13,21 +13,52 @@ import { expect, test } from "@playwright/test";
 
 const PAGES = ["/", "/login", "/registro", "/terminos", "/privacidad", "/cookies", "/olvide", "/restablecer"];
 
+// Pantallas del panel. Se entra con la cuenta demo (GET /demo inicia sesión y vuelve
+// a /app): así axe cubre el panel sin repetir en cada prueba un alta y un pago.
+const PANEL_PAGES = [
+  "/app",
+  "/app/bancos",
+  "/app/documentos",
+  "/app/arco",
+  "/app/incidentes",
+  "/app/asistente",
+  "/app/ayuda",
+  "/app/ajustes",
+  "/app/empresa",
+  "/app/evidencias",
+  "/app/herramientas",
+];
+
+/** Analiza la página actual y devuelve las violaciones en un formato corto y legible. */
+async function audit(page: Page) {
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  return results.violations.map((violation) => ({
+    id: violation.id,
+    impact: violation.impact,
+    help: violation.help,
+    nodes: violation.nodes.slice(0, 3).map((node) => node.target.join(" ")),
+  }));
+}
+
 for (const path of PAGES) {
   test(`axe · ${path}`, async ({ page }) => {
     await page.goto(path);
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      // La demo pública y la política de un cliente dependen de datos sembrados; se
-      // revisan aparte en el recorrido, donde la cuenta existe.
-      .analyze();
-
-    const violations = results.violations.map((violation) => ({
-      id: violation.id,
-      impact: violation.impact,
-      help: violation.help,
-      nodes: violation.nodes.slice(0, 3).map((node) => node.target.join(" ")),
-    }));
+    const violations = await audit(page);
     expect(violations, JSON.stringify(violations, null, 2)).toEqual([]);
   });
 }
+
+test.describe("panel", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/demo");
+    await page.waitForURL(/\/app/);
+  });
+
+  for (const path of PANEL_PAGES) {
+    test(`axe · ${path}`, async ({ page }) => {
+      await page.goto(path);
+      const violations = await audit(page);
+      expect(violations, JSON.stringify(violations, null, 2)).toEqual([]);
+    });
+  }
+});

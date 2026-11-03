@@ -138,7 +138,7 @@ export function ConsentAiAuditor({
                   result.verdict === "cumple"
                     ? "bg-sage/15 text-ink"
                     : result.verdict === "observado"
-                      ? "bg-ochre/15 text-ochre"
+                      ? "bg-ochre/15 text-ochre-dark"
                       : "bg-crimson/15 text-crimson"
                 }`}
               >

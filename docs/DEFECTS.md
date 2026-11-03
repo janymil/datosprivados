@@ -21,7 +21,7 @@ haya S1/S2 abiertos.
 
 | # | Sev | Qué | Dónde | Reproducir | Notas |
 |---|---|---|---|---|---|
-| D-2 | S3 | Las pantallas del panel no están cubiertas por axe: solo las ocho públicas | `e2e/axe.spec.ts` | `pnpm exec playwright test --project=axe` | Hace falta un fixture que registre una cuenta y recorra el panel; el recorrido de `journey.spec.ts` ya sabe hacerlo, hay que reutilizarlo |
+| — | — | **Sin defectos abiertos** al 2026-11-03 | — | — | Los dos últimos (D-1 cobertura de cobro, D-2 panel sin axe) se cerraron ese día; ver el registro de abajo. |
 
 ## Conocidos por diseño (no son defectos, pero condicionan el lanzamiento)
 
@@ -38,7 +38,11 @@ haya S1/S2 abiertos.
 
 | Fecha | Sev | Qué | Arreglo |
 |---|---|---|---|
+| 2026-11-03 | S3 | Bordes de campos a 2,0:1: `.input` y `.btn-ghost` se identifican solo por `--line-strong` (#b8aa90), y WCAG 1.4.11 pide 3:1 | `--line-strong: #97855f` (3,2:1 sobre papel y 3,5:1 sobre el relleno del campo); lo detectó `test/color-contrast.test.ts` |
+| 2026-11-03 | S3 | Distintivos de aviso en ocre a 3,2:1 (`text-ochre` sobre `bg-ochre/10`) en 8 componentes | token `--ochre-dark: #7d5713` (5,8:1) y `text-ochre` → `text-ochre-dark`; el ocre de marca queda para rellenos y bordes |
+| 2026-11-03 | S3 | Etiquetas de grupo del menú lateral a 3,7:1 (`text-ink-soft/70`, 11 px) | `text-ink-soft` sólido (7,2:1); también en el estado inactivo de criterios de incidente y en el placeholder del buscador de ayuda |
 | 2026-11-03 | S3 | `mercadopago.ts` era el archivo con menos cobertura (56 % sentencias, 38 % funciones): los modos de fallo del cobro no se probaban | `test/mercadopago.test.ts` contra un servidor HTTP real: 4xx/5xx con detalle recortado, token ausente, respuesta sin URL de pago, cancelación con `cancelled`→`canceled`, id codificado y red caída. Ahora 96 % sentencias / 100 % funciones y líneas |
+| 2026-11-03 | S3 | El panel no estaba cubierto por axe (D-2) | `e2e/axe.spec.ts` entra con la cuenta demo y audita 11 pantallas del panel: al hacerlo encontró los tres fallos de contraste de arriba. 19/19 en el proyecto `axe` |
 | 2026-11-03 | S3 | `test/form-pow.test.ts` fallaba una de cada 256 ejecuciones: asumía que `counter + 1` no cumple la dificultad | la prueba ahora busca un contador que de verdad no la cumpla |
 | 2026-11-03 | S3 | Contraste AA en la portada: los distintivos `bg-sage/15 text-sage` quedaban en 4,4:1 | `text-ink` sobre el mismo fondo (en portada, `consent-ai-auditor` y `business-doc-advisor`); detectado por `e2e/axe.spec.ts` |
 | 2026-11-03 | S3 | Pie del correo transaccional en `#777` sobre blanco = 4,48:1 (por debajo de AA) | `#666` (5,6:1); detectado por `test/mail-a11y.test.ts` |

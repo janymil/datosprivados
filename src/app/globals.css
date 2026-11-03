@@ -11,6 +11,7 @@
   --color-crimson-dark: var(--crimson-dark);
   --color-sage: var(--sage);
   --color-ochre: var(--ochre);
+  --color-ochre-dark: var(--ochre-dark);
 
   --font-sans: var(--font-archivo);
   --font-display: var(--font-fraunces);
@@ -25,11 +26,18 @@
   --ink: #17191e;
   --ink-soft: #52565e;
   --line: #d9cfbc;
-  --line-strong: #b8aa90;
+  /* Borde de campos y de botones fantasma: es la única pista visual del campo (el
+     relleno del input casi no se distingue del papel), así que WCAG 1.4.11 pide 3:1.
+     El tono anterior (#b8aa90) daba 2,0:1. Test: test/color-contrast.test.ts. */
+  --line-strong: #97855f;
   --crimson: #b0241c;
   --crimson-dark: #85160f;
   --sage: #3f6b52;
   --ochre: #a9761b;
+  /* Texto sobre papel: el ocre de marca da 3,5:1 y no llega a AA (4,5:1). Este tono,
+     el mismo con menos luz, da 5,8:1. El ocre normal queda para rellenos, bordes e
+     iconos. Test: test/color-contrast.test.ts. */
+  --ochre-dark: #7d5713;
 }
 
 * {
