@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SECTIONS, TOPICS, topicBySlug } from "@/lib/help-content";
+import { HELP_LEGAL_REVIEW, reviewState } from "@/lib/help-review";
 import { HelpBlocks, slugifyHeading } from "@/components/help-blocks";
 import { SparklesIcon } from "@/components/icons";
 
@@ -21,6 +22,12 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
   const section = SECTIONS.find((item) => item.id === topic.section);
   const related = topic.related.map((related) => topicBySlug(related)).filter((item) => item !== undefined);
   const headings = topic.blocks.flatMap((block) => (block.t === "h" ? [block.text] : []));
+  const review = reviewState(topic.slug);
+  const reviewedLabel = review
+    ? new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "long", year: "numeric", timeZone: "America/Lima" }).format(
+        new Date(`${review.reviewed}T12:00:00Z`)
+      )
+    : null;
 
   return (
     <article className="grid gap-10 lg:grid-cols-[1fr_15rem]">
@@ -34,7 +41,24 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
         </nav>
 
         <h1 className="mt-3 font-display text-[2.2rem] leading-[1.06] tracking-[-0.03em] md:text-[2.8rem]">{topic.title}</h1>
-        <p className="mt-2 font-mono text-xs uppercase tracking-[0.08em] text-ink-soft">{topic.minutes} min de lectura</p>
+        <p className="mt-2 font-mono text-xs uppercase tracking-[0.08em] text-ink-soft">
+          {topic.minutes} min de lectura
+          {reviewedLabel && <> · revisado el {reviewedLabel}</>}
+        </p>
+
+        {review?.stale && (
+          <p
+            role="note"
+            className="mt-5 border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-[15px] leading-relaxed"
+          >
+            <strong>Este artículo puede estar desactualizado.</strong> Su última revisión fue hace más de un año
+            ({reviewedLabel}). Si algo no coincide con lo que ves en la app, escribe a{" "}
+            <a href="mailto:hola@datosprivados.pe" className="link-underline font-medium text-ink">
+              hola@datosprivados.pe
+            </a>
+            .
+          </p>
+        )}
 
         <div className="mt-6 border-2 border-ink bg-paper-2 p-5">
           <p className="font-mono text-xs font-bold uppercase tracking-[0.12em] text-crimson">En 30 segundos</p>
@@ -120,6 +144,10 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
               </ul>
             </nav>
           )}
+          <p className="border-t border-line pt-3 font-mono text-[11px] uppercase leading-relaxed tracking-[0.06em] text-ink-soft">
+            {reviewedLabel ? `Revisado el ${reviewedLabel}` : "Sin fecha de revisión"}
+            {HELP_LEGAL_REVIEW.at ? ` · revisión legal: ${HELP_LEGAL_REVIEW.by}` : " · revisión legal pendiente"}
+          </p>
           <Link href="/app/ayuda" className="block font-mono text-xs font-semibold uppercase tracking-[0.08em] text-crimson hover:underline">
             ← Volver al Centro de ayuda
           </Link>

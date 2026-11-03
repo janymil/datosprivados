@@ -18,14 +18,14 @@ This file is a *view* over the other docs, not a replacement. When this file and
 
 | Check | Result |
 |---|---|
-| `pnpm test` | 489/489 passing, 35 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
+| `pnpm test` | 498/498 passing, 36 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm typecheck` | clean |
 | `pnpm lint` | clean (0 errors, 0 warnings) |
 | CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
 | Hourly DB backup cron | **Installed and running** (`/etc/cron.d/datosprivados`, `/usr/local/bin/datosprivados-backup`; newest file in `/var/backups/datosprivados` was from 2026-11-02 19:00 Lima). `GO-NO-GO.md` row 5 and `RUNBOOK.md` were corrected on 2026-11-02. |
 | Rate limiting | Exists in SQLite (`src/lib/rate-limit.ts`) and is applied to login, signup, ARCO form, password reset, verification, password/email change, account deletion, export, demo, AI. |
 | Invoicing | Data model + manual issuance only (`src/lib/invoicing.ts` header says so). **No PSE/OSE API integration.** |
-| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states` — 84 new tests, all green. |
+| New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review` — 93 new tests, all green. |
 | Not present | `proxy.ts`/middleware (so no CSP), real staging, Anthropic key, production domain, lawyer review. |
 
 ---
@@ -45,7 +45,7 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 9 | Incidents (48 h) | `app/app/incidentes/*`, `lib/incident-criteria.ts` | 75 % | 65 % | Pre-deadline alerts depend on email |
 | 10 | Data banks & SIPDP | `app/app/bancos/*`, `lib/bank-sheet.ts`, `lib/bank-presets.ts` | 90 % | 85 % | Platform's own banks unregistered (P0-OWN-BANKS) |
 | 11 | AI assistant | `lib/ai.ts`, `lib/llm.ts`, `lib/anonymizer.ts`, `lib/ai-guard.ts`, `actions/ai.ts` | 80 % | 40 % | No vendor/key/DPA decided (P0-AI-VENDOR) |
-| 12 | Help & knowledge base | `lib/help-content.ts`, `lib/glossary.ts`, `lib/help-tips.ts`, `lib/help-knowledge.ts`, `lib/legal-faq.ts` | 90 % | 70 % | Content not reviewed by lawyer/editor |
+| 12 | Help & knowledge base | `lib/help-content.ts`, `lib/glossary.ts`, `lib/help-tips.ts`, `lib/help-knowledge.ts`, `lib/help-review.ts`, `lib/legal-faq.ts` | 96 % | 70 % | Content not reviewed by lawyer/editor |
 | 13 | Landing, demo, SEO | `app/page.tsx`, `components/landing-interactive.tsx`, `lib/demo.ts`, `public/video/*` | 88 % | 65 % | Production domain not wired; demo account is public |
 | 14 | Platform legal pages | `lib/platform-legal.ts`, `/terminos`, `/privacidad`, `/cookies` | 70 % | 20 % | Drafts; need operating entity + lawyer (P0-ENTITY, P0-LEGAL) |
 | 15 | Security | `lib/security-checks.ts`, `next.config.ts` | 90 % | 68 % | CSP is report-only (enforcement awaits owner decision); no pen-test; no SSL Labs |
@@ -208,14 +208,15 @@ Files: `src/lib/ai.ts` (1.2k lines), `llm.ts`, `anonymizer.ts`, `ai-guard.ts`, `
 - [ ] [AGENT] Prompt-injection tests via user-supplied text (document fields, ARCO text) that reaches prompts.
 
 ### 12. Help & knowledge base
-Files: `src/lib/help-content.ts` (974 lines), `glossary.ts`, `help-tips.ts`, `help-knowledge.ts` (feeds the assistant), `legal-faq.ts`, `src/app/app/ayuda/*`, `test/help.test.ts`.
+Files: `src/lib/help-content.ts` (974 lines), `glossary.ts`, `help-tips.ts`, `help-knowledge.ts` (feeds the assistant), `help-review.ts`, `legal-faq.ts`, `src/app/app/ayuda/*`, `components/help-search.tsx`, `test/help.test.ts`, `test/help-review.test.ts`.
 - [x] Help center, glossary, contextual tips, knowledge base for the assistant (latest commit `8ea6c6a`).
-- [ ] [OWNER] Lawyer review of `legal-faq.ts`, glossary and help articles (P0-LEGAL).
+- [ ] [OWNER] Lawyer review of `legal-faq.ts`, glossary and help articles (P0-LEGAL). Until it happens, every article footer says so (`HELP_LEGAL_REVIEW.at === null` → “revisión legal pendiente”), so the gap is visible instead of assumed.
 - [ ] [OWNER] Native-speaker editorial pass for Peruvian Spanish.
-- [ ] [AGENT] Add last-reviewed date per article and a staleness warning.
-- [ ] [AGENT] Check every article's links and referenced UI labels still exist (extend `test/help.test.ts`).
-- [ ] [AGENT] Search inside help, if absent.
-- [ ] [AGENT] Keep `help-knowledge.ts` in sync with `help-content.ts`; add a test that fails on drift.
+- [x] [AGENT] Last-reviewed date per article and a staleness warning: `src/lib/help-review.ts` holds `HELP_REVIEWED` (one ISO date per slug), `REVIEW_MAX_AGE_DAYS = 365` and `staleArticles()`. The article shows “revisado el …” and, past a year, a prominent “puede estar desactualizado” note with the support address. `test/help-review.test.ts` fails if a new article ships without a date or if a date is in the future.
+- [x] [VERIFY] Every article's links and referenced UI labels still exist — already pinned by `test/help.test.ts`: `related`, `route`, journey steps, screens against `app-nav.tsx`, tips, `DOC_LABELS` against `document-catalog.ts`, bank presets, and the prices/quotas against `plans.ts`. Re-run on 2026-11-02: green.
+- [x] [AGENT] Search inside help: `HelpSearch` on `/app/ayuda` backed by `buildSearchDocs`/`searchDocs` (articles + FAQ + glossary, accent- and case-insensitive), covered by the “buscador de la ayuda” suite.
+- [x] [AGENT] Keep `help-knowledge.ts` in sync with `help-content.ts`: the assistant builds its map and search docs from `help-content.ts` (no second copy). `test/help-review.test.ts` now fails if that module ever declares its own `ARTICLES`/`TOPICS`/`FAQ`/`GLOSSARY` arrays or hardcodes an article title.
+
 
 ### 13. Landing, demo, SEO
 Files: `src/app/page.tsx`, `components/landing-interactive.tsx`, `src/lib/demo.ts`, `src/app/demo/*`, `public/video/*` (23 MB), `robots.ts`, `sitemap.ts`, `AUDITORIA_PORTADA.md`, `COMPARACION_VIDEO.md`.
