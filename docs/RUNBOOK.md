@@ -42,18 +42,29 @@ Si algún día se quiere cerrar la contraseña, el archivo que **sí** manda es 
 antes (`/etc/ssh/sshd_config.d/00-*.conf`), no editar `sshd_config`. Se probó y se revirtió
 el 2026-11-03: `root` se quedaba sin poder entrar con contraseña.
 
-**Mitigación recomendada mientras haya contraseña** (no cambia cómo entras, no toca el
-login):
+**Mitigación activa: `fail2ban` instalado el 2026-11-03.** No cambia cómo entra nadie
+legítimo; solo corta a quien falla la contraseña. Configuración en
+`/etc/fail2ban/jail.d/zz-datosprivados.local`:
+
+| Ajuste | Valor | Por qué |
+|---|---|---|
+| `ignoreip` | `127.0.0.1/8 ::1 38.25.60.169` | **La IP del propietario nunca se banea**: un error de tecleo no puede dejarlo fuera |
+| `sshd` | `mode = aggressive`, `maxretry = 4`, `findtime = 10m` | Cuenta también los usuarios inexistentes, que es lo que prueba un diccionario |
+| `bantime` | `1h` | Suficiente para que lo intente en otro sitio |
+| `recidive` | `bantime = 1w`, `maxretry = 3` | Quien vuelve, se va una semana |
+| `banaction` | `nftables` (por defecto en Debian/Ubuntu) | Sin tocar `iptables` a mano |
 
 ```bash
-apt-get install -y fail2ban          # jail sshd por defecto: banea por IP tras varios fallos
-systemctl enable --now fail2ban
-fail2ban-client status sshd
+fail2ban-client status sshd                  # fallos, baneados y lista
+fail2ban-client set sshd unbanip 1.2.3.4     # si alguna vez hace falta
+nft list ruleset | grep <ip>                 # comprobar el bloqueo real
 ```
 
-Hoy `fail2ban` **no está instalado** y `/var/log/auth.log` acumula decenas de miles de
-«Failed password». Instalarlo no impide entrar con contraseña; solo corta a quien la
-adivina. Y una contraseña larga y única para `root`/`jan` sigue siendo la primera línea.
+Comprobado el día de la instalación: al arrancar baneó **4 IPs** que estaban atacando en
+ese momento (una de ellas, `77.74.202.251`, ya aparecía en `lastb` intentando entrar como
+`ftp1`); el baneo manual de una IP de prueba apareció en `nftables` y desapareció al
+desbanear; y el registro muestra detecciones en vivo (`Found` → `Ban`, la primera en 7
+segundos).
 
 ## Acceso al servidor: por contraseña, a sabiendas
 

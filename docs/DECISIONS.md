@@ -132,7 +132,7 @@ navegador lo ignora en silencio.
 |---|---|---|
 | ¿Se entra al servidor con contraseña? | **Sí.** `root` y `jan` pueden entrar con contraseña y con clave | Es como el propietario entra al servidor. El 2026-11-03 se endureció a solo claves y **se revirtió el mismo día**: lo dejaba fuera. Cómo se administra la máquina es decisión suya, no del agente |
 | ¿Qué hay que saber? | Que la configuración **parece** cerrada: `sshd_config` y `60-cloudimg-settings.conf` dicen `PasswordAuthentication no`, pero `sshd_config.d/50-cloud-init.conf` dice `yes` y se incluye en la línea 12; sshd se queda con el primer valor, así que el efectivo es `yes`. Solo se ve con `sshd -T` | Para que nadie edite el archivo equivocado ni crea que está cerrado porque el archivo lo dice |
-| ¿Y la fuerza bruta? | **Sin mitigar**: `fail2ban` no está instalado y `auth.log` acumula decenas de miles de «Failed password». Instalarlo está recomendado y **no cambia la forma de entrar** (banea IPs, no usuarios) | Detrás del login está la base con datos personales: ver `docs/INCIDENTE-INTERNO-2026-11-03.md`. La recomendación queda escrita; aplicarla es del propietario |
+| ¿Y la fuerza bruta? | **Mitigada con `fail2ban` desde el 2026-11-03**: jail `sshd` en modo `aggressive` (4 fallos en 10 min → 1 h de baneo), `recidive` para reincidentes (1 semana) y `ignoreip` con la IP del propietario para que un error de tecleo no lo deje fuera. No cambia cómo se entra | Detrás del login está la base con datos personales. Al arrancar baneó 4 IPs que estaban atacando en ese momento y el bloqueo se verificó en `nftables`. Configuración y comandos en `docs/RUNBOOK.md` («Acceso al servidor (SSH)») |
 
 ## Analítica: hoy no hay ninguna
 

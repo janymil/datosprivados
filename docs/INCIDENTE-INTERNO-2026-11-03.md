@@ -83,7 +83,7 @@ Copias previas de lo tocado: `/root/sshd_config.bak-*` y `/root/datosprivados-vh
    jurídica y conviene dejarla por escrito. Material: este documento.
 2. **¿Se conservan las tres solicitudes ARCO de prueba?** Si alguna es de una persona real,
    hay que tratarla como dato personal y valorar su borrado.
-3. **`fail2ban`**: instalarlo y dejar el jail `sshd` activo (hoy no está instalado). **Es la única mitigación compatible con la decisión de mantener la contraseña**: no cambia cómo entra nadie, solo corta a quien intenta adivinar. No se ha instalado por decisión del propietario.
+3. **`fail2ban`**: **instalado y verificado el 2026-11-03** (jail `sshd` en `aggressive`, `recidive`, `nftables`, con la IP del propietario en `ignoreip`). Al arrancar baneó 4 IPs que estaban atacando; el bloqueo se comprobó en `nftables` y el desbaneo también. No cambia cómo entra nadie legítimo.
 4. **Cuenta `jan`**: confirmar si sigue siendo necesaria; si no, darla de baja.
 5. **Contraseña de `root`/`jan`**: larga y única, y no compartida. Con la contraseña abierta y sin `fail2ban`, es la línea que separa Internet de la base de datos.
 5. **Producción**: arrancar con estos valores desde el primer día. Están escritos en

@@ -27,7 +27,7 @@ haya S1/S2 abiertos.
 
 | Tema | Estado | Referencia |
 |---|---|---|
-| **Acceso SSH con contraseña, sin fail2ban** | **Riesgo aceptado por el propietario (2026-11-03)**: es su forma de entrar al servidor. La configuración además lo esconde (`50-cloud-init.conf` gana por ser el primer valor), así que solo `sshd -T` dice la verdad. Detrás del login está la base con datos personales | `docs/DECISIONS.md` («Acceso SSH»), `docs/RUNBOOK.md`, `docs/INCIDENTE-INTERNO-2026-11-03.md` |
+| **Acceso SSH con contraseña** | **Decisión del propietario (2026-11-03)**: es su forma de entrar al servidor, y se revirtió el endurecimiento a solo claves. **Fuerza bruta mitigada** con `fail2ban` (sshd aggressive + recidive, con su IP en `ignoreip`). Ojo: la configuración lo esconde —`50-cloud-init.conf` gana por ser el primer valor— así que solo `sshd -T` dice la verdad | `docs/DECISIONS.md` («Acceso SSH»), `docs/RUNBOOK.md`, `docs/INCIDENTE-INTERNO-2026-11-03.md` |
 | Entrega de correo sin dominio/SPF/DKIM/DMARC | bloquea P0-DOMAIN (área 6) | `docs/READINESS-BY-AREA.md` §6 |
 | Facturación SUNAT manual (sin PSE/OSE) | decisión pendiente P0-SUNAT (área 5) | `docs/DECISIONS.md` |
 | Textos legales en borrador, con `noindex` | falta abogado y entidad (P0-LEGAL, P0-ENTITY) | áreas 7, 12, 14 |
