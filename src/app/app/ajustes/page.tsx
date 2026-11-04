@@ -2,10 +2,10 @@ import Link from "next/link";
 import { HelpTip } from "@/components/help-tip";
 import { requireSession } from "@/lib/auth";
 import { listBanks, listDocuments, listIncidents, listRequests } from "@/lib/data";
-import { billingLabel, getPaymentsForCompany, isCompanyActive, planFromCompany } from "@/lib/billing";
+import { billingLabel, canRenewNow, getPaymentsForCompany, isCompanyActive, planFromCompany } from "@/lib/billing";
 import { formatSol, invoiceNumber, listInvoicesForCompany } from "@/lib/invoicing";
 import { formatDate } from "@/lib/format";
-import { planName } from "@/lib/plans";
+import { planName, renewalPrice } from "@/lib/plans";
 import { cancelSubscriptionAction } from "@/app/pago/actions";
 import { PageHeader, StatusPill } from "@/components/ui";
 import { ChangeEmailForm, ChangePasswordForm } from "@/components/account-forms";
@@ -41,7 +41,10 @@ export default async function SettingsPage({
   const currentPlan = planFromCompany(company);
   const isDemo = company.billing_status === "demo";
   const subscriptionCancelled = company.subscription_status === "cancelled";
-  const canCancel = Boolean(company.subscription_id) && !subscriptionCancelled;
+  // Primer año ya cobrado y cerrado, o pago por transferencia: no se renueva solo y no hay nada que cancelar.
+  const manualRenewal = company.subscription_status === "completed" || !company.subscription_id;
+  const canCancel = Boolean(company.subscription_id) && !subscriptionCancelled && !manualRenewal;
+  const renewable = canRenewNow(company);
 
   return (
     <div className="space-y-7">
@@ -67,9 +70,11 @@ export default async function SettingsPage({
                 <p className="mt-2 text-sm text-ink-soft">
                   {subscriptionCancelled
                     ? `Acceso hasta ${formatDate(company.paid_until)}.`
-                    : active
-                      ? `Se renueva automáticamente el ${formatDate(company.paid_until)}.`
-                      : `Venció el ${formatDate(company.paid_until)}.`}
+                    : active && manualRenewal
+                      ? `Pagado hasta el ${formatDate(company.paid_until)}. No se renueva solo: te avisaremos para renovar por S/ ${renewalPrice(currentPlan)} al año.`
+                      : active
+                        ? `Se renueva automáticamente el ${formatDate(company.paid_until)}.`
+                        : `Venció el ${formatDate(company.paid_until)}.`}
                 </p>
               )}
             </div>
@@ -115,6 +120,11 @@ export default async function SettingsPage({
                     </button>
                   </form>
                 )}
+                {renewable && (
+                  <Link href="/pago" className="btn btn-primary btn-sm">
+                    Renovar por S/ {renewalPrice(currentPlan)}
+                  </Link>
+                )}
                 {!active && !subscriptionCancelled && (
                   <Link href="/pago" className="btn btn-primary btn-sm">
                     Activar mi plan
@@ -133,8 +143,9 @@ export default async function SettingsPage({
                 </Link>
               </div>
               <p className="mt-3.5 font-mono text-xs uppercase tracking-[0.08em] text-ink-soft">
-                MercadoPago cobra automáticamente cada mes o año, según tu plan. Puedes cancelar
-                desde aquí; el acceso sigue hasta el final del período pagado.
+                {manualRenewal
+                  ? "El primer año se paga una sola vez; la renovación es más barata y la haces tú desde aquí."
+                  : "MercadoPago cobra automáticamente cada año. Puedes cancelar desde aquí; el acceso sigue hasta el final del período pagado."}
               </p>
             </>
           )}

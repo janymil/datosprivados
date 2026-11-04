@@ -8,7 +8,7 @@ import { getDb, newId, nowIso } from "@/lib/db";
  * borrador y no se indexan. Al cambiar el texto, sube `LEGAL_VERSION`: el registro de
  * aceptaciones guarda la versión que vio cada persona.
  */
-export const LEGAL_VERSION = "2026-11-01-borrador-1";
+export const LEGAL_VERSION = "2026-11-04-borrador-2";
 export const LEGAL_REVIEWED = false;
 
 export type LegalDocument = "terms" | "privacy" | "cookies";
@@ -48,7 +48,8 @@ export const LEGAL_CONTENT: Record<LegalDocument, LegalSection[]> = {
     {
       heading: "4. Planes, cobro y cancelación",
       paragraphs: [
-        "La suscripción se cobra de forma recurrente a través de MercadoPago (o por transferencia contra factura). El precio, el IGV y el periodo se muestran antes de pagar. Puedes cancelar cuando quieras; conservas el acceso hasta el fin del periodo pagado.",
+        "El servicio se contrata por años. El primer año tiene un precio que incluye la implementación (documentos, fichas y 12 meses de acceso) y cada renovación anual tiene un precio menor. El pago se hace a través de MercadoPago o por transferencia contra factura. El precio, el IGV y el periodo se muestran antes de pagar.",
+        "El pago del primer año no se renueva solo: antes de que venza te avisamos para que renueves al precio de renovación. Si renuevas con tarjeta, esa renovación se cobra automáticamente cada año hasta que la canceles; conservas el acceso hasta el fin del periodo pagado. Si no renuevas, puedes exportar tus datos desde «Cuenta».",
         "[Reembolsos, mora y suspensión: texto pendiente de definir con el abogado.]",
       ],
     },

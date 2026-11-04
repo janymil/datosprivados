@@ -3,21 +3,19 @@ import { redirect } from "next/navigation";
 import { DEMO_EMAIL, getSession } from "@/lib/auth";
 import { SignupForm } from "@/components/auth-forms";
 import { findSectorById } from "@/lib/sectors";
-import { isBillingTerm } from "@/lib/plans";
 
 export const metadata = { title: "Crear cuenta" };
 
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ plan?: string; sector?: string; term?: string }>;
+  searchParams: Promise<{ plan?: string; sector?: string }>;
 }) {
   const session = await getSession();
   const isDemo = session?.user.email === DEMO_EMAIL;
   if (session && !isDemo) redirect("/app");
-  const { plan, sector, term } = await searchParams;
+  const { plan, sector } = await searchParams;
   const selected = plan === "pro" ? "pro" : "basico";
-  const selectedTerm = term && isBillingTerm(term) ? term : "monthly";
   const template = sector ? findSectorById(sector) : undefined;
 
   return (
@@ -52,7 +50,7 @@ export default async function RegisterPage({
       )}
 
       <div className="mt-8">
-        <SignupForm plan={selected} term={selectedTerm} sector={template?.id} />
+        <SignupForm plan={selected} sector={template?.id} />
       </div>
     </div>
   );

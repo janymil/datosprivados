@@ -1,9 +1,9 @@
 import "server-only";
 
-import { activateSubscription, getCompanyBySubscriptionId, planFromCompany, companyTerm } from "./billing";
+import { activateSubscription, expectedSubscriptionAmount, getCompanyBySubscriptionId, planFromCompany, companyTerm } from "./billing";
 import { logActivity } from "./data";
 import { cancelPreapproval, getPreapproval, preapprovalMismatch } from "./mercadopago";
-import { isBillingTerm, isPlanId, planPrice, type BillingTerm, type PlanId } from "./plans";
+import { isBillingTerm, isPlanId, type BillingTerm, type PlanId } from "./plans";
 
 export type ConfirmResult =
   | { ok: true; paidUntil: string; replacedSubscriptionId: string | null }
@@ -14,7 +14,9 @@ export type ConfirmResult =
  *
  * Es la única ruta que activa o cambia un plan: la usan el webhook y la página
  * de retorno. Nunca toma el identificador de la URL: se consulta a MercadoPago
- * y se compara con la empresa, el monto y la frecuencia esperados.
+ * y se compara con la empresa, la frecuencia y el monto acordado al crearla (no el de la
+ * lista de precios de hoy: el primer año y la renovación cuestan distinto, y un cambio de
+ * precios no debe invalidar suscripciones ya autorizadas).
  */
 export async function confirmAuthorizedSubscription(subscriptionId: string): Promise<ConfirmResult> {
   const preapproval = await getPreapproval(subscriptionId);
@@ -34,7 +36,7 @@ export async function confirmAuthorizedSubscription(subscriptionId: string): Pro
 
   const mismatch = preapprovalMismatch(preapproval, {
     companyId: company.id,
-    amount: planPrice(plan, term),
+    amount: expectedSubscriptionAmount(company, subscriptionId, plan, term),
     term,
   });
   if (mismatch) {

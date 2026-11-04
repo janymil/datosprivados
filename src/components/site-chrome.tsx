@@ -76,6 +76,7 @@ export function SiteFooter() {
               <li><Link href="/plantillas/checklist-inscripcion-sipdp" className="hover:text-ink">Checklist SIPDP</Link></li>
               <li><Link href="/plantillas/politica-de-privacidad" className="hover:text-ink">Modelo de política de privacidad</Link></li>
               <li><Link href="/plantillas" className="hover:text-ink">Todas las plantillas</Link></li>
+              <li><Link href="/contadores" className="hover:text-ink">Para contadores</Link></li>
               <li><Link href="/#precios" className="hover:text-ink">Precios</Link></li>
               <li><Link href="/demo" prefetch={false} className="hover:text-ink">Demo interactiva</Link></li>
             </ul>

@@ -31,6 +31,7 @@ const PUBLIC_FILES: Record<string, string> = {
   "glosario/page.tsx": "glosario público",
   "plantillas/page.tsx": "catálogo público de plantillas",
   "diagnostico/page.tsx": "autodiagnóstico en el navegador (no envía datos)",
+  "contadores/page.tsx": "página informativa del programa piloto para contadores (solo mailto)",
   "herramientas/page.tsx": "índice de herramientas gratuitas",
   "herramientas/calculadora-multas-ley-29733/page.tsx": "calculadora de multas en el navegador (no envía datos)",
   "plantillas/politica-de-privacidad/page.tsx": "modelo público de política de privacidad",

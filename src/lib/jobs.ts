@@ -3,15 +3,15 @@ import "server-only";
 import { businessDaysBetween, calculatedHolidays, getDb, newId, resetDemoCompany, seedHolidays, type Company } from "./db";
 import { deleteAccount } from "./account";
 import { formatDate, formatDateTime, limaToday } from "./format";
-import { isCompanyActive, markSubscriptionStatus, planFromCompany } from "./billing";
+import { addMonths, introNeedsClose, isCompanyActive, markSubscriptionStatus, planFromCompany } from "./billing";
 import { confirmAuthorizedSubscription } from "./subscriptions";
-import { getPreapproval, isMercadoPagoConfigured } from "./mercadopago";
+import { cancelPreapproval, getPreapproval, isMercadoPagoConfigured } from "./mercadopago";
 import { documentFreshness } from "./document-freshness";
 import { listBanks, listDocuments, listProviders } from "./data";
 import { enqueueEmail, processOutbox, stuckOutboxCount } from "./mail";
 import { logEvent } from "./log";
 import { notifyCompany } from "./notify";
-import { planName } from "./plans";
+import { planName, renewalPrice } from "./plans";
 
 /**
  * Tareas programadas. Cada una es idempotente (repetirla no duplica correos ni
@@ -39,6 +39,60 @@ function activeCompanies(): Company[] {
 }
 
 const longDate = (iso: string) => formatDate(iso);
+
+/**
+ * Red de seguridad del primer año. La suscripción del primer año se cierra en MercadoPago al
+ * confirmar su primer cobro (webhook); si ese cierre falló o el webhook nunca llegó, la
+ * suscripción seguiría abierta y cobraría el monto del primer año otra vez. Aquí se reintenta
+ * el cierre y se avisa de lo que no se pueda resolver solo: cierres fallidos y primeros años
+ * autorizados hace días sin un cobro aprobado (acceso concedido sin pago confirmado).
+ */
+async function closeFirstYearSubscriptions(now: Date): Promise<{ closed: number; alerts: string[] }> {
+  const db = getDb();
+  const rows = db
+    .prepare("SELECT * FROM companies WHERE subscription_intro = 1 AND subscription_status = 'authorized' AND billing_status NOT IN ('demo', 'deleted')")
+    .all() as unknown as Company[];
+  const alerts: string[] = [];
+  let closed = 0;
+
+  for (const company of rows) {
+    const subscriptionId = company.subscription_id;
+    if (!subscriptionId) continue;
+
+    if (introNeedsClose(company, subscriptionId)) {
+      try {
+        if (!isMercadoPagoConfigured()) throw new Error("MercadoPago no está configurado");
+        const result = await cancelPreapproval(subscriptionId);
+        if (result.status !== "cancelled" && result.status !== "canceled") throw new Error(`estado «${result.status}» tras cancelar`);
+        markSubscriptionStatus(company.id, subscriptionId, "cancelled");
+        closed += 1;
+      } catch (error) {
+        alerts.push(`${company.name}: no se pudo cerrar la suscripción del primer año ${subscriptionId} (${error instanceof Error ? error.message : error}). Ciérrala en MercadoPago antes de que cobre de nuevo.`);
+      }
+      continue;
+    }
+
+    // Sin cobro aprobado: la autorización dio el periodo completo, así que el acceso va por delante del pago.
+    if (company.paid_until) {
+      const authorizedAt = addMonths(new Date(company.paid_until), -12);
+      if (now.getTime() - authorizedAt.getTime() > 3 * DAY) {
+        alerts.push(`${company.name}: primer año autorizado el ${authorizedAt.toISOString().slice(0, 10)} sin ningún cobro aprobado (${subscriptionId}). Verifica el cobro en MercadoPago.`);
+      }
+    }
+  }
+
+  const to = process.env.ALERT_EMAIL?.trim();
+  if (alerts.length && to) {
+    enqueueEmail({
+      to,
+      template: "ops_alert",
+      payload: { subject: `DatosPrivados: ${alerts.length} suscripción(es) del primer año por revisar`, message: alerts.join(" | ") },
+      dedupeKey: `intro-subscriptions:${limaToday(now)}`,
+    });
+  }
+  for (const alert of alerts) logEvent("warn", "intro_subscription", { message: alert });
+  return { closed, alerts };
+}
 
 /* ------------------------------ las tareas -------------------------------- */
 
@@ -107,8 +161,9 @@ const JOBS = {
   },
 
   /** Marca vencidas las cuentas cuyo periodo terminó y avisa de renovación o vencimiento próximos. */
-  "billing-reconcile"({ now }: JobContext): JobResult {
+  "billing-reconcile": async ({ now }: JobContext): Promise<JobResult> => {
     const db = getDb();
+    const introIssues = await closeFirstYearSubscriptions(now);
     const expired = db
       .prepare("UPDATE companies SET billing_status = 'expired' WHERE billing_status = 'active' AND paid_until IS NOT NULL AND paid_until <= ?")
       .run(now.toISOString());
@@ -116,6 +171,25 @@ const JOBS = {
     for (const company of activeCompanies()) {
       if (!company.paid_until) continue;
       const daysLeft = (new Date(company.paid_until).getTime() - now.getTime()) / DAY;
+      // Plan anual de primer año (cerrado tras su cobro) o pagado por transferencia: no se renueva solo,
+      // así que se avisa con tiempo, a los 30 y a los 7 días, con el precio de renovación.
+      const manual = company.subscription_status === "completed" || (!company.subscription_id && company.subscription_status !== "cancelled");
+      if (manual) {
+        if (daysLeft > 30) continue;
+        const stage = daysLeft <= 7 ? "7" : "30";
+        const plan = planFromCompany(company);
+        if (
+          notifyCompany(
+            company,
+            "renewal_manual",
+            { plan: planName(plan), paidUntil: longDate(company.paid_until), amount: `S/ ${renewalPrice(plan)}` },
+            { dedupeKey: `renewal_manual:${company.id}:${company.paid_until}:${stage}` }
+          )
+        ) {
+          notices += 1;
+        }
+        continue;
+      }
       if (daysLeft > 3) continue;
       const cancelling = company.subscription_status === "cancelled" || company.subscription_status === "paused" || !company.subscription_id;
       const template = cancelling ? "subscription_expiring" : "renewal_soon";
@@ -130,7 +204,7 @@ const JOBS = {
         notices += 1;
       }
     }
-    return { expired: Number(expired.changes), notices };
+    return { expired: Number(expired.changes), notices, primer_ano_cerrado: introIssues.closed, primer_ano_alertas: introIssues.alerts.length };
   },
 
   /**

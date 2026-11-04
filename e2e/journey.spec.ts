@@ -72,7 +72,7 @@ test("recorrido completo: de la suscripción al vencimiento", async ({ page, bro
 
   await test.step("pago con MercadoPago simulado", async () => {
     await page.goto("/pago");
-    await page.getByRole("button", { name: /Suscribirme con MercadoPago/ }).click();
+    await page.getByRole("button", { name: /Pagar con MercadoPago/ }).click();
     // Pasa por el servidor simulado, que autoriza y devuelve a /pago/resultado.
     await page.waitForURL("**/pago/resultado**");
     await expect(page.getByRole("heading", { name: /Suscripción confirmada/ })).toBeVisible();

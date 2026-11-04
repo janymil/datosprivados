@@ -100,7 +100,8 @@ export function deleteCompanyData(companyId: string): { deleted: boolean; ownerE
       `UPDATE companies SET name = 'Cuenta eliminada', slug = ?, email = '', phone = '', address = '', dpo_name = '', dpo_email = '',
          website = '', complaints_url = '', representative_name = '', representative_address = '',
          billing_status = 'deleted', paid_until = NULL, subscription_status = 'cancelled',
-         pending_subscription_id = NULL, pending_plan = NULL, pending_term = NULL, ai_consent_at = NULL, deleted_at = ?
+         pending_subscription_id = NULL, pending_plan = NULL, pending_term = NULL,
+         pending_amount = NULL, subscription_amount = NULL, pending_intro = 0, subscription_intro = 0, ai_consent_at = NULL, deleted_at = ?
        WHERE id = ?`
     ).run(`eliminada-${crypto.randomUUID().slice(0, 12)}`, now, companyId);
     db.exec("COMMIT");

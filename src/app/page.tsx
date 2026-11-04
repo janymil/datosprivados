@@ -16,6 +16,7 @@ import { InteractivePricing, InteractiveSegments } from "@/components/landing-in
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { GUIDES } from "@/lib/guides";
 import { TOOLS } from "@/lib/tools";
+import { renewalPrice } from "@/lib/plans";
 import { JsonLd } from "@/components/json-ld";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 
@@ -383,10 +384,10 @@ function Pricing() {
     <section id="precios" className="scroll-mt-20 border-b border-line">
       <div className="container-page py-16 md:py-24">
         <h2 className="font-display text-[2.25rem] leading-[1.03] tracking-[-0.03em] md:text-[2.8rem]">
-          Cuesta menos que una hora de consultoría.
+          Un pago de implementación. Renovación a menos de la mitad.
         </h2>
         <p className="mt-4 max-w-[56ch] text-base leading-relaxed text-ink-soft">
-          Sin contratos de permanencia. El registro en el SIPDP del Estado es gratis.
+          Sin cobros mensuales ni contratos de permanencia. El registro en el SIPDP del Estado es gratis.
         </p>
 
         <InteractivePricing />
@@ -412,6 +413,10 @@ function Faq() {
     {
       q: "¿Necesitamos un Oficial de Datos Personales?",
       a: "Solo si tratas datos sensibles o grandes volúmenes como parte de tu actividad. Si te aplica, las medianas empresas están obligadas desde noviembre de 2026 y las pequeñas desde noviembre de 2027. DatosPrivados mantiene el expediente que ese oficial necesita.",
+    },
+    {
+      q: "¿Qué pasa cuando termina el primer año?",
+      a: `El primer año incluye la implementación y se paga una sola vez; no se renueva solo. Te avisamos 30 y 7 días antes para que renueves por menos (S/ ${renewalPrice("basico")} o S/ ${renewalPrice("pro")} al año). Si decides no renovar, exportas todos tus datos.`,
     },
     {
       q: "¿Esto reemplaza a mi abogado?",

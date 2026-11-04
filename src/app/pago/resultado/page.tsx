@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth";
-import { isCompanyActive } from "@/lib/billing";
+import { getCompanyById, isCompanyActive, planFromCompany } from "@/lib/billing";
+import { renewalPrice } from "@/lib/plans";
 import { isMercadoPagoConfigured } from "@/lib/mercadopago";
 import { formatDate } from "@/lib/format";
 import { confirmAuthorizedSubscription } from "@/lib/subscriptions";
@@ -32,7 +33,12 @@ export default async function PaymentResultPage() {
       if (result.ok) {
         ok = true;
         title = "Suscripción confirmada.";
-        message = `Tu suscripción está activa hasta el ${formatDate(result.paidUntil)}. Se renueva automáticamente.`;
+        // El primer año no se renueva solo: se cierra tras su cobro y la renovación se paga aparte.
+        const confirmed = getCompanyById(company.id);
+        message =
+          confirmed && confirmed.subscription_intro === 1
+            ? `Tu primer año está pagado hasta el ${formatDate(result.paidUntil)}. No se renueva solo: te avisaremos para que renueves por S/ ${renewalPrice(planFromCompany(confirmed))} al año.`
+            : `Tu plan está activo hasta el ${formatDate(result.paidUntil)}. Se renueva automáticamente cada año.`;
       } else if (result.status === "pending") {
         title = "Suscripción pendiente.";
         message =

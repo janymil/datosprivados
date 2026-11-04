@@ -5,7 +5,6 @@ import { getDb, hashPassword, newId, nowIso } from "@/lib/db";
 import { destroySession, signIn } from "@/lib/auth";
 import { clientIp } from "@/lib/client-ip";
 import { findSectorById } from "@/lib/sectors";
-import { isBillingTerm } from "@/lib/plans";
 import { takeRateLimit } from "@/lib/rate-limit";
 import { isValidRuc } from "@/lib/ruc";
 import { checkCompanyRuc } from "@/lib/ruc-lookup";
@@ -59,8 +58,8 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
   const email = text(formData, "email").toLowerCase();
   const password = text(formData, "password");
   const plan = text(formData, "plan") === "pro" ? "pro" : "basico";
-  const rawTerm = text(formData, "term");
-  const term = isBillingTerm(rawTerm) ? rawTerm : "monthly";
+  // Todo alta nueva es anual (primer año con implementación); el plan mensual quedó solo para cuentas antiguas.
+  const term = "yearly";
   const sectorId = text(formData, "sector");
   const sector = sectorId ? findSectorById(sectorId)?.label ?? "" : "";
 
@@ -159,7 +158,7 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
   );
 
   await signIn(email, password);
-  redirect(`/pago?plan=${plan}&term=${term}`);
+  redirect(`/pago?plan=${plan}`);
 }
 
 export async function logoutAction() {

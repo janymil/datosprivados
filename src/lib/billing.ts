@@ -3,11 +3,15 @@ import "server-only";
 import { getDb, newId, nowIso, type Company } from "./db";
 import { logActivity } from "./data";
 import { notifyCompany } from "./notify";
+import { enqueueEmail } from "./mail";
 import { createInvoiceForPayment, getInvoiceByPayment, markCreditNotePending, voidPendingInvoice } from "./invoicing";
 import {
   PLANS,
+  firstYearPrice,
   isBillingTerm,
   isPlanId,
+  planPrice,
+  renewalPrice,
   termMonths,
   termLabel,
   type BillingTerm,
@@ -27,6 +31,16 @@ import {
  * - pending_subscription_id (+ pending_plan / pending_term): un cambio de plan
  *   creado en MercadoPago que todavía no está autorizado. Hasta que se autoriza,
  *   el plan y el acceso actuales no cambian.
+ *
+ * Modelo anual (primer año con implementación, renovaciones más baratas):
+ * - La suscripción del primer año se crea con el monto del primer año
+ *   (`pending_amount`/`subscription_amount`, con `*_intro = 1`). Tras su primer cobro
+ *   aprobado se cierra en MercadoPago para que no vuelva a cobrar ese monto, y queda en
+ *   `subscription_status = 'completed'` (acceso activo hasta `paid_until`, sin correo
+ *   de cancelación).
+ * - La renovación crea una suscripción anual nueva con el precio de renovación, que se
+ *   renueva sola cada año. El plan es siempre anual: la validación del monto usa el
+ *   monto acordado al crear la suscripción, no la lista de precios vigente.
  *
  * Marcadores de `last_payment_id`:
  * - `auth-<id>`: la suscripción <id> recibió el periodo inicial al autorizarse y
@@ -77,6 +91,7 @@ export function billingLabel(
   }
   // Sin suscripción de MercadoPago (transferencia o activación manual): el plan está pagado.
   if (!company.subscription_id) return `Plan ${termLabel(company.billing_term).toLowerCase()} activo`;
+  if (company.subscription_status === "completed") return "Plan anual activo";
   if (company.subscription_status === "cancelled") return "Suscripción cancelada";
   if (company.subscription_status === "paused") return "Suscripción pausada";
   return `Suscripción ${termLabel(company.billing_term).toLowerCase()} activa`;
@@ -136,6 +151,63 @@ function hasApprovedPayments(subscriptionId: string) {
   );
 }
 
+/** ¿La empresa ya pagó algo (tarjeta o transferencia)? Define si le toca el precio de primer año o el de renovación. */
+export function hasApprovedPayment(companyId: string) {
+  return Boolean(getDb().prepare("SELECT 1 FROM payments WHERE company_id = ? AND status = 'approved' LIMIT 1").get(companyId));
+}
+
+export type CheckoutCharge = { amount: number; intro: boolean };
+
+/**
+ * Cuánto cobrar hoy por un plan anual: el primer año (con implementación) si la empresa
+ * nunca pagó; la renovación en cualquier otro caso. Es la única fuente del monto de
+ * checkout, para tarjeta y para transferencia.
+ */
+export function checkoutCharge(companyId: string, plan: PlanId): CheckoutCharge {
+  return hasApprovedPayment(companyId)
+    ? { amount: renewalPrice(plan), intro: false }
+    : { amount: firstYearPrice(plan), intro: true };
+}
+
+/**
+ * Monto que debe tener en MercadoPago la suscripción `subscriptionId`: el acordado al
+ * crearla. Las cuentas anteriores al modelo anual no lo guardaron y usan el precio del plan.
+ */
+export function expectedSubscriptionAmount(
+  company: Pick<Company, "pending_subscription_id" | "pending_amount" | "subscription_amount">,
+  subscriptionId: string,
+  plan: PlanId,
+  term: BillingTerm
+) {
+  const agreed = company.pending_subscription_id === subscriptionId ? company.pending_amount : company.subscription_amount;
+  return typeof agreed === "number" && agreed > 0 ? agreed : planPrice(plan, term);
+}
+
+/** ¿Es la suscripción de primer año ya cobrada, que hay que cerrar en MercadoPago? */
+export function introNeedsClose(company: Company, subscriptionId: string) {
+  return (
+    company.subscription_id === subscriptionId &&
+    company.subscription_intro === 1 &&
+    company.subscription_status !== "completed" &&
+    hasApprovedPayments(subscriptionId)
+  );
+}
+
+/**
+ * ¿Puede renovar ahora? Activa, sin una suscripción que se renueve sola, y a menos de 60
+ * días del vencimiento (o sin fecha). Habilita el pago anticipado desde /pago.
+ */
+export function canRenewNow(
+  company: Pick<Company, "billing_status" | "paid_until" | "subscription_id" | "subscription_status" | "subscription_intro">,
+  now: Date = new Date()
+) {
+  if (!isCompanyActive(company) || company.billing_status === "demo" || !company.paid_until) return false;
+  const selfRenewing =
+    Boolean(company.subscription_id) && company.subscription_status === "authorized" && company.subscription_intro !== 1;
+  if (selfRenewing) return false;
+  return new Date(company.paid_until).getTime() - now.getTime() <= 60 * 86_400_000;
+}
+
 /**
  * Se creó una suscripción nueva en MercadoPago y espera autorización.
  * Si la cuenta ya tiene un plan activo, ese plan sigue vigente.
@@ -144,7 +216,8 @@ export function setSubscriptionPending(
   companyId: string,
   subscriptionId: string,
   plan: PlanId,
-  term: BillingTerm
+  term: BillingTerm,
+  agreed?: CheckoutCharge
 ) {
   const db = getDb();
   const company = getCompanyById(companyId);
@@ -153,9 +226,10 @@ export function setSubscriptionPending(
   const keepActive = isCompanyActive(company) ? 1 : 0;
   db.prepare(
     `UPDATE companies SET pending_subscription_id = ?, pending_plan = ?, pending_term = ?,
+       pending_amount = ?, pending_intro = ?,
        billing_status = CASE WHEN ? = 1 THEN billing_status ELSE 'pending' END
      WHERE id = ?`
-  ).run(subscriptionId, plan, term, keepActive, companyId);
+  ).run(subscriptionId, plan, term, agreed?.amount ?? null, agreed?.intro ? 1 : 0, keepActive, companyId);
 
   logActivity(
     companyId,
@@ -168,7 +242,7 @@ export function setSubscriptionPending(
 export function clearPendingSubscription(companyId: string) {
   getDb()
     .prepare(
-      "UPDATE companies SET pending_subscription_id = NULL, pending_plan = NULL, pending_term = NULL WHERE id = ?"
+      "UPDATE companies SET pending_subscription_id = NULL, pending_plan = NULL, pending_term = NULL, pending_amount = NULL, pending_intro = 0 WHERE id = ?"
     )
     .run(companyId);
 }
@@ -214,9 +288,13 @@ export function activateSubscription(input: {
   db.prepare(
     `UPDATE companies SET subscription_id = ?, subscription_status = 'authorized',
        billing_status = 'active', paid_until = ?, plan = ?, billing_term = ?, last_payment_id = ?,
+       subscription_amount = CASE WHEN ? = 1 THEN pending_amount ELSE subscription_amount END,
+       subscription_intro = CASE WHEN ? = 1 THEN pending_intro ELSE subscription_intro END,
        pending_subscription_id = CASE WHEN ? = 1 THEN NULL ELSE pending_subscription_id END,
        pending_plan = CASE WHEN ? = 1 THEN NULL ELSE pending_plan END,
-       pending_term = CASE WHEN ? = 1 THEN NULL ELSE pending_term END
+       pending_term = CASE WHEN ? = 1 THEN NULL ELSE pending_term END,
+       pending_amount = CASE WHEN ? = 1 THEN NULL ELSE pending_amount END,
+       pending_intro = CASE WHEN ? = 1 THEN 0 ELSE pending_intro END
      WHERE id = ?`
   ).run(
     input.subscriptionId,
@@ -227,13 +305,17 @@ export function activateSubscription(input: {
     isPending ? 1 : 0,
     isPending ? 1 : 0,
     isPending ? 1 : 0,
+    isPending ? 1 : 0,
+    isPending ? 1 : 0,
+    isPending ? 1 : 0,
+    isPending ? 1 : 0,
     input.companyId
   );
 
   logActivity(
     input.companyId,
     "pago",
-    `Suscripción ${input.term === "yearly" ? "anual" : "mensual"} autorizada. Tu plan está activo hasta el ${new Date(
+    `Pago ${input.term === "yearly" ? "anual" : "mensual"} autorizado. Tu plan está activo hasta el ${new Date(
       paidUntil
     ).toLocaleDateString("es-PE", { timeZone: "America/Lima" })}.`
   );
@@ -273,6 +355,23 @@ export function recordSubscriptionCharge(input: {
 
   const term = companyTerm(company);
   const paidAt = input.paidAt ? new Date(input.paidAt) : new Date();
+
+  // Una suscripción de primer año solo debe cobrar una vez: se cierra tras su primer cobro. Un segundo
+  // cobro distinto significa que no se cerró a tiempo y se cobró el monto del primer año otra vez.
+  if (company.subscription_intro === 1 && hasApprovedPayments(input.subscriptionId)) {
+    const message = `${company.name} (${company.id}) recibió un segundo cobro de S/ ${input.amount.toFixed(2)} en la suscripción de primer año ${input.subscriptionId}. Cierra esa suscripción en MercadoPago y revisa si corresponde reembolsar la diferencia con el precio de renovación.`;
+    logActivity(company.id, "pago", "Detectamos un segundo cobro del primer año; lo estamos revisando.");
+    console.error(`[billing] ${message}`);
+    const alertTo = process.env.ALERT_EMAIL?.trim();
+    if (alertTo) {
+      enqueueEmail({
+        to: alertTo,
+        template: "ops_alert",
+        payload: { subject: "DatosPrivados: cobro duplicado del primer año", message },
+        dedupeKey: `intro-double-charge:${input.paymentId}`,
+      });
+    }
+  }
   // El primer cobro tras la autorización ya quedó cubierto por el periodo inicial.
   const firstAfterAuthorization = company.last_payment_id === `auth-${input.subscriptionId}`;
   const paidUntil = firstAfterAuthorization
@@ -324,7 +423,7 @@ export function recordSubscriptionCharge(input: {
   logActivity(
     input.companyId,
     "pago",
-    `Cobro mensual confirmado: S/ ${input.amount.toFixed(2)}. Plan activo hasta el ${new Date(
+    `Cobro confirmado: S/ ${input.amount.toFixed(2)}. Plan activo hasta el ${new Date(
       paidUntil
     ).toLocaleDateString("es-PE", { timeZone: "America/Lima" })}.`
   );
@@ -351,6 +450,23 @@ export function markSubscriptionStatus(
   }
   if (company.subscription_id !== subscriptionId) return;
 
+  if (status === "cancelled") {
+    // Cierre previsto del primer año: ya cobró y no debe volver a cobrar ese monto. No es una
+    // cancelación del cliente, así que no se le avisa como tal. También cubre el evento de
+    // MercadoPago que llega después de que lo cerramos nosotros.
+    if (company.subscription_status === "completed") return;
+    if (company.subscription_intro === 1 && hasApprovedPayments(subscriptionId)) {
+      getDb().prepare("UPDATE companies SET subscription_status = 'completed' WHERE id = ?").run(companyId);
+      const plan = planFromCompany(company);
+      logActivity(
+        companyId,
+        "pago",
+        `Tu primer año está pagado${company.paid_until ? ` hasta el ${new Date(company.paid_until).toLocaleDateString("es-PE", { timeZone: "America/Lima" })}` : ""}. Renueva por S/ ${renewalPrice(plan)} al año desde Plan y pago, unas semanas antes de que venza.`
+      );
+      return;
+    }
+  }
+
   getDb()
     .prepare("UPDATE companies SET subscription_status = ? WHERE id = ?")
     .run(status, companyId);
@@ -366,10 +482,10 @@ export function markSubscriptionStatus(
 
   const label =
     status === "cancelled"
-      ? "Cancelaste la suscripción mensual."
+      ? "Cancelaste la suscripción."
       : status === "paused"
-        ? "Tu suscripción mensual quedó pausada."
-        : "Tu suscripción mensual quedó activa.";
+        ? "Tu suscripción quedó pausada."
+        : "Tu suscripción quedó activa.";
   logActivity(companyId, "pago", label);
 }
 

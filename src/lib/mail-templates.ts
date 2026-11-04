@@ -18,6 +18,7 @@ export type MailTemplate =
   | "transfer_instructions"
   | "payment_refunded"
   | "renewal_soon"
+  | "renewal_manual"
   | "subscription_cancelled"
   | "subscription_expiring"
   | "arco_received_owner"
@@ -48,6 +49,7 @@ const ESSENTIAL: Record<MailTemplate, boolean> = {
   transfer_instructions: true,
   payment_refunded: true,
   renewal_soon: true,
+  renewal_manual: true,
   subscription_cancelled: true,
   subscription_expiring: true,
   arco_received_owner: true,
@@ -249,6 +251,19 @@ export function renderMail(template: MailTemplate, payload: MailPayload): Render
           subject: "Tu suscripción se renueva pronto",
           paragraphs: [`Tu Plan ${s(payload, "plan")} se renueva el ${s(payload, "paidUntil")}. No tienes que hacer nada.`],
           action: { label: "Ver mi plan", url: "/app/ajustes" },
+        },
+        company
+      );
+    case "renewal_manual":
+      need("plan", "paidUntil", "amount");
+      return layout(
+        {
+          subject: "Renueva tu plan de DatosPrivados",
+          paragraphs: [
+            `Tu Plan ${s(payload, "plan")} está pagado hasta el ${s(payload, "paidUntil")}. Tu plan anual no se renueva solo: para mantener tu expediente al día, renuévalo por ${s(payload, "amount")} al año (IGV incluido).`,
+            "Renovar es más barato que el primer año, que incluía la implementación. Si lo haces antes de esa fecha, sumas 12 meses a tu plazo actual: no pierdes ningún día.",
+          ],
+          action: { label: "Renovar mi plan", url: "/pago" },
         },
         company
       );

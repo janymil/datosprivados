@@ -2,13 +2,14 @@ import {
   companyTerm,
   getCompanyById,
   getCompanyBySubscriptionId,
+  introNeedsClose,
   markSubscriptionStatus,
   planFromCompany,
   recordRefund,
   recordSubscriptionCharge,
 } from "@/lib/billing";
 import { confirmAuthorizedSubscription } from "@/lib/subscriptions";
-import { getAuthorizedPayment, getPreapproval, validateMercadoPagoSignature } from "@/lib/mercadopago";
+import { cancelPreapproval, getAuthorizedPayment, getPreapproval, validateMercadoPagoSignature } from "@/lib/mercadopago";
 import { planName, planPrice } from "@/lib/plans";
 import { notifyCompany } from "@/lib/notify";
 import { getDb, newId, nowIso } from "@/lib/db";
@@ -135,10 +136,31 @@ async function handleEvent(type: string, dataId: string): Promise<Response> {
         companyId: company.id,
         subscriptionId,
         paymentId: String(invoice.payment?.id ?? invoice.id),
-        amount: invoice.transaction_amount ?? planPrice(planFromCompany(company), companyTerm(company)),
+        amount:
+          invoice.transaction_amount ??
+          company.subscription_amount ??
+          planPrice(planFromCompany(company), companyTerm(company)),
         paidAt: invoice.date_created ?? new Date().toISOString(),
         raw: JSON.stringify(invoice),
       });
+
+      // El primer año ya cobró: se cierra la suscripción para que no repita ese monto el año
+      // siguiente (la renovación es otra suscripción, con el precio de renovación). Si el
+      // cierre falla se responde 500: MercadoPago reintenta el evento, el cobro ya está
+      // registrado (es idempotente) y se vuelve a intentar cerrar.
+      const current = getCompanyById(company.id);
+      if (current && introNeedsClose(current, subscriptionId)) {
+        try {
+          const closed = await cancelPreapproval(subscriptionId);
+          if (closed.status !== "cancelled" && closed.status !== "canceled") {
+            throw new Error(`estado «${closed.status}» tras cancelar`);
+          }
+        } catch (error) {
+          console.error("[mercadopago] No se pudo cerrar la suscripción del primer año:", error);
+          return Response.json({ ok: false, error: "No se pudo cerrar la suscripción del primer año." }, { status: 500 });
+        }
+        markSubscriptionStatus(company.id, subscriptionId, "cancelled");
+      }
     }
 
     if (paymentStatus === "refunded" || paymentStatus === "charged_back") {

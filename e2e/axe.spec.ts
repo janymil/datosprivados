@@ -32,6 +32,7 @@ const PAGES = [
   "/plantillas/checklist-inscripcion-sipdp",
   "/guias/plazos-ds-016-2024-jus",
   "/sectores/tiendas-online-y-ecommerce",
+  "/contadores",
 ];
 
 // Pantallas del panel. Se entra con la cuenta demo (GET /demo inicia sesión y vuelve

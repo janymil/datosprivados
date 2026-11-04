@@ -95,8 +95,8 @@ describe("contenido de la ayuda", () => {
   it("los precios y cuotas coinciden con los planes reales", () => {
     const text = topicToPlainText(topicBySlug("plan-y-pagos")!) + topicToPlainText(topicBySlug("asistente-ia")!);
     for (const plan of Object.values(PLANS)) {
-      expect(text, plan.id).toContain(`S/ ${plan.prices.monthly}`);
-      expect(text, plan.id).toContain(`S/ ${plan.prices.yearly}`);
+      expect(text, plan.id).toContain(`S/ ${plan.prices.yearly}`); // primer año
+      expect(text, plan.id).toContain(`S/ ${plan.renewal}`); // renovación
       expect(text, plan.id).toContain(String(plan.aiMonthlyQuota));
     }
   });

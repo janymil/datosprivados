@@ -80,11 +80,9 @@ export function LoginForm() {
 
 export function SignupForm({
   plan,
-  term,
   sector,
 }: {
   plan: string;
-  term?: string;
   sector?: string;
 }) {
   const [state, formAction, pending] = useActionState(signupAction, initial);
@@ -93,7 +91,6 @@ export function SignupForm({
     <form action={formAction} className="space-y-5">
       <ErrorBox message={state.error} />
       <input type="hidden" name="plan" value={plan} />
-      <input type="hidden" name="term" value={term ?? "monthly"} />
       {sector && <input type="hidden" name="sector" value={sector} />}
 
       <Field label="Nombre de la empresa" hint="Al verificar tu RUC se reemplaza por la razón social registrada en la SUNAT. Podrás editarla después en «Empresa».">

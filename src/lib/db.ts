@@ -57,6 +57,13 @@ export type Company = {
   pending_subscription_id: string | null;
   pending_plan: string | null;
   pending_term: string | null;
+  /** Monto acordado al crear la suscripción pendiente; la validación usa este monto, no la lista de precios. */
+  pending_amount: number | null;
+  /** Monto acordado de la suscripción vigente. null en cuentas anteriores (se usa el precio del plan). */
+  subscription_amount: number | null;
+  /** 1 = suscripción de primer año: se cierra tras su primer cobro y la renovación se paga aparte. */
+  pending_intro: number;
+  subscription_intro: number;
   /** Cuándo se verificó el RUC con la SUNAT; null si nunca se verificó (cuentas anteriores). */
   ruc_verified_at: string | null;
   /** Estado del RUC según la SUNAT al verificarlo (ACTIVO, …). */
@@ -618,6 +625,11 @@ function migrate(db: DatabaseSync) {
   if (!hasV10("pending_term")) {
     db.exec("ALTER TABLE companies ADD COLUMN pending_term TEXT");
   }
+  // v11: monto acordado por suscripción (primer año ≠ renovación) y marca de suscripción de primer año.
+  if (!hasV10("pending_amount")) db.exec("ALTER TABLE companies ADD COLUMN pending_amount REAL");
+  if (!hasV10("subscription_amount")) db.exec("ALTER TABLE companies ADD COLUMN subscription_amount REAL");
+  if (!hasV10("pending_intro")) db.exec("ALTER TABLE companies ADD COLUMN pending_intro INTEGER NOT NULL DEFAULT 0");
+  if (!hasV10("subscription_intro")) db.exec("ALTER TABLE companies ADD COLUMN subscription_intro INTEGER NOT NULL DEFAULT 0");
   db.exec(`
     CREATE TABLE IF NOT EXISTS rate_limits (
       key TEXT PRIMARY KEY,
@@ -1334,7 +1346,8 @@ export function resetDemoCompany(): { found: boolean; outbox: number; aiUsage: n
   db.prepare(
     `UPDATE companies SET billing_status = 'demo', subscription_status = 'demo', plan = 'pro',
        paid_until = NULL, mail_optout = 1, ai_consent_at = NULL, deleted_at = NULL,
-       pending_subscription_id = NULL, pending_plan = NULL, pending_term = NULL
+       pending_subscription_id = NULL, pending_plan = NULL, pending_term = NULL,
+       pending_amount = NULL, subscription_amount = NULL, pending_intro = 0, subscription_intro = 0
      WHERE id = 'casa-verde'`
   ).run();
 

@@ -3,7 +3,7 @@ import "server-only";
 import crypto from "node:crypto";
 import { getDb, newId, nowIso, type Company } from "./db";
 import { logActivity } from "./data";
-import { getCompanyById, nextPaidUntil, type PaymentRow } from "./billing";
+import { checkoutCharge, getCompanyById, nextPaidUntil, type PaymentRow } from "./billing";
 import { createInvoiceForPayment, formatSol } from "./invoicing";
 import { notifyCompany } from "./notify";
 import { PLANS, planPrice, termMonths, type BillingTerm, type PlanId } from "./plans";
@@ -58,7 +58,8 @@ export function requestTransfer(company: Company, plan: PlanId, term: BillingTer
   const open = getPendingTransfer(company.id);
   if (open) db.prepare("UPDATE payments SET status = 'cancelled' WHERE id = ?").run(open.id);
 
-  const amount = planPrice(plan, term);
+  // Anual: primer año o renovación según el historial de pagos; mensual: solo suscripciones antiguas.
+  const amount = term === "yearly" ? checkoutCharge(company.id, plan).amount : planPrice(plan, term);
   const reference = `DP-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
   const id = newId();
   db.prepare(

@@ -4,22 +4,13 @@ import { requireSession } from "@/lib/auth";
 import {
   billingLabel,
   canBypassPayment,
-  companyTerm,
+  canRenewNow,
+  checkoutCharge,
   isCompanyActive,
   planFromCompany,
 } from "@/lib/billing";
 import { isMercadoPagoConfigured } from "@/lib/mercadopago";
-import {
-  PLANS,
-  PLAN_IDS,
-  isBillingTerm,
-  isPlanId,
-  planName,
-  planPrice,
-  termLabel,
-  termShortLabel,
-  yearlySaving,
-} from "@/lib/plans";
+import { PLANS, PLAN_IDS, isPlanId, planName, renewalPrice } from "@/lib/plans";
 import { formatDate } from "@/lib/format";
 import { ArrowRightIcon, CheckIcon } from "@/components/icons";
 import { getPendingTransfer, isTransferConfigured, transferBankDetails } from "@/lib/transfers";
@@ -46,20 +37,21 @@ const PLAN_BULLETS = {
 export default async function PagoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ plan?: string; term?: string; error?: string; change?: string; transfer?: string; detail?: string }>;
+  searchParams: Promise<{ plan?: string; error?: string; change?: string; transfer?: string; detail?: string }>;
 }) {
   const { company } = await requireSession();
   const params = await searchParams;
   const active = isCompanyActive(company);
   const change = params.change === "1";
 
-  if (active && !change) {
+  // Una cuenta activa vuelve aquí para cambiar de plan o, a menos de 60 días del vencimiento, para renovar.
+  const renewing = active && !change && canRenewNow(company);
+  if (active && !change && !renewing) {
     redirect(company.onboarded_at ? "/app" : "/bienvenida");
   }
 
   const requested = params.plan;
   const plan = requested && isPlanId(requested) ? requested : planFromCompany(company);
-  const term = params.term && isBillingTerm(params.term) ? params.term : companyTerm(company);
   const configured = isMercadoPagoConfigured();
   const devBypass = canBypassPayment();
   const error = params.error;
@@ -70,12 +62,14 @@ export default async function PagoPage({
     <div>
       <p className="label-mono">Suscripción</p>
       <h1 className="mt-3 max-w-[20ch] font-display text-[2.5rem] leading-[1.05] tracking-[-0.03em]">
-        {active ? "Cambia tu plan." : "Activa tu suscripción."}
+        {renewing ? "Renueva tu plan." : active ? "Cambia tu plan." : "Activa tu plan."}
       </h1>
       <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-ink-soft">
-        {active
-          ? "Tu plan actual sigue activo hasta que MercadoPago autorice el nuevo. Recién entonces se cancela el anterior."
-          : "Tu cuenta ya está creada. Para entrar al panel y empezar tu expediente, activa tu suscripción mensual o anual con MercadoPago."}
+        {renewing
+          ? "Renovar antes de que venza suma 12 meses a tu plazo actual: no pierdes ningún día."
+          : active
+            ? "Tu plan actual sigue activo hasta que se confirme el pago del nuevo. El cambio se cobra como una renovación anual y suma 12 meses."
+            : "Tu cuenta ya está creada. Para entrar al panel y empezar tu expediente, paga tu primer año: incluye la implementación (documentos y fichas) y 12 meses de acceso."}
       </p>
 
       <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-y border-line py-3 text-sm text-ink-soft">
@@ -83,7 +77,7 @@ export default async function PagoPage({
           Plan actual: <strong className="text-ink">{planName(planFromCompany(company))}</strong>
         </span>
         <span>
-          Facturación: <strong className="text-ink">{termLabel(term)}</strong>
+          Facturación: <strong className="text-ink">Anual</strong>
         </span>
         <span>
           Estado: <strong className="text-ink">{billingLabel(company)}</strong>
@@ -94,27 +88,6 @@ export default async function PagoPage({
             <strong className="text-ink">{formatDate(company.paid_until)}</strong>
           </span>
         )}
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <span className="label-mono mr-1">Elige facturación</span>
-        {(["monthly", "yearly"] as const).map((option) => {
-          const selected = term === option;
-          const suffix = change ? "&change=1" : "";
-          return (
-            <Link
-              key={option}
-              href={`/pago?plan=${plan}&term=${option}${suffix}`}
-              className={`border px-3.5 py-2 text-sm font-medium transition-colors ${
-                selected
-                  ? "border-ink bg-ink text-paper"
-                  : "border-line-strong bg-paper text-ink hover:border-ink"
-              }`}
-            >
-              {option === "yearly" ? "Anual · 2 meses gratis" : "Mensual"}
-            </Link>
-          );
-        })}
       </div>
 
       {error && (
@@ -148,12 +121,12 @@ export default async function PagoPage({
 
       <form action={startSubscriptionAction} className="mt-8">
         <input type="hidden" name="change" value={change ? "1" : ""} />
-        <input type="hidden" name="term" value={term} />
 
         <div className="grid gap-4 md:grid-cols-2">
           {PLAN_IDS.map((id) => {
             const item = PLANS[id];
             const selected = plan === id;
+            const charge = checkoutCharge(company.id, id);
             return (
               <label
                 key={id}
@@ -174,16 +147,16 @@ export default async function PagoPage({
                 </span>
                 <span className="mt-2 block text-sm leading-relaxed text-ink-soft">{item.audience}</span>
                 <span className="mt-5 flex items-baseline gap-1.5">
-                  <span className="font-display text-4xl tracking-[-0.04em]">
-                    S/ {planPrice(id, term)}
+                  <span className="font-display text-4xl tracking-[-0.04em]">S/ {charge.amount}</span>
+                  <span className="text-sm text-ink-soft">
+                    {charge.intro ? "primer año · IGV incluido" : "renovación anual · IGV incluido"}
                   </span>
-                  <span className="text-sm text-ink-soft">/ {termShortLabel(term)} · IGV incluido</span>
                 </span>
-                {term === "yearly" && (
-                  <span className="mt-1 block font-mono text-xs uppercase tracking-[0.08em] text-sage">
-                    Ahorras S/ {yearlySaving(id)} al año
-                  </span>
-                )}
+                <span className="mt-1 block font-mono text-xs uppercase tracking-[0.08em] text-sage">
+                  {charge.intro
+                    ? `Incluye la implementación · luego S/ ${renewalPrice(id)} al año`
+                    : "Suma 12 meses a tu plazo"}
+                </span>
                 <ul className="mt-5 space-y-2 border-t border-line pt-4 text-sm leading-relaxed">
                   {PLAN_BULLETS[id].map((bullet) => (
                     <li key={bullet} className="flex gap-2">
@@ -199,10 +172,10 @@ export default async function PagoPage({
 
         <div className="mt-6 border border-line bg-paper-2 p-5">
           <p className="text-sm leading-relaxed text-ink-soft">
-            La suscripción se renueva automáticamente cada {term === "yearly" ? "año" : "mes"} con
-            MercadoPago. Puedes cancelarla cuando quieras desde Ajustes; el acceso sigue activo hasta
-            el final del período pagado. El trámite de inscripción en el SIPDP sigue siendo gratuito
-            (S/ 0).
+            {PLAN_IDS.every((id) => !checkoutCharge(company.id, id).intro)
+              ? "La renovación se cobra cada año con MercadoPago hasta que la canceles desde Ajustes; el acceso sigue activo hasta el final del período pagado."
+              : "Pagas el primer año una sola vez. Antes de que termine te avisamos para que renueves por menos: tu plan no se renueva solo con el monto del primer año."}{" "}
+            El trámite de inscripción en el SIPDP sigue siendo gratuito (S/ 0).
           </p>
 
           {configured ? (
@@ -218,7 +191,7 @@ export default async function PagoPage({
                 <Link href="/privacidad" target="_blank" className="link-underline font-medium text-ink">Política de privacidad</Link>.
               </p>
               <button type="submit" className="btn btn-primary mt-4 w-full">
-                {active ? "Cambiar de plan con MercadoPago" : "Suscribirme con MercadoPago"}
+                {renewing ? "Renovar con MercadoPago" : active ? "Cambiar de plan con MercadoPago" : "Pagar con MercadoPago"}
                 <ArrowRightIcon className="h-4 w-4" />
               </button>
             </>

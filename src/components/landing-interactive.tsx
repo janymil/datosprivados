@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  PLANS,
-  planPrice,
-  termShortLabel,
-  yearlySaving,
-  type BillingTerm,
-} from "@/lib/plans";
+import { PLANS, firstYearPrice, renewalPrice } from "@/lib/plans";
 import { Term } from "./help";
 import {
   AlertIcon,
@@ -447,126 +441,85 @@ export function InteractiveProduct() {
   );
 }
 
-export function InteractivePricing() {
-  const [term, setTerm] = useState<BillingTerm>("monthly");
+const PRICING_BULLETS: Record<"basico" | "pro", string[]> = {
+  basico: [
+    "Implementación incluida: tus bancos, política, documento de seguridad y fichas SIPDP listos",
+    "Todos tus bancos de datos y solicitudes ARCO, sin límite",
+    "Política de privacidad con enlace público + textos de WhatsApp",
+    "Reloj de plazos ARCO e incidentes con reloj de 48 horas",
+    "Asistente Legal con IA para consultas",
+  ],
+  pro: [
+    "Todo lo del Plan Básico",
+    "Redactor IA de respuestas ARCO a medida",
+    "Autocompletado IA de fichas SIPDP",
+    "Evaluador IA de incidentes + comunicado a afectados",
+    "Revisor IA de textos de WhatsApp, formularios y sorteos",
+  ],
+};
 
+/** Planes anuales: el primer año incluye la implementación y cada renovación cuesta menos. */
+export function InteractivePricing() {
   return (
     <div className="mt-10">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-[3px] border border-line-strong bg-paper p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="font-display text-lg font-medium text-ink">Elige cómo prefieres pagar:</span>
-          <span className="rounded-full bg-sage/15 px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.08em] text-ink">
-            El plan anual ahorra 2 meses
-          </span>
-        </div>
-
-        <div className="inline-flex rounded-[3px] border border-ink bg-paper-2 p-1">
-          <button
-            type="button"
-            onClick={() => setTerm("monthly")}
-            aria-pressed={term === "monthly"}
-            className={`rounded-[2px] px-4 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] transition-colors ${
-              term === "monthly" ? "bg-ink text-paper" : "text-ink-soft hover:text-ink"
-            }`}
-          >
-            Pago mensual
-          </button>
-          <button
-            type="button"
-            onClick={() => setTerm("yearly")}
-            aria-pressed={term === "yearly"}
-            className={`rounded-[2px] px-4 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] transition-colors ${
-              term === "yearly" ? "bg-crimson text-paper" : "text-ink-soft hover:text-ink"
-            }`}
-          >
-            Pago anual (−17 %)
-          </button>
-        </div>
+      <div className="mb-8 flex flex-wrap items-center gap-3 rounded-[3px] border border-line-strong bg-paper p-4">
+        <span className="font-display text-lg font-medium text-ink">Un pago al año, sin cobros mensuales.</span>
+        <span className="rounded-full bg-sage/15 px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.08em] text-ink">
+          Primer año con implementación · renovación más barata
+        </span>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="card flex flex-col p-7 md:p-8">
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className="font-display text-3xl tracking-[-0.02em]">Básico</h3>
-            <span className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">
-              {PLANS.basico.tagline}
-            </span>
-          </div>
-          <p className="mt-2.5 text-base text-ink-soft">{PLANS.basico.audience}</p>
-          <div className="mt-6 flex items-baseline gap-2">
-            <span className="font-display text-5xl tracking-[-0.04em]">
-              S/ {planPrice("basico", term)}
-            </span>
-            <span className="text-base text-ink-soft">/ {termShortLabel(term)}</span>
-          </div>
-          <p className="mt-1.5 font-mono text-xs uppercase tracking-[0.1em] text-sage">
-            {term === "yearly"
-              ? `Ahorras S/ ${yearlySaving("basico")} al año (2 meses)`
-              : `o S/ ${PLANS.basico.prices.yearly} al año · ahorras 2 meses`}
-          </p>
+        {(["basico", "pro"] as const).map((id) => {
+          const plan = PLANS[id];
+          const featured = id === "pro";
+          return (
+            <div
+              key={id}
+              className={`relative flex flex-col p-7 md:p-8 ${featured ? "border-2 border-ink bg-paper" : "card"}`}
+            >
+              {featured && (
+                <span className="absolute -top-[13px] left-7 bg-crimson px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.12em] text-paper">
+                  Recomendado · Plan Pro
+                </span>
+              )}
+              <div className="flex items-baseline justify-between gap-2">
+                <h3 className="font-display text-3xl tracking-[-0.02em]">{plan.name}</h3>
+                <span className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">{plan.tagline}</span>
+              </div>
+              <p className="mt-2.5 text-base text-ink-soft">{plan.audience}</p>
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="font-display text-5xl tracking-[-0.04em]">S/ {firstYearPrice(id)}</span>
+                <span className="text-base text-ink-soft">el primer año</span>
+              </div>
+              <p className="mt-1.5 font-mono text-xs uppercase tracking-[0.1em] text-sage">
+                Luego S/ {renewalPrice(id)} al año · IGV incluido
+              </p>
 
-          <ul className="mt-7 flex-1 space-y-3.5 border-t border-line pt-6 text-base">
-            {[
-              "Todos tus bancos de datos y solicitudes ARCO, sin límite",
-              "Política de privacidad con enlace público + textos de WhatsApp",
-              "Ficha SIPDP y reloj de 10/20 días hábiles",
-              "Incidentes con reloj de 48 horas",
-              "Asistente Legal con IA para consultas",
-            ].map((item) => (
-              <li key={item} className="flex gap-3">
-                <CheckIcon className="mt-1 h-4 w-4 shrink-0 text-sage" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-          <Link href={`/registro?plan=basico&term=${term}`} className="btn btn-ghost mt-7 w-full">
-            Empezar con Básico
-          </Link>
-        </div>
-
-        <div className="relative flex flex-col border-2 border-ink bg-paper p-7 md:p-8">
-          <span className="absolute -top-[13px] left-7 bg-crimson px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.12em] text-paper">
-            Recomendado · Plan Pro
-          </span>
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className="font-display text-3xl tracking-[-0.02em]">Pro</h3>
-            <span className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">
-              {PLANS.pro.tagline}
-            </span>
-          </div>
-          <p className="mt-2.5 text-base text-ink-soft">{PLANS.pro.audience}</p>
-          <div className="mt-6 flex items-baseline gap-2">
-            <span className="font-display text-5xl tracking-[-0.04em]">
-              S/ {planPrice("pro", term)}
-            </span>
-            <span className="text-base text-ink-soft">/ {termShortLabel(term)}</span>
-          </div>
-          <p className="mt-1.5 font-mono text-xs uppercase tracking-[0.1em] text-sage">
-            {term === "yearly"
-              ? `Ahorras S/ ${yearlySaving("pro")} al año (2 meses)`
-              : `o S/ ${PLANS.pro.prices.yearly} al año · ahorras 2 meses`}
-          </p>
-
-          <ul className="mt-7 flex-1 space-y-3.5 border-t border-line pt-6 text-base">
-            {[
-              "Todo lo del Plan Básico",
-              "Redactor IA de respuestas ARCO a medida",
-              "Autocompletado IA de fichas SIPDP",
-              "Evaluador IA de incidentes + comunicado a afectados",
-              "Revisor IA de textos de WhatsApp, formularios y sorteos",
-            ].map((item) => (
-              <li key={item} className="flex gap-3">
-                <CheckIcon className="mt-1 h-4 w-4 shrink-0 text-sage" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-          <Link href={`/registro?plan=pro&term=${term}`} className="btn btn-crimson mt-7 w-full">
-            Empezar con Pro
-            <ArrowRightIcon className="h-4 w-4" />
-          </Link>
-        </div>
+              <ul className="mt-7 flex-1 space-y-3.5 border-t border-line pt-6 text-base">
+                {PRICING_BULLETS[id].map((item) => (
+                  <li key={item} className="flex gap-3">
+                    <CheckIcon className="mt-1 h-4 w-4 shrink-0 text-sage" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href={`/registro?plan=${id}`}
+                className={`btn mt-7 w-full ${featured ? "btn-crimson" : "btn-ghost"}`}
+              >
+                Empezar con {plan.name}
+                {featured && <ArrowRightIcon className="h-4 w-4" />}
+              </Link>
+            </div>
+          );
+        })}
       </div>
+
+      <p className="mt-6 max-w-[80ch] text-sm leading-relaxed text-ink-soft">
+        Tu plan no se renueva solo con el precio del primer año: te avisamos 30 y 7 días antes para que renueves
+        por menos. Si no renuevas, puedes exportar todos tus datos.
+      </p>
     </div>
   );
 }
