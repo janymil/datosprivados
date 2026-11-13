@@ -38,6 +38,7 @@ const PUBLIC_FILES: Record<string, string> = {
   "plantillas/checklist-inscripcion-sipdp/page.tsx": "checklist público de inscripción en el SIPDP",
   "p/[slug]/page.tsx": "política publicada de un cliente (solo lectura)",
   "solicitud/[slug]/page.tsx": "formulario ARCO público",
+  "libro-de-reclamaciones/page.tsx": "solo redirige al Libro de Reclamaciones oficial (LibroDigital.pe)",
   "(auth)/layout.tsx": "layout del acceso",
   "(auth)/login/page.tsx": "ingreso",
   "(auth)/registro/page.tsx": "registro",

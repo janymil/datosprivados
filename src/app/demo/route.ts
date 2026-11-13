@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createSession } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, refreshDemoDates } from "@/lib/db";
 import { clientIp } from "@/lib/client-ip";
 import { takeRateLimit } from "@/lib/rate-limit";
 
@@ -18,6 +18,7 @@ export async function GET(request: Request) {
     .get() as { id: string } | undefined;
 
   if (!demo) redirect("/login");
+  refreshDemoDates();
   await createSession(demo.id);
   redirect("/app");
 }

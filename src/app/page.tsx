@@ -1,3 +1,4 @@
+import { PLATFORM_CONTACT_EMAIL, PLATFORM_ENTITY } from "@/lib/platform-entity";
 import Link from "next/link";
 import type { ComponentType } from "react";
 import {
@@ -433,8 +434,8 @@ function Faq() {
           </h2>
           <p className="mt-5 max-w-[36ch] text-base leading-relaxed text-ink-soft">
             ¿Otra duda? Escríbenos a{" "}
-            <a href="mailto:hola@datosprivados.pe" className="link-underline text-ink">
-              hola@datosprivados.pe
+            <a href={`mailto:${PLATFORM_CONTACT_EMAIL}`} className="link-underline text-ink">
+              {PLATFORM_CONTACT_EMAIL}
             </a>
             .
           </p>
@@ -553,7 +554,18 @@ const ORGANIZATION_LD = {
       "@type": "Organization",
       name: "DatosPrivados",
       url: absoluteUrl("/"),
-      email: "hola@datosprivados.pe",
+      legalName: PLATFORM_ENTITY.legalName,
+      taxID: PLATFORM_ENTITY.ruc,
+      email: PLATFORM_CONTACT_EMAIL,
+      telephone: PLATFORM_ENTITY.phoneHref.replace("tel:", ""),
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Av. Javier Prado Este 560",
+        addressLocality: "San Isidro",
+        addressRegion: "Lima",
+        postalCode: "15040",
+        addressCountry: "PE",
+      },
       areaServed: "PE",
     },
     {
@@ -574,7 +586,7 @@ export default function LandingPage() {
     <>
       <SiteHeader />
       <JsonLd data={ORGANIZATION_LD} />
-      <main>
+      <main id="contenido" tabIndex={-1}>
         <Hero />
         <Obligations />
         <Segments />

@@ -34,8 +34,9 @@ function realCompanies(): Company[] {
     .all() as unknown as Company[];
 }
 
-function activeCompanies(): Company[] {
-  return realCompanies().filter((company) => isCompanyActive(company));
+/** Activas según el reloj del trabajo (`now`), no el del sistema: así los trabajos son reproducibles. */
+function activeCompanies(now: Date): Company[] {
+  return realCompanies().filter((company) => isCompanyActive(company, now));
 }
 
 const longDate = (iso: string) => formatDate(iso);
@@ -117,7 +118,7 @@ const JOBS = {
     let dueSoon = 0;
     let overdue = 0;
     const db = getDb();
-    for (const company of activeCompanies()) {
+    for (const company of activeCompanies(now)) {
       const open = db
         .prepare("SELECT id, ticket, due_at FROM arco_requests WHERE company_id = ? AND status IN ('nuevo','en_proceso')")
         .all(company.id) as { id: string; ticket: string; due_at: string }[];
@@ -138,7 +139,7 @@ const JOBS = {
   "incident-deadline-reminders"({ now }: JobContext): JobResult {
     const db = getDb();
     let sent = 0;
-    for (const company of activeCompanies()) {
+    for (const company of activeCompanies(now)) {
       const open = db
         .prepare("SELECT id, title, due_at, criteria FROM incidents WHERE company_id = ? AND status IN ('abierto','en_analisis') AND notified_at IS NULL")
         .all(company.id) as { id: string; title: string; due_at: string; criteria: string }[];
@@ -168,7 +169,7 @@ const JOBS = {
       .prepare("UPDATE companies SET billing_status = 'expired' WHERE billing_status = 'active' AND paid_until IS NOT NULL AND paid_until <= ?")
       .run(now.toISOString());
     let notices = 0;
-    for (const company of activeCompanies()) {
+    for (const company of activeCompanies(now)) {
       if (!company.paid_until) continue;
       const daysLeft = (new Date(company.paid_until).getTime() - now.getTime()) / DAY;
       // Plan anual de primer año (cerrado tras su cobro) o pagado por transferencia: no se renueva solo,
@@ -278,7 +279,7 @@ const JOBS = {
   "document-staleness-notice"({ now }: JobContext): JobResult {
     const week = Math.floor(now.getTime() / (7 * DAY));
     let sent = 0;
-    for (const company of activeCompanies()) {
+    for (const company of activeCompanies(now)) {
       const banks = listBanks(company.id);
       const providers = listProviders(company.id);
       const stale = listDocuments(company.id).filter((doc) => documentFreshness(doc, company, banks, providers).stale).length;
@@ -298,7 +299,7 @@ const JOBS = {
     const db = getDb();
     let sent = 0;
     for (const company of realCompanies()) {
-      if (!company.paid_until || isCompanyActive(company)) continue;
+      if (!company.paid_until || isCompanyActive(company, now)) continue;
       const lapsedDays = (now.getTime() - new Date(company.paid_until).getTime()) / DAY;
       const stage = stages.filter(([, day]) => lapsedDays >= day).map(([n]) => n).pop() ?? 0;
       if (stage <= company.lapsed_notice) continue;
@@ -316,7 +317,7 @@ const JOBS = {
     const retention = LAPSED_RETENTION_DAYS();
     let accounts = 0;
     for (const company of realCompanies()) {
-      if (!company.paid_until || isCompanyActive(company)) continue;
+      if (!company.paid_until || isCompanyActive(company, now)) continue;
       // Solo se borra a quien recibió el último aviso: nadie pierde datos sin haber sido advertido.
       if (company.lapsed_notice < 3) continue;
       const lapsedDays = (now.getTime() - new Date(company.paid_until).getTime()) / DAY;
@@ -390,7 +391,7 @@ const JOBS = {
     const db = getDb();
     let sent = 0;
     let skipped = 0;
-    for (const company of activeCompanies()) {
+    for (const company of activeCompanies(now)) {
       const openArco = db
         .prepare("SELECT COUNT(*) AS n FROM arco_requests WHERE company_id = ? AND status IN ('nuevo','en_proceso')")
         .get(company.id) as { n: number };

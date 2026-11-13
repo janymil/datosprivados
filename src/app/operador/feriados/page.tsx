@@ -3,6 +3,7 @@ import { listHolidays } from "@/lib/db";
 import { formatDate, limaToday } from "@/lib/format";
 import { requireOperator } from "@/lib/operator";
 import { SubmitButton } from "@/components/submit-button";
+import { OperatorNav } from "@/components/operator-nav";
 import { addHolidayAction, removeHolidayAction } from "./actions";
 
 export const metadata = { title: "Feriados", robots: { index: false } };
@@ -27,13 +28,10 @@ export default async function HolidaysPage({
   const years = Array.from(new Set([currentYear, currentYear + 1, selected])).sort();
 
   return (
-    <main className="mx-auto max-w-3xl space-y-8 px-4 py-10">
+    <main id="contenido" tabIndex={-1} className="mx-auto max-w-3xl space-y-8 px-4 py-10">
       <header>
-        <Link href="/operador" className="text-sm text-ink-soft hover:text-ink">
-          ← Operador
-        </Link>
-        <p className="mt-3 label-mono">Operador</p>
-        <h1 className="mt-2 font-display text-4xl tracking-[-0.03em]">Feriados y días no laborables</h1>
+        <OperatorNav current="feriados" />
+        <h1 className="mt-4 font-display text-4xl tracking-[-0.03em]">Feriados y días no laborables</h1>
         <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">
           De aquí salen los plazos en <strong>días hábiles</strong> de las solicitudes ARCO y de los incidentes: los
           fines de semana y estas fechas no se cuentan. Se siembran los feriados nacionales calculados; añade los días

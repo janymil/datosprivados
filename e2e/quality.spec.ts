@@ -67,6 +67,32 @@ test("el pie de la landing enlaza los documentos legales", async ({ page }) => {
   }
 });
 
+test("cada página pública identifica a la empresa y enlaza su Libro de Reclamaciones", async ({ page }) => {
+  for (const path of PUBLIC_PAGES) {
+    await page.goto(path);
+    const libro = page.locator('a[href="https://librodigital.pe/libro/semantikatech"]').first();
+    await expect(libro, path).toBeVisible();
+    await expect(libro).toHaveAttribute("rel", /noopener/);
+    await expect(page.locator("body"), path).toContainText("RUC 20616806981");
+  }
+});
+
+test("la política de privacidad trae los datos que pide el reglamento", async ({ page }) => {
+  await page.goto("/privacidad");
+  const body = page.locator("main");
+  for (const text of [
+    "SEMANTIKA TECH E.I.R.L.",
+    "Av. Javier Prado Este 560",
+    "Decreto Supremo N.° 016-2024-JUS",
+    "Ley N.° 29733",
+    "Banco de datos",
+    "Transferencias internacionales",
+    "Autoridad Nacional de Protección de Datos Personales",
+  ]) {
+    await expect(body).toContainText(text);
+  }
+});
+
 test("mientras sean borrador, los textos legales avisan y no se indexan", async ({ page, request }) => {
   await page.goto("/terminos");
   await expect(page.getByRole("note")).toContainText("Borrador pendiente de revisión legal");

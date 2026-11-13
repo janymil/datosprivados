@@ -11,6 +11,7 @@ import { companyIdentityLine } from "@/lib/documents";
 export const metadata = { title: "Solicitud de derechos ARCO" };
 
 const TYPES = [
+  ["informacion", "Información (8 días hábiles) — quiero saber si tienen datos míos, para qué y con quién los comparten"],
   ["acceso", "Acceso (20 días hábiles) — quiero saber qué datos míos tienen y cómo los usan"],
   ["rectificacion", "Rectificación (10 días hábiles) — quiero corregir o actualizar un dato mío"],
   ["cancelacion", "Cancelación (10 días hábiles) — quiero que eliminen mis datos de sus listas"],
@@ -47,7 +48,7 @@ export default async function PublicRequestPage({
         </div>
       </header>
 
-      <main className="container-page grid gap-10 py-10 md:py-16 lg:grid-cols-[0.88fr_1.12fr]">
+      <main id="contenido" tabIndex={-1} className="container-page grid gap-10 py-10 md:py-16 lg:grid-cols-[0.88fr_1.12fr]">
         <div>
           <p className="label-mono">{companyIdentityLine(company)}</p>
           <h1 className="mt-3 font-display text-[2.3rem] leading-[1.03] tracking-[-0.03em] md:text-[2.85rem]">
@@ -65,7 +66,7 @@ export default async function PublicRequestPage({
               ],
               [
                 "Plazos legales de respuesta (en días hábiles)",
-                "Hasta 10 días hábiles para Rectificación, Cancelación u Oposición, y hasta 20 días hábiles para solicitudes de Acceso.",
+                "Hasta 8 días hábiles para Información (si tienen datos tuyos, para qué y con quién los comparten), 10 para Rectificación, Cancelación u Oposición, y 20 para solicitudes de Acceso.",
               ],
               [
                 "Número de seguimiento (Ticket)",

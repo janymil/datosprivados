@@ -5,7 +5,12 @@ import { requireSession } from "@/lib/auth";
 import { getBank } from "@/lib/data";
 import { formatDate, limaToday } from "@/lib/format";
 import { legalBasisLabel } from "@/lib/documents";
-import { markBankRegisteredAction, reopenBankAction } from "@/app/actions/company";
+import {
+  cancelBankRegistrationAction,
+  deleteDraftBankAction,
+  markBankRegisteredAction,
+  reopenBankAction,
+} from "@/app/actions/company";
 import { Field, PageHeader, StatusPill } from "@/components/ui";
 import { FileIcon } from "@/components/icons";
 import { Term } from "@/components/help";
@@ -20,13 +25,15 @@ export default async function BankDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ ok?: string }>;
+  searchParams: Promise<{ ok?: string; cancelado?: string; error?: string }>;
 }) {
   const { company } = await requireSession();
   const { id } = await params;
-  const { ok } = await searchParams;
+  const { ok, cancelado, error } = await searchParams;
   const bank = getBank(company.id, id);
   if (!bank) notFound();
+  const registered = bank.status === "registrado";
+  const cancelled = bank.status === "cancelado";
 
   const rows: Array<[ReactNode, string]> = [
     ["Finalidad (para qué se usa)", bank.purpose || "—"],
@@ -49,26 +56,34 @@ export default async function BankDetailPage({
       </nav>
 
       {ok && <Toast message="Banco de datos guardado." />}
+      {cancelado && <Toast message="Registraste la cancelación de la inscripción." />}
+      {error === "fecha" && (
+        <p role="alert" className="border border-crimson/40 bg-crimson/[0.06] px-4 py-3 text-sm">
+          Revisa la fecha de cancelación: no puede ser futura ni anterior a la fecha de inscripción.
+        </p>
+      )}
 
       <PageHeader
         title={bank.name}
         description={bank.purpose || undefined}
         actions={
-          <>
-            <Link
-              href={`/app/bancos/${bank.id}/ficha`}
-              className={`btn btn-sm ${bank.status === "registrado" ? "btn-ghost" : "btn-primary"}`}
-            >
-              <FileIcon className="h-4 w-4" />
-              Abrir Ficha para el SIPDP
-            </Link>
-            <Link
-              href={`/app/bancos/${bank.id}/editar`}
-              className={`btn btn-sm ${bank.status === "registrado" ? "btn-primary" : "btn-ghost"}`}
-            >
-              Editar datos
-            </Link>
-          </>
+          cancelled ? undefined : (
+            <>
+              <Link
+                href={`/app/bancos/${bank.id}/ficha`}
+                className={`btn btn-sm ${registered ? "btn-ghost" : "btn-primary"}`}
+              >
+                <FileIcon className="h-4 w-4" />
+                Abrir Ficha para el SIPDP
+              </Link>
+              <Link
+                href={`/app/bancos/${bank.id}/editar`}
+                className={`btn btn-sm ${registered ? "btn-primary" : "btn-ghost"}`}
+              >
+                Editar datos
+              </Link>
+            </>
+          )
         }
       />
 
@@ -76,8 +91,8 @@ export default async function BankDetailPage({
         <section className="card">
           <div className="flex items-center justify-between border-b border-line px-6 py-4">
             <h2 className="font-display text-xl tracking-[-0.02em]">Información de este banco</h2>
-            <StatusPill tone={bank.status === "registrado" ? "ok" : "neutral"}>
-              {bank.status === "registrado" ? "Inscrito en SIPDP" : "Borrador (falta inscribir)"}
+            <StatusPill tone={registered ? "ok" : "neutral"}>
+              {registered ? "Inscrito en SIPDP" : cancelled ? "Inscripción cancelada" : "Borrador (falta inscribir)"}
             </StatusPill>
           </div>
 
@@ -98,7 +113,20 @@ export default async function BankDetailPage({
         </section>
 
         <div className="space-y-5">
-          {bank.status === "registrado" ? (
+          {cancelled ? (
+            <section className="card p-6">
+              <p className="label-mono">Inscripción cancelada ante la ANPD</p>
+              <p className="mt-2 text-[15px] leading-relaxed">
+                Inscrito con el código <span className="font-mono">{bank.sipdp_code}</span> el{" "}
+                {formatDate(bank.registered_at)}; cancelado el {formatDate(bank.cancelled_at)}
+                {bank.cancel_reference ? ` (${bank.cancel_reference})` : ""}.
+              </p>
+              <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">
+                Ya no aparece en tus documentos, en tu puntaje ni en los avisos. Se conserva aquí como constancia; guarda
+                también la resolución de cancelación que emite la ANPD.
+              </p>
+            </section>
+          ) : registered ? (
             <section className="border border-sage/40 bg-sage/[0.06] p-6">
               <p className="font-mono text-xs font-semibold uppercase tracking-[0.1em] text-sage">
                 Inscrito oficialmente en el <Term k="sipdp">SIPDP</Term> <HelpTip k="banco_estado" className="ml-1.5" />
@@ -114,11 +142,37 @@ export default async function BankDetailPage({
               <form action={reopenBankAction} className="mt-4">
                 <input type="hidden" name="id" value={bank.id} />
                 <button type="submit" className="font-mono text-xs uppercase tracking-[0.08em] text-ink-soft underline hover:text-crimson">
-                  Cambiar estado a borrador
+                  Lo marqué por error: volver a borrador
                 </button>
               </form>
             </section>
-          ) : (
+          ) : null}
+
+          {registered && (
+            <details className="border border-line px-5 py-4 text-sm">
+              <summary className="cursor-pointer font-mono text-xs uppercase tracking-[0.08em] text-ink-soft hover:text-crimson">
+                Dejé de usar este banco
+              </summary>
+              <p className="mt-3 leading-relaxed text-ink-soft">
+                Un banco inscrito no se elimina: pide a la ANPD la cancelación de la inscripción (en el mismo portal del{" "}
+                <Term k="sipdp">SIPDP</Term>) y, cuando te la confirmen, regístrala aquí. Antes, borra o devuelve los datos
+                según tu plazo de conservación.
+              </p>
+              <form action={cancelBankRegistrationAction} className="mt-4 space-y-4">
+                <input type="hidden" name="id" value={bank.id} />
+                <Field label="Fecha de la cancelación">
+                  <input type="date" name="cancelled_at" className="input" defaultValue={limaToday()} max={limaToday()} required />
+                </Field>
+                <Field label="N.° de resolución o trámite (opcional)">
+                  <input name="cancel_reference" className="input" maxLength={200} placeholder="Ej. Resolución N.° 1234-2026-JUS/DGTAIPD" />
+                </Field>
+                <SubmitButton className="btn btn-ghost btn-sm text-crimson">Registrar la cancelación</SubmitButton>
+                <p className="text-xs text-ink-soft">Es definitivo: el banco queda en el historial y ya no se puede editar.</p>
+              </form>
+            </details>
+          )}
+
+          {bank.status === "borrador" && (
             <section className="card p-6">
               <p className="label-mono">
                 Paso 2 · Inscripción gratuita (S/ 0) <HelpTip k="ficha_sipdp" className="ml-1.5" />
@@ -167,6 +221,22 @@ export default async function BankDetailPage({
                 <SubmitButton className="btn btn-primary btn-sm w-full">Guardar código y marcar como inscrito</SubmitButton>
               </form>
             </section>
+          )}
+
+          {bank.status === "borrador" && (
+            <details className="border border-line px-5 py-4 text-sm">
+              <summary className="cursor-pointer font-mono text-xs uppercase tracking-[0.08em] text-ink-soft hover:text-crimson">
+                Este banco no aplica a mi empresa
+              </summary>
+              <p className="mt-3 leading-relaxed text-ink-soft">
+                Se elimina este borrador y su ficha. Si en realidad ya lo inscribiste en el SIPDP, no lo borres: anota su
+                código arriba y, si dejaste de usarlo, registra la cancelación de la inscripción.
+              </p>
+              <form action={deleteDraftBankAction} className="mt-3">
+                <input type="hidden" name="id" value={bank.id} />
+                <SubmitButton className="btn btn-ghost btn-sm text-crimson">Eliminar borrador</SubmitButton>
+              </form>
+            </details>
           )}
 
         </div>

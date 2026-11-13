@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { getDb } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { createIncidentAction, updateIncidentAction } from "@/app/actions/incidents";
-import { markBankRegisteredAction, reopenBankAction, saveBankAction } from "@/app/actions/company";
+import { deleteDraftBankAction, markBankRegisteredAction, reopenBankAction, saveBankAction } from "@/app/actions/company";
 import { respondArcoAction, setArcoStatusAction } from "@/app/actions/arco";
 import { deleteEvidenceAction, updateProviderAction } from "@/app/actions/tools";
 import { jar, freezeTime } from "./helpers/next";
@@ -40,6 +40,24 @@ describe("una empresa no toca los datos de otra (company_id)", () => {
     getDb().prepare("UPDATE data_banks SET status = 'registrado' WHERE id = ?").run(bankB);
     await expect(reopenBankAction(form({ id: bankB }))).rejects.toThrow("REDIRECT:");
     expect(row<{ status: string }>("SELECT status FROM data_banks WHERE id = ?", bankB).status).toBe("registrado");
+  });
+
+  it("banco: se elimina un borrador propio; ni uno inscrito ni el de otra empresa", async () => {
+    const a = makeActiveCompany();
+    const b = makeActiveCompany();
+    const draftA = makeBank(a.companyId, { name: "No aplica" });
+    const registeredA = makeBank(a.companyId, { name: "Inscrito" });
+    getDb().prepare("UPDATE data_banks SET status = 'registrado' WHERE id = ?").run(registeredA);
+    const draftB = makeBank(b.companyId, { name: "Clientes B" });
+    await loginAs(a.userId);
+    const exists = (id: string) => Boolean(row<{ id: string } | undefined>("SELECT id FROM data_banks WHERE id = ?", id));
+
+    await expect(deleteDraftBankAction(form({ id: draftA }))).rejects.toThrow("REDIRECT:/app/bancos?eliminado=1");
+    expect(exists(draftA)).toBe(false);
+    await expect(deleteDraftBankAction(form({ id: registeredA }))).rejects.toThrow("REDIRECT:");
+    expect(exists(registeredA)).toBe(true);
+    await expect(deleteDraftBankAction(form({ id: draftB }))).rejects.toThrow("REDIRECT:");
+    expect(exists(draftB)).toBe(true);
   });
 
   it("ARCO: no puede responder ni cambiar el estado de la solicitud de otra empresa", async () => {

@@ -114,7 +114,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <AppNav variant="mobile" badges={{ arco: stats.openRequests, incidents: stats.incidentsOpen }} />
         </div>
 
-        <main className="flex-1 px-4 pb-28 pt-7 md:px-8 lg:px-10 lg:pb-24 lg:pt-10 print:p-0">
+        <main id="contenido" tabIndex={-1} className="flex-1 px-4 pb-28 pt-7 md:px-8 lg:px-10 lg:pb-24 lg:pt-10 print:p-0">
           <div className="mx-auto w-full max-w-[1100px]">
             {isDemo && (
               <div className="no-print mb-6 flex flex-col gap-2 border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">

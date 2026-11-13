@@ -33,9 +33,10 @@ export async function saveBankAction(formData: FormData) {
   };
 
   if (id) {
-    db.prepare(
+    // Un banco cancelado ante la ANPD queda tal como estaba al cancelarse.
+    const result = db.prepare(
       `UPDATE data_banks SET name = ?, purpose = ?, data_categories = ?, legal_basis = ?, retention = ?,
-       recipients = ?, transfers = ?, channel = ?, updated_at = ? WHERE id = ? AND company_id = ?`
+       recipients = ?, transfers = ?, channel = ?, updated_at = ? WHERE id = ? AND company_id = ? AND status != 'cancelado'`
     ).run(
       values.name,
       values.purpose,
@@ -49,7 +50,7 @@ export async function saveBankAction(formData: FormData) {
       id,
       company.id
     );
-    logActivity(company.id, "banco", `Actualizaste el banco de datos «${name}».`);
+    if (result.changes > 0) logActivity(company.id, "banco", `Actualizaste el banco de datos «${name}».`);
     revalidatePath("/app", "layout");
     redirect(`/app/bancos/${id}`);
   }
@@ -84,22 +85,19 @@ export async function markBankRegisteredAction(formData: FormData) {
   const code = text(formData, "sipdp_code");
   const date = text(formData, "registered_at") || limaToday();
 
-  getDb()
+  const result = getDb()
     .prepare(
       `UPDATE data_banks SET status = 'registrado', sipdp_code = ?, registered_at = ?, updated_at = ?
-       WHERE id = ? AND company_id = ?`
+       WHERE id = ? AND company_id = ? AND status != 'cancelado'`
     )
     .run(code || "SIPDP-PENDIENTE", date, nowIso(), id, company.id);
 
-  const bank = getDb()
-    .prepare("SELECT name FROM data_banks WHERE id = ? AND company_id = ?")
-    .get(id, company.id) as { name: string } | undefined;
-
-  logActivity(
-    company.id,
-    "banco",
-    `Registraste el banco de datos «${bank?.name ?? "sin nombre"}» en el SIPDP.`
-  );
+  if (result.changes > 0) {
+    const bank = getDb()
+      .prepare("SELECT name FROM data_banks WHERE id = ? AND company_id = ?")
+      .get(id, company.id) as { name: string } | undefined;
+    logActivity(company.id, "banco", `Registraste el banco de datos «${bank?.name ?? "sin nombre"}» en el SIPDP.`);
+  }
   revalidatePath("/app", "layout");
   redirect(`/app/bancos/${id}`);
 }
@@ -108,10 +106,64 @@ export async function reopenBankAction(formData: FormData) {
   const { company } = await requireActiveSession();
   const id = text(formData, "id");
   getDb()
-    .prepare("UPDATE data_banks SET status = 'borrador', updated_at = ? WHERE id = ? AND company_id = ?")
+    .prepare("UPDATE data_banks SET status = 'borrador', updated_at = ? WHERE id = ? AND company_id = ? AND status = 'registrado'")
     .run(nowIso(), id, company.id);
   revalidatePath("/app", "layout");
   redirect(`/app/bancos/${id}`);
+}
+
+/**
+ * Registra que la ANPD canceló la inscripción de un banco (la empresa dejó de
+ * tratar esos datos). Solo aplica a un banco inscrito y es definitivo: el banco
+ * sale de documentos, puntaje y avisos, pero se conserva en el historial.
+ */
+export async function cancelBankRegistrationAction(formData: FormData) {
+  const { company } = await requireActiveSession();
+  const id = text(formData, "id");
+  const date = text(formData, "cancelled_at");
+  const reference = text(formData, "cancel_reference").slice(0, 200);
+  const back = `/app/bancos/${encodeURIComponent(id)}`;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date)) || date > limaToday()) {
+    redirect(`${back}?error=fecha`);
+  }
+
+  const db = getDb();
+  const bank = db
+    .prepare("SELECT name, registered_at FROM data_banks WHERE id = ? AND company_id = ? AND status = 'registrado'")
+    .get(id, company.id) as { name: string; registered_at: string | null } | undefined;
+  if (!bank) redirect(back);
+  if (bank.registered_at && date < bank.registered_at.slice(0, 10)) redirect(`${back}?error=fecha`);
+
+  db.prepare(
+    `UPDATE data_banks SET status = 'cancelado', cancelled_at = ?, cancel_reference = ?, updated_at = ?
+     WHERE id = ? AND company_id = ? AND status = 'registrado'`
+  ).run(date, reference || null, nowIso(), id, company.id);
+  logActivity(
+    company.id,
+    "banco",
+    `Cancelaste ante la ANPD la inscripción del banco de datos «${bank.name}»${reference ? ` (${reference})` : ""}.`
+  );
+  revalidatePath("/app", "layout");
+  redirect(`${back}?cancelado=1`);
+}
+
+/**
+ * Elimina un banco en borrador (por ejemplo, uno que el asistente propuso y no aplica).
+ * Un banco inscrito no se borra: si dejó de usarse, se cancela su inscripción ante la
+ * ANPD y se registra aquí con cancelBankRegistrationAction; así queda en el expediente.
+ */
+export async function deleteDraftBankAction(formData: FormData) {
+  const { company } = await requireActiveSession();
+  const id = text(formData, "id");
+  const db = getDb();
+  const bank = db.prepare("SELECT name FROM data_banks WHERE id = ? AND company_id = ? AND status = 'borrador'").get(id, company.id) as
+    | { name: string }
+    | undefined;
+  if (!bank) redirect(`/app/bancos/${encodeURIComponent(id)}`);
+  db.prepare("DELETE FROM data_banks WHERE id = ? AND company_id = ? AND status = 'borrador'").run(id, company.id);
+  logActivity(company.id, "banco", `Banco de datos eliminado (borrador): ${bank.name}.`);
+  revalidatePath("/app", "layout");
+  redirect("/app/bancos?eliminado=1");
 }
 
 export async function updateCompanyAction(formData: FormData) {

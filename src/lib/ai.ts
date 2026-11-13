@@ -195,7 +195,7 @@ export function aiMode(company?: Pick<Company, "id" | "plan" | "ai_consent_at">)
 /* -------------------------------------------------------------------------- */
 
 export type ArcoAiAnalysis = {
-  detectedRight: "acceso" | "rectificacion" | "cancelacion" | "oposicion";
+  detectedRight: "informacion" | "acceso" | "rectificacion" | "cancelacion" | "oposicion";
   matchesDeclaredType: boolean;
   legalDeadlineDays: number;
   remainingBusinessDays: number;
@@ -229,6 +229,8 @@ export async function analyzeAndDraftArcoWithAi(input: {
     detectedRight = "cancelacion";
   } else if (lower.includes("correg") || lower.includes("actualiz") || lower.includes("mal ") || lower.includes("rectific") || lower.includes("cambiar")) {
     detectedRight = "rectificacion";
+  } else if (lower.includes("si tienen") || lower.includes("si tratan") || lower.includes("para qué usan") || lower.includes("con quién compart")) {
+    detectedRight = "informacion";
   } else if (lower.includes("copia") || lower.includes("saber qué") || lower.includes("historial") || lower.includes("inform") || lower.includes("acceso")) {
     detectedRight = "acceso";
   } else if (lower.includes("opongo") || lower.includes("no quiero recibir") || lower.includes("publicidad") || lower.includes("promocion")) {
@@ -307,7 +309,7 @@ Genera únicamente el cuerpo de la carta/correo formal de respuesta al titular.`
 }
 
 function buildTailoredArcoDraft(ctx: {
-  detectedRight: "acceso" | "rectificacion" | "cancelacion" | "oposicion";
+  detectedRight: "informacion" | "acceso" | "rectificacion" | "cancelacion" | "oposicion";
   declaredType: string;
   sanitizedDescription: string;
   ticket: string;

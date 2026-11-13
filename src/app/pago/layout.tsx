@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/icons";
 import { logoutAction } from "@/app/actions/auth";
+import { PLATFORM_COMPLAINTS_URL, PLATFORM_ENTITY } from "@/lib/platform-entity";
 
 export default function PagoLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -20,13 +21,21 @@ export default function PagoLayout({ children }: { children: React.ReactNode }) 
           </form>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-[820px] px-5 py-10 md:py-14">{children}</main>
+      <main id="contenido" tabIndex={-1} className="mx-auto w-full max-w-[820px] px-5 py-10 md:py-14">{children}</main>
       <footer className="mx-auto w-full max-w-[820px] px-5 pb-8 text-xs leading-relaxed text-ink-soft">
         Pago procesado por MercadoPago. DatosPrivados no almacena los datos de tu tarjeta.{" "}
         <Link href="/cuenta" className="link-underline">
           Descargar o eliminar mis datos
         </Link>
         .
+        <span className="mt-2 block">
+          Vende {PLATFORM_ENTITY.legalName}, RUC {PLATFORM_ENTITY.ruc}, {PLATFORM_ENTITY.address}. ·{" "}
+          <Link href="/terminos" className="link-underline">Términos</Link> ·{" "}
+          <Link href="/privacidad" className="link-underline">Privacidad</Link> ·{" "}
+          <a href={PLATFORM_COMPLAINTS_URL} target="_blank" rel="noopener noreferrer" className="link-underline font-medium text-ink">
+            Libro de Reclamaciones
+          </a>
+        </span>
       </footer>
     </div>
   );

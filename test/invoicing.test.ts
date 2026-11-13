@@ -11,7 +11,7 @@ import { getInvoiceByPayment, isSafePdfUrl, markInvoiceIssued, splitIgv } from "
 import { closeCreditNote, listCreditNotes } from "@/lib/invoicing";
 import { PLANS } from "@/lib/plans";
 import { confirmTransferPaid, getPendingTransfer, requestTransfer } from "@/lib/transfers";
-import { isOperatorEmail } from "@/lib/operator";
+import { isOperatorEmail, isOperatorUser } from "@/lib/operator";
 import { getCompanyRow, makeCompany } from "./helpers/db";
 import type { Company } from "@/lib/db";
 
@@ -226,6 +226,13 @@ describe("operadores", () => {
     expect(isOperatorEmail("Yo@Empresa.pe", "yo@empresa.pe, otro@x.pe")).toBe(true);
     expect(isOperatorEmail("intruso@x.pe", "yo@empresa.pe")).toBe(false);
     expect(isOperatorEmail("a@x.pe", "")).toBe(false);
+  });
+
+  it("con el correo del operador pero sin verificar, no es operador (registro hecho por otro)", () => {
+    const sinVerificar = makeCompany({}, { email_verified_at: null });
+    const verificado = makeCompany();
+    expect(isOperatorUser({ id: sinVerificar.userId, email: sinVerificar.email }, sinVerificar.email)).toBe(false);
+    expect(isOperatorUser({ id: verificado.userId, email: verificado.email }, verificado.email)).toBe(true);
   });
 });
 

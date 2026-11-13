@@ -28,7 +28,7 @@ export default async function WelcomePage({
           </Link>
         )}
       </header>
-      <main className="mx-auto w-full max-w-[720px] px-5 py-10 md:py-14">
+      <main id="contenido" tabIndex={-1} className="mx-auto w-full max-w-[720px] px-5 py-10 md:py-14">
         <p className="label-mono">Bienvenida · 3 minutos</p>
         <div className="mt-5">
           <OnboardingWizard

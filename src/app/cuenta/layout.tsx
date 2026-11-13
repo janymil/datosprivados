@@ -17,7 +17,7 @@ export default function CuentaLayout({ children }: { children: React.ReactNode }
           </form>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-[820px] px-5 py-10 md:py-14">{children}</main>
+      <main id="contenido" tabIndex={-1} className="mx-auto w-full max-w-[820px] px-5 py-10 md:py-14">{children}</main>
     </div>
   );
 }

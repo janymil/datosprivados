@@ -1,3 +1,4 @@
+import { PLATFORM_CONTACT_EMAIL } from "@/lib/platform-entity";
 import { siteUrl } from "./site";
 
 /**
@@ -6,7 +7,7 @@ import { siteUrl } from "./site";
  * mensaje. Todo valor que viene del usuario se escapa en el HTML.
  */
 
-export const SUPPORT_EMAIL = "hola@datosprivados.pe";
+export const SUPPORT_EMAIL = PLATFORM_CONTACT_EMAIL;
 
 export type MailTemplate =
   | "verify_email"
@@ -128,6 +129,7 @@ ${body.footerNote ? `<tr><td style="padding:0 28px 12px;font-size:13px;color:#55
 const s = (payload: MailPayload, key: string) => String(payload[key] ?? "");
 
 const ARCO_LABEL: Record<string, string> = {
+  informacion: "información",
   acceso: "acceso",
   rectificacion: "rectificación",
   cancelacion: "cancelación",

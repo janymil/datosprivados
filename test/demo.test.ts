@@ -159,3 +159,26 @@ describe("demoPreview", () => {
     expect(demoPreview(real.content).length).toBeLessThan(real.content.length / 2);
   });
 });
+
+describe("la demo no envejece", () => {
+  it("corre las fechas para que la solicitud más reciente tenga 4 días, recalcula plazos y no repite", async () => {
+    const { refreshDemoDates, addBusinessDays, arcoLegalBusinessDays } = await import("@/lib/db");
+    const db = getDb();
+    const now = new Date("2027-03-10T15:00:00Z"); // 10:00 en Lima
+    const first = refreshDemoDates(now);
+    expect(first).toBeGreaterThan(0);
+    const rows = db.prepare("SELECT type, received_at, due_at FROM arco_requests WHERE company_id = 'casa-verde'").all() as {
+      type: string;
+      received_at: string;
+      due_at: string;
+    }[];
+    expect(rows.map((r) => r.received_at).sort().pop()).toBe("2027-03-06");
+    for (const r of rows) expect(r.due_at).toBe(addBusinessDays(r.received_at, arcoLegalBusinessDays(r.type)));
+    expect(refreshDemoDates(now)).toBe(0);
+    // Nada cambió después de inscribir: sin la alerta falsa de «actualiza la ficha».
+    const changedAfter = db
+      .prepare("SELECT COUNT(*) AS n FROM data_banks WHERE company_id = 'casa-verde' AND status = 'registrado' AND substr(updated_at,1,10) > substr(registered_at,1,10)")
+      .get() as { n: number };
+    expect(changedAfter.n).toBe(0);
+  });
+});

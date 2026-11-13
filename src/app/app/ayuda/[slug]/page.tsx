@@ -1,3 +1,4 @@
+import { PLATFORM_CONTACT_EMAIL } from "@/lib/platform-entity";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SECTIONS, TOPICS, topicBySlug } from "@/lib/help-content";
@@ -53,8 +54,8 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
           >
             <strong>Este artículo puede estar desactualizado.</strong> Su última revisión fue hace más de un año
             ({reviewedLabel}). Si algo no coincide con lo que ves en la app, escribe a{" "}
-            <a href="mailto:hola@datosprivados.pe" className="link-underline font-medium text-ink">
-              hola@datosprivados.pe
+            <a href={`mailto:${PLATFORM_CONTACT_EMAIL}`} className="link-underline font-medium text-ink">
+              {PLATFORM_CONTACT_EMAIL}
             </a>
             .
           </p>

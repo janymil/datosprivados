@@ -1,3 +1,4 @@
+import { PLATFORM_CONTACT_EMAIL } from "@/lib/platform-entity";
 import Link from "next/link";
 import { HelpTip } from "@/components/help-tip";
 import { requireSession } from "@/lib/auth";
@@ -23,7 +24,7 @@ export default async function CompanyPage({
   const { ok, error } = await searchParams;
   const rucErrors: Record<string, string> = {
     ruc_formato: "Revisa tu RUC: son 11 dígitos válidos según SUNAT.",
-    ruc_en_uso: "Ya existe una cuenta activa para ese RUC. Escríbenos a hola@datosprivados.pe.",
+    ruc_en_uso: `Ya existe una cuenta activa para ese RUC. Escríbenos a ${PLATFORM_CONTACT_EMAIL}.`,
     ruc_no_existe: "No encontramos ese RUC en la SUNAT. Revísalo e inténtalo de nuevo.",
     ruc_inactivo: "Ese RUC no figura como ACTIVO en la SUNAT, por lo que no podemos usarlo.",
     ruc_no_disponible: "No pudimos verificar el RUC con la SUNAT en este momento. Inténtalo de nuevo en unos minutos.",

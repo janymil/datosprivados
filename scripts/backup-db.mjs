@@ -27,7 +27,9 @@ function stamp(date = new Date()) {
 export function backupDatabase({ source, targetDir, retentionDays = 7, now = new Date(), encryptionKey = undefined }) {
   if (!fs.existsSync(source)) throw new Error(`No existe la base: ${source}`);
   const key = encryptionKey === undefined ? encryptionKeyFromEnv() : encryptionKey;
-  fs.mkdirSync(targetDir, { recursive: true });
+  fs.mkdirSync(targetDir, { recursive: true, mode: 0o700 });
+  // También si ya existía: `backups/` del repo quedó en 755 con dos volcados de 644 legibles por cualquiera.
+  fs.chmodSync(targetDir, 0o700);
 
   const base = `datosprivados-${stamp(now)}`;
   const tmpDb = path.join(targetDir, `${base}.db.tmp`);

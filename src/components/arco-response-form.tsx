@@ -14,6 +14,23 @@ function todayEsPe() {
 }
 
 const TEMPLATES: Record<string, (name: string, company: string) => string> = {
+  informacion: (name, company) =>
+    `Estimado(a) ${name}:
+
+En atención a su solicitud de ejercicio del Derecho de Información, presentada al amparo de la Ley N.° 29733 (Ley de Protección de Datos Personales) y su Reglamento aprobado por Decreto Supremo N.° 016-2024-JUS, cumplimos con informarle dentro del plazo legal (8 días hábiles) lo siguiente:
+
+1. Tratamos datos personales suyos: [sí / no]. De ser así, se encuentran en el banco de datos [nombre del banco y código de inscripción en el RNPDP].
+2. Finalidad del tratamiento: [indicar para qué se usan, p. ej., gestión de compras y facturación electrónica].
+3. Destinatarios o encargados: [indicar proveedores o terceros con quienes se comparten, y si hay transferencia fuera del Perú].
+4. Plazo de conservación: [indicar plazo].
+5. Responsable del banco de datos: ${company}, [RUC y domicilio].
+6. Usted puede ejercer en cualquier momento sus derechos de acceso, rectificación, cancelación y oposición a través de nuestro formulario de solicitudes o del correo de privacidad.
+
+Este trámite es totalmente gratuito. En caso de no encontrarse conforme con la presente respuesta, le informamos que tiene derecho a interponer una reclamación (Procedimiento de Tutela de Derechos) ante la Autoridad Nacional de Protección de Datos Personales (ANPD - MINJUSDH), o acudir a la vía judicial (Hábeas Data).
+
+Atentamente,
+Área de Privacidad y Protección de Datos
+${company}`,
   acceso: (name, company) =>
     `Estimado(a) ${name}:
 
@@ -79,11 +96,15 @@ export function ArcoResponseForm({
   type,
   response,
   status,
+  requesterEmail = "",
+  ticket = "",
 }: {
   id: string;
   companyName: string;
   companyPlan?: "basico" | "pro";
   requesterName: string;
+  requesterEmail?: string;
+  ticket?: string;
   type: string;
   response: string | null;
   status: string;
@@ -208,6 +229,17 @@ export function ArcoResponseForm({
         >
           {copied ? "Copiado ✓" : "Copiar respuesta"}
         </button>
+        {requesterEmail && (
+          // La respuesta sale del correo de la empresa (es ella quien responde), con todo ya escrito.
+          <a
+            href={`mailto:${encodeURIComponent(requesterEmail)}?subject=${encodeURIComponent(
+              `Respuesta a su solicitud ${ticket} — ${companyName}`
+            )}&body=${encodeURIComponent(text)}`}
+            className={`btn btn-ghost btn-sm whitespace-nowrap${text.trim() ? "" : " pointer-events-none opacity-50"}`}
+          >
+            Enviar por correo
+          </a>
+        )}
         <span className="ml-auto font-mono text-xs uppercase tracking-[0.08em] text-ink-soft">
           {text.length} caracteres
         </span>

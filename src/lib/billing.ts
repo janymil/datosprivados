@@ -68,12 +68,13 @@ export type PaymentRow = {
 };
 
 export function isCompanyActive(
-  company: Pick<Company, "billing_status" | "paid_until">
+  company: Pick<Company, "billing_status" | "paid_until">,
+  now: Date = new Date()
 ) {
   if (company.billing_status === "demo") return true;
   if (company.billing_status !== "active") return false;
   if (!company.paid_until) return true;
-  return new Date(company.paid_until).getTime() > Date.now();
+  return new Date(company.paid_until).getTime() > now.getTime();
 }
 
 export function canBypassPayment() {

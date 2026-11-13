@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
 import { getBank } from "@/lib/data";
 import { saveBankAction } from "@/app/actions/company";
@@ -13,6 +13,8 @@ export default async function EditBankPage({ params }: { params: Promise<{ id: s
   const { id } = await params;
   const bank = getBank(company.id, id);
   if (!bank) notFound();
+  // Un banco con la inscripción cancelada queda como constancia: no se edita.
+  if (bank.status === "cancelado") redirect(`/app/bancos/${bank.id}`);
 
   return (
     <div className="max-w-[820px] space-y-7">

@@ -34,7 +34,7 @@ export default async function PublicPolicyPage({ params }: { params: Promise<{ s
         </div>
       </header>
 
-      <main className="container-page py-10 md:py-16">
+      <main id="contenido" tabIndex={-1} className="container-page py-10 md:py-16">
         <article className="print-page mx-auto max-w-[800px]">
           <p className="label-mono">{companyIdentityLine(company)}</p>
           <h1 className="mt-3 font-display text-[2.4rem] leading-[1.03] tracking-[-0.03em] md:text-[3rem]">

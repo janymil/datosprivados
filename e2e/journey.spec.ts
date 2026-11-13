@@ -121,6 +121,16 @@ test("recorrido completo: de la suscripción al vencimiento", async ({ page, bro
     expect(sql(`SELECT status FROM data_banks WHERE name = 'Clientes E2E' AND ${OWN}`)[0].status).toBe("registrado");
   });
 
+  await test.step("editar el banco de datos (la página fallaba con «Algo salió mal»)", async () => {
+    const bankUrl = page.url();
+    await page.goto(`${bankUrl}/editar`);
+    await expect(page.locator('input[name="name"]')).toHaveValue("Clientes E2E");
+    await page.locator('textarea[name="purpose"]').fill("Vender, entregar pedidos y emitir comprobantes");
+    await submit(page, /Guardar/);
+    await page.waitForURL(bankUrl);
+    expect(sql(`SELECT purpose FROM data_banks WHERE name = 'Clientes E2E' AND ${OWN}`)[0].purpose).toBe("Vender, entregar pedidos y emitir comprobantes");
+  });
+
   await test.step("publicar la política y verla en la página pública", async () => {
     await page.goto("/app/documentos?tab=politica");
     await page.getByRole("button", { name: "Publicar enlace público" }).click();

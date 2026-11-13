@@ -26,7 +26,7 @@ How to use this file: work **phase by phase, in order**. Every task has an ID, t
 | `.env` (preview) | `NEXT_PUBLIC_APP_URL` set to the registio.app host (https); `COOKIE_SECURE` set; **MercadoPago sandbox (`TEST-`) token, public key and webhook secret are set; an `OPENAI_API_KEY` is set** (no Anthropic key). *Correction (2026-10-31): the first version of this file said these were empty — that was wrong.* The billing flow and the LLM calls are configured but had never been exercised end to end. `.env` is git-ignored (good). |
 | HTTP | `/robots.txt` → 404, `/sitemap.xml` → 404. Response sends `X-Powered-By: Next.js` and **no** security headers (HSTS/CSP/X-Frame-Options/etc.) from the app. `error.tsx` / `global-error.tsx` / `loading.tsx` do not exist. |
 | Brand/domain | Code hardcodes `https://datosprivados.pe` in `src/app/layout.tsx:26` (`metadataBase`) and `src/lib/ai.ts:753` fallback; the preview runs on `registio.app`. Production domain is not wired yet. |
-| Docs in repo | `README.md`, `AUDITORIA_*.md`, `DOCUMENTOS_LEGALES_PERU.md`, `COMPARACION_VIDEO.md`. `kaptia-compliance/` is a dossier about a **different product** (Kaptia); do not treat it as this app's spec. |
+| Docs in repo | `README.md`, `AUDITORIA_*.md`, `DOCUMENTOS_LEGALES_PERU.md`. `kaptia-compliance/` is a dossier about a **different product** (Kaptia); do not treat it as this app's spec. |
 
 ### 0.3 Feature maturity matrix
 

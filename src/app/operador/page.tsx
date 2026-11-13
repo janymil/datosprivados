@@ -3,6 +3,7 @@ import { requireOperator } from "@/lib/operator";
 import { listPendingInvoices, formatSol, listCreditNotes } from "@/lib/invoicing";
 import { listPendingTransfers } from "@/lib/transfers";
 import { formatDate } from "@/lib/format";
+import { OperatorNav } from "@/components/operator-nav";
 import { issueInvoiceAction, confirmTransferAction, closeCreditNoteAction } from "./actions";
 
 export const metadata = { title: "Operador", robots: { index: false } };
@@ -16,10 +17,10 @@ export default async function OperatorPage({ searchParams }: { searchParams: Pro
   const transfers = listPendingTransfers();
 
   return (
-    <main className="mx-auto max-w-5xl space-y-10 px-4 py-10">
+    <main id="contenido" tabIndex={-1} className="mx-auto max-w-5xl space-y-10 px-4 py-10">
       <header>
-        <p className="label-mono">Operador</p>
-        <h1 className="mt-2 font-display text-4xl tracking-[-0.03em]">Comprobantes y transferencias</h1>
+        <OperatorNav current="cobros" />
+        <h1 className="mt-4 font-display text-4xl tracking-[-0.03em]">Comprobantes y transferencias</h1>
       </header>
 
       {ok && <p className="border-l-3 border-sage bg-sage/[0.08] px-4 py-3 text-sm">Guardado.</p>}

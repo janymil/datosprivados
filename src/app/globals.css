@@ -72,6 +72,24 @@ body {
   outline-offset: 2px;
 }
 
+/* Primer elemento con Tab en cada página: lleva al <main id="contenido">. */
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -100px;
+  z-index: 100;
+  padding: 10px 16px;
+  background: var(--ink);
+  color: var(--paper-2);
+  font-size: 15px;
+}
+.skip-link:focus {
+  top: 12px;
+}
+#contenido:focus {
+  outline: none;
+}
+
 @layer components {
   .container-page {
     width: 100%;

@@ -123,6 +123,9 @@ mkdir -p "$BUILD_DIR"
 rsync -a --delete \
   --exclude '/.next' --exclude '/node_modules' --exclude '/data' --exclude '/backups' \
   --exclude '/.deploy' --exclude '/test/.tmp' --exclude '/.git' \
+  --exclude '/.pnpm-store' --exclude '/graft' --exclude '/graphify-out' \
+  --exclude '/test-results' --exclude '/playwright-report' --exclude '/shots' \
+  --exclude '/Videos' --exclude '/tsconfig.tsbuildinfo' \
   "$APP_DIR/" "$BUILD_DIR/"
 ln -s "$APP_DIR/node_modules" "$BUILD_DIR/node_modules"
 (cd "$BUILD_DIR" && pnpm build)

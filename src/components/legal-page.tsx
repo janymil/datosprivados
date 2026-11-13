@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/icons";
+import { SiteFooter } from "@/components/site-chrome";
 import { LEGAL_CONTENT, LEGAL_PAGES, LEGAL_REVIEWED, LEGAL_VERSION, type LegalDocument } from "@/lib/platform-legal";
 
 export function legalMetadata(document: LegalDocument) {
@@ -29,7 +30,7 @@ export function LegalPage({ document }: { document: LegalDocument }) {
         </div>
       </header>
 
-      <main className="container-page py-10 md:py-16">
+      <main id="contenido" tabIndex={-1} className="container-page py-10 md:py-16">
         <article className="mx-auto max-w-[800px]">
           <h1 className="font-display text-[2.4rem] leading-[1.03] tracking-[-0.03em] md:text-[3rem]">{title}</h1>
           <p className="mt-3 text-sm text-ink-soft">Versión {LEGAL_VERSION}</p>
@@ -37,7 +38,7 @@ export function LegalPage({ document }: { document: LegalDocument }) {
           {!LEGAL_REVIEWED && (
             <p role="note" className="mt-6 border-l-3 border-ochre bg-ochre/[0.08] px-4 py-3 text-[15px] leading-relaxed">
               <strong>Borrador pendiente de revisión legal.</strong> Este texto no sustituye asesoría legal y puede cambiar antes
-              del lanzamiento. Los datos entre corchetes se completarán cuando se constituya la empresa operadora.
+              del lanzamiento. Los datos entre corchetes están pendientes de esa revisión.
             </p>
           )}
 
@@ -47,7 +48,7 @@ export function LegalPage({ document }: { document: LegalDocument }) {
                 <h2 className="font-display text-[1.5rem] leading-snug tracking-[-0.02em]">{section.heading}</h2>
                 {section.paragraphs.map((paragraph) => (
                   <p key={paragraph} className="mt-3 text-base leading-relaxed text-ink/95">
-                    {paragraph}
+                    <Linkified text={paragraph} />
                   </p>
                 ))}
               </section>
@@ -55,6 +56,20 @@ export function LegalPage({ document }: { document: LegalDocument }) {
           </div>
         </article>
       </main>
+      <SiteFooter />
     </div>
+  );
+}
+
+/** Convierte las direcciones https:// del texto en enlaces (se abren en otra pestaña). */
+function Linkified({ text }: { text: string }) {
+  return text.split(/(https:\/\/[^\s]+?)(?=[.,;)]?(?:\s|$))/).map((part, i) =>
+    part.startsWith("https://") ? (
+      <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="link-underline font-medium text-ink">
+        {part}
+      </a>
+    ) : (
+      part
+    )
   );
 }

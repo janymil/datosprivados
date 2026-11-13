@@ -63,6 +63,6 @@ Inscripción gratuita en el RNPDP / Portal SIPDP (MINJUSDH) · Ley N.° 29733 y 
 
 ${rows}
 
-Estado: ${bank.status === "registrado" ? "Inscrito en el SIPDP" : "Borrador por inscribir"}
+Estado: ${bank.status === "registrado" ? "Inscrito en el SIPDP" : bank.status === "cancelado" ? "Inscripción cancelada ante la ANPD" : "Borrador por inscribir"}
 Generado con DatosPrivados · ${siteUrl().replace(/^https?:\/\//, "")}`;
 }

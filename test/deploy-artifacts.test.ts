@@ -123,6 +123,9 @@ describe("cron: la tabla y el wrapper", () => {
     // Se salta donde no hay logrotate (CI puede no tenerlo): la comprobación es para la
     // máquina que rota los logs. Encontró que la segunda sección fallaba cada semana
     // por no llevar `su` («parent directory has insecure permissions»).
+    // También se salta sin root: la config lleva `su root root` y, como usuario normal (el
+    // runner de GitHub es uid 1001), logrotate falla al cambiar de euid. Eso rompió el CI.
+    if (process.getuid?.() !== 0) return;
     try {
       execFileSync("logrotate", ["--version"], { stdio: "pipe" });
     } catch {

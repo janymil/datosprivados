@@ -101,7 +101,7 @@ export default async function BankSheetPage({ params }: { params: Promise<{ id: 
             <p>Hoja de trabajo interna; la inscripción oficial se acredita con la constancia emitida por la ANPD.</p>
           </div>
           <div className="shrink-0 border border-[#b0241c] px-3.5 py-2 text-center font-mono text-xs font-semibold uppercase tracking-[0.12em] text-[#b0241c]">
-            {bank.status === "registrado" ? "Inscrito en SIPDP" : "Borrador por inscribir"}
+            {bank.status === "registrado" ? "Inscrito en SIPDP" : bank.status === "cancelado" ? "Inscripción cancelada" : "Borrador por inscribir"}
           </div>
         </footer>
       </article>

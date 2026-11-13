@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowRightIcon, Logo } from "@/components/icons";
+import { ArrowRightIcon, FileIcon, Logo } from "@/components/icons";
 import { JsonLd } from "@/components/json-ld";
+import { PLATFORM_COMPLAINTS_URL, PLATFORM_CONTACT_EMAIL, PLATFORM_ENTITY } from "@/lib/platform-entity";
 
 /**
  * Cabecera y pie de las páginas públicas (portada, guías, sectores, glosario,
@@ -98,19 +99,35 @@ export function SiteFooter() {
           <div>
             <p className="label-mono">Contacto</p>
             <ul className="mt-4 space-y-2.5 text-[15px] text-ink-soft">
-              <li><a href="mailto:hola@datosprivados.pe" className="hover:text-ink">hola@datosprivados.pe</a></li>
+              <li><a href={`mailto:${PLATFORM_CONTACT_EMAIL}`} className="hover:text-ink">{PLATFORM_CONTACT_EMAIL}</a></li>
               <li><Link href="/login" className="hover:text-ink">Ingresar a mi cuenta</Link></li>
               <li><Link href="/registro" className="hover:text-ink">Crear una cuenta</Link></li>
               <li><Link href="/terminos" className="hover:text-ink">Términos y condiciones</Link></li>
               <li><Link href="/privacidad" className="hover:text-ink">Política de privacidad</Link></li>
               <li><Link href="/cookies" className="hover:text-ink">Cookies</Link></li>
+              <li>
+                <a
+                  href={PLATFORM_COMPLAINTS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 font-medium text-ink hover:text-crimson"
+                >
+                  <FileIcon className="h-4 w-4" />
+                  Libro de Reclamaciones
+                </a>
+              </li>
             </ul>
           </div>
         </div>
 
         <div className="mt-10 flex flex-col gap-4 border-t border-line pt-6 text-sm leading-relaxed text-ink-soft md:flex-row md:items-start md:justify-between">
           <p className="max-w-[76ch]">
-            © 2026 DatosPrivados. DatosPrivados es una herramienta tecnológica de gestión y educación
+            © 2026 {PLATFORM_ENTITY.legalName} · RUC {PLATFORM_ENTITY.ruc} · {PLATFORM_ENTITY.address} ·{" "}
+            <a href={PLATFORM_ENTITY.phoneHref} className="hover:text-ink">
+              {PLATFORM_ENTITY.phone}
+            </a>
+            <br />
+            DatosPrivados es una herramienta tecnológica de gestión y educación
             sobre la Ley 29733, no un estudio jurídico. Los documentos generados son borradores de
             trabajo que recomendamos validar con un abogado.
           </p>
@@ -137,7 +154,7 @@ export function ContentShell({
       {structuredData.map((data, index) => (
         <JsonLd key={index} data={data} />
       ))}
-      <main>
+      <main id="contenido" tabIndex={-1}>
         <nav aria-label="Migas de pan" className="no-print border-b border-line bg-paper-2">
           <ol className="container-page flex flex-wrap items-center gap-1.5 py-3 font-mono text-xs uppercase tracking-[0.08em] text-ink-soft">
             {crumbs.map((crumb, index) => (

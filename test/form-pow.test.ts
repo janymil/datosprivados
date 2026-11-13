@@ -11,7 +11,7 @@ vi.mock("next/headers", () => ({
   headers: async () => new Headers({ "x-real-ip": ctx.ip }),
 }));
 
-import { getDb } from "@/lib/db";
+import { addBusinessDays, getDb } from "@/lib/db";
 import {
   consumeChallenge,
   createChallenge,
@@ -161,6 +161,20 @@ describe("formulario ARCO con prueba de trabajo", () => {
     // Repetir el mismo envío (misma solución) no crea otra solicitud.
     await expect(createArcoRequestAction(valid(slug, fields))).rejects.toThrow(`/solicitud/${slug}?error=verificacion`);
     expect(getDb().prepare("SELECT COUNT(*) AS n FROM arco_requests WHERE company_id = ?").get(made.companyId)).toEqual({ n: 1 });
+  });
+
+  it("acepta el derecho de información con su plazo de 8 días hábiles", async () => {
+    const made = publishedCompany();
+    const slug = slugOf(made.companyId);
+    const { fields } = solved();
+    await expect(createArcoRequestAction(valid(slug, { ...fields, type: "informacion" }))).rejects.toThrow(`/solicitud/${slug}?ok=`);
+    const row = getDb().prepare("SELECT type, received_at, due_at FROM arco_requests WHERE company_id = ?").get(made.companyId) as {
+      type: string;
+      received_at: string;
+      due_at: string;
+    };
+    expect(row.type).toBe("informacion");
+    expect(row.due_at).toBe(addBusinessDays(row.received_at, 8));
   });
 
   it("un desafío vencido o manipulado se rechaza", async () => {

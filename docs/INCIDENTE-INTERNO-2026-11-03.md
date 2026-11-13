@@ -72,7 +72,8 @@ expuesto era de demostración, no de clientes. No es prueba de inexistencia.
 | 130 respaldos a `600` | `ls -l` → todos `-rw-------` |
 | `backup-db.mjs` hace `chmod 600` del respaldo y su `.sha256` al escribirlos | prueba en `test/backup-crypto.test.ts` |
 | `/etc/ssh/sshd_config.d/00-datosprivados.conf`: `PasswordAuthentication no`, `KbdInteractiveAuthentication no`, `PermitRootLogin prohibit-password` | **Probado y revertido el mismo día por decisión del propietario**: es como entra al servidor. Estado actual: `sshd -T` → `passwordauthentication yes`, `permitrootlogin yes`, claves intactas. Riesgo aceptado y documentado en `docs/DECISIONS.md` |
-| Registro de ambos fallos con severidad S1/S3 | `docs/DEFECTS.md` |
+| **Añadido el 2026-11-13:** la carpeta `backups/` del repositorio (respaldos previos a cada despliegue) estaba en `755` y dos volcados completos del 2026-11-01 en `644`: la misma exposición en una segunda ubicación, dentro de la misma ventana. Carpeta a `700`, archivos a `600`; `backup-db.mjs` fija `700` en la carpeta destino | `sudo -u nobody test -r` → denegado; prueba en `test/backup-crypto.test.ts` |
+| Registro de los fallos (la base legible, reclasificada de S3 a S1 el 2026-11-13; la carpeta `backups/`, S1) | `docs/DEFECTS.md` |
 
 Copias previas de lo tocado: `/root/sshd_config.bak-*` y `/root/datosprivados-vhost.bak-*`.
 

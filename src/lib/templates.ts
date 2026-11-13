@@ -77,6 +77,8 @@ function templateBanks(): DataBank[] {
         status: "borrador" as const,
         sipdp_code: null,
         registered_at: null,
+        cancelled_at: null,
+        cancel_reference: null,
         created_at: PLACEHOLDER_COMPANY.created_at,
         updated_at: PLACEHOLDER_COMPANY.created_at,
       },

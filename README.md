@@ -9,12 +9,15 @@ MYPE y negocios pequeños. No es un documento legal: es el expediente operativo.
 
 ## Qué incluye
 
-- **Landing pública** en español con propuesta de valor, precios mensuales o anuales (S/ 19 / S/ 39
-  al mes; S/ 190 / S/ 390 al año) y preguntas.
+- **Landing pública** en español con propuesta de valor, precios y preguntas. Las altas nuevas son
+  **solo anuales** (`src/lib/plans.ts`): primer año S/ 290 (Básico) o S/ 390 (Pro), con la
+  implementación; renovación S/ 120 o S/ 190. El plan mensual (S/ 19 / S/ 39) queda solo para
+  cuentas antiguas.
 - **Registro / login** con contraseña (scrypt) y sesión en cookie httpOnly.
-- **Suscripción mensual o anual** con MercadoPago (preapproval). El registro crea la cuenta en
-  estado `pending`; la suscripción autorizada la activa y se renueva automáticamente. Se puede
-  cancelar desde Ajustes.
+- **Pago anual** con MercadoPago (o transferencia con factura). El registro crea la cuenta en
+  estado `pending`; el pago la activa por 12 meses. El primer año **no se renueva solo**: la
+  suscripción se cierra tras el cobro y la app avisa 30 y 7 días antes para renovar al precio
+  menor.
 - **Panel de cumplimiento** con puntaje, pendientes y vencimientos.
 - **Bancos de datos**: inventario, declaración de finalidad, base legal, plazo, encargados y
   ficha imprimible y copiable para el SIPDP, numerada como el formulario del Estado
@@ -68,10 +71,10 @@ documentos generados.
 
 ## Pagos (MercadoPago)
 
-El registro crea la empresa en estado `pending`. Para activarla hay que crear una suscripción
-mensual o anual con MercadoPago; la suscripción autorizada activa el período y se renueva
-automáticamente. El usuario puede cancelarla desde Ajustes y mantiene el acceso hasta el final del
-período pagado. El plan anual cobra 12 meses con 2 meses de ahorro.
+El registro crea la empresa en estado `pending`. Para activarla se paga el primer año con
+MercadoPago (preapproval que se cierra tras su primer cobro, para que no repita el monto) o por
+transferencia, que el operador confirma en `/operador`. La renovación es otro pago, al precio de
+renovación. Detalle en `docs/BILLING.md`.
 
 1. Crea una aplicación en el panel de MercadoPago y copia el **Access Token** (`TEST-...` para
    sandbox).
@@ -141,12 +144,16 @@ Viernes Santo, calculados a partir de Pascua). Los feriados regionales y las sus
 - Solo empresas peruanas con RUC: el SIPDP no inscribe bancos de datos de empresas extranjeras.
 - La suscripción se cobra con MercadoPago; no hay dunning propio ni portal de cliente para
   actualizar la tarjeta. La cancelación se hace desde Ajustes.
-- No hay job de reconciliación diaria: los webhooks de MercadoPago son la fuente de verdad.
+- Conciliación diaria con MercadoPago (`billing-sync`) además de los webhooks, que siguen siendo
+  la fuente principal.
 - Sin `MERCADOPAGO_ACCESS_TOKEN`, desarrollo muestra una activación manual de prueba; producción
   no permite activar cuentas sin pago. Configura las credenciales en `.env`.
-- Sin envío real de correo ni WhatsApp: las notificaciones se muestran en el panel.
-- El formulario ARCO público no tiene captcha ni rate limiting.
-- Datos en SQLite local; producción requiere Postgres, respaldos y cifrado gestionado.
+- Correo transaccional por Resend con cola (`email_outbox`), reintentos y supresión; **todavía sin
+  dominio verificado** (SPF/DKIM/DMARC), así que la entrega real no está probada. Sin WhatsApp.
+- El formulario ARCO público tiene límite por IP y por empresa (`rate-limit.ts`) y prueba de
+  trabajo (`form-pow.ts`); no lleva captcha.
+- Datos en SQLite local (un solo nodo), con respaldo cada hora; el paso a Postgres tiene un
+  disparador escrito en `docs/DECISIONS.md`.
 - Los documentos son borradores: falta revisión legal y textos de términos del servicio.
 
 ## Videos de la landing

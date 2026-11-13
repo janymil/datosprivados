@@ -15,6 +15,7 @@ import { HolidayDisclaimer } from "@/components/legal-notes";
 export const metadata = { title: "Solicitudes ARCO" };
 
 const TYPE_LABEL: Record<string, string> = {
+  informacion: "Información",
   acceso: "Acceso",
   rectificacion: "Rectificación",
   cancelacion: "Cancelación",
@@ -194,6 +195,7 @@ export default async function ArcoPage({
           )}
           <Field label="Derecho solicitado">
             <select name="type" className="input" defaultValue="acceso" required>
+              <option value="informacion">Información (8 días hábiles)</option>
               <option value="acceso">Acceso (20 días hábiles)</option>
               <option value="rectificacion">Rectificación (10 días hábiles)</option>
               <option value="cancelacion">Cancelación (10 días hábiles)</option>

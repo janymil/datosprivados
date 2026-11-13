@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth";
-import { listBanks } from "@/lib/data";
+import { listBanks, listCancelledBanks } from "@/lib/data";
 import { formatDate } from "@/lib/format";
 import { EmptyState, PageHeader, StatusPill } from "@/components/ui";
 import { ArrowRightIcon } from "@/components/icons";
 import { GuideBox, Term } from "@/components/help";
 import { findSectorByLabel } from "@/lib/sectors";
 import { getBankPreset } from "@/lib/bank-presets";
+import { Toast } from "@/components/toast";
 
 export const metadata = { title: "Bancos de datos" };
 
@@ -43,9 +44,11 @@ function sameBankName(declared: string, preset: string): boolean {
   return declaredWords.some((word) => presetWords.includes(word));
 }
 
-export default async function BanksPage() {
+export default async function BanksPage({ searchParams }: { searchParams: Promise<{ eliminado?: string }> }) {
   const { company } = await requireSession();
+  const { eliminado } = await searchParams;
   const banks = listBanks(company.id);
+  const cancelledBanks = listCancelledBanks(company.id);
   const registered = banks.filter((bank) => bank.status === "registrado").length;
 
   // Cobertura esperada para el rubro: sirve para que nadie olvide un banco entero
@@ -61,6 +64,7 @@ export default async function BanksPage() {
 
   return (
     <div className="space-y-7">
+      {eliminado && <Toast message="Banco de datos eliminado." />}
       <PageHeader
         title={
           <>
@@ -190,6 +194,26 @@ export default async function BanksPage() {
             </Link>
           ))}
         </div>
+      )}
+
+      {cancelledBanks.length > 0 && (
+        <details className="border border-line px-5 py-4">
+          <summary className="cursor-pointer font-mono text-xs uppercase tracking-[0.08em] text-ink-soft hover:text-ink">
+            Inscripciones canceladas ({cancelledBanks.length})
+          </summary>
+          <ul className="mt-3 divide-y divide-line">
+            {cancelledBanks.map((bank) => (
+              <li key={bank.id} className="flex flex-wrap items-baseline justify-between gap-2 py-2.5">
+                <Link href={`/app/bancos/${bank.id}`} className="link-underline">
+                  {bank.name}
+                </Link>
+                <span className="font-mono text-xs text-ink-soft">
+                  {bank.sipdp_code} · cancelado el {formatDate(bank.cancelled_at, "short")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </div>
   );

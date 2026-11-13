@@ -49,7 +49,7 @@ export async function createArcoRequestAction(formData: FormData) {
     !name ||
     !description ||
     (!email && !phone) ||
-    !["acceso", "rectificacion", "cancelacion", "oposicion"].includes(type)
+    !ARCO_TYPES.includes(type)
   ) {
     redirect(`/solicitud/${slug}?error=1`);
   }
@@ -118,7 +118,7 @@ export async function createArcoRequestAction(formData: FormData) {
   redirect(`/solicitud/${slug}?ok=${ticket}`);
 }
 
-const ARCO_TYPES = ["acceso", "rectificacion", "cancelacion", "oposicion"];
+const ARCO_TYPES = ["informacion", "acceso", "rectificacion", "cancelacion", "oposicion"];
 const MANUAL_CHANNELS = ["whatsapp", "telefono", "correo", "presencial", "carta"];
 
 /** Registra una solicitud que llegó fuera del formulario web (WhatsApp, teléfono, etc.). */

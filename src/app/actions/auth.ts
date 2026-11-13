@@ -1,4 +1,5 @@
 "use server";
+import { PLATFORM_CONTACT_EMAIL } from "@/lib/platform-entity";
 
 import { redirect } from "next/navigation";
 import { getDb, hashPassword, newId, nowIso } from "@/lib/db";
@@ -93,7 +94,7 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
   if (rucTaken) {
     return {
       error:
-        "Ya existe una cuenta activa para ese RUC. Si es tu empresa y no la creaste tú, escríbenos a hola@datosprivados.pe.",
+        `Ya existe una cuenta activa para ese RUC. Si es tu empresa y no la creaste tú, escríbenos a ${PLATFORM_CONTACT_EMAIL}.`,
     };
   }
 

@@ -64,7 +64,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
       className={`${archivo.variable} ${fraunces.variable} ${plex.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <a href="#contenido" className="skip-link">
+          Saltar al contenido
+        </a>
+        {children}
+      </body>
     </html>
   );
 }

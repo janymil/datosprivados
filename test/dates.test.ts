@@ -4,6 +4,7 @@ import { limaDateTimeLocal, limaToday } from "@/lib/format";
 
 describe("días hábiles", () => {
   it("10 días para rectificación/cancelación/oposición y 20 para acceso", () => {
+    expect(arcoLegalBusinessDays("informacion")).toBe(8);
     expect(arcoLegalBusinessDays("acceso")).toBe(20);
     for (const type of ["rectificacion", "cancelacion", "oposicion"]) expect(arcoLegalBusinessDays(type)).toBe(10);
   });

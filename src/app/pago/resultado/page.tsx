@@ -1,3 +1,4 @@
+import { PLATFORM_CONTACT_EMAIL } from "@/lib/platform-entity";
 import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { getCompanyById, isCompanyActive, planFromCompany } from "@/lib/billing";
@@ -78,8 +79,8 @@ export default async function PaymentResultPage() {
       </div>
       <p className="mt-6 text-sm text-ink-soft">
         ¿Necesitas ayuda? Escríbenos a{" "}
-        <a href="mailto:hola@datosprivados.pe" className="link-underline text-ink">
-          hola@datosprivados.pe
+        <a href={`mailto:${PLATFORM_CONTACT_EMAIL}`} className="link-underline text-ink">
+          {PLATFORM_CONTACT_EMAIL}
         </a>
         .
       </p>

@@ -1,7 +1,7 @@
 # DatosPrivados — Readiness by area (oblasti) and task checklists
 
 **Audience:** AI coding agents and humans continuing this project.
-**Written:** 2026-11-02, from a read of the repo at `8ea6c6a`, `docs/GO-NO-GO.md`, `PRODUCTION_ROADMAP.md`, and checks run that day.
+**Written:** 2026-11-02 at `8ea6c6a`; **re-assessed 2026-11-03 22:00 (CET) at `8676c7e`** (see "Three states of production" below). Scores and facts below are the 11-03 ones.
 **Read first:** [AGENTS.md](../AGENTS.md) — Next.js 16.4.3 has breaking changes; read `node_modules/next/dist/docs/` before touching any Next API.
 
 ## How to use this file
@@ -21,13 +21,38 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | `pnpm test` | 636/636 passing, 50 files (CI runs `pnpm test:coverage` with floors 80/80/80/70) |
 | `pnpm exec playwright test` | 101/101 across chromium (journey + quality + perf), mobile-chrome, firefox, webkit and axe (19 axe: 8 public + 11 panel; 2 perf budgets: LCP 1872 ms / CLS 0.008 on the landing) — the suite builds with `CSP_ENFORCE=1`, so it also proves the blocking CSP |
 | `pnpm typecheck` | clean |
-| `pnpm lint` | clean (0 errors, 0 warnings) |
-| CI | `.github/workflows/ci.yml`; green run `41272543343` per GO-NO-GO (audit, typecheck/lint/test/build, E2E 31/31) |
+| `pnpm lint` | 0 errors, **2 warnings** (re-run 2026-11-03 22:00): unused `_omitido` in `src/app/api/health/route.ts:15` and `src/app/api/ready/route.ts:12` (introduced by `78fca4d`). Earlier "0 warnings" claim was stale. |
+| CI | `.github/workflows/ci.yml`. The only green run known is `41272543343` on `6c805d0` (2026-11-01: 378 tests, E2E 31/31). **`master` is 38 commits ahead of `origin/master` (unpushed), so CI has never run on HEAD**: the 636 tests, the 101 E2E, the coverage floors and the blocking-CSP build are verified locally only. `gh` is not installed here, so CI state could not be queried. |
 | Hourly DB backup cron | **Installed and running** (`/etc/cron.d/datosprivados`, `/usr/local/bin/datosprivados-backup`; newest file in `/var/backups/datosprivados` was from 2026-11-02 19:00 Lima). `GO-NO-GO.md` row 5 and `RUNBOOK.md` were corrected on 2026-11-02. |
 | Rate limiting | Exists in SQLite (`src/lib/rate-limit.ts`) and is applied to login, signup, ARCO form, password reset, verification, password/email change, account deletion, export, demo, AI. |
 | Invoicing | Data model + manual issuance only (`src/lib/invoicing.ts` header says so). **No PSE/OSE API integration.** |
 | New guard tests (2026-11-02) | `db-migrations`, `db-indexes`, `tenancy-queries`, `route-guards`, `public-pages`, `zip`, `env`, `client-ip`, `csp-report`, `scan-secrets`, `nginx-template`, `backup-crypto`, `holidays`, `loading-states`, `help-review`, `webhook`, `ai-policy`, `form-pow`, `print-styles`, credit-note flow, incident banner, ANPD draft, mail a11y — 159 new tests, all green. |
-| Not present | `proxy.ts`/middleware (so no CSP), real staging, Anthropic key, production domain, lawyer review. |
+| CSP | Emitted from `next.config.ts` headers: **report-only by default**, blocking with `CSP_ENFORCE=1` (E2E build uses it). No nonce, no `proxy.ts` (the nonce variant is the open owner decision). |
+| Not present | `proxy.ts`/middleware, real staging, Anthropic key, production domain, lawyer review, external monitor, off-box backups. |
+
+### Update 2026-11-13 (supersedes the 11-03 table below where they disagree)
+
+| State | Where it stands |
+|---|---|
+| **HEAD** (`215c4e6` + working-tree fixes) | 673/673 tests (52 files), coverage 91/86/92/95, typecheck clean, **lint 0 warnings**, `pnpm audit --prod` clean. Two S2 found and fixed (see `docs/DEFECTS.md`): a date time-bomb in `test/jobs.test.ts` caused by `isCompanyActive()` ignoring the job clock, and a logrotate test that can only pass as root. |
+| **Pushed + CI-verified** | Pushed (0 commits ahead). **CI is red on `master` since 2026-11-04** (run `41746373922`, step "Pruebas con suelo de cobertura", logrotate test; E2E skipped). Fixed in the working tree; turns green only after these fixes are committed and pushed. 8 Dependabot PRs open (#1–#5 GitHub Actions majors for the Node 20 deprecation, #6 minor/patch group, #7 `@types/node` 26, #8 TypeScript 6). |
+| **Actually serving** | `scripts/deploy.sh` **was run** on 2026-11-04 01:20 CET (pre-deploy backup + `.deploy/build`), PM2 restarted 00:22 UTC: the preview serves `215c4e6`. `robots.txt` still says `Allow: /` because the preview build had no `NEXT_PUBLIC_NOINDEX=1`; nginx `X-Robots-Tag: noindex` still covers it. |
+
+`deploy.sh` copied the 1.9 GB `.pnpm-store` (plus `graft/`, `graphify-out/`) into `.deploy/build` on every deploy: excludes added on 2026-11-13.
+
+### Three states of production (2026-11-03) — read before trusting any "done"
+
+"Done" can mean three different things here. Check which one a claim refers to.
+
+| State | Where it stands |
+|---|---|
+| **HEAD** (local `master`, `8676c7e`) | 636/636 tests, typecheck clean, lint 2 warnings, 0 S1/S2 in `docs/DEFECTS.md`. |
+| **Pushed + CI-verified** | **Not true for the last 38 commits.** Only `6c805d0` has a green CI run. Push first so CI runs on HEAD. |
+| **Actually serving** (`datosprivados.registio.app`) | **Older than HEAD.** PM2 started the process on 2026-11-02 04:18 from `/var/www/datosprivados` (`next start` reading `./.next`, not `.deploy/build`, so it is not deployed through `scripts/deploy.sh`). Live evidence of drift: `robots.txt` still says `Allow: /` and `/api/health` still prints a `config` block (`mail/mercadopago/llm`) that commits `78fca4d` and `957d9a7` removed or corrected. `./.next` on disk was rebuilt 2026-11-03 19:52, after the process started; `pnpm test:e2e` runs `next build` in that same directory, so a restart would likely serve a test build. Not confirmed which command wrote it. |
+
+Live **now** because they are server-side, not code: DB dir `700` / DB `600` / backups `600`, cron wrapper and `/etc/cron.d` identical to `deploy/*` (S1 fix effective: `/api/cron/health` returns `healthy: true`, no overdue jobs), logrotate, fail2ban (sshd + recidive), nginx `X-Robots-Tag: noindex, nofollow`.
+Live **only after a deploy**: every code change since the process started (noindex flag/robots, health/ready changes, CSP/perf work, anything in `src/` after 2026-11-02 04:18).
+Next step for a human or an agent *with permission*: push → confirm CI green on HEAD → `scripts/deploy.sh --check` → deploy (restarts the preview). Do not push or deploy without being asked.
 
 ---
 
@@ -48,12 +73,12 @@ This file is a *view* over the other docs, not a replacement. When this file and
 | 11 | AI assistant | `lib/ai.ts`, `lib/llm.ts`, `lib/anonymizer.ts`, `lib/ai-guard.ts`, `lib/ai-policy.ts`, `actions/ai.ts` | 92 % | 40 % | No vendor/key/DPA decided (P0-AI-VENDOR) |
 | 12 | Help & knowledge base | `lib/help-content.ts`, `lib/glossary.ts`, `lib/help-tips.ts`, `lib/help-knowledge.ts`, `lib/help-review.ts`, `lib/legal-faq.ts` | 96 % | 70 % | Content not reviewed by lawyer/editor |
 | 13 | Landing, demo, SEO | `app/page.tsx`, `components/landing-interactive.tsx`, `lib/demo.ts`, `public/video/*` | 94 % | 65 % | Production domain not wired (P0-DOMAIN); landing claims await lawyer |
-| 14 | Platform legal pages | `lib/platform-legal.ts`, `/terminos`, `/privacidad`, `/cookies` | 70 % | 20 % | Drafts; need operating entity + lawyer (P0-ENTITY, P0-LEGAL) |
-| 15 | Security | `lib/security-checks.ts`, `next.config.ts` | 90 % | 68 % | CSP is report-only (enforcement awaits owner decision); no pen-test; no SSL Labs |
+| 14 | Platform legal pages | `lib/platform-legal.ts`, `/terminos`, `/privacidad`, `/cookies` | 70 % | 20 % | Drafts with the operating entity filled in (2026-11-13); still need lawyer (P0-LEGAL), own-bank SIPDP code and a working contact mailbox |
+| 15 | Security | `lib/security-checks.ts`, `next.config.ts` | 90 % | 62 % | CSP report-only; SSH password login is an owner-accepted risk on a box holding customer data (fail2ban mitigates); no pen-test; no SSL Labs |
 | 16 | Cron jobs & operations | `lib/jobs.ts`, `lib/ops.ts`, `api/cron/[job]`, `api/health`, `api/ready` | 92 % | 70 % | No external monitor or error tracking (self-alerting job ready, needs activation) |
 | 17 | Backup & restore | `scripts/backup-db.mjs`, `restore-db.mjs`, `restore-drill.mjs`, `backup-crypto.mjs` | 88 % | 65 % | Backups live on the same box; no fresh-machine drill |
-| 18 | Deploy & infrastructure | `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-production.conf` | 78 % | 40 % | No real staging; `deploy.sh` never run |
-| 19 | Tests & CI | `test/`, `e2e/`, `.github/workflows/ci.yml` | 94 % | 80 % | No iOS device and no UAT |
+| 18 | Deploy & infrastructure | `scripts/deploy.sh`, `ecosystem.staging.config.cjs`, `deploy/nginx-production.conf` | 78 % | 35 % | No real staging; `deploy.sh` never run; the preview is served from the repo's `./.next` and lags HEAD |
+| 19 | Tests & CI | `test/`, `e2e/`, `.github/workflows/ci.yml` | 94 % | 70 % | CI has not run on the last 38 commits (unpushed); no iOS device and no UAT |
 | 20 | Accessibility & UI | `components/`, `app/globals.css` | 96 % | 78 % | No screen-reader / keyboard-only walkthrough by a person |
 
 **Reading:** areas 1, 3, 10, 19 are strong. Areas 6, 7, 11, 14 have finished code but are blocked by non-code inputs. Areas 4, 5, 15, 17, 18 still need real engineering or ops work.
@@ -222,7 +247,7 @@ Files: `src/lib/help-content.ts` (974 lines), `glossary.ts`, `help-tips.ts`, `he
 
 
 ### 13. Landing, demo, SEO
-Files: `src/app/page.tsx`, `components/landing-interactive.tsx`, `src/lib/demo.ts`, `src/app/demo/*`, `public/video/*` (23 MB), `robots.ts`, `sitemap.ts`, `AUDITORIA_PORTADA.md`, `COMPARACION_VIDEO.md`.
+Files: `src/app/page.tsx`, `components/landing-interactive.tsx`, `src/lib/demo.ts`, `src/app/demo/*`, `public/video/*` (23 MB), `robots.ts`, `sitemap.ts`, `AUDITORIA_PORTADA.md`, `scripts/verify-video-claims.mjs`.
 - [x] `robots.ts`, `sitemap.ts`, `error.tsx`, `global-error.tsx`, `not-found.tsx` exist. **Added 2026-11-03:** they existed but nothing kept a *preview* out of search — the preview answered `Allow: /`, had no `X-Robots-Tag` and advertised its own sitemap, so it was indexable (a preview indexed today outlives the launch and competes with the real domain). Two mechanisms now, both tested in `test/seo-indexing.test.ts`: `X-Robots-Tag: noindex, nofollow` on the preview vhost (`deploy/nginx-preview-noindex.conf`, applied and verified live) and `NEXT_PUBLIC_NOINDEX=1` at build time, which turns `robots.txt` into `Disallow: /` and the metadata into `robots: noindex`. Production carries neither, and a test fails if the header is ever copied into the production template.
 - [x] LCP mobile 4G about 1.8–2.1 s; videos `preload="none"`; page transfers about 244 KB.
 - [x] [AGENT] Hardcoded host removed from the generated artefacts: `documents.ts` `appUrl()` and `bank-sheet.ts` now go through `siteUrl()` (`lib/site.ts`, the single `NEXT_PUBLIC_APP_URL` reader); `layout.tsx` `metadataBase`, `robots.ts`, `sitemap.ts` and `ai.ts` already did. Test: `test/domain.test.ts` (“dominio configurado”) sets a staging host and asserts the generated policy and bank sheet contain it and never `datosprivados.pe`. Still literal on purpose: the support address (`hola@datosprivados.pe`), the demo/seed e-mails and the marketing copy in `landing-interactive.tsx`/`explainer-video.tsx` — they are product identity, not routing.
@@ -241,7 +266,7 @@ Files: `src/lib/platform-legal.ts`, `src/app/terminos`, `privacidad`, `cookies`,
 - [ ] [OWNER] Lawyer-approved Terms, Privacy Policy, DPA, cookie notice, refund/cancellation policy, Libro de Reclamaciones (P0-LEGAL).
 - [ ] [AGENT] Fill in entity data and flows listed in `PRODUCTION_ROADMAP.md` §4.1 (personal-data flows the platform's own pages must describe), including sub-processors: hosting, Cloudflare, Resend, MercadoPago, LLM vendor.
 - [ ] [AGENT] Remove the draft notice and `noindex` only after legal sign-off; bump the document version so existing users must re-accept.
-- [ ] [AGENT] Add Libro de Reclamaciones page/link if the lawyer confirms it applies.
+- [x] [AGENT] Libro de Reclamaciones: footer link to the official book on LibroDigital.pe (SEMANTIKA TECH E.I.R.L.); `/libro-de-reclamaciones` redirects there.
 - [ ] [VERIFY] Acceptance record is created at signup and again when a version changes.
 
 ### 15. Security
@@ -261,6 +286,10 @@ Files: `src/lib/security-checks.ts`, `next.config.ts`, `src/app/actions/*`, `tes
 - [ ] [AGENT] Dependabot PRs open for GitHub Actions versions; merge them (`.github/dependabot.yml` already schedule both `npm` weekly and `github-actions` monthly; merging needs repo access).
 - [x] [AGENT] Session lifecycle reviewed: 30-day expiry, cookie `HttpOnly`/`SameSite=Lax`/`Secure` in production, rotation on every login (the previous id is deleted), password change closes the other sessions but keeps the current one, logout deletes the row, an invented cookie gives no session, and an expired row is rejected — all covered in `test/security.test.ts` (“sesiones”) and `test/account.test.ts`.
 
+
+- [ ] [OWNER] SSH password login is enabled on the host (`sshd -T`: `passwordauthentication yes`, `permitrootlogin yes`) as an accepted risk of the owner, mitigated by fail2ban. Revisit before real customer data lands on this box (`docs/DECISIONS.md` «Acceso SSH»).
+- [x] [AGENT] (2026-11-13: reclassified to S1 in `docs/DEFECTS.md`) Re-classify or justify the severity of the closed "world-readable DB and backups" defect in `docs/DEFECTS.md`: it is labelled S3, but the file's own S1 definition is "exposure of personal data". It feeds `docs/INCIDENTE-INTERNO-2026-11-03.md`, so the label matters for the legal assessment.
+- [x] [AGENT] (2026-11-13: `ignoreRestSiblings` in `eslint.config.mjs`; lint 0 warnings) Fix the 2 lint warnings (`_omitido` in `api/health/route.ts:15`, `api/ready/route.ts:12`).
 
 ### 16. Cron jobs & operations
 Files: `src/lib/jobs.ts`, `ops.ts`, `src/app/api/cron/[job]`, `api/health`, `api/ready`, `src/instrumentation.ts`, `scripts/weekly-report.mjs`, `docs/RUNBOOK.md`, `docs/POST-LAUNCH.md`, `deploy/logrotate-datosprivados.conf`.

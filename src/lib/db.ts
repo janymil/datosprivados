@@ -157,9 +157,14 @@ export type DataBank = {
   recipients: string;
   transfers: string;
   channel: string;
-  status: "borrador" | "registrado";
+  /** cancelado: la inscripción se canceló ante la ANPD; queda en el expediente pero ya no se trata. */
+  status: "borrador" | "registrado" | "cancelado";
   sipdp_code: string | null;
   registered_at: string | null;
+  /** Fecha (AAAA-MM-DD) en que la ANPD canceló la inscripción. */
+  cancelled_at: string | null;
+  /** Número de resolución o trámite de la cancelación. */
+  cancel_reference: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -168,7 +173,7 @@ export type ArcoRequest = {
   id: string;
   company_id: string;
   ticket: string;
-  type: "acceso" | "rectificacion" | "cancelacion" | "oposicion";
+  type: "informacion" | "acceso" | "rectificacion" | "cancelacion" | "oposicion";
   channel: string;
   requester_name: string;
   doc_number: string;
@@ -461,7 +466,7 @@ function initSchema(db: DatabaseSync) {
  * cacheada en `globalThis` (en `next dev` la conexión sobrevive a los recargos
  * en caliente y `initSchema` no vuelve a correr).
  */
-const SCHEMA_VERSION = 15;
+const SCHEMA_VERSION = 16;
 
 function migrate(db: DatabaseSync) {
   const companyColumns = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
@@ -852,6 +857,13 @@ function migrate(db: DatabaseSync) {
     CREATE INDEX IF NOT EXISTS idx_pow_challenges_created ON pow_challenges(created_at);
   `);
 
+  // v16: cancelación de la inscripción de un banco ante la ANPD. El banco no se
+  // borra: queda como constancia de que existió y de cuándo dejó de tratarse.
+  const bankColumns = db.prepare("PRAGMA table_info(data_banks)").all() as { name: string }[];
+  const hasBankColumn = (name: string) => bankColumns.some((column) => column.name === name);
+  if (!hasBankColumn("cancelled_at")) db.exec("ALTER TABLE data_banks ADD COLUMN cancelled_at TEXT");
+  if (!hasBankColumn("cancel_reference")) db.exec("ALTER TABLE data_banks ADD COLUMN cancel_reference TEXT");
+
   seedHolidays(db);
 }
 
@@ -1235,7 +1247,12 @@ export function verifyPassword(password: string, stored: string): boolean {
  * - Derecho de Acceso: 20 días hábiles
  * - Derechos de Rectificación, Cancelación y Oposición: 10 días hábiles
  */
+/**
+ * Plazos legales en días hábiles (DS 016-2024-JUS): información 8, acceso 20,
+ * rectificación, cancelación y oposición 10.
+ */
 export function arcoLegalBusinessDays(type: string): number {
+  if (type === "informacion") return 8;
   return type === "acceso" ? 20 : 10;
 }
 
@@ -1338,6 +1355,47 @@ export function seedHolidays(db: DatabaseSync) {
  * No toca pagos: si apareciera uno, se informa para que lo revise una persona
  * (borrarlo podría romper la contabilidad y los comprobantes).
  */
+/**
+ * La demo se sembró con fechas fijas (septiembre y octubre de 2026), así que envejecía:
+ * cada semana más solicitudes vencidas y alertas que no tocaban. Esto corre sus fechas
+ * para que la solicitud más reciente siempre tenga 4 días (como el día en que se sembró)
+ * y recalcula los plazos con los feriados. Si ya está al día no hace nada.
+ */
+export function refreshDemoDates(now = new Date()): number {
+  const db = getDb();
+  const latest = db
+    .prepare("SELECT MAX(received_at) AS d FROM arco_requests WHERE company_id = 'casa-verde'")
+    .get() as { d: string | null };
+  if (!latest.d) return 0;
+  const today = new Date(now.toLocaleString("en-US", { timeZone: "America/Lima" }));
+  const target = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate() - 4));
+  const delta = Math.round((target.getTime() - new Date(`${latest.d.slice(0, 10)}T00:00:00Z`).getTime()) / 86_400_000);
+  if (delta <= 0) return 0;
+
+  const shift = (column: string) => `${column} = CASE WHEN ${column} IS NULL THEN NULL WHEN length(${column}) = 10 THEN date(${column}, '+${delta} days') ELSE strftime('%Y-%m-%dT%H:%M:%fZ', ${column}, '+${delta} days') END`;
+  db.exec("BEGIN");
+  try {
+    db.exec(`UPDATE arco_requests SET ${shift("received_at")}, ${shift("responded_at")}, ${shift("created_at")} WHERE company_id = 'casa-verde'`);
+    const rows = db.prepare("SELECT id, type, received_at FROM arco_requests WHERE company_id = 'casa-verde'").all() as { id: string; type: string; received_at: string }[];
+    for (const row of rows) {
+      db.prepare("UPDATE arco_requests SET due_at = ? WHERE id = ?").run(addBusinessDays(row.received_at.slice(0, 10), arcoLegalBusinessDays(row.type)), row.id);
+    }
+    db.exec(`UPDATE incidents SET ${shift("detected_at")}, ${shift("due_at")}, ${shift("notified_at")}, ${shift("created_at")} WHERE company_id = 'casa-verde'`);
+    db.exec(`UPDATE activity SET ${shift("created_at")} WHERE company_id = 'casa-verde'`);
+    db.exec(`UPDATE documents SET ${shift("published_at")} WHERE company_id = 'casa-verde'`);
+    // Nada se cambió después de inscribir: así no aparece la alerta de «actualiza la ficha».
+    db.exec("UPDATE data_banks SET updated_at = COALESCE(registered_at, updated_at) WHERE company_id = 'casa-verde'");
+    db.exec(
+      "UPDATE providers SET updated_at = (SELECT MIN(registered_at) FROM data_banks WHERE company_id = 'casa-verde' AND registered_at IS NOT NULL) WHERE company_id = 'casa-verde' AND EXISTS (SELECT 1 FROM data_banks WHERE company_id = 'casa-verde' AND registered_at IS NOT NULL)"
+    );
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+  return delta;
+}
+
 export function resetDemoCompany(): { found: boolean; outbox: number; aiUsage: number; payments: number; documents: number } {
   const db = getDb();
   const demo = db.prepare("SELECT id FROM companies WHERE id = 'casa-verde'").get() as { id: string } | undefined;
@@ -1355,6 +1413,7 @@ export function resetDemoCompany(): { found: boolean; outbox: number; aiUsage: n
   const aiUsage = Number(db.prepare("DELETE FROM ai_usage WHERE company_id = 'casa-verde'").run().changes);
   const payments = (db.prepare("SELECT COUNT(*) AS n FROM payments WHERE company_id = 'casa-verde'").get() as { n: number }).n;
 
+  refreshDemoDates();
   const company = db.prepare("SELECT * FROM companies WHERE id = 'casa-verde'").get() as unknown as Company;
   const banks = db.prepare("SELECT * FROM data_banks WHERE company_id = 'casa-verde'").all() as unknown as DataBank[];
   ensureDemoDocuments(db, company, banks);

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/icons";
+import { PLATFORM_COMPLAINTS_URL, PLATFORM_ENTITY } from "@/lib/platform-entity";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -45,7 +46,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </p>
       </aside>
 
-      <main className="flex min-h-screen flex-col">
+      <main id="contenido" tabIndex={-1} className="flex min-h-screen flex-col">
         <div className="flex items-center justify-between border-b border-line px-5 py-4 lg:hidden">
           <Link href="/" aria-label="DatosPrivados, inicio">
             <Logo />
@@ -57,6 +58,19 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="flex flex-1 items-center justify-center px-5 py-10">
           <div className="w-full max-w-[460px]">{children}</div>
         </div>
+        <footer className="border-t border-line px-5 py-4 text-xs leading-relaxed text-ink-soft">
+          <nav aria-label="Documentos legales" className="flex flex-wrap gap-x-4 gap-y-1">
+            <Link href="/terminos" className="hover:text-ink">Términos</Link>
+            <Link href="/privacidad" className="hover:text-ink">Privacidad</Link>
+            <Link href="/cookies" className="hover:text-ink">Cookies</Link>
+            <a href={PLATFORM_COMPLAINTS_URL} target="_blank" rel="noopener noreferrer" className="font-medium text-ink hover:text-crimson">
+              Libro de Reclamaciones
+            </a>
+          </nav>
+          <p className="mt-1">
+            {PLATFORM_ENTITY.legalName} · RUC {PLATFORM_ENTITY.ruc}
+          </p>
+        </footer>
       </main>
     </div>
   );

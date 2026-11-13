@@ -12,6 +12,7 @@ import { HolidayDisclaimer } from "@/components/legal-notes";
 export const metadata = { title: "Solicitud ARCO" };
 
 const TYPE_LABEL: Record<string, string> = {
+  informacion: "Información (si hay datos, para qué y con quién)",
   acceso: "Acceso (saber qué datos tienes)",
   rectificacion: "Rectificación (corregir datos)",
   cancelacion: "Cancelación (eliminar datos)",
@@ -138,6 +139,8 @@ export default async function ArcoDetailPage({
                 companyName={company.name}
                 companyPlan={company.plan}
                 requesterName={request.requester_name}
+                requesterEmail={request.email ?? ""}
+                ticket={request.ticket}
                 type={request.type}
                 response={request.response}
                 status={request.status}

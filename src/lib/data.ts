@@ -20,22 +20,42 @@ import { buildDocument, documentTitle } from "./document-catalog";
 import { TEMPLATE_VERSIONS, fingerprint, serializeBuiltFrom } from "./document-freshness";
 import type { DocumentKind } from "./db";
 
+// `node:sqlite` devuelve filas con prototipo nulo. React no deja pasar esos objetos a un
+// componente cliente («Only plain objects… can be passed to Client Components»): editar un
+// banco de datos fallaba con «Algo salió mal». Aquí se convierten en objetos normales.
+function plain<T>(row: unknown): T {
+  return { ...(row as object) } as T;
+}
+
 function all<T>(sql: string, ...params: Array<string | number | null>): T[] {
-  return getDb().prepare(sql).all(...params) as unknown as T[];
+  return getDb().prepare(sql).all(...params).map((row) => plain<T>(row));
 }
 
 function one<T>(sql: string, ...params: Array<string | number | null>): T | undefined {
-  return getDb().prepare(sql).get(...params) as unknown as T | undefined;
+  const row = getDb().prepare(sql).get(...params);
+  return row === undefined ? undefined : plain<T>(row);
 }
 
 export function getCompanyBySlug(slug: string): Company | undefined {
   return one<Company>("SELECT * FROM companies WHERE slug = ?", slug);
 }
 
+/**
+ * Bancos vigentes (borrador o inscrito). Los cancelados ante la ANPD no entran:
+ * ya no se tratan, así que no deben aparecer en documentos, puntaje ni avisos.
+ */
 export function listBanks(companyId: string): DataBank[] {
   return all<DataBank>(
-    `SELECT * FROM data_banks WHERE company_id = ?
+    `SELECT * FROM data_banks WHERE company_id = ? AND status != 'cancelado'
      ORDER BY CASE status WHEN 'registrado' THEN 0 ELSE 1 END, updated_at DESC`,
+    companyId
+  );
+}
+
+/** Bancos cuya inscripción se canceló; solo para el historial en la lista de bancos. */
+export function listCancelledBanks(companyId: string): DataBank[] {
+  return all<DataBank>(
+    "SELECT * FROM data_banks WHERE company_id = ? AND status = 'cancelado' ORDER BY cancelled_at DESC, updated_at DESC",
     companyId
   );
 }
@@ -294,7 +314,7 @@ export type CompanyStats = {
 export function getStats(companyId: string): CompanyStats {
   const today = limaToday();
   return {
-    banks: one<{ n: number }>("SELECT COUNT(*) AS n FROM data_banks WHERE company_id = ?", companyId)?.n ?? 0,
+    banks: one<{ n: number }>("SELECT COUNT(*) AS n FROM data_banks WHERE company_id = ? AND status != 'cancelado'", companyId)?.n ?? 0,
     banksRegistered:
       one<{ n: number }>(
         "SELECT COUNT(*) AS n FROM data_banks WHERE company_id = ? AND status = 'registrado'",

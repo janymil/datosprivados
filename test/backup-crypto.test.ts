@@ -70,6 +70,7 @@ describe("respaldo y restauración cifrados", () => {
     const backup = backupDatabase({ source, targetDir: dir, encryptionKey: null });
     expect(fs.statSync(backup.file).mode & 0o777).toBe(0o600);
     expect(fs.statSync(`${backup.file}.sha256`).mode & 0o777).toBe(0o600);
+    expect(fs.statSync(path.dirname(backup.file)).mode & 0o777, "la carpeta de respaldos también es privada").toBe(0o700);
 
     const cifrado = backupDatabase({ source, targetDir: path.join(root, "permisos-cifrado"), encryptionKey: KEY });
     expect(fs.statSync(cifrado.file).mode & 0o777).toBe(0o600);
