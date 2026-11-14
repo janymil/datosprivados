@@ -12,7 +12,24 @@ export type SplitOptions = {
   start: RegExp;
   /** Primera línea que ya no es de la norma (otra norma publicada en el mismo PDF). */
   end?: RegExp;
+  /**
+   * Compilación anotada (copias de ONP, gob.pe…): tras el texto original viene
+   * «(*) Artículo modificado por … cuyo texto es el siguiente:» y la versión nueva
+   * entre comillas. La versión posterior reemplaza a la anterior y se quitan las notas.
+   */
+  amended?: boolean;
+  /**
+   * Códigos (Código Civil): la sumilla va en la línea anterior al encabezado y el texto
+   * empieza en la misma línea de «Artículo 15.-». La sumilla es el título.
+   */
+  sumilla?: boolean;
 };
+
+/** Una sumilla: línea corta sin punto final que precede a un encabezado de artículo. */
+const isSumilla = (line: string) => line.length > 0 && line.length <= 90 && !/[.;:,]$/.test(line);
+
+/** Nota de modificación o de concordancia de una compilación: desde «(*)» hasta el final del cuerpo. */
+const AMENDMENT_NOTE = /\s*\(\*+\)[\s\S]*$/;
 
 /** «Artículo 34.», «Artículo 2.-», «Artículo III.», «“Artículo 2.» (modificado, citado) y «Artículo54.» (sin espacios). */
 const HEADING = /^[“"]?Art[ií]culo\s*(\d+|[IVXLC]+)\s*\.\s*-?\s*(.*)$/;
@@ -91,7 +108,26 @@ export function splitArticles(raw: string, opts: SplitOptions): Article[] {
       continue;
     }
 
-    const heading = HEADING.exec(line);
+    const rawHeading = HEADING.exec(line);
+    // «…conforme a lo señalado en el / Artículo 59.»: referencia partida a mitad de frase, no un encabezado.
+    const last: string | undefined = (current as { body: string[] } | null)?.body.at(-1);
+    const midSentence: boolean = last !== undefined && !/[.:;]$/.test(last);
+    const heading: RegExpExecArray | null =
+      rawHeading && !(rawHeading[2].trim() === "" && !/-/.test(line) && midSentence) ? rawHeading : null;
+    if (rawHeading && !heading) {
+      (current as { body: string[] } | null)?.body.push(line);
+      continue;
+    }
+    if (heading && opts.sumilla) {
+      // La línea anterior, si es una sumilla, quedó en el cuerpo del artículo previo: va de título.
+      const open: { body: string[] } | null = current;
+      const prev: string = open?.body.at(-1) ?? (i > 0 ? lines[i - 1] : "");
+      const title: string = isSumilla(prev) ? prev : "";
+      if (title && open && open.body.at(-1) === prev) open.body.pop();
+      flush();
+      current = { num: heading[1], title, body: heading[2].trim() ? [heading[2].trim()] : [] };
+      continue;
+    }
     if (heading) {
       flush();
       let title = heading[2].trim();
@@ -117,10 +153,26 @@ export function splitArticles(raw: string, opts: SplitOptions): Article[] {
   }
   flush();
 
+  if (opts.amended) return keepLatestVersions(out);
+
   const seen = new Set<string>();
   for (const article of out) {
     if (seen.has(article.num)) throw new Error(`artículo ${article.num} repetido: ¿hay otra norma dentro del rango?`);
     seen.add(article.num);
   }
   return out;
+}
+
+/** Compilación anotada: la última versión de cada artículo, en su lugar, sin notas ni comillas. */
+function keepLatestVersions(articles: Article[]): Article[] {
+  const latest = new Map<string, Article>();
+  for (const article of articles) latest.set(article.num, article);
+  const order: string[] = [];
+  for (const article of articles) if (!order.includes(article.num)) order.push(article.num);
+  return order.map((num) => {
+    const a = latest.get(num)!;
+    const title = a.title.replace(/^[“"]|[”"]$/g, "").trim();
+    const text = a.text.replace(AMENDMENT_NOTE, "").replace(/[“”]/g, "").replace(/\s+/g, " ").trim();
+    return { num, title, text, sha256: sha(`${title}\n${text}`) };
+  });
 }

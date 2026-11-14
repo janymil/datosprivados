@@ -12,7 +12,12 @@
       "status": "vigente",
       "consolidated": true,
       "amendedBy": [],
-      "aliases": ["DS N.° 016-2024-JUS", "DS 016-2024-JUS", "Decreto Supremo N.° 016-2024-JUS", "Reglamento"]
+      "aliases": [
+        "DS N.° 016-2024-JUS",
+        "DS 016-2024-JUS",
+        "Decreto Supremo N.° 016-2024-JUS",
+        "Reglamento"
+      ]
     }
   },
   "ley-29733": {
@@ -27,8 +32,109 @@
       "publishedAt": "2011-07-03",
       "status": "modificada",
       "consolidated": false,
-      "amendedBy": ["dleg-1353"],
-      "aliases": ["Ley N.° 29733", "Ley 29733", "Ley"]
+      "amendedBy": [
+        "dleg-1353"
+      ],
+      "aliases": [
+        "Ley N.° 29733",
+        "Ley 29733",
+        "Ley"
+      ]
+    }
+  },
+  "codigo-civil": {
+    "url": "https://www.onp.gob.pe/seccion/centro_de_documentos/Documentos/774.pdf",
+    "start": "^TITULO PRELIMINAR$",
+    "startOccurrence": 1,
+    "end": null,
+    "amended": true,
+    "sumilla": true,
+    "norm": {
+      "title": "Código Civil (Decreto Legislativo N.° 295)",
+      "type": "codigo",
+      "number": "D. Leg. 295",
+      "publishedAt": "1984-07-25",
+      "status": "vigente",
+      "consolidated": true,
+      "amendedBy": [],
+      "aliases": [
+        "Código Civil"
+      ]
+    }
+  },
+  "ds-020-2017-jus": {
+    "url": "https://www.smv.gob.pe/uploads/Reglamento%20de%20la%20Ley%2027693.pdf",
+    "start": "^Artículo 1\\.- Objeto",
+    "startOccurrence": 1,
+    "end": null,
+    "norm": {
+      "title": "Decreto Supremo N.° 020-2017-JUS, Reglamento de la Ley N.° 27693 (Unidad de Inteligencia Financiera)",
+      "type": "decreto-supremo",
+      "number": "020-2017-JUS",
+      "publishedAt": "2017-10-06",
+      "status": "vigente",
+      "consolidated": false,
+      "amendedBy": [],
+      "aliases": [
+        "DS N.° 020-2017-JUS"
+      ]
+    }
+  },
+  "ds-011-2011-pcm": {
+    "url": "https://cdn.www.gob.pe/uploads/document/file/662494/Decreto_Supremo_N_011-2011-PCM.pdf",
+    "start": "^REGLAMENTO DEL LIBRO DE RECLAMACIONES$",
+    "startOccurrence": 1,
+    "end": null,
+    "amended": true,
+    "norm": {
+      "title": "Decreto Supremo N.° 011-2011-PCM, Reglamento del Libro de Reclamaciones",
+      "type": "decreto-supremo",
+      "number": "011-2011-PCM",
+      "publishedAt": "2011-02-19",
+      "status": "modificada",
+      "consolidated": false,
+      "amendedBy": [
+        "ds-101-2022-pcm"
+      ],
+      "aliases": []
+    }
+  },
+  "ds-uit-2026": {
+    "url": "https://cdn.www.gob.pe/uploads/document/file/9183949/7540449-ds301_2025ef.pdf",
+    "start": "^Decreto Supremo que aprueba el valor de la$",
+    "startOccurrence": 1,
+    "end": "^2469116-1$",
+    "norm": {
+      "title": "Decreto Supremo N.° 301-2025-EF, que aprueba el valor de la UIT para el año 2026",
+      "type": "decreto-supremo",
+      "number": "301-2025-EF",
+      "publishedAt": "2025-12-17",
+      "status": "vigente",
+      "consolidated": true,
+      "amendedBy": [],
+      "aliases": [
+        "DS N.° 301-2025-EF"
+      ]
+    }
+  },
+  "ley-29571": {
+    "url": "https://cdn.www.gob.pe/uploads/document/file/4265044/Co%CC%81digo%20de%20Proteccio%CC%81n%20y%20Defensa%20del%20Consumidor%20-%202023%20(1).pdf.pdf",
+    "extract": "default",
+    "start": "^TÍTULO PRELIMINAR$",
+    "startOccurrence": 1,
+    "end": "^DISPOSICIONES COMPLEMENTARIAS\nMODIFICATORIAS$",
+    "norm": {
+      "title": "Ley N.° 29571, Código de Protección y Defensa del Consumidor (texto actualizado, Indecopi 2023)",
+      "type": "ley",
+      "number": "29571",
+      "publishedAt": "2010-09-02",
+      "status": "vigente",
+      "consolidated": true,
+      "amendedBy": [],
+      "aliases": [
+        "Ley N.° 29571",
+        "Código de Protección y Defensa del Consumidor"
+      ]
     }
   }
 }

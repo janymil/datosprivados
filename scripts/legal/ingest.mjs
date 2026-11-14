@@ -29,7 +29,8 @@ execFileSync("curl", ["-sSfL", "-m", "120", "-A", "Mozilla/5.0", "-o", pdf, sour
 const sourceSha256 = crypto.createHash("sha256").update(fs.readFileSync(pdf)).digest("hex");
 const txt = path.join(store, "source.txt");
 // -raw: orden de lectura del contenido; sin él, los encabezados de las columnas justificadas se parten (DS 016-2024-JUS arts. 18 y 33).
-execFileSync("pdftotext", ["-raw", "-enc", "UTF-8", pdf, txt]);
+// `extract: "default"` (sin -raw) para PDFs justificados donde -raw pega palabras (ediciones de Indecopi).
+execFileSync("pdftotext", [...(source.extract === "default" ? [] : ["-raw"]), "-enc", "UTF-8", pdf, txt]);
 const raw = fs.readFileSync(txt, "utf8").normalize("NFKC");
 
 // La norma empieza en la N-ésima aparición del marcador (antes puede haber un índice o el decreto aprobatorio).
@@ -42,6 +43,8 @@ for (let n = 0; n < source.startOccurrence; n++) {
 const articles = splitArticles(raw.slice(match.index), {
   start: new RegExp(source.start, "m"),
   end: source.end ? new RegExp(source.end, "m") : undefined,
+  amended: Boolean(source.amended),
+  sumilla: Boolean(source.sumilla),
 });
 
 const dir = path.join(root, "legal/library", id);
