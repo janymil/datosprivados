@@ -32,6 +32,7 @@ const SAMPLE: Record<MailTemplate, MailPayload> = {
   account_deleted: { company: "Casa Verde" },
   ops_alert: { subject: "Alerta", message: "Algo pasó" },
   legal_change_new: { title: "Corregir art. 2.6", kind: "auditoria", affected: 3, path: "/operador/legal/lc-20261114-abcdef" },
+  legal_change_failed: { title: "Corregir art. 2.6", reason: "El flujo de GitHub terminó en «failure»", path: "/operador/legal/lc-20261114-abcdef" },
 };
 
 const outbox = () =>
@@ -47,7 +48,7 @@ describe("plantillas", () => {
   it("hay un ejemplo por cada plantilla (que no se quede una sin probar)", () => {
     const templates = Object.keys(SAMPLE) as MailTemplate[];
     for (const template of templates) expect(() => renderMail(template, SAMPLE[template])).not.toThrow();
-    expect(templates).toHaveLength(25);
+    expect(templates).toHaveLength(26);
   });
 
   it.each(Object.keys(SAMPLE) as MailTemplate[])("%s: asunto, texto y HTML sin fugas de variables", (template) => {
