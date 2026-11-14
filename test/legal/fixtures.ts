@@ -1,6 +1,6 @@
 import { getBankPreset, type BankPresetId } from "@/lib/bank-presets";
 import type { Company, DataBank, Provider } from "@/lib/db";
-import { SALES_BANDS } from "@/lib/sector-legal";
+import { SALES_BANDS, sectorFamilyOf } from "@/lib/sector-legal";
 import { SECTORS } from "@/lib/sectors";
 import { pairwise } from "./pairwise";
 
@@ -177,22 +177,48 @@ function company(fixtureId: string, sectorLabel: string, row: Row): Company {
   };
 }
 
+type SectorLike = { id: string; label: string; banks: BankPresetId[] };
+
+function buildFixture(sector: SectorLike, row: Row, id: string): LegalFixture {
+  return {
+    id,
+    company: company(id, sector.label, row),
+    banks: banksFor(id, sector.banks, row.banks),
+    providers: providersFor(id, row.providers),
+  };
+}
+
 let cache: LegalFixture[] | undefined;
 
 export function legalFixtures(): LegalFixture[] {
   if (cache) return cache;
   const rows = pairwise(COMPANY_DIMENSIONS);
-  const sectors = [...SECTORS.map((s) => ({ id: s.id, label: s.label, banks: s.banks })), UNKNOWN_SECTOR];
-  cache = sectors.flatMap((sector) =>
-    rows.map((row, index) => {
-      const id = `${sector.id}__${index}`;
-      return {
-        id,
-        company: company(id, sector.label, row),
-        banks: banksFor(id, sector.banks, row.banks),
-        providers: providersFor(id, row.providers),
-      };
-    })
-  );
+  const sectors: SectorLike[] = [...SECTORS.map((s) => ({ id: s.id, label: s.label, banks: s.banks })), UNKNOWN_SECTOR];
+  cache = sectors.flatMap((sector) => rows.map((row, index) => buildFixture(sector, row, `${sector.id}__${index}`)));
   return cache;
+}
+
+/** Fila más completa: activa casi todas las ramas de los documentos. */
+const RICH_ROW: Row = {
+  entity: "peruana",
+  name: COMPANY_DIMENSIONS.name[1],
+  web: "https://ejemplo.pe",
+  complaints: "https://ejemplo.pe/reclamos",
+  dpo: "filled",
+  salesBand: "pequena",
+  banks: "mixed",
+  providers: "foreign",
+};
+
+/** Un fixture por familia legal (el primer rubro de cada familia), con la fila más completa. */
+export function representativeFixtures(): LegalFixture[] {
+  const seen = new Set<string>();
+  const out: LegalFixture[] = [];
+  for (const sector of SECTORS) {
+    const family = sectorFamilyOf(sector.id);
+    if (!family || seen.has(family)) continue;
+    seen.add(family);
+    out.push(buildFixture({ id: sector.id, label: sector.label, banks: sector.banks }, RICH_ROW, `${sector.id}__rep`));
+  }
+  return out;
 }
