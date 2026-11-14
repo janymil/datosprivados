@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { CLAUSE_DEFAULT_NORM, parseCitations } from "@/legal/citations";
 import { legalContext } from "@/legal/context";
 import { allClauses } from "@/legal/registry";
 import type { Citation } from "@/legal/types";
@@ -49,6 +50,32 @@ describe("citas de las cláusulas", () => {
       .map((clause) => clause.id);
     expect(mismatched, "corre FILL_CITES=1 pnpm vitest run test/legal/citations.test.ts").toEqual([]);
   }, 120_000);
+
+  it("cada cláusula aplica en al menos una combinación (ninguna queda fuera del lint)", () => {
+    const never = allClauses().filter((clause) => !found.has(clause.id)).map((clause) => clause.id);
+    expect(never).toEqual([]);
+  });
+
+  it("toda cita escrita en el código de un documento está declarada en alguna cláusula de ese documento", () => {
+    // Red para las ramas que ninguna combinación alcanza: se lee el código fuente, sin comentarios.
+    const problems: string[] = [];
+    for (const file of fs.readdirSync(DOCS).filter((f) => f.endsWith(".ts"))) {
+      const kind = file.replace(/\.ts$/, "");
+      const source = fs
+        .readFileSync(path.join(DOCS, file), "utf8")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/^\s*\/\/.*$/gm, "");
+      const declared = new Set(
+        allClauses()
+          .filter((clause) => clause.id.startsWith(`${kind}.`))
+          .flatMap((clause) => clause.cites.map((c) => `${c.norm}:${c.art}`))
+      );
+      for (const c of parseCitations(source, CLAUSE_DEFAULT_NORM)) {
+        if (!declared.has(`${c.norm}:${c.art}`)) problems.push(`${file}: ${c.norm}:${c.art}`);
+      }
+    }
+    expect(problems).toEqual([]);
+  });
 
   /** Cláusulas cuyo texto nombra una norma en alguna combinación. */
   const NORM_NAME = /\b(Ley|DS|D\. ?Leg|Decreto|Directiva|C[óo]digo|Reglamento|Resoluci[óo]n|NTS|Opini[óo]n Consultiva)\b/;
