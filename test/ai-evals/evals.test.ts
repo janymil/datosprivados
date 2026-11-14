@@ -18,7 +18,10 @@ import { ARCO_CASES, AUDIT_CASES, INCIDENT_CASES, INJECTION_PAYLOADS } from "./c
 const SRC = path.join(process.cwd(), "src", "lib");
 /** Artículos que el producto cita en sus propios textos verificados: lo demás es sospechoso de ser inventado. */
 const KNOWN_ARTICLES = (() => {
-  const text = ["documents.ts", "legal-faq.ts", "sector-legal.ts", "incident-criteria.ts", "security-checks.ts"].map((f) => fs.readFileSync(path.join(SRC, f), "utf8")).join("\n") + PERU_LEGAL_RAG;
+  // Los textos de los documentos viven en src/legal (biblioteca de cláusulas) desde el motor legal.
+  const LEGAL = path.join(process.cwd(), "src", "legal");
+  const legalFiles = [path.join(LEGAL, "shared.ts"), ...fs.readdirSync(path.join(LEGAL, "documents")).map((f) => path.join(LEGAL, "documents", f))];
+  const text = [...["documents.ts", "legal-faq.ts", "sector-legal.ts", "incident-criteria.ts", "security-checks.ts"].map((f) => path.join(SRC, f)), ...legalFiles].map((f) => fs.readFileSync(f, "utf8")).join("\n") + PERU_LEGAL_RAG;
   const numbers = new Set<number>();
   for (const match of text.matchAll(/arts?\.\s*(\d+)(?:\s*(?:,|y|al?|a)\s*(\d+))?/gi)) {
     numbers.add(Number(match[1]));
