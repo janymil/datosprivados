@@ -65,6 +65,10 @@ export type PaymentRow = {
   paid_at: string | null;
   raw: string | null;
   created_at: string;
+  /** 1 = pago con factura a crédito (src/lib/credit.ts). */
+  credit: number;
+  /** Vencimiento de la factura a crédito: emisión + 15 días; null hasta emitirla. */
+  due_at: string | null;
 };
 
 export function isCompanyActive(

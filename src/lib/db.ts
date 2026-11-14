@@ -494,7 +494,7 @@ function initSchema(db: DatabaseSync) {
  * cacheada en `globalThis` (en `next dev` la conexión sobrevive a los recargos
  * en caliente y `initSchema` no vuelve a correr).
  */
-const SCHEMA_VERSION = 17;
+const SCHEMA_VERSION = 18;
 
 function migrate(db: DatabaseSync) {
   const companyColumns = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
@@ -618,6 +618,13 @@ function migrate(db: DatabaseSync) {
   const paymentColumns = db.prepare("PRAGMA table_info(payments)").all() as { name: string }[];
   if (!paymentColumns.some((column) => column.name === "subscription_id")) {
     db.exec("ALTER TABLE payments ADD COLUMN subscription_id TEXT");
+  }
+  // v18: pago con factura a crédito (src/lib/credit.ts).
+  if (!paymentColumns.some((column) => column.name === "credit")) {
+    db.exec("ALTER TABLE payments ADD COLUMN credit INTEGER NOT NULL DEFAULT 0");
+  }
+  if (!paymentColumns.some((column) => column.name === "due_at")) {
+    db.exec("ALTER TABLE payments ADD COLUMN due_at TEXT");
   }
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_companies_subscription ON companies(subscription_id);
