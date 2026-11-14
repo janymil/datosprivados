@@ -11,6 +11,8 @@ import type { VerdictCache } from "./verdict-cache";
  * confirman como error.
  */
 
+const SCOPE = `Los datos propios de la empresa (nombre, RUC, dirección, correos, canales de atención, procedimientos internos o plazos que la empresa elige por encima del mínimo legal) no son afirmaciones legales: no los evalúes. Juzga solo lo que la cláusula atribuye a la norma: derechos, obligaciones, plazos legales, sujetos, condiciones y excepciones.`;
+
 const FORMAT = `Responde SOLO con un objeto JSON, sin texto alrededor:
 {"verdict":"supported"|"partial"|"not_supported","quote":"<extracto LITERAL del artículo que fundamenta tu respuesta>","reason":"<una o dos frases en español>"}`;
 
@@ -20,12 +22,14 @@ Decide si los artículos respaldan lo que la cláusula dice:
 - "supported": todo lo que afirma la cláusula está en los artículos.
 - "partial": una parte está y otra no (un plazo, un sujeto, una condición distintos o ausentes).
 - "not_supported": los artículos no dicen lo que la cláusula afirma.
+${SCOPE}
 ${FORMAT}`;
 
 export const PASS_B_SYSTEM = `Eres un revisor escéptico de textos legales peruanos. Tu trabajo es encontrar lo que una cláusula afirma SIN respaldo.
 1. Enumera mentalmente cada afirmación de la cláusula: obligaciones, plazos, números, sujetos, condiciones y excepciones.
 2. Para cada una, busca la frase del artículo que la dice. No supongas: si no está escrita, no está.
 3. Si todas están: "supported". Si falta alguna: "partial". Si falta la principal o el artículo dice otra cosa: "not_supported".
+${SCOPE}
 ${FORMAT}`;
 
 export type MeaningInput = { source: string; text: string; articles: Array<{ norm: string; art: string; text: string }> };
@@ -34,6 +38,22 @@ type Deps = { call: typeof callLlm; cache: VerdictCache; model: string };
 
 const VERDICTS = new Set(["supported", "partial", "not_supported"]);
 const normalize = (s: string) => s.replace(/[«»"“”]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+/** Número de artículo o inciso al inicio de un trozo: «Art. 61:», «66.1», «III.8». */
+const LABEL = /^(?:art(?:[íi]culo)?s?\.?\s*)?(?:\d+|[IVX]+)(?:\.\d+)*\.?\s*[:.)-]?\s+/i;
+
+/**
+ * ¿La cita de la IA está en los artículos? La IA junta incisos («66.1 … 68.1 …»), antepone
+ * el número o corta con «…»: cada trozo de al menos 20 caracteres debe estar, literal.
+ */
+export function quoteFound(quote: string, articles: Array<{ text: string }>): boolean {
+  const corpus = normalize(articles.map((a) => a.text).join(" "));
+  const pieces = quote
+    .split(/\s*(?:…|\.\.\.)\s*|\s+(?=(?:\d+|[IVX]+)\.\d+\s)/)
+    .map((p) => normalize(p.replace(LABEL, "")).replace(/^[.,;:]\s*|[.,;:]$/g, ""))
+    .filter(Boolean);
+  const long = pieces.filter((p) => p.length >= 20);
+  return (long.length ? long : [normalize(quote)]).every((p) => corpus.includes(p));
+}
 
 /** Lee el primer objeto JSON de la respuesta (también dentro de ```json o con texto alrededor). */
 export function parseVerdict(raw: string | null, pass: "a" | "b"): AiVerdict | null {
@@ -64,7 +84,7 @@ async function runPass(pass: "a" | "b", input: MeaningInput, deps: Deps): Promis
     .digest("hex");
   const cached = deps.cache.get(key);
   if (cached) return cached;
-  const verdict = parseVerdict(await deps.call({ system, messages: [{ role: "user", content: userMessage(input) }], maxTokens: 800 }), pass);
+  const verdict = parseVerdict(await deps.call({ system, messages: [{ role: "user", content: userMessage(input) }], maxTokens: 4000 }), pass);
   if (verdict) deps.cache.set(key, verdict);
   return verdict;
 }
@@ -83,8 +103,7 @@ export async function checkMeaning(input: MeaningInput, deps: Deps): Promise<{ f
 
   if (!a || !b) return { finding: make("revisar", "la IA no respondió", [a, b].filter((v): v is AiVerdict => v !== null)), aiFailed: true };
 
-  const corpus = normalize(input.articles.map((x) => x.text).join(" "));
-  if ([a, b].some((v) => v.quote && !corpus.includes(normalize(v.quote)))) {
+  if ([a, b].some((v) => v.quote && !quoteFound(v.quote, input.articles))) {
     return { finding: make("revisar", "la cita de la IA no está en el artículo", [a, b]), aiFailed: false };
   }
   if (a.verdict === "supported" && b.verdict === "supported") return { finding: null, aiFailed: false };

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { checkMeaning, parseVerdict, type MeaningInput } from "@/legal/audit/meaning";
+import { checkMeaning, parseVerdict, PASS_A_SYSTEM, PASS_B_SYSTEM, quoteFound, type MeaningInput } from "@/legal/audit/meaning";
 import { VerdictCache } from "@/legal/audit/verdict-cache";
 
 const ARTICLE = "El titular de datos personales tiene derecho a obtener la información que sobre sí mismo sea objeto de tratamiento.";
@@ -58,6 +58,28 @@ describe("chequeo de significado (dos pasadas)", () => {
   it("cita inventada: revisar", async () => {
     const { finding } = await run(fake(json("supported", "el titular puede exigir una copia gratis"), json("supported")));
     expect(finding).toMatchObject({ severity: "revisar", detail: "la cita de la IA no está en el artículo" });
+  });
+
+  it("una cita con el número del artículo delante, que junta dos incisos o lleva «…», se encuentra", () => {
+    const articles = [
+      { norm: "ds", art: "66", text: "66.1 Todas las solicitudes presentadas deben ser recibidas dejándose constancia de su recepción." },
+      { norm: "ds", art: "68", text: "68.1 El titular del banco de datos personales debe responder la solicitud en el plazo previsto." },
+    ];
+    expect(quoteFound("66.1 Todas las solicitudes presentadas deben ser recibidas dejándose constancia de su recepción. 68.1 El titular del banco de datos personales debe responder", articles)).toBe(true);
+    expect(quoteFound("Art. 66: “Todas las solicitudes presentadas deben ser recibidas … dejándose constancia de su recepción”", articles)).toBe(true);
+    expect(quoteFound("Todas las solicitudes deben pagarse con una tasa de diez soles", articles)).toBe(false);
+  });
+
+  it("las dos pasadas excluyen los datos propios de la empresa y piden margen de salida", async () => {
+    expect(PASS_A_SYSTEM).toContain("datos propios de la empresa");
+    expect(PASS_B_SYSTEM).toContain("datos propios de la empresa");
+    const seen: number[] = [];
+    const call = (async (args: { maxTokens?: number }) => {
+      seen.push(args.maxTokens ?? 0);
+      return json("supported");
+    }) as never;
+    await checkMeaning(input, { call, cache: cache(), model: "m" });
+    expect(Math.min(...seen)).toBeGreaterThanOrEqual(4000);
   });
 
   it("segunda vez con la misma entrada: usa la caché (0 llamadas)", async () => {
