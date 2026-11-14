@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseUnifiedDiff } from "@/lib/unified-diff";
+import { isGeneratedFile, parseUnifiedDiff, reviewOrder } from "@/lib/unified-diff";
 
 const DIFF = `diff --git a/src/legal/documents/politica.ts b/src/legal/documents/politica.ts
 index 1111111..2222222 100644
@@ -55,5 +55,21 @@ describe("parseUnifiedDiff", () => {
 
   it("un diff vacío o sin archivos da una lista vacía", () => {
     expect(parseUnifiedDiff("")).toEqual([]);
+  });
+});
+
+describe("orden para revisar un cambio legal", () => {
+  it("reconoce los archivos generados (instantáneas, huellas, fallas conocidas)", () => {
+    expect(isGeneratedFile("test/legal/__snapshots__/salud/politica.md")).toBe(true);
+    expect(isGeneratedFile("test/legal/__snapshots__/modules/modules.json")).toBe(true);
+    expect(isGeneratedFile("test/legal/baseline-hashes.json")).toBe(true);
+    expect(isGeneratedFile("legal/known-failures/citations.json")).toBe(true);
+    expect(isGeneratedFile("src/legal/documents/politica.ts")).toBe(false);
+    expect(isGeneratedFile("legal/changes/lc-20261114-abc123.md")).toBe(false);
+  });
+
+  it("primero el texto legal y el registro, al final lo generado", () => {
+    const files = parseUnifiedDiff(DIFF.replace(/viejo\.txt/g, "test/legal/baseline-hashes.json"));
+    expect(reviewOrder(files).map((f) => f.file)).toEqual(["src/legal/documents/politica.ts", "legal/changes/lc-1.md", "test/legal/baseline-hashes.json"]);
   });
 });

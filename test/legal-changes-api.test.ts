@@ -37,6 +37,13 @@ describe("POST /api/legal/changes", () => {
     expect((await bad.json()).error).toMatch(/id inválido/);
   });
 
+  it("acepta un diff grande (instantáneas regeneradas, ~4 MB) y rechaza más de 16 MB", async () => {
+    const big = "+".repeat(4 * 1024 * 1024);
+    expect((await POST(request(body({ branch: "legal/api-grande", diff: big })))).status).toBe(201);
+    const huge = "+".repeat(17 * 1024 * 1024);
+    expect((await POST(request(body({ branch: "legal/api-enorme", diff: huge })))).status).toBe(413);
+  });
+
   it("sin el secreto responde 401", async () => {
     expect((await POST(request(body(), "Bearer otro-secreto-de-prueba"))).status).toBe(401);
   });

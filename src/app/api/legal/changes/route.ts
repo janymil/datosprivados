@@ -6,7 +6,8 @@ import { enqueueEmail } from "@/lib/mail";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MAX_BODY = 2 * 1024 * 1024;
+/** Un cambio de texto regenera instantáneas y huellas: ~4 MB por 6 tipos de documento. */
+const MAX_BODY = 16 * 1024 * 1024;
 
 /**
  * POST /api/legal/changes — registra un cambio legal propuesto (rama legal/<id>).
@@ -24,7 +25,7 @@ const MAX_BODY = 2 * 1024 * 1024;
 export async function POST(request: Request) {
   if (!authorizedByCronSecret(request)) return new Response("Unauthorized", { status: 401 });
   const raw = await request.text();
-  if (raw.length > MAX_BODY) return Response.json({ error: "cuerpo demasiado grande (máx. 2 MB)" }, { status: 413 });
+  if (raw.length > MAX_BODY) return Response.json({ error: "cuerpo demasiado grande (máx. 16 MB)" }, { status: 413 });
 
   let input: LegalChangeInput;
   try {
