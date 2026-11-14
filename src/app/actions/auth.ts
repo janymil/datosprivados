@@ -166,3 +166,25 @@ export async function logoutAction() {
   await destroySession();
   redirect("/");
 }
+
+export type RucLiveCheck =
+  | { ok: true; razonSocial: string; estado: string; condicion: string }
+  | { ok: false; message: string; retry?: true };
+
+/**
+ * Verificación del RUC al salir del campo, en el formulario de registro. Responde solo
+ * lo que dice la SUNAT (razón social y estado), nunca si el RUC ya tiene cuenta aquí:
+ * así no sirve para averiguar quién es cliente. 10 consultas por IP cada 10 minutos,
+ * para que no sea un buscador gratuito de RUC. Al crear la cuenta se verifica de nuevo.
+ */
+export async function checkRucAction(raw: string): Promise<RucLiveCheck> {
+  const ruc = String(raw ?? "").replace(/\D/g, "");
+  if (!isValidRuc(ruc)) return { ok: false, message: "Revisa tu RUC: son 11 dígitos válidos según SUNAT." };
+  const ip = await clientIp();
+  if (!takeRateLimit(`ruc-check:ip:${ip}`, 10, 10 * MINUTE)) {
+    return { ok: false, message: "Demasiadas consultas de RUC. Espera unos minutos o continúa: lo verificamos al crear la cuenta." };
+  }
+  const check = await checkCompanyRuc(ruc);
+  if (check.ok) return { ok: true, razonSocial: check.razonSocial, estado: check.estado, condicion: check.condicion };
+  return check.code === "no_disponible" ? { ok: false, message: check.message, retry: true } : { ok: false, message: check.message };
+}

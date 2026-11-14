@@ -60,6 +60,7 @@ const PUBLIC_FILES: Record<string, string> = {
 const PUBLIC_ACTIONS: Record<string, string> = {
   loginAction: "ingreso",
   signupAction: "registro",
+  checkRucAction: "verificación del RUC en el registro (antes de tener cuenta; solo datos públicos de la SUNAT, con límite por IP)",
   logoutAction: "cerrar sesión: idempotente sin sesión",
   requestPasswordResetAction: "sin sesión por definición",
   resetPasswordAction: "se autentica con el token del correo",
