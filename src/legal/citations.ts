@@ -50,11 +50,40 @@ const boundary = (s: string, at: number) => at >= s.length || !/[\p{L}\p{N}]/u.t
 function normAfter(after: string, index: AliasIndex): string | null {
   const m = /^\s*\**\s*,?\s*(?:de la|del|de los|de las)\s+\**\s*/i.exec(after);
   if (!m) return null;
-  const rest = after.slice(m[0].length);
+  return resolveNormName(after.slice(m[0].length), index);
+}
+
+/** Nombre completo de una norma: alias de varias palabras, o forma con número fuera de la biblioteca. */
+function specificNorm(rest: string, index: AliasIndex): string | null {
   const norm = normalizeAlias(rest.slice(0, 120));
-  for (const { key, id } of index) if (norm.startsWith(key) && boundary(norm, key.length)) return id;
+  for (const { key, id } of index) if (key.includes(" ") && norm.startsWith(key) && boundary(norm, key.length)) return id;
   const generic = GENERIC_NORM.exec(rest);
   return generic ? `desconocida:${generic[1]}` : null;
+}
+
+/** Ley con nombre propio («Ley General de Salud»): mayúscula tras la palabra. */
+const NAMED = /^(Ley|Reglamento)((?:\s+(?:[A-ZÁÉÍÓÚÑ][\p{L}]+|de|del|la|las|los|y|e)(?=[\s,.;:)]|$))*\s+[A-ZÁÉÍÓÚÑ][\p{L}]+)/u;
+/** «Reglamento de la Ley N.° 29733 aprobado por Decreto Supremo N.° 003-2013-JUS». */
+const APPROVED_BY = /^[^;()]{0,100}?\baprobad[oa] por\s+(?:el\s+)?/i;
+
+function resolveNormName(rest: string, index: AliasIndex): string | null {
+  const specific = specificNorm(rest, index);
+  if (specific) return specific;
+  const word = /^(Ley|Reglamento)\b/i.exec(rest);
+  if (!word) return null;
+  // «Reglamento … aprobado por <norma>»: manda la norma aprobatoria.
+  const approved = APPROVED_BY.exec(rest);
+  if (approved) {
+    const by = specificNorm(rest.slice(approved[0].length), index);
+    if (by) return by;
+  }
+  // «Ley General de Salud»: otra ley con nombre propio, fuera de la biblioteca.
+  const named = NAMED.exec(rest);
+  if (named && !/^\s+(de|del)\b/.test(named[2])) return `desconocida:${named[0]}`;
+  // «la Ley», «el Reglamento», «la Ley de Protección de Datos Personales»: los alias genéricos.
+  const norm = normalizeAlias(word[0]);
+  for (const { key, id } of index) if (key === norm) return id;
+  return null;
 }
 
 /**

@@ -51,6 +51,18 @@ describe("parseCitations (formas reales de los documentos)", () => {
     expect(refs("Art. 24 del DS N.° 020-2017-JUS")).toEqual(["ds-020-2017-jus:24"]);
   });
 
+  it("«Ley» y «Reglamento» a secas no capturan otra ley u otro reglamento con nombre propio", () => {
+    expect(refs("art. 24 de la Ley N.° 29571")).toEqual(["desconocida:Ley N.° 29571:24"]);
+    expect(refs("art. 25 de la Ley General de Salud")).toEqual(["desconocida:Ley General de Salud:25"]);
+    expect(refs("art. 69 del Reglamento de la Ley N.° 29733 aprobado por Decreto Supremo N.° 003-2013-JUS")).toEqual([
+      "desconocida:Decreto Supremo N.° 003-2013-JUS:69",
+    ]);
+    // Siguen siendo la Ley 29733 y su Reglamento vigente:
+    expect(refs("art. 18 de la Ley de Protección de Datos Personales")).toEqual(["ley-29733:18"]);
+    expect(refs("(art. 14, numeral 5, de la Ley)")).toEqual(["ley-29733:14.5"]);
+    expect(refs("art. 8 del Reglamento, que exige")).toEqual([`${D}:8`]);
+  });
+
   it("los artículos del Título Preliminar en romanos", () => {
     expect(refs("(art. III.6)")).toEqual([`${D}:III.6`]);
   });
