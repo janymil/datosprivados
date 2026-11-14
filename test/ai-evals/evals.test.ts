@@ -20,7 +20,7 @@ const SRC = path.join(process.cwd(), "src", "lib");
 const KNOWN_ARTICLES = (() => {
   // Los textos de los documentos viven en src/legal (biblioteca de cláusulas) desde el motor legal.
   const LEGAL = path.join(process.cwd(), "src", "legal");
-  const legalFiles = [path.join(LEGAL, "shared.ts"), ...fs.readdirSync(path.join(LEGAL, "documents")).map((f) => path.join(LEGAL, "documents", f))];
+  const legalFiles = [path.join(LEGAL, "shared.ts"), ...fs.readdirSync(path.join(LEGAL, "documents")).filter((f) => f.endsWith(".ts")).map((f) => path.join(LEGAL, "documents", f))];
   const text = [...["documents.ts", "legal-faq.ts", "sector-legal.ts", "incident-criteria.ts", "security-checks.ts"].map((f) => path.join(SRC, f)), ...legalFiles].map((f) => fs.readFileSync(f, "utf8")).join("\n") + PERU_LEGAL_RAG;
   const numbers = new Set<number>();
   for (const match of text.matchAll(/arts?\.\s*(\d+)(?:\s*(?:,|y|al?|a)\s*(\d+))?/gi)) {
@@ -141,5 +141,12 @@ describe(`evaluación de la IA (${LIVE ? "modelo real" : "modo básico"})`, () =
       expect(draft).not.toMatch(/90 días|1 UIT/i);
       expect(draft).not.toMatch(/REGLAS DE SEGURIDAD|datos_usuario/);
     });
+  });
+});
+
+describe("artículos conocidos por el producto", () => {
+  it("incluye los del Libro de Reclamaciones (Ley N.° 29571, arts. 150 a 152)", () => {
+    expect(KNOWN_ARTICLES.has(150)).toBe(true);
+    expect(KNOWN_ARTICLES.has(152)).toBe(true);
   });
 });

@@ -1,7 +1,10 @@
 import { companyShortId, complaintsLink, isForeign } from "@/legal/shared";
 import type { DocumentSpec } from "@/legal/types";
 
-/** Libro de Reclamaciones: aviso, hoja y procedimiento (antes `buildComplaintBook`). */
+/**
+ * Libro de Reclamaciones: aviso obligatorio + hoja + procedimiento interno.
+ * (Ley N.° 29571, arts. 150 a 152, y su Reglamento.) Antes `buildComplaintBook`.
+ */
 
 export const reclamacionesSpec: DocumentSpec = {
   kind: "reclamaciones",
