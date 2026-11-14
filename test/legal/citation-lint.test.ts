@@ -24,6 +24,25 @@ describe("lint de citas", () => {
     expect(rules([{ norm: "desconocida:DS N.° 1", art: "1" }])).toEqual(["cite-norm-unknown"]);
   });
 
+  it("«art. 2.N» del DS es una cita mal numerada: las definiciones están en el art. III", () => {
+    for (const n of ["2", "4", "6", "8"]) {
+      const failures = checkCitations([clause([{ norm: "ds-016-2024-jus", art: `2.${n}` }])]);
+      expect(failures.map((f) => [f.rule, f.detail])).toEqual([["cite-misnumbered", `ds-016-2024-jus:2.${n} → III.${n}`]]);
+    }
+  });
+
+  it("si el artículo numera sus incisos «N.M», un «M.» suelto no cuenta como inciso", () => {
+    const demoWith = (cites: Clause["cites"]) => checkCitations([clause(cites)], demo).map((f) => f.rule);
+    // demo:26 dice «26.5 …»: el inciso 5 existe; el 1 no, aunque el texto tuviera «1. » suelto.
+    expect(demoWith([{ norm: "demo", art: "26.5" }])).toEqual([]);
+    expect(demoWith([{ norm: "demo", art: "26.1" }])).toEqual(["cite-item-missing"]);
+  });
+
+  it("clasifica una cláusula sin cita ni nonLegal como clause-without-basis", () => {
+    expect(checkCitations([clause([])], demo).map((f) => f.rule)).toEqual(["clause-without-basis"]);
+    expect(checkCitations([{ ...clause([]), nonLegal: "Encabezado" }], demo)).toEqual([]);
+  });
+
   const current = checkCitations();
   const { added, stale } = ratchet("citations", current);
 

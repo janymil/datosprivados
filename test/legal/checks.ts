@@ -15,23 +15,41 @@ export const KNOWN_FAILURES_DIR = path.join(process.cwd(), "legal", "known-failu
 const key = (f: KnownFailure) => `${f.rule}|${f.clause}|${f.detail}`;
 const byKey = (a: KnownFailure, b: KnownFailure) => key(a).localeCompare(key(b));
 
-/** El primer segmento del inciso existe dentro del artículo: «26.5», «6. Datos…», «a) …». */
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * El primer segmento del inciso existe dentro del artículo. Si el artículo numera sus
+ * incisos «26.1, 26.2…», se exige esa forma; si no, vale una lista «1. …» o «a) …».
+ */
 export function itemExists(article: Article, item: string): boolean {
-  const first = item.split(".")[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const num = article.num.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return (
-    new RegExp(`\\b${num}\\.${first}\\b`).test(article.text) ||
-    new RegExp(`(?:^|\\s)${first}\\.\\s`).test(article.text) ||
-    new RegExp(`(?:^|\\s)${first}\\)\\s`).test(article.text)
-  );
+  const first = escape(item.split(".")[0]);
+  const num = escape(article.num);
+  if (new RegExp(`\\b${num}\\.\\d`).test(article.text)) return new RegExp(`\\b${num}\\.${first}\\b`).test(article.text);
+  return new RegExp(`(?:^|\\s)${first}\\.\\s`).test(article.text) || new RegExp(`(?:^|\\s)${first}\\)\\s`).test(article.text);
 }
+
+/**
+ * Citas mal numeradas, revisadas a mano contra el texto oficial: el inciso existe pero
+ * dice otra cosa. Las definiciones del DS 016-2024-JUS están en el art. III del Título
+ * Preliminar (III.2 Bloqueo, III.4 Datos personales, III.6 Datos sensibles, III.8 Días);
+ * el art. 2 es «Características del consentimiento válido».
+ */
+export const MISNUMBERED: Record<string, string> = {
+  "ds-016-2024-jus:2.2": "III.2",
+  "ds-016-2024-jus:2.4": "III.4",
+  "ds-016-2024-jus:2.6": "III.6",
+  "ds-016-2024-jus:2.8": "III.8",
+};
 
 export function checkCitations(clauses: Clause[] = allClauses(), lib: Library = legalLibrary()): KnownFailure[] {
   const out = new Map<string, KnownFailure>();
   const add = (f: KnownFailure) => out.set(key(f), f);
   for (const clause of clauses) {
+    // Cláusula sustantiva sin ningún artículo citado: la auditoría (plan 5) decide su base.
+    if (clause.cites.length === 0 && !clause.nonLegal) add({ rule: "clause-without-basis", clause: clause.id, detail: "" });
     for (const cite of clause.cites) {
       const detail = `${cite.norm}:${cite.art}`;
+      if (MISNUMBERED[detail]) { add({ rule: "cite-misnumbered", clause: clause.id, detail: `${detail} → ${MISNUMBERED[detail]}` }); continue; }
       if (cite.norm.startsWith("desconocida:")) { add({ rule: "cite-norm-unknown", clause: clause.id, detail }); continue; }
       const norm = lib.norms[cite.norm];
       if (!norm) { add({ rule: "cite-norm-missing", clause: clause.id, detail }); continue; }

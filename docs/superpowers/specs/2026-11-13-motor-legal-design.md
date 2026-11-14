@@ -145,7 +145,7 @@ type Clause = {
   id: string;                       // "politica.derechos.arco"
   when?: (ctx: LegalContext) => boolean;   // conditions over profile + company
   text: (ctx: LegalContext) => string;     // exactly today's wording
-  cites: Citation[];                // exactly the articles the text cites (lint-enforced); [] if none
+  cites: Citation[];                // exactly the articles the text cites (lint-enforced); [] needs nonLegal or a known-failures entry
   nonLegal?: string;                // structural clause (heading, note, signature); never with a cite or a norm name
   defaultNorm?: string;             // norm of bare mentions; default ds-016-2024-jus
 };
