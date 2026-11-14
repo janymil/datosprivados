@@ -37,6 +37,7 @@ import {
 } from "@/legal/shared";
 import { legalContext } from "@/legal/context";
 import { renderDocument } from "@/legal/render";
+import { sectorialSpec } from "@/legal/documents/sectorial";
 import { eipdSpec } from "@/legal/documents/eipd";
 import { encargoSpec } from "@/legal/documents/encargo";
 import { terminosSpec } from "@/legal/documents/terminos";
@@ -170,70 +171,5 @@ export function buildArcoProcedure(company: Company): string {
  * la familia legal del negocio, y las herramientas que declaró.
  */
 export function buildSectorProtocol(company: Company, banks: DataBank[], providers: Provider[] = []): string {
-  const date = formatDate(new Date().toISOString(), "long");
-  const profile = sectorLegalProfile(company);
-  const contact = company.dpo_email || company.email;
-  const abroad = foreignProviders(providers);
-
-  return `## 1. Para quién es
-
-Este protocolo es el complemento operativo del Documento de Seguridad de **${company.name}** (${company.sector || profile.title}). Resume lo que el equipo debe hacer cada día con los datos de este rubro: **${profile.title}**.
-
-## 2. Qué tiene de especial tu rubro
-
-${bullets([
-  profile.sensitive ? "Tu actividad principal trata **datos sensibles**: necesitas autorización por escrito y medidas reforzadas (arts. 8 y 47.3 del DS N.° 016-2024-JUS)." : "Tus datos son mayormente comunes; si recoges datos sensibles en algún caso, pide autorización por escrito.",
-  profile.minors ? "Atiendes a **menores de edad**: menores de 14 años consienten sus padres o tutores; de 14 a 17 pueden consentir ellos (art. 22)." : "No es habitual que trates datos de menores; si ocurre, aplica el art. 22.",
-  profile.biometric ? "Usas o puedes usar **datos biométricos** (huella, rostro): son sensibles; ofrece una alternativa y borra las plantillas al dar de baja." : "No usas datos biométricos como práctica habitual.",
-  profile.imageUse ? "Usas **fotos y videos de personas**: autorización expresa (Código Civil, art. 15)." : "No usas imagen de personas con fines de difusión.",
-  profile.splaft ? "Puedes ser **sujeto obligado ante la UIF-Perú**: verifica la relación de la SBS y conserva el registro de operaciones." : "No sueles ser sujeto obligado ante la UIF-Perú; verifícalo si cambia tu actividad.",
-  profile.processor ? "Tratas datos **por cuenta de otras empresas**: eres su encargado (arts. 31 a 33); conserva los datos como máximo 2 años desde el último encargo." : "Eres el responsable de tus datos; tus proveedores son los encargados.",
-])}
-
-## 3. Procedimientos diarios
-
-${sectorProtocol(profile.family).map((step, index) => `${index + 1}. ${step}`).join("\n")}
-
-## 4. Normas que debes tener presentes
-
-${bullets(profile.norms)}
-
-## 5. Cuánto tiempo guardas cada cosa
-
-${table(["Tipo de dato", "Plazo sugerido", "Fundamento"], profile.retention.map((row) => [row.data, row.term, row.basis]))}
-
-## 6. Riesgos típicos del rubro y cómo evitarlos
-
-${table(["Riesgo", "Probabilidad", "Impacto", "Nivel"], profile.risks.map((r) => [r.risk, r.probability, r.impact, r.level]))}
-
-## 7. Tus herramientas
-
-${
-  providers.length
-    ? `${table(
-        ["Herramienta", "Categoría", "País", "Contrato", "Flujo transfronterizo"],
-        providers.map((provider) => [
-          provider.name,
-          categoryLabel(provider.category),
-          COUNTRY_LABEL(provider.country),
-          DPA_LABEL[provider.dpa_status],
-          isAbroad(provider.country) ? TRANSFER_LABEL[provider.transfer_status] : "No aplica",
-        ])
-      )}
-
-${abroad.length ? `**${abroad.length} ${abroad.length === 1 ? "herramienta trata" : "herramientas tratan"} datos fuera del Perú (o en un país por verificar).** Para cada una: contrato de encargo con cláusulas que impongan al menos las mismas obligaciones (art. 20), comunicación a la ANPD para su inscripción (art. 21.2), y mención en la Política de Privacidad (art. 6.1.7).` : "Todas tus herramientas declaradas tratan los datos en el Perú."}`
-    : "Aún no declaraste tus herramientas. Hazlo en la sección «Herramientas» para completar este apartado y la Política de Privacidad."
-}
-
-## 8. Revisión mensual (10 minutos)
-
-- [ ] ¿Alguien nuevo entró o salió del equipo? Actualiza accesos (art. 46.1).
-- [ ] ¿Se instaló una herramienta nueva que recibe datos? Decláralo en «Herramientas».
-- [ ] ¿Hubo solicitudes de derechos pendientes de respuesta? Revisa los plazos.
-- [ ] ¿Se perdió un equipo o se envió algo a la persona equivocada? Reporta a ${contact} dentro de 2 horas.
-- [ ] ¿Venció algún plazo de conservación? Purga y deja constancia en «Evidencias».
-
----
-
-*Aprobado el ${date}. Complementa el «Documento de Seguridad». Los bancos declarados: ${banks.length ? banks.map((b) => `«${b.name}»`).join(", ") : "ninguno todavía"}.*`;
+  return renderDocument(sectorialSpec, legalContext(company, banks, providers));
 }
