@@ -508,8 +508,13 @@ horario incluido); **pendiente:** el monitor externo y la prueba de la alerta en
 Un cambio legal propuesto (rama `legal/<id>`) aparece en `/operador/legal`. Al aprobarlo:
 
 1. La aplicación envía un `repository_dispatch` a GitHub con `GITHUB_DISPATCH_TOKEN`.
-2. `.github/workflows/legal-change.yml` comprueba que la rama siga en el commit aprobado, valida
-   las reglas del cambio, corre las mismas pruebas que CI y fusiona en `master`.
+2. `.github/workflows/legal-change.yml`, en un job **sin permiso de escritura** ni credenciales
+   guardadas: comprueba que la rama siga en el commit aprobado y que su diff sea byte a byte el que
+   viste (sha256), la juzga con las reglas de `master` (una rama no puede cambiar las suyas), la
+   fusiona en local sobre `master` y prueba ese resultado (pruebas, build y E2E). Solo entonces otro
+   job, que no ejecuta nada de la rama, la fusiona. Si `master` se movió mientras tanto, falla:
+   vuelve a aprobar. Quien registra un cambio debe enviar como `diff` exactamente
+   `git diff --no-color --no-ext-diff -M origin/master...<commit>`.
 3. La tarea `legal-change-sync` (cada 10 min) lee el resultado: si falló, el cambio queda en
    «fallo» con el enlace al run y se avisa a `OPERATOR_EMAILS`; si fusionó, escribe el commit en
    `/var/lib/datosprivados/deploy-request`.
@@ -517,6 +522,13 @@ Un cambio legal propuesto (rama `legal/<id>`) aparece en `/operador/legal`. Al a
    `git pull --ff-only` en `/var/www/datosprivados` y corre `scripts/deploy.sh`. Deja
    `deployed-sha` (el cambio pasa a «aplicado») o `deploy-failed` con las últimas 40 líneas del
    registro (pasa a «fallo»; `deploy.sh` ya revirtió). Registro completo: `/var/lib/datosprivados/autodeploy.log`.
+
+Nada queda colgado: si la aprobación no llegó a enviarse en 15 min, si GitHub no termina en 2 h o
+si el servidor no despliega en 2 h, el cambio pasa a «fallo» con el motivo y se te avisa. Un cambio en
+«fallo» se puede volver a aprobar o rechazar; uno enviado al abogado, aprobar o rechazar.
+
+`datosprivados-autodeploy` publica lo que haya en `master` en ese momento, también commits que no
+son cambios legales (es lo mismo que un despliegue manual de `master`).
 
 La aplicación nunca despliega: solo deja la solicitud. Sin `GITHUB_DISPATCH_TOKEN` la tarea está
 apagada (no cuenta para la salud) y aprobar responde «falta GITHUB_DISPATCH_TOKEN».
@@ -539,7 +551,8 @@ install -m 644 deploy/cron.d-datosprivados        /etc/cron.d/datosprivados
 
 Si `/var/www/datosprivados` tiene cambios locales en archivos que el cambio también toca,
 `git pull --ff-only` falla y el cambio queda en «fallo» sin desplegar nada: resolverlo a mano y
-reaprobar (reaprobar un cambio ya fusionado solo vuelve a pedir el despliegue).
+reaprobar. Reaprobar un cambio ya fusionado cuyo despliegue falló no pasa por GitHub: solo vuelve a
+pedir el despliegue de ese commit.
 
 ## Correo
 

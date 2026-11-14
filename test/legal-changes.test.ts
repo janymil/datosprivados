@@ -48,6 +48,21 @@ describe("cambios legales propuestos", () => {
     expect(decideLegalChange("lc-no-existe", "aprobado", "fundador")).toEqual({ ok: false, error: "no-existe" });
   });
 
+  it("«abogado» se aprueba o rechaza tras la respuesta, y «fallo» también se puede rechazar", () => {
+    const toLawyer = registerLegalChange(input());
+    decideLegalChange(toLawyer.id, "abogado", "fundador", "Revisar con el abogado");
+    expect(decideLegalChange(toLawyer.id, "abogado", "fundador", "otra vez")).toEqual({ ok: false, error: "ya-decidido" });
+    const approved = decideLegalChange(toLawyer.id, "aprobado", "fundador");
+    expect(approved.ok && approved.change.status).toBe("aprobado");
+
+    const failed = registerLegalChange(input());
+    decideLegalChange(failed.id, "aprobado", "fundador");
+    markLegalChange(failed.id, { status: "fallo", error: "la rama cambió" });
+    const rejected = decideLegalChange(failed.id, "rechazado", "fundador", "Se reemplaza por otro cambio");
+    expect(rejected.ok && rejected.change.status).toBe("rechazado");
+    expect(decideLegalChange(failed.id, "aprobado", "fundador")).toEqual({ ok: false, error: "ya-decidido" });
+  });
+
   it("lista los más recientes primero y filtra por estado", () => {
     const a = registerLegalChange(input());
     const b = registerLegalChange(input());

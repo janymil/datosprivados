@@ -61,6 +61,17 @@ describe("panel /operador/legal", () => {
     expect(html).toContain(change.head_sha.slice(0, 7));
   });
 
+  it("tras el abogado se puede aprobar o rechazar, pero no volver a enviarlo", async () => {
+    const change = newChange();
+    decideLegalChange(change.id, "abogado", "fundador", "Revisar el plazo de 48 h");
+    const html = renderToStaticMarkup(
+      await LegalChangePage({ params: Promise.resolve({ id: change.id }), searchParams: Promise.resolve({}) })
+    );
+    expect(html).toContain("Aprobar y publicar");
+    expect(html).toContain(">Rechazar<");
+    expect(html).not.toContain("Enviar al abogado");
+  });
+
   it("un cambio ya decidido no muestra botones", async () => {
     const change = newChange();
     decideLegalChange(change.id, "rechazado", "fundador", "No corresponde");

@@ -50,6 +50,12 @@ describe("validateChange", () => {
     expect(check({ ...log, "test/legal/baseline-hashes.json": "{}" })).toHaveLength(1);
   });
 
+  it("una rama legal no puede cambiar el validador que la juzga", () => {
+    expect(check({ ...log, "src/legal/validate-change.ts": "export const validateChange = () => [];" })).toEqual([
+      "una rama legal no puede cambiar sus propias reglas: src/legal/validate-change.ts",
+    ]);
+  });
+
   it("rechaza archivos fuera del área legal", () => {
     expect(check({ ...log, ".github/workflows/ci.yml": "x", "package.json": "{}" })).toEqual([
       "archivo fuera del área permitida: .github/workflows/ci.yml",

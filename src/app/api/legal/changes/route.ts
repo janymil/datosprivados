@@ -12,6 +12,11 @@ const MAX_BODY = 2 * 1024 * 1024;
  * POST /api/legal/changes — registra un cambio legal propuesto (rama legal/<id>).
  * Interno: lo llaman la auditoría (plan 5) y el monitor de normas (plan 6) con el
  * bearer de CRON_SECRET. Avisa por correo a cada operador la primera vez.
+ *
+ * `diff` debe ser EXACTAMENTE la salida de
+ *   git diff --no-color --no-ext-diff -M origin/master...<head_sha>
+ * El flujo de GitHub recalcula ese diff y no fusiona si su sha256 no coincide con el
+ * del diff guardado aquí: lo que el fundador ve es lo que se fusiona.
  */
 export async function POST(request: Request) {
   if (!authorizedByCronSecret(request)) return new Response("Unauthorized", { status: 401 });

@@ -46,6 +46,7 @@ export default async function LegalChangePage({
   );
   const canDecide = change.status === "nuevo";
   const canRetry = change.status === "fallo";
+  const afterLawyer = change.status === "abogado";
   const repo = process.env.GITHUB_REPOSITORY || "janymil/datosprivados";
 
   return (
@@ -133,7 +134,7 @@ export default async function LegalChangePage({
         </ul>
       </section>
 
-      {(canDecide || canRetry) && (
+      {(canDecide || canRetry || afterLawyer) && (
         <section className="space-y-6">
           <form action={approveLegalChangeAction} className="card p-6">
             <input type="hidden" name="id" value={change.id} />
@@ -147,8 +148,7 @@ export default async function LegalChangePage({
             </SubmitButton>
           </form>
 
-          {canDecide && (
-            <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-6 sm:grid-cols-2">
               <form action={rejectLegalChangeAction} className="card p-6">
                 <input type="hidden" name="id" value={change.id} />
                 <h2 className="font-display text-xl">Rechazar</h2>
@@ -160,6 +160,7 @@ export default async function LegalChangePage({
                   Rechazar
                 </SubmitButton>
               </form>
+              {canDecide && (
               <form action={lawyerLegalChangeAction} className="card p-6">
                 <input type="hidden" name="id" value={change.id} />
                 <h2 className="font-display text-xl">Enviar al abogado</h2>
@@ -171,8 +172,8 @@ export default async function LegalChangePage({
                   Enviar al abogado
                 </SubmitButton>
               </form>
+              )}
             </div>
-          )}
         </section>
       )}
     </main>

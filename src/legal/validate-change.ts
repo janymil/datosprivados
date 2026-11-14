@@ -16,6 +16,8 @@ export type ChangeInput = {
 const ALLOWED = [/^src\/legal\//, /^src\/lib\//, /^legal\//, /^test\/legal\//, /^src\/app\//, /^src\/components\//, /^docs\//];
 const DOCUMENT_TEXT = [/^test\/legal\/__snapshots__\/(?!modules\/)/, /^test\/legal\/baseline-hashes\.json$/];
 const FRESHNESS = "src/lib/document-freshness.ts";
+/** Las reglas cambian por un PR normal, nunca dentro de un cambio legal. */
+const OWN_RULES = ["src/legal/validate-change.ts"];
 
 type Failure = { rule?: string; clause?: string; detail?: string };
 const failureKey = (f: Failure) => `${f.rule} ${f.clause} ${f.detail}`;
@@ -52,6 +54,10 @@ export function validateChange({ id, changedFiles, read, readBase }: ChangeInput
     const after = templateVersions(read(FRESHNESS) ?? readBase(FRESHNESS));
     const raised = Object.keys(after).some((kind) => after[kind] > (before[kind] ?? 0));
     if (!raised) problems.push(`cambió el texto de los documentos pero no subió ninguna versión en TEMPLATE_VERSIONS (${FRESHNESS})`);
+  }
+
+  for (const file of changedFiles.filter((f) => OWN_RULES.includes(f))) {
+    problems.push(`una rama legal no puede cambiar sus propias reglas: ${file}`);
   }
 
   for (const file of changedFiles) {

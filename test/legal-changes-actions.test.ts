@@ -1,8 +1,12 @@
+import { createHash } from "node:crypto";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { approveLegalChangeAction, lawyerLegalChangeAction, rejectLegalChangeAction } from "@/app/operador/legal/actions";
 import { createSession } from "@/lib/auth";
 import { dispatchLegalChange } from "@/lib/github-dispatch";
-import { getLegalChange, registerLegalChange } from "@/lib/legal-changes";
+import { getLegalChange, markLegalChange, registerLegalChange } from "@/lib/legal-changes";
 import { makeActiveCompany } from "./helpers/db";
 import { jar } from "./helpers/next";
 
@@ -54,9 +58,17 @@ describe("aprobar, rechazar o enviar al abogado", () => {
     await expect(approveLegalChangeAction(form({ id: change.id }))).rejects.toThrow(`REDIRECT:/operador/legal/${change.id}?ok=aprobado`);
     expect(calls).toHaveLength(1);
     expect(calls[0].url).toBe("https://api.github.com/repos/janymil/datosprivados/dispatches");
+    const attempt = getLegalChange(change.id)!.dispatched_at;
+    expect(attempt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     expect(JSON.parse(String(calls[0].init.body))).toEqual({
       event_type: "legal-change-approved",
-      client_payload: { id: change.id, branch: change.branch, head_sha: change.head_sha },
+      client_payload: {
+        id: change.id,
+        branch: change.branch,
+        head_sha: change.head_sha,
+        attempt,
+        diff_sha256: createHash("sha256").update(change.diff, "utf8").digest("hex"),
+      },
     });
     expect(new Headers(calls[0].init.headers).get("authorization")).toBe("Bearer github_pat_prueba");
     expect(getLegalChange(change.id)).toMatchObject({ status: "aprobado", decided_by: operatorEmail });
@@ -65,6 +77,25 @@ describe("aprobar, rechazar o enviar al abogado", () => {
     // Segundo clic: ya está decidido, no se envía de nuevo.
     await expect(approveLegalChangeAction(form({ id: change.id }))).rejects.toThrow(`REDIRECT:/operador/legal/${change.id}?error=ya-decidido`);
     expect(calls).toHaveLength(1);
+  });
+
+  it("reaprobar un cambio ya fusionado cuyo despliegue falló solo vuelve a pedir el despliegue", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dp-legal-redeploy-"));
+    process.env.LEGAL_DEPLOY_DIR = dir;
+    try {
+      const change = newChange();
+      markLegalChange(change.id, { status: "fallo", merged_sha: "d".repeat(40), error: "El despliegue falló" });
+      fs.writeFileSync(path.join(dir, "deploy-failed"), `${"d".repeat(40)}
+falló
+`);
+      await expect(approveLegalChangeAction(form({ id: change.id }))).rejects.toThrow(/ok=aprobado/);
+      expect(calls).toHaveLength(0);
+      expect(getLegalChange(change.id)).toMatchObject({ status: "fusionado", error: null });
+      expect(fs.readFileSync(path.join(dir, "deploy-request"), "utf8").trim()).toBe("d".repeat(40));
+      expect(fs.existsSync(path.join(dir, "deploy-failed"))).toBe(false);
+    } finally {
+      delete process.env.LEGAL_DEPLOY_DIR;
+    }
   });
 
   it("sin token queda en «fallo» con el motivo, y se puede reintentar", async () => {

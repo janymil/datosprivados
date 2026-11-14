@@ -65,9 +65,16 @@ export function listLegalChanges(filter: { status?: LegalChangeStatus[] } = {}):
 export type DecideResult = { ok: true; change: LegalChange } | { ok: false; error: "no-existe" | "ya-decidido" | "motivo-requerido" };
 
 /**
- * Decisión del fundador. Solo un cambio «nuevo» se decide; uno «fallo» puede
- * aprobarse de nuevo (reintento). Rechazar o enviar al abogado exige motivo.
+ * Decisión del fundador. Un cambio «nuevo» admite cualquier decisión; uno en
+ * «abogado» se aprueba o rechaza cuando llega la respuesta; uno en «fallo» se
+ * reaprueba (reintento) o se rechaza. Rechazar o enviar al abogado exige motivo.
  */
+const NEXT: Partial<Record<LegalChange["status"], Array<"aprobado" | "rechazado" | "abogado">>> = {
+  nuevo: ["aprobado", "rechazado", "abogado"],
+  abogado: ["aprobado", "rechazado"],
+  fallo: ["aprobado", "rechazado"],
+};
+
 export function decideLegalChange(
   id: string,
   decision: "aprobado" | "rechazado" | "abogado",
@@ -76,15 +83,14 @@ export function decideLegalChange(
 ): DecideResult {
   const change = getLegalChange(id);
   if (!change) return { ok: false, error: "no-existe" };
-  const retry = decision === "aprobado" && change.status === "fallo";
-  if (change.status !== "nuevo" && !retry) return { ok: false, error: "ya-decidido" };
+  if (!NEXT[change.status]?.includes(decision)) return { ok: false, error: "ya-decidido" };
   if (decision !== "aprobado" && !reason?.trim()) return { ok: false, error: "motivo-requerido" };
 
   const now = nowIso();
   // Condición en el UPDATE: dos clics simultáneos no deciden dos veces.
   const result = getDb()
     .prepare(
-      `UPDATE legal_changes SET status = ?, reason = ?, decided_by = ?, decided_at = ?, error = NULL, dispatched_at = NULL, updated_at = ?
+      `UPDATE legal_changes SET status = ?, reason = COALESCE(?, reason), decided_by = ?, decided_at = ?, error = NULL, dispatched_at = NULL, updated_at = ?
        WHERE id = ? AND status = ?`
     )
     .run(decision, reason?.trim() || null, by, now, now, id, change.status);
