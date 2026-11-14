@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { CLAUSE_DEFAULT_NORM, parseCitations } from "@/legal/citations";
 import { legalLibrary, type Article, type Library } from "@/legal/library";
 import { allClauses } from "@/legal/registry";
 import type { Clause } from "@/legal/types";
@@ -61,6 +62,38 @@ export function checkCitations(clauses: Clause[] = allClauses(), lib: Library = 
     }
   }
   return [...out.values()].sort(byKey);
+}
+
+/**
+ * Lint de citas sobre textos sueltos (ayuda, guías, páginas): se leen las citas del
+ * texto (norma por defecto: el DS) y se validan igual que las de las cláusulas.
+ */
+export function checkTextCitations(items: Array<{ source: string; text: string }>, lib: Library = legalLibrary()): KnownFailure[] {
+  const out = new Map<string, KnownFailure>();
+  for (const { source, text } of items) {
+    const cites = parseCitations(text, CLAUSE_DEFAULT_NORM, lib);
+    if (!cites.length) continue;
+    for (const f of checkCitations([{ id: source, text: () => text, cites, nonLegal: "texto suelto" }], lib)) out.set(key(f), f);
+  }
+  return [...out.values()].sort(byKey);
+}
+
+/** Código fuente de páginas y componentes, sin comentarios: sus citas son cadenas estáticas. */
+export function pageSourceTexts(): Array<{ source: string; text: string }> {
+  const out: Array<{ source: string; text: string }> = [];
+  const visit = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) visit(full);
+      else if (entry.name.endsWith(".tsx"))
+        out.push({
+          source: path.relative(process.cwd(), full).replace(/\\/g, "/"),
+          text: fs.readFileSync(full, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, ""),
+        });
+    }
+  };
+  for (const dir of ["src/app", "src/components"]) visit(path.join(process.cwd(), dir));
+  return out;
 }
 
 /** Compara con legal/known-failures/<name>.json. Devuelve las fallas nuevas y las entradas que ya no fallan. */
