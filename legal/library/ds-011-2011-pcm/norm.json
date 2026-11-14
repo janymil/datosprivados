@@ -3,12 +3,14 @@
   "title": "Decreto Supremo N.° 011-2011-PCM, Reglamento del Libro de Reclamaciones",
   "type": "decreto-supremo",
   "number": "011-2011-PCM",
-  "publishedAt": null,
-  "officialUrl": null,
-  "sourceSha256": null,
-  "retrievedAt": null,
-  "status": "no-verificada",
+  "publishedAt": "2011-02-19",
+  "officialUrl": "https://cdn.www.gob.pe/uploads/document/file/662494/Decreto_Supremo_N_011-2011-PCM.pdf",
+  "sourceSha256": "78917c9f8a425f01955ec690992ef583e8a51a5c9d5b406b8381ff0d1aece57b",
+  "retrievedAt": "2026-11-14",
+  "status": "modificada",
   "consolidated": false,
-  "amendedBy": [],
+  "amendedBy": [
+    "ds-101-2022-pcm"
+  ],
   "aliases": []
 }

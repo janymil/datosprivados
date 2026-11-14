@@ -192,8 +192,7 @@ const list: LegalFact[] = [
     value: 5500,
     unit: "soles",
     cites: [{ norm: "ds-uit-2026", art: "1" }],
-    quote: null,
-    note: "Falta el decreto supremo que fija la UIT 2026 en la biblioteca.",
+    quote: "será de S/ 5 500,00 (Cinco Mil Quinientos y 00/100 Soles)",
     validFrom: "2026-01-01",
   },
   {
@@ -218,6 +217,10 @@ const list: LegalFact[] = [
     unit: "días calendario",
     cites: [{ norm: "ds-011-2011-pcm", art: "6" }],
     quote: null,
+    // El art. 6 del DS 011-2011-PCM (ya en la biblioteca) dice 30 días calendario, pero la
+    // Ley N.° 31435 modificó el art. 24.1 de la Ley N.° 29571: 15 días hábiles improrrogables,
+    // y el DS 101-2022-PCM adecuó el Reglamento. Se corrige en un cambio aparte, con la
+    // Ley N.° 29571 en la biblioteca (cambia el texto de los documentos de clientes).
     note: "Falta el DS 011-2011-PCM y sus modificaciones. Verificar: las páginas legales de DatosPrivados dicen 15 días hábiles y los documentos de clientes, 30 días calendario.",
   },
 ];

@@ -1,14 +1,16 @@
 {
   "id": "ds-uit-2026",
-  "title": "Decreto Supremo que fija el valor de la UIT para 2026",
+  "title": "Decreto Supremo N.° 301-2025-EF, que aprueba el valor de la UIT para el año 2026",
   "type": "decreto-supremo",
-  "number": "UIT 2026",
-  "publishedAt": null,
-  "officialUrl": null,
-  "sourceSha256": null,
-  "retrievedAt": null,
-  "status": "no-verificada",
-  "consolidated": false,
+  "number": "301-2025-EF",
+  "publishedAt": "2025-12-17",
+  "officialUrl": "https://cdn.www.gob.pe/uploads/document/file/9183949/7540449-ds301_2025ef.pdf",
+  "sourceSha256": "65d4f41dd814ce989b5e111055bad768423e0ebfd8bc24edca42addabeacf0a2",
+  "retrievedAt": "2026-11-14",
+  "status": "vigente",
+  "consolidated": true,
   "amendedBy": [],
-  "aliases": []
+  "aliases": [
+    "DS N.° 301-2025-EF"
+  ]
 }

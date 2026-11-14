@@ -60,36 +60,6 @@
   "detail": "ds-016-2024-jus:2.2 → III.2"
  },
  {
-  "rule": "cite-norm-unverified",
-  "clause": "consentimiento.g.imagen-voz",
-  "detail": "codigo-civil:15"
- },
- {
-  "rule": "cite-norm-unverified",
-  "clause": "politica.10.normas",
-  "detail": "codigo-civil:15"
- },
- {
-  "rule": "cite-norm-unverified",
-  "clause": "retencion.3.plazos-rubro",
-  "detail": "ds-020-2017-jus:24"
- },
- {
-  "rule": "cite-norm-unverified",
-  "clause": "sectorial.2.especial-rubro",
-  "detail": "codigo-civil:15"
- },
- {
-  "rule": "cite-norm-unverified",
-  "clause": "sectorial.4.normas",
-  "detail": "codigo-civil:15"
- },
- {
-  "rule": "cite-norm-unverified",
-  "clause": "sectorial.5.conservacion",
-  "detail": "ds-020-2017-jus:24"
- },
- {
   "rule": "clause-without-basis",
   "clause": "arco.8.evidencia",
   "detail": ""

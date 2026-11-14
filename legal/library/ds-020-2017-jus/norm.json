@@ -3,12 +3,14 @@
   "title": "Decreto Supremo N.° 020-2017-JUS, Reglamento de la Ley N.° 27693 (Unidad de Inteligencia Financiera)",
   "type": "decreto-supremo",
   "number": "020-2017-JUS",
-  "publishedAt": null,
-  "officialUrl": null,
-  "sourceSha256": null,
-  "retrievedAt": null,
-  "status": "no-verificada",
+  "publishedAt": "2017-10-06",
+  "officialUrl": "https://www.smv.gob.pe/uploads/Reglamento%20de%20la%20Ley%2027693.pdf",
+  "sourceSha256": "8f6bab91d39b2996019bafb80f968d526ba5ce5564acd1927eb2e0f12eb861b6",
+  "retrievedAt": "2026-11-14",
+  "status": "vigente",
   "consolidated": false,
   "amendedBy": [],
-  "aliases": ["DS N.° 020-2017-JUS"]
+  "aliases": [
+    "DS N.° 020-2017-JUS"
+  ]
 }

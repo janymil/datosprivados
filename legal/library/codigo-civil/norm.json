@@ -3,12 +3,14 @@
   "title": "Código Civil (Decreto Legislativo N.° 295)",
   "type": "codigo",
   "number": "D. Leg. 295",
-  "publishedAt": null,
-  "officialUrl": null,
-  "sourceSha256": null,
-  "retrievedAt": null,
-  "status": "no-verificada",
-  "consolidated": false,
+  "publishedAt": "1984-07-25",
+  "officialUrl": "https://www.onp.gob.pe/seccion/centro_de_documentos/Documentos/774.pdf",
+  "sourceSha256": "9dba39e8cb7e4885b9f64648366fecfe80908deb812fafbde470967e66ff20af",
+  "retrievedAt": "2026-11-14",
+  "status": "vigente",
+  "consolidated": true,
   "amendedBy": [],
-  "aliases": ["Código Civil"]
+  "aliases": [
+    "Código Civil"
+  ]
 }

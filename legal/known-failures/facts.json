@@ -1,11 +1,6 @@
 [
  {
   "rule": "fact-unverified",
-  "clause": "uit.2026",
-  "detail": "Falta el decreto supremo que fija la UIT 2026 en la biblioteca."
- },
- {
-  "rule": "fact-unverified",
   "clause": "cctv.conservacion",
   "detail": "Falta la Directiva 01-2020-JUS/DGTAIPD; el número de artículo es provisional."
  },

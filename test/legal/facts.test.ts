@@ -43,6 +43,7 @@ const NUMBER_WORDS: Record<string, string[]> = {
   "48": ["48 horas"],
   "50": ["cincuenta unidades"],
   "100": ["cien unidades"],
+  "5500": ["S/ 5 500,00", "Cinco Mil Quinientos"],
 };
 
 /** El valor del hecho está dicho en su propia frase (o, para fechas del ODP, se deduce de ella). */
