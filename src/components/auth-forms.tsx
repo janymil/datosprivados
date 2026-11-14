@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
-import { loginAction, signupAction, type AuthState } from "@/app/actions/auth";
+import { useActionState, useRef, useState } from "react";
+import { checkRucAction, loginAction, signupAction, type AuthState, type RucLiveCheck } from "@/app/actions/auth";
 import { Field } from "@/components/ui";
 
 const initial: AuthState = {};
@@ -78,6 +78,75 @@ export function LoginForm() {
   );
 }
 
+/**
+ * RUC con verificación inmediata: al completar los 11 dígitos o salir del campo se
+ * consulta la SUNAT y se muestra la razón social y el estado debajo. Al crear la
+ * cuenta se verifica de nuevo en el servidor; esto solo adelanta el resultado.
+ */
+function RucField() {
+  const [check, setCheck] = useState<RucLiveCheck | null>(null);
+  const [checking, setChecking] = useState(false);
+  const lastChecked = useRef("");
+
+  async function verify(value: string) {
+    const ruc = value.replace(/\D/g, "");
+    if (ruc.length !== 11) {
+      lastChecked.current = "";
+      setCheck(null);
+      return;
+    }
+    if (ruc === lastChecked.current) return;
+    lastChecked.current = ruc;
+    setChecking(true);
+    try {
+      const result = await checkRucAction(ruc);
+      // Si el usuario cambió el RUC mientras se consultaba, este resultado ya no vale.
+      if (lastChecked.current === ruc) setCheck(result);
+    } catch {
+      if (lastChecked.current === ruc) setCheck({ ok: false, message: "No pudimos verificar tu RUC ahora. Lo verificamos al crear la cuenta.", retry: true });
+    } finally {
+      if (lastChecked.current === ruc) setChecking(false);
+    }
+  }
+
+  return (
+    <div>
+    <Field label="RUC" hint="11 dígitos. Al completarlo lo consultamos en la SUNAT: debe existir y estar ACTIVO. Solo empresas o personas con negocio constituidas en el Perú.">
+      <input
+        name="ruc"
+        required
+        inputMode="numeric"
+        pattern="\d{11}"
+        maxLength={11}
+        className="input"
+        placeholder="20604567891"
+        onChange={(e) => {
+          if (e.currentTarget.value.replace(/\D/g, "").length === 11) void verify(e.currentTarget.value);
+          else if (check || lastChecked.current) {
+            lastChecked.current = "";
+            setCheck(null);
+          }
+        }}
+        onBlur={(e) => void verify(e.currentTarget.value)}
+      />
+    </Field>
+      {/* Fuera de Field: con un solo control hijo, Field asocia etiqueta y ayuda al input. */}
+      <p id="ruc-check" aria-live="polite" className="mt-1.5 min-h-[1.25rem] text-[14px] leading-snug">
+        {checking ? (
+          <span className="text-ink-soft">Consultando la SUNAT…</span>
+        ) : check?.ok ? (
+          <span className="text-sage">
+            ✓ {check.razonSocial} — {check.estado}
+            {check.condicion ? ` · ${check.condicion}` : ""}
+          </span>
+        ) : check ? (
+          <span className={check.retry ? "text-ink-soft" : "text-crimson"}>{check.message}</span>
+        ) : null}
+      </p>
+    </div>
+  );
+}
+
 export function SignupForm({
   plan,
   sector,
@@ -97,17 +166,7 @@ export function SignupForm({
         <input name="company" required className="input" placeholder="Casa Verde Perú S.A.C." />
       </Field>
 
-      <Field label="RUC" hint="11 dígitos. Lo verificamos con la SUNAT: debe existir y estar ACTIVO. Solo empresas o personas con negocio constituidas en el Perú.">
-        <input
-          name="ruc"
-          required
-          inputMode="numeric"
-          pattern="\d{11}"
-          maxLength={11}
-          className="input"
-          placeholder="20604567891"
-        />
-      </Field>
+      <RucField />
 
       <Field label="Tu nombre">
         <input name="name" required className="input" placeholder="Lucía Rojas" />

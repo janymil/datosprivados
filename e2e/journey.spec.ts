@@ -48,6 +48,8 @@ test("recorrido completo: de la suscripción al vencimiento", async ({ page, bro
     await page.goto("/registro");
     await page.locator('input[name="company"]').fill("Empresa E2E");
     await page.locator('input[name="ruc"]').fill(RUC);
+    // Al completar el RUC se consulta la SUNAT y la razón social aparece debajo del campo.
+    await expect(page.locator("#ruc-check")).toContainText("EMPRESA E2E S.A.C. — ACTIVO");
     await page.locator('input[name="name"]').fill("Dueño E2E");
     await page.locator('input[name="email"]').fill(EMAIL);
     await page.locator('input[name="password"]').fill(PASSWORD);
