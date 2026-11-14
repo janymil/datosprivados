@@ -37,6 +37,7 @@ import {
 } from "@/legal/shared";
 import { legalContext } from "@/legal/context";
 import { renderDocument } from "@/legal/render";
+import { eipdSpec } from "@/legal/documents/eipd";
 import { encargoSpec } from "@/legal/documents/encargo";
 import { terminosSpec } from "@/legal/documents/terminos";
 import { arcoSpec } from "@/legal/documents/arco";
@@ -137,90 +138,7 @@ export function buildRetentionPolicy(company: Company, banks: DataBank[]): strin
  * diligencia cuando se usan proveedores de IA sobre datos financieros.
  */
 export function buildImpactAssessment(company: Company, banks: DataBank[], providers: Provider[] = []): string {
-  const date = formatDate(new Date().toISOString(), "long");
-  const name = company.name;
-  const contact = company.dpo_email || company.email;
-  const profile = sectorLegalProfile(company);
-  const highRisk = banks.filter(
-    (bank) =>
-      isSensitiveBank(bank) ||
-      /\b(ia|ocr)\b|inteligencia artificial|voz|audio|recibo|salud|biometr|video|perfil|menor|alumno|paciente/i.test(
-        `${bank.name} ${bank.purpose} ${bank.data_categories}`
-      )
-  );
-  const list = highRisk.length ? highRisk.map((bank) => `«${bank.name}»`).join(", ") : "los tratamientos descritos abajo";
-  const riskRows = [
-    ...profile.risks.map((r) => [r.risk, r.probability, r.impact, r.level]),
-    ["Acceso indebido por credenciales compartidas", "Media", "Alto", "Alto"],
-    ["Conservación más allá del plazo declarado", "Alta", "Medio", "Medio"],
-    ["Transferencia internacional sin garantías ni comunicación a la ANPD", "Media", "Alto", "Alto"],
-    ...foreignProviders(providers).map((provider) => [
-      `Datos tratados por ${provider.name} en ${COUNTRY_LABEL(provider.country)}`,
-      "Media",
-      "Alto",
-      "Alto",
-    ]),
-  ];
-
-  return `## 0. Cuándo corresponde hacerla
-
-La evaluación de impacto (EIPD) es **facultativa** y previa al tratamiento (art. 40.1 del DS N.° 016-2024-JUS), pero la norma la recomienda especialmente cuando se tratan datos sensibles, datos para crear perfiles, datos de personas en situación de vulnerabilidad (niños, niñas y adolescentes, personas con discapacidad, pueblos indígenas en aislamiento) o grandes volúmenes de datos. Puede elaborarse con la guía de la NTP-ISO/IEC 27005 y la NTP-ISO 31000 (art. 40.2). **Tenerla acreditada antes de que se inicie un procedimiento sancionador se considera al graduar la multa** (art. 125.4).
-
-En ${name} (${profile.title}) se recomienda dejarla documentada para: ${list}.${profile.minors ? " Tratas datos de menores de edad." : ""}${profile.sensitive ? " Tu actividad principal trata datos sensibles." : ""}
-
-## 1. Descripción del tratamiento
-
-- **Finalidad:** ______________________________________________
-- **Bancos de datos implicados:** ${list}
-- **Categorías de datos:** ____________________________________
-- **Titulares:** ______________________________________________
-- **Sistemas y proveedores:** ${providers.length ? providers.map((provider) => provider.name).join(", ") : "_________________________________"}
-- **País de almacenamiento:** ${providers.length ? Array.from(new Set(providers.map((provider) => COUNTRY_LABEL(provider.country)))).join(", ") : "_________________________________"}
-- **Base legal:** _____________________________________________
-
-## 2. Necesidad y proporcionalidad
-
-| Pregunta | Respuesta |
-| --- | --- |
-| ¿Cada dato es necesario para la finalidad? | |
-| ¿Se puede lograr lo mismo con menos datos o con datos agregados? | |
-| ¿Se informó a los titulares antes de recogerlos? | |
-| ¿Existe una base legal distinta del consentimiento? | |
-| ¿El plazo de conservación es el mínimo posible? | |
-
-## 3. Riesgos identificados
-
-${table(["Riesgo", "Probabilidad", "Impacto", "Nivel"], riskRows)}
-
-*Estos riesgos son los típicos de tu rubro. Agrega los propios y reevalúa probabilidad e impacto con tu realidad.*
-
-## 4. Medidas de mitigación
-
-1. Consentimiento escrito y separado para datos sensibles y de menores; no condicionar el servicio a finalidades adicionales.
-2. Contrato de encargo con cada proveedor, prohibición expresa de entrenamiento con los datos y supresión acreditada al terminar (arts. 29 a 33).
-3. Supresión o enmascaramiento de identificadores antes de cualquier envío a un proveedor de IA o analítica externo.
-4. Revisión humana posible en toda categorización, evaluación o extracción automática (art. 87).
-5. Registro de interacciones con los datos conservado 2 años y revisión semestral de privilegios (art. 46).
-6. Plazos de conservación con purga registrada y bloqueo previo a la eliminación.
-${profile.security.map((measure, index) => `${index + 7}. ${measure}`).join("\n")}
-
-## 5. Riesgo residual y decisión
-
-Con las medidas anteriores, el riesgo residual se considera: ☐ Bajo ☐ Medio ☐ Alto.
-
-Decisión: ☐ Continuar ☐ Continuar con condiciones ☐ No continuar
-
-Condiciones: ______________________________________________
-
-## 6. Aprobación y revisión
-
-- Responsable: ${company.dpo_name || "[responsable de privacidad]"} (${contact}).
-- Fecha: ${date}.
-- Revisión: antes de cambiar de proveedor de IA, de modelo o de países de tratamiento.
-
----
-
-*Borrador generado con DatosPrivados. La EIPD es un documento vivo: se actualiza cuando cambia el tratamiento.*`;
+  return renderDocument(eipdSpec, legalContext(company, banks, providers));
 }
 
 /* -------------------------------------------------------------------------- */
