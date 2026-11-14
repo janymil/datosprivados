@@ -119,6 +119,47 @@ describe("splitArticles", () => {
     expect(out[3].text).toBe("Se rigen por la norma anterior.");
   });
 
+  it("en una compilación anotada, la versión modificada reemplaza a la original", () => {
+    const text = [
+      "REGLAMENTO DE LA LEY",
+      "Artículo 1.- Objeto",
+      "Regula el libro.",
+      "Artículo 2.- Plazo",
+      "El proveedor responde en treinta días. (*)",
+      "(*) Artículo modificado por el Artículo 1 del Decreto Supremo Nº 006-2014-PCM, publicado el 23 enero 2014, cuyo texto es el siguiente:",
+      "“Artículo 2.- Plazo",
+      "El proveedor responde en quince días hábiles.”",
+      "Artículo 3.- Aviso",
+      "Se exhibe un aviso.",
+    ].join("\n");
+    const out = splitArticles(text, { start: /^REGLAMENTO/m, amended: true });
+    expect(out.map((a) => a.num)).toEqual(["1", "2", "3"]);
+    const art2 = out.find((a) => a.num === "2")!;
+    expect(art2.text).toContain("quince días hábiles");
+    expect(art2.text).not.toContain("treinta");
+    expect(art2.text).not.toContain("(*)");
+    expect(art2.text).not.toMatch(/[“”]/);
+  });
+
+  it("código con sumilla en la línea anterior: el título es la sumilla y el texto empieza en el encabezado", () => {
+    const text = [
+      "LIBRO I",
+      "Derecho a la intimidad",
+      "Artículo 14.- La intimidad de la vida personal y familiar no puede ser puesta de manifiesto",
+      "sin el asentimiento de la persona.",
+      "Derecho a la imagen y voz",
+      "Artículo 15.- La imagen y la voz de una persona no pueden ser aprovechadas sin autorización",
+      "expresa de ella.",
+    ].join("\n");
+    const out = splitArticles(text, { start: /^LIBRO I$/m, sumilla: true });
+    expect(out.map((a) => [a.num, a.title])).toEqual([
+      ["14", "Derecho a la intimidad"],
+      ["15", "Derecho a la imagen y voz"],
+    ]);
+    expect(out[0].text).toBe("La intimidad de la vida personal y familiar no puede ser puesta de manifiesto sin el asentimiento de la persona.");
+    expect(out[1].text).toBe("La imagen y la voz de una persona no pueden ser aprovechadas sin autorización expresa de ella.");
+  });
+
   it("rechaza un número de artículo repetido", () => {
     expect(() => splitArticles("REGLAMENTO DE LA LEY\nArtículo 1. A\nx\nArtículo 1. B\ny", { start: /^REGLAMENTO/m })).toThrow(/repetido/);
   });

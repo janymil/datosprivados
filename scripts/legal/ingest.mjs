@@ -42,6 +42,8 @@ for (let n = 0; n < source.startOccurrence; n++) {
 const articles = splitArticles(raw.slice(match.index), {
   start: new RegExp(source.start, "m"),
   end: source.end ? new RegExp(source.end, "m") : undefined,
+  amended: Boolean(source.amended),
+  sumilla: Boolean(source.sumilla),
 });
 
 const dir = path.join(root, "legal/library", id);
