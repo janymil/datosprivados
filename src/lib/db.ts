@@ -1,4 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
+import { factNumber } from "@/legal/facts";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -1252,8 +1253,8 @@ export function verifyPassword(password: string, stored: string): boolean {
  * rectificación, cancelación y oposición 10.
  */
 export function arcoLegalBusinessDays(type: string): number {
-  if (type === "informacion") return 8;
-  return type === "acceso" ? 20 : 10;
+  if (type === "informacion") return factNumber("arco.plazo.informacion");
+  return type === "acceso" ? factNumber("arco.plazo.acceso") : factNumber("arco.plazo.otros");
 }
 
 /**

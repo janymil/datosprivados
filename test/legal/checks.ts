@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { CLAUSE_DEFAULT_NORM, parseCitations } from "@/legal/citations";
 import { legalLibrary, type Article, type Library } from "@/legal/library";
 import { allClauses } from "@/legal/registry";
 import type { Clause } from "@/legal/types";
@@ -59,6 +60,20 @@ export function checkCitations(clauses: Clause[] = allClauses(), lib: Library = 
       if (!found) { add({ rule: "cite-article-missing", clause: clause.id, detail }); continue; }
       if (found.item && !itemExists(found.article, found.item)) add({ rule: "cite-item-missing", clause: clause.id, detail });
     }
+  }
+  return [...out.values()].sort(byKey);
+}
+
+/**
+ * Lint de citas sobre textos sueltos (ayuda, guías, páginas): se leen las citas del
+ * texto (norma por defecto: el DS) y se validan igual que las de las cláusulas.
+ */
+export function checkTextCitations(items: Array<{ source: string; text: string }>, lib: Library = legalLibrary()): KnownFailure[] {
+  const out = new Map<string, KnownFailure>();
+  for (const { source, text } of items) {
+    const cites = parseCitations(text, CLAUSE_DEFAULT_NORM, lib);
+    if (!cites.length) continue;
+    for (const f of checkCitations([{ id: source, text: () => text, cites, nonLegal: "texto suelto" }], lib)) out.set(key(f), f);
   }
   return [...out.values()].sort(byKey);
 }

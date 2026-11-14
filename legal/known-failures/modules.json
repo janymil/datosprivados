@@ -1,0 +1,127 @@
+[
+ {
+  "rule": "cite-item-missing",
+  "clause": "faq:7",
+  "detail": "ds-016-2024-jus:13.6"
+ },
+ {
+  "rule": "cite-item-missing",
+  "clause": "help:TOPICS[casos-especiales].blocks[5].items[0]",
+  "detail": "ds-016-2024-jus:13.6"
+ },
+ {
+  "rule": "cite-item-missing",
+  "clause": "help:topicToPlainText:casos-especiales",
+  "detail": "ds-016-2024-jus:13.6"
+ },
+ {
+  "rule": "cite-item-missing",
+  "clause": "src/lib/ai.ts",
+  "detail": "ds-016-2024-jus:13.6"
+ },
+ {
+  "rule": "cite-item-missing",
+  "clause": "src/lib/help-content.ts",
+  "detail": "ds-016-2024-jus:13.6"
+ },
+ {
+  "rule": "cite-item-missing",
+  "clause": "src/lib/legal-faq.ts",
+  "detail": "ds-016-2024-jus:13.6"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "guides:GUIDES[ds-016-2024-jus-reglamento].sections[5].bullets[1]",
+  "detail": "ds-016-2024-jus:2.4 → III.4"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "incident-criteria:INCIDENT_CRITERIA[datos_sensibles].hint",
+  "detail": "ds-016-2024-jus:2.6 → III.6"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "sector-legal:FAMILIES.fintech.norms[0]",
+  "detail": "ds-016-2024-jus:2.6 → III.6"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "sector-legal:FAMILIES.venta_online.norms[3]",
+  "detail": "ds-016-2024-jus:2.4 → III.4"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "src/lib/guides.ts",
+  "detail": "ds-016-2024-jus:2.4 → III.4"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "src/lib/incident-criteria.ts",
+  "detail": "ds-016-2024-jus:2.6 → III.6"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "src/lib/sector-legal.ts",
+  "detail": "ds-016-2024-jus:2.4 → III.4"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "src/lib/sector-legal.ts",
+  "detail": "ds-016-2024-jus:2.6 → III.6"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sector-legal:FAMILIES.bienestar.norms[5]",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sector-legal:FAMILIES.educacion_menores.norms[4]",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sector-legal:FAMILIES.finanzas.retention[0].basis",
+  "detail": "ds-020-2017-jus:24"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sector-legal:FAMILIES.inmobiliaria.retention[0].basis",
+  "detail": "ds-020-2017-jus:24"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sector-legal:FAMILIES.medios.norms[2]",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sector-legal:FAMILIES.nocturno.norms[3]",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sector-legal:FAMILIES.profesional.retention[2].basis",
+  "detail": "ds-020-2017-jus:24"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sector-legal:FAMILIES.seguros.retention[1].basis",
+  "detail": "ds-020-2017-jus:24"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sector-legal:FAMILIES.vehiculos.retention[0].basis",
+  "detail": "ds-020-2017-jus:24"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "src/lib/sector-legal.ts",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "src/lib/sector-legal.ts",
+  "detail": "ds-020-2017-jus:24"
+ }
+]
