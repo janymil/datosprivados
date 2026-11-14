@@ -1,3 +1,5 @@
+import { fact, factNumber } from "@/legal/facts";
+
 /**
  * Escala de multas de la ANPD (art. 39 de la Ley 29733), en UIT. Es la misma escala
  * que ya usan el glosario, el asistente y la ayuda; aquí vive como datos para la
@@ -5,14 +7,20 @@
  */
 
 /** UIT 2026, en soles. */
-export const UIT_2026 = 5500;
+export const UIT_2026 = factNumber("uit.2026");
 
 export type FineTier = "leve" | "grave" | "muy_grave";
 
+/** «0.5-5» → [0.5, 5]: rango en UIT de un hecho legal (Ley 29733, art. 39). */
+function uitRange(id: string): { minUit: number; maxUit: number } {
+  const [minUit, maxUit] = String(fact(id).value).split("-").map(Number);
+  return { minUit, maxUit };
+}
+
 export const FINE_TIERS: Record<FineTier, { label: string; minUit: number; maxUit: number }> = {
-  leve: { label: "Leve", minUit: 0.5, maxUit: 5 },
-  grave: { label: "Grave", minUit: 5, maxUit: 50 },
-  muy_grave: { label: "Muy grave", minUit: 50, maxUit: 100 },
+  leve: { label: "Leve", ...uitRange("multa.leve") },
+  grave: { label: "Grave", ...uitRange("multa.grave") },
+  muy_grave: { label: "Muy grave", ...uitRange("multa.muy-grave") },
 };
 
 /** Infracciones leves que el producto ya documenta (asistente y glosario). */

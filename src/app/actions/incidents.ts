@@ -7,7 +7,7 @@ import { requireActiveSession } from "@/lib/auth";
 import { logActivity } from "@/lib/data";
 import { notifyCompany } from "@/lib/notify";
 import { formatDateTime } from "@/lib/format";
-import { normalizeCriteria, serializeCriteria } from "@/lib/incident-criteria";
+import { incidentDueAt, normalizeCriteria, serializeCriteria } from "@/lib/incident-criteria";
 
 const SEVERITIES = ["leve", "moderado", "grave"] as const;
 const ACTIONS = ["notificar", "cerrar", "analisis", "guardar"] as const;
@@ -53,7 +53,7 @@ export async function createIncidentAction(formData: FormData) {
     redirect("/app/incidentes/nuevo?error=fecha");
   }
 
-  const due = new Date(detected.getTime() + 48 * 3_600_000);
+  const due = incidentDueAt(detected);
   const id = newId();
   const criteriaValue = criteria(formData);
   const hasCriteria = normalizeCriteria(criteriaValue.split(",")).length > 0;

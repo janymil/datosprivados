@@ -1,3 +1,5 @@
+import { factNumber } from "@/legal/facts";
+
 /**
  * Criterios del art. 34.1 del Reglamento (DS N.° 016-2024-JUS).
  *
@@ -71,6 +73,11 @@ export function criteriaLabels(value: string | null | undefined): string[] {
 }
 
 /** ¿Hay que avisar a la ANPD en 48 horas? */
+/** Vencimiento de la notificación a la ANPD: plazo del art. 34.1 del DS 016-2024-JUS desde la detección. */
+export function incidentDueAt(detected: Date): Date {
+  return new Date(detected.getTime() + factNumber("incidente.notificacion") * 3_600_000);
+}
+
 export function requiresAnpdNotification(value: string | null | undefined): boolean {
   return parseCriteria(value).length > 0;
 }
