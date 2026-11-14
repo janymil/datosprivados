@@ -1,0 +1,67 @@
+[
+ {
+  "rule": "cite-item-missing",
+  "clause": "arco.3.plazos",
+  "detail": "ds-016-2024-jus:2.8"
+ },
+ {
+  "rule": "cite-item-missing",
+  "clause": "consentimiento.d-uso.si-aplica",
+  "detail": "ds-016-2024-jus:2.6"
+ },
+ {
+  "rule": "cite-item-missing",
+  "clause": "consentimiento.d.encabezado",
+  "detail": "ds-016-2024-jus:2.6"
+ },
+ {
+  "rule": "cite-item-missing",
+  "clause": "politica.10-sensibles.no",
+  "detail": "ds-016-2024-jus:2.6"
+ },
+ {
+  "rule": "cite-item-missing",
+  "clause": "politica.10.normas",
+  "detail": "ds-016-2024-jus:2.6"
+ },
+ {
+  "rule": "cite-item-missing",
+  "clause": "politica.7.derechos-arco",
+  "detail": "ds-016-2024-jus:2.8"
+ },
+ {
+  "rule": "cite-item-missing",
+  "clause": "sectorial.4.normas",
+  "detail": "ds-016-2024-jus:2.6"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "consentimiento.g.imagen-voz",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "politica.10.normas",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "retencion.3.plazos-rubro",
+  "detail": "ds-020-2017-jus:24"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sectorial.2.especial-rubro",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sectorial.4.normas",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sectorial.5.conservacion",
+  "detail": "ds-020-2017-jus:24"
+ }
+]
