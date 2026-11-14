@@ -1,0 +1,79 @@
+# Cambio legal aprobado por el fundador en /operador/legal (motor legal, plan 4).
+# El servidor envía un repository_dispatch con { id, branch, head_sha }. Este flujo:
+#   1. comprueba que la rama siga exactamente en el commit aprobado;
+#   2. valida las reglas del cambio (scripts/legal/validate-change.mjs);
+#   3. corre las mismas pruebas que ci.yml;
+#   4. si todo pasa, fusiona la rama en master. El servidor lo despliega después.
+# Si algo falla, no se fusiona nada; el servidor lee el resultado y lo muestra.
+name: Cambio legal aprobado
+run-name: legal ${{ github.event.client_payload.id }}
+
+on:
+  repository_dispatch:
+    types: [legal-change-approved]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: legal-change
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Validar, probar y fusionar
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CHANGE_ID: ${{ github.event.client_payload.id }}
+      CHANGE_BRANCH: ${{ github.event.client_payload.branch }}
+      CHANGE_SHA: ${{ github.event.client_payload.head_sha }}
+    steps:
+      - name: Datos del cambio con forma válida
+        run: |
+          [[ "$CHANGE_ID" =~ ^lc-[0-9]{8}-[0-9a-f]{6}$ ]] || { echo "id inválido: $CHANGE_ID"; exit 1; }
+          [[ "$CHANGE_BRANCH" =~ ^legal/[a-z0-9-]+$ ]] || { echo "rama inválida: $CHANGE_BRANCH"; exit 1; }
+          [[ "$CHANGE_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "commit inválido: $CHANGE_SHA"; exit 1; }
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.client_payload.branch }}
+          fetch-depth: 0
+
+      - name: La rama sigue en el commit aprobado
+        run: |
+          head="$(git rev-parse HEAD)"
+          if [ "$head" != "$CHANGE_SHA" ]; then
+            echo "la rama cambió después de aprobar: aprobado $CHANGE_SHA, ahora $head"
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Reglas del cambio
+        run: node --experimental-strip-types scripts/legal/validate-change.mjs "$CHANGE_ID" origin/master
+
+      - name: Escaneo de secretos
+        run: pnpm scan:secrets
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - name: Pruebas con suelo de cobertura
+        run: pnpm test:coverage
+      - run: pnpm build
+        env:
+          NEXT_PUBLIC_APP_URL: https://ci.example.com
+          CSP_ENFORCE: "1"
+
+      - name: Fusionar en master
+        run: |
+          git config user.name "datosprivados-legal"
+          git config user.email "legal@datosprivados.invalid"
+          git fetch origin master
+          git checkout -B master origin/master
+          git merge --no-ff "$CHANGE_SHA" -m "legal: $CHANGE_ID aprobado" -m "Rama $CHANGE_BRANCH en $CHANGE_SHA, aprobada en /operador/legal."
+          git push origin master
