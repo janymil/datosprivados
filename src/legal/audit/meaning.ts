@@ -48,11 +48,26 @@ const LABEL = /^(?:art(?:[íi]culo)?s?\.?\s*)?(?:\d+|[IVX]+)(?:\.\d+)*\.?\s*[:.)
 export function quoteFound(quote: string, articles: Array<{ text: string }>): boolean {
   const corpus = normalize(articles.map((a) => a.text).join(" "));
   const pieces = quote
-    .split(/\s*(?:…|\.\.\.)\s*|\s+(?=(?:\d+|[IVX]+)\.\d+\s)/)
-    .map((p) => normalize(p.replace(LABEL, "")).replace(/^[.,;:]\s*|[.,;:]$/g, ""))
+    // Cortes de la IA: «…», «...», «[...]», «”; “», « / », y el número de otro inciso.
+    .split(/\s*\[?(?:…|\.\.\.)\]?\s*|[”"»]\s*[;/,]\s*[“"«]|\s+\/\s+|\s+(?=(?:\d+|[IVX]+)\.\d+\s)/)
+    .map((p) => normalize(normalize(p).replace(LABEL, "")).replace(/^[.,;:]\s*|[.,;:]$/g, ""))
     .filter(Boolean);
   const long = pieces.filter((p) => p.length >= 20);
-  return (long.length ? long : [normalize(quote)]).every((p) => corpus.includes(p));
+  return (long.length ? long : [normalize(quote)]).every((p) => corpus.includes(p) || shingleCoverage(p, corpus) >= 0.7);
+}
+
+const SHINGLE = 5;
+/**
+ * Parte de las secuencias de 5 palabras del trozo que están en el artículo. Tolera una
+ * palabra cambiada o añadida por la IA («comuniquen» por «comunique»); una frase
+ * inventada no comparte secuencias con el artículo.
+ */
+function shingleCoverage(piece: string, corpus: string): number {
+  const words = piece.split(" ");
+  if (words.length < SHINGLE) return 0;
+  let hits = 0;
+  for (let i = 0; i + SHINGLE <= words.length; i++) if (corpus.includes(words.slice(i, i + SHINGLE).join(" "))) hits += 1;
+  return hits / (words.length - SHINGLE + 1);
 }
 
 /** Lee el primer objeto JSON de la respuesta (también dentro de ```json o con texto alrededor). */

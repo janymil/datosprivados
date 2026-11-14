@@ -67,7 +67,18 @@ describe("chequeo de significado (dos pasadas)", () => {
     ];
     expect(quoteFound("66.1 Todas las solicitudes presentadas deben ser recibidas dejándose constancia de su recepción. 68.1 El titular del banco de datos personales debe responder", articles)).toBe(true);
     expect(quoteFound("Art. 66: “Todas las solicitudes presentadas deben ser recibidas … dejándose constancia de su recepción”", articles)).toBe(true);
+    expect(quoteFound("Todas las solicitudes presentadas deben ser recibidas [...] dejándose constancia de su recepción", articles)).toBe(true);
+    expect(quoteFound("“Todas las solicitudes presentadas deben ser recibidas”; “debe responder la solicitud en el plazo previsto”", articles)).toBe(true);
+    expect(quoteFound("“66.1 Todas las solicitudes presentadas deben ser recibidas” / “68.1 El titular del banco de datos personales debe responder”", articles)).toBe(true);
     expect(quoteFound("Todas las solicitudes deben pagarse con una tasa de diez soles", articles)).toBe(false);
+    // Dos incisos pegados tras un punto, el segundo sin subnúmero.
+    expect(quoteFound("deben ser recibidas dejándose constancia de su recepción. 68 El titular del banco de datos personales debe responder", [articles[0], { text: "68 El titular del banco de datos personales debe responder la solicitud." }])).toBe(true);
+  });
+
+  it("una paráfrasis mínima (una palabra cambiada o añadida) se acepta; una cita inventada no", () => {
+    const art = [{ text: "El titular de datos personales tiene derecho a que se le comunique de forma clara, expresa e indubitable el tratamiento de sus datos y la finalidad para la que se recopilan." }];
+    expect(quoteFound("El titular de datos personales tiene derecho a que se le comuniquen de forma clara, expresa e indubitable el tratamiento de sus datos y la finalidad para la que se recopilan", art)).toBe(true);
+    expect(quoteFound("El titular de datos personales puede exigir una indemnización inmediata y un pago en efectivo por cada uso de sus datos personales", art)).toBe(false);
   });
 
   it("las dos pasadas excluyen los datos propios de la empresa y piden margen de salida", async () => {
