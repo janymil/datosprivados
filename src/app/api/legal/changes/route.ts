@@ -13,6 +13,9 @@ const MAX_BODY = 2 * 1024 * 1024;
  * Interno: lo llaman la auditoría (plan 5) y el monitor de normas (plan 6) con el
  * bearer de CRON_SECRET. Avisa por correo a cada operador la primera vez.
  *
+ * `id` (lc-AAAAMMDD-xxxxxx) lo elige quien registra: la rama ya lleva
+ * `legal/changes/<id>.md`, que el flujo de GitHub exige.
+ *
  * `diff` debe ser EXACTAMENTE la salida de
  *   git diff --no-color --no-ext-diff -M origin/master...<head_sha>
  * El flujo de GitHub recalcula ese diff y no fusiona si su sha256 no coincide con el
@@ -53,6 +56,7 @@ function parseInput(data: Record<string, unknown>): LegalChangeInput {
     branch: String(data.branch ?? ""),
     head_sha: String(data.head_sha ?? ""),
     diff: String(data.diff ?? ""),
+    ...(data.id !== undefined && data.id !== null ? { id: String(data.id) } : {}),
     affected: Array.isArray(data.affected)
       ? data.affected.map((a: { kind?: unknown; source?: unknown }) => ({ kind: String(a.kind), source: String(a.source) }))
       : [],

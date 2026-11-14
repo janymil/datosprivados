@@ -29,6 +29,26 @@ describe("cambios legales propuestos", () => {
     expect(registerLegalChange(data).id).toBe(registerLegalChange(data).id);
   });
 
+  it("usa el id que envía quien registra", () => {
+    expect(registerLegalChange(input({ id: "lc-20261114-abc123" })).id).toBe("lc-20261114-abc123");
+  });
+
+  it("rechaza un id con forma inválida", () => {
+    expect(() => registerLegalChange(input({ id: "lc-1" }))).toThrow(/id inválido/);
+  });
+
+  it("mismo id, rama y commit: devuelve el existente", () => {
+    const data = input({ id: "lc-20261114-def456" });
+    registerLegalChange(data);
+    expect(registerLegalChange(data).id).toBe("lc-20261114-def456");
+    expect(listLegalChanges().filter((c) => c.id === "lc-20261114-def456")).toHaveLength(1);
+  });
+
+  it("mismo id con otra rama: rechaza", () => {
+    registerLegalChange(input({ id: "lc-20261114-0a0b0c" }));
+    expect(() => registerLegalChange(input({ id: "lc-20261114-0a0b0c" }))).toThrow(/id ya usado/);
+  });
+
   it("rechaza rama, commit o diff inválidos", () => {
     expect(() => registerLegalChange(input({ branch: "main" }))).toThrow(/rama/);
     expect(() => registerLegalChange(input({ head_sha: "abc" }))).toThrow(/commit/);

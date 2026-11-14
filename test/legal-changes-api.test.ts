@@ -28,6 +28,15 @@ describe("POST /api/legal/changes", () => {
     delete process.env.OPERATOR_EMAILS;
   });
 
+  it("acepta el id que elige quien registra (201) y rechaza uno inválido (400)", async () => {
+    const ok = await POST(request(body({ id: "lc-20261114-aaa111", branch: "legal/api-con-id" })));
+    expect(ok.status).toBe(201);
+    expect((await ok.json()).id).toBe("lc-20261114-aaa111");
+    const bad = await POST(request(body({ id: "x", branch: "legal/api-id-malo" })));
+    expect(bad.status).toBe(400);
+    expect((await bad.json()).error).toMatch(/id inválido/);
+  });
+
   it("sin el secreto responde 401", async () => {
     expect((await POST(request(body(), "Bearer otro-secreto-de-prueba"))).status).toBe(401);
   });

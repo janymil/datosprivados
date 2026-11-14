@@ -9,7 +9,16 @@ import { getDb, nowIso, type LegalChange, type LegalChangeStatus } from "./db";
 
 export type LegalChangeInput = Pick<LegalChange, "kind" | "title" | "summary" | "source_url" | "branch" | "head_sha" | "diff"> & {
   affected: Array<{ kind: string; source: string }>;
+  /**
+   * Id elegido por quien registra. La rama ya debe llevar `legal/changes/<id>.md`
+   * (el flujo de GitHub lo exige), así que el id existe antes del commit; sin él,
+   * se genera uno (solo útil en pruebas).
+   */
+  id?: string;
 };
+
+/** Forma de un id de cambio legal: `lc-AAAAMMDD-xxxxxx`. */
+export const CHANGE_ID = /^lc-\d{8}-[0-9a-f]{6}$/;
 
 const BRANCH = /^legal\/[a-z0-9-]+$/;
 const SHA = /^[0-9a-f]{40}$/;
@@ -25,6 +34,7 @@ export function registerLegalChange(input: LegalChangeInput): LegalChange {
   if (!SHA.test(input.head_sha)) throw new Error(`commit inválido: ${input.head_sha}`);
   if (!input.diff.trim()) throw new Error("diff vacío");
   if (!input.title.trim()) throw new Error("título vacío");
+  if (input.id !== undefined && !CHANGE_ID.test(input.id)) throw new Error(`id inválido: ${input.id} (debe ser lc-AAAAMMDD-xxxxxx)`);
 
   const db = getDb();
   const existing = db.prepare("SELECT * FROM legal_changes WHERE branch = ? AND head_sha = ?").get(input.branch, input.head_sha) as
@@ -32,8 +42,9 @@ export function registerLegalChange(input: LegalChangeInput): LegalChange {
     | undefined;
   if (existing) return existing;
 
+  const id = input.id ?? changeId();
+  if (getLegalChange(id)) throw new Error(`id ya usado: ${id}`);
   const now = nowIso();
-  const id = changeId();
   db.prepare(
     `INSERT INTO legal_changes (id, kind, title, summary, source_url, branch, head_sha, diff, affected, status, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'nuevo', ?, ?)`

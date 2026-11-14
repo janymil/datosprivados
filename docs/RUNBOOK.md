@@ -515,6 +515,8 @@ Un cambio legal propuesto (rama `legal/<id>`) aparece en `/operador/legal`. Al a
    job, que no ejecuta nada de la rama, la fusiona. Si `master` se movió mientras tanto, falla:
    vuelve a aprobar. Quien registra un cambio debe enviar como `diff` exactamente
    `git diff --no-color --no-ext-diff -M origin/master...<commit>`.
+   El `id` (`lc-AAAAMMDD-xxxxxx`) también lo elige quien registra: la rama ya debe llevar
+   `legal/changes/<id>.md`, que el flujo exige (`scripts/legal/propose-change.mjs` lo hace solo).
 3. La tarea `legal-change-sync` (cada 10 min) lee el resultado: si falló, el cambio queda en
    «fallo» con el enlace al run y se avisa a `OPERATOR_EMAILS`; si fusionó, escribe el commit en
    `/var/lib/datosprivados/deploy-request`.
