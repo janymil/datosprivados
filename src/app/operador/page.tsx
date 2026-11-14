@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireOperator } from "@/lib/operator";
 import { listPendingInvoices, formatSol, listCreditNotes } from "@/lib/invoicing";
 import { listPendingTransfers } from "@/lib/transfers";
+import { CREDIT_DAYS, isCreditOverdue } from "@/lib/credit";
 import { formatDate } from "@/lib/format";
 import { OperatorNav } from "@/components/operator-nav";
 import { issueInvoiceAction, confirmTransferAction, closeCreditNoteAction } from "./actions";
@@ -114,6 +115,20 @@ export default async function OperatorPage({ searchParams }: { searchParams: Pro
                 Plan {payment.plan} {payment.term === "yearly" ? "anual" : "mensual"} · {formatSol(payment.amount)} · referencia{" "}
                 <strong>{payment.external_reference}</strong> · {formatDate(payment.created_at)}
               </p>
+              {payment.credit === 1 && (
+                <p className="mt-1 text-sm">
+                  <strong>Crédito</strong> (acceso ya activo) ·{" "}
+                  {payment.due_at ? (
+                    isCreditOverdue(payment.company_id) ? (
+                      <strong className="text-crimson">VENCIDA el {formatDate(payment.due_at)} · cuenta en solo lectura</strong>
+                    ) : (
+                      <>vence el {formatDate(payment.due_at)}</>
+                    )
+                  ) : (
+                    <>factura sin emitir: el plazo de {CREDIT_DAYS} días corre desde su emisión</>
+                  )}
+                </p>
+              )}
               <form action={confirmTransferAction} className="mt-4 flex flex-wrap items-end gap-3">
                 <input type="hidden" name="id" value={payment.id} />
                 <label className="text-sm">

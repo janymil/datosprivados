@@ -421,6 +421,7 @@ considera de un proceso muerto.
 | `document-staleness-notice` | semanal | Un aviso por empresa con documentos desactualizados (opcional para la empresa). |
 | `expire-sessions` | diario | Sesiones, tokens y límites de intentos vencidos. |
 | `holidays-check` | semanal | Asegura feriados de este año y el siguiente; informa los años aún sin decreto confirmado. |
+| `credit-reminders` | diaria, 11:00 | Recordatorios de las facturas a crédito (−3, 0 y +3 días del vencimiento) y aviso al pasar a solo lectura (+7). |
 | `weekly-digest` | semanal (opcional) | Resumen por empresa con lo que quedó pendiente (ARCO sin responder, incidentes abiertos, documentos desactualizados, bancos sin inscribir). **Apagado por defecto**: solo hace algo con `WEEKLY_DIGEST=1`, y mientras esté apagado no se le exige a `/api/health`. Una cuenta al día no recibe correo. |
 
 ### Instalación (este servidor; versionado en `deploy/` desde 2026-11-03)

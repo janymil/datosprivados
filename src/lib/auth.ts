@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { getDb, hashPassword, verifyPassword, type Company, type User } from "./db";
 import { isCompanyActive } from "./billing";
 import { isDemoCompany } from "./demo";
+import { isCreditOverdue } from "./credit";
 
 const COOKIE = "pdp_session";
 const MAX_AGE = 60 * 60 * 24 * 30;
@@ -109,6 +110,8 @@ export async function requireActiveSession(options: { allowDemo?: boolean } = {}
   // La cuenta de demostración es de solo lectura: ninguna acción escribe datos.
   // Las acciones de IA la admiten porque responden con un aviso sin llamar al modelo.
   if (isDemoCompany(session.company) && !options.allowDemo) redirect("/app?demo=lectura");
+  // Factura a crédito vencida (+7 días de gracia): solo lectura hasta confirmar el pago.
+  if (isCreditOverdue(session.company.id)) redirect("/app?pago=vencido");
   return session;
 }
 

@@ -2,6 +2,7 @@ import "server-only";
 
 import { getDb, newId, nowIso, type Company } from "./db";
 import { logActivity } from "./data";
+import { creditDueAt } from "./credit";
 import { notifyCompany } from "./notify";
 import { PLANS, isPlanId, termLabel, isBillingTerm } from "./plans";
 
@@ -212,9 +213,23 @@ export function markInvoiceIssued(invoiceId: string, input: { series: string; nu
   }
 
   const company = db.prepare("SELECT * FROM companies WHERE id = ?").get(invoice.company_id) as unknown as Company | undefined;
-  const payment = db.prepare("SELECT status FROM payments WHERE id = ?").get(invoice.payment_id) as { status: string } | undefined;
+  const payment = db.prepare("SELECT status, credit FROM payments WHERE id = ?").get(invoice.payment_id) as
+    | { status: string; credit: number }
+    | undefined;
+  // Factura a crédito: el plazo de pago corre desde la emisión (src/lib/credit.ts).
+  let creditDue: string | null = null;
+  if (payment?.credit === 1 && payment.status === "pending") {
+    const issued = db.prepare("SELECT issued_at FROM invoices WHERE id = ?").get(invoiceId) as { issued_at: string };
+    creditDue = creditDueAt(issued.issued_at);
+    db.prepare("UPDATE payments SET due_at = ? WHERE id = ?").run(creditDue, invoice.payment_id);
+  }
   if (company) {
     const unpaid = payment?.status === "pending";
+    const dueNote = creditDue
+      ? `Factura a crédito: vence el ${new Date(creditDue).toLocaleDateString("es-PE", { timeZone: "America/Lima", day: "2-digit", month: "long", year: "numeric" })}. Págala por transferencia antes de esa fecha.`
+      : unpaid
+        ? "Te la enviamos antes del pago para que puedas pagarla por transferencia. Activaremos tu plan al recibirlo."
+        : null;
     const sent = notifyCompany(
       company,
       "invoice_issued",
@@ -222,7 +237,7 @@ export function markInvoiceIssued(invoiceId: string, input: { series: string; nu
         number: `${series}-${number}`,
         amount: formatSol(invoice.total),
         ...(pdfUrl ? { pdfUrl } : {}),
-        ...(unpaid ? { dueNote: "Te la enviamos antes del pago para que puedas pagarla por transferencia. Activaremos tu plan al recibirlo." } : {}),
+        ...(dueNote ? { dueNote } : {}),
       },
       { dedupeKey: `invoice:${invoiceId}` }
     );

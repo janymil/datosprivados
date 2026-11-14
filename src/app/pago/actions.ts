@@ -23,7 +23,9 @@ import {
 import { isPlanId, planName, type BillingTerm } from "@/lib/plans";
 import { siteUrl } from "@/lib/site";
 import { isDemoCompany } from "@/lib/demo";
-import { requestTransfer } from "@/lib/transfers";
+import { getOpenCredit } from "@/lib/credit";
+import type { Company } from "@/lib/db";
+import { requestCreditInvoice, requestTransfer } from "@/lib/transfers";
 import { recordConsents } from "@/lib/platform-legal";
 import { clientIp } from "@/lib/client-ip";
 
@@ -50,6 +52,7 @@ const CHECKOUT_TERM: BillingTerm = "yearly";
 export async function startSubscriptionAction(formData: FormData) {
   const { company, user } = await requireSession();
   if (isDemoCompany(company)) redirect("/app?demo=lectura");
+  refuseWithOpenCredit(company.id);
   const change = String(formData.get("change") ?? "") === "1";
   // Una cuenta activa solo vuelve aquí para cambiar de plan o, a menos de 60 días del vencimiento, para renovar.
   if (isCompanyActive(company) && !change && !canRenewNow(company)) redirect("/app");
@@ -105,6 +108,7 @@ export async function startSubscriptionAction(formData: FormData) {
 export async function activateDevAction(formData: FormData) {
   const { company } = await requireSession();
   if (isDemoCompany(company)) redirect("/app?demo=lectura");
+  refuseWithOpenCredit(company.id);
   if (!canBypassPayment()) redirect("/pago?error=dev");
 
   const rawPlan = String(formData.get("plan") ?? company.plan);
@@ -138,31 +142,51 @@ export async function cancelSubscriptionAction() {
   redirect("/app/ajustes?ok=cancel");
 }
 
+/** Con una factura a crédito abierta no se paga de otra forma: se paga esa factura (ver /pago). */
+function refuseWithOpenCredit(companyId: string) {
+  if (getOpenCredit(companyId)) redirect("/pago");
+}
+
+/** Una suscripción creada y todavía no autorizada cobraría además de la transferencia: se cancela antes. */
+async function cancelPendingSubscription(company: Company, errorKey: "transfer" | "credit") {
+  if (!company.pending_subscription_id) return;
+  if (!isMercadoPagoConfigured()) {
+    redirect(`/pago?error=${errorKey}&detail=${encodeURIComponent("No pudimos cancelar tu suscripción pendiente de MercadoPago.")}`);
+  }
+  try {
+    await cancelPreapproval(company.pending_subscription_id);
+  } catch (error) {
+    console.error("[mercadopago] No se pudo cancelar la suscripción pendiente antes de la transferencia:", error);
+    redirect(`/pago?error=${errorKey}&detail=${encodeURIComponent("No pudimos cancelar tu suscripción pendiente de MercadoPago. Intenta de nuevo.")}`);
+  }
+  clearPendingSubscription(company.id);
+}
+
 /** Pide pagar por transferencia: crea el pago pendiente y la factura, y muestra los datos bancarios. */
 export async function requestTransferAction(formData: FormData) {
+  const { company } = await requireSession();
+  if (isDemoCompany(company)) redirect("/app?demo=lectura");
+  refuseWithOpenCredit(company.id);
+
+  const rawPlan = String(formData.get("plan") ?? company.plan);
+  const plan = isPlanId(rawPlan) ? rawPlan : "basico";
+  await cancelPendingSubscription(company, "transfer");
+
+  const result = requestTransfer(company, plan, CHECKOUT_TERM);
+  if (!result.ok) redirect(`/pago?error=transfer&detail=${encodeURIComponent(result.error)}`);
+  redirect(`/pago?transfer=${result.reference}`);
+}
+
+/** Pago con factura a crédito (empresas con RUC 20): acceso inmediato; la factura se emite a mano. */
+export async function requestCreditAction(formData: FormData) {
   const { company } = await requireSession();
   if (isDemoCompany(company)) redirect("/app?demo=lectura");
 
   const rawPlan = String(formData.get("plan") ?? company.plan);
   const plan = isPlanId(rawPlan) ? rawPlan : "basico";
+  await cancelPendingSubscription(company, "credit");
 
-  // Una suscripción creada y todavía no autorizada cobraría además de la transferencia.
-  if (company.pending_subscription_id) {
-    if (!isMercadoPagoConfigured()) {
-      redirect(`/pago?error=transfer&detail=${encodeURIComponent("No pudimos cancelar tu suscripción pendiente de MercadoPago.")}`);
-    }
-    try {
-      await cancelPreapproval(company.pending_subscription_id);
-    } catch (error) {
-      console.error("[mercadopago] No se pudo cancelar la suscripción pendiente antes de la transferencia:", error);
-      redirect(
-        `/pago?error=transfer&detail=${encodeURIComponent("No pudimos cancelar tu suscripción pendiente de MercadoPago. Intenta de nuevo.")}`
-      );
-    }
-    clearPendingSubscription(company.id);
-  }
-
-  const result = requestTransfer(company, plan, CHECKOUT_TERM);
-  if (!result.ok) redirect(`/pago?error=transfer&detail=${encodeURIComponent(result.error)}`);
-  redirect(`/pago?transfer=${result.reference}`);
+  const result = requestCreditInvoice(company, plan);
+  if (!result.ok) redirect(`/pago?error=credit&detail=${encodeURIComponent(result.error)}`);
+  redirect("/app?credito=ok");
 }

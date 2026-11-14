@@ -13,6 +13,7 @@ import { logEvent } from "./log";
 import { notifyCompany } from "./notify";
 import { planName, renewalPrice } from "./plans";
 import { syncLegalChanges } from "./legal-change-sync";
+import { sendCreditReminders } from "./credit-reminders";
 
 /**
  * Tareas programadas. Cada una es idempotente (repetirla no duplica correos ni
@@ -449,6 +450,11 @@ const JOBS = {
   async "legal-change-sync"({ now }: JobContext): Promise<JobResult> {
     return { ...(await syncLegalChanges({ now })) };
   },
+
+  /** Recordatorios de las facturas a crédito: 3 días antes, el día, 3 días después y al pasar a solo lectura. */
+  "credit-reminders"({ now }: JobContext): JobResult {
+    return { enviados: sendCreditReminders(now) };
+  },
 } satisfies Record<string, (context: JobContext) => JobResult | Promise<JobResult>>;
 
 export type JobName = keyof typeof JOBS;
@@ -474,6 +480,7 @@ export const JOB_MAX_AGE_HOURS: Record<JobName, number> = {
   "weekly-digest": 8 * 24,
   "holidays-check": 8 * 24,
   "legal-change-sync": 1,
+  "credit-reminders": 26,
 };
 
 /**

@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { getDb, newId, nowIso, type Company } from "./db";
 import { logActivity } from "./data";
 import { checkoutCharge, getCompanyById, nextPaidUntil, type PaymentRow } from "./billing";
+import { CREDIT_DAYS, creditEligibility, getOpenCredit } from "./credit";
 import { createInvoiceForPayment, formatSol } from "./invoicing";
 import { notifyCompany } from "./notify";
 import { PLANS, planPrice, termMonths, type BillingTerm, type PlanId } from "./plans";
@@ -40,7 +41,7 @@ export function listPendingTransfers() {
 
 export function getPendingTransfer(companyId: string) {
   return getDb()
-    .prepare("SELECT * FROM payments WHERE company_id = ? AND provider = 'transfer' AND status = 'pending' ORDER BY created_at DESC LIMIT 1")
+    .prepare("SELECT * FROM payments WHERE company_id = ? AND provider = 'transfer' AND status = 'pending' AND credit = 0 ORDER BY created_at DESC LIMIT 1")
     .get(companyId) as unknown as PaymentRow | undefined;
 }
 
@@ -49,6 +50,8 @@ export type TransferRequestResult = { ok: true; reference: string } | { ok: fals
 export function requestTransfer(company: Company, plan: PlanId, term: BillingTerm): TransferRequestResult {
   if (!isTransferConfigured()) return { ok: false, error: "El pago por transferencia no está disponible." };
   if (company.billing_status === "demo") return { ok: false, error: "La cuenta de demostración no puede pagar." };
+  // Un crédito abierto se paga con su propia referencia; otra transferencia no lo reemplaza (si no, regalaría el año).
+  if (getOpenCredit(company.id)) return { ok: false, error: "Ya tienes una factura a crédito pendiente: págala por transferencia con su referencia." };
   // Con una suscripción de MercadoPago vigente, una transferencia cobraría dos veces.
   if (company.subscription_id && company.subscription_status === "authorized") {
     return { ok: false, error: "Tu cuenta ya tiene una suscripción con tarjeta. Cancélala antes de pagar por transferencia." };
@@ -79,6 +82,52 @@ export function requestTransfer(company: Company, plan: PlanId, term: BillingTer
   return { ok: true, reference };
 }
 
+/**
+ * Pago con factura a crédito (src/lib/credit.ts): el plan anual se activa al pedirlo;
+ * el fundador emite la factura a mano y el plazo de 15 días corre desde la emisión.
+ */
+export function requestCreditInvoice(company: Company, plan: PlanId): TransferRequestResult {
+  const eligibility = creditEligibility(company);
+  if (!eligibility.ok) return { ok: false, error: eligibility.reason };
+
+  const db = getDb();
+  // Una transferencia normal pendiente se reemplaza por el crédito (como al pedir otra transferencia).
+  const open = getPendingTransfer(company.id);
+  if (open) {
+    db.prepare("UPDATE payments SET status = 'cancelled' WHERE id = ?").run(open.id);
+    db.prepare("UPDATE invoices SET status = 'void' WHERE payment_id = ? AND status = 'pending'").run(open.id);
+  }
+
+  const term: BillingTerm = "yearly";
+  const amount = checkoutCharge(company.id, plan).amount;
+  const reference = `DP-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
+  const id = newId();
+  const now = new Date();
+  db.prepare(
+    `INSERT INTO payments (id, company_id, plan, term, amount, currency, status, provider, external_reference, credit, created_at)
+     VALUES (?, ?, ?, ?, ?, 'PEN', 'pending', 'transfer', ?, 1, ?)`
+  ).run(id, company.id, plan, term, amount, reference, now.toISOString());
+  createInvoiceForPayment(id);
+
+  // Acceso inmediato por el año completo; confirmar el pago después no lo extiende otra vez.
+  const paidUntil = nextPaidUntil(company.paid_until, now, termMonths(term));
+  db.prepare("UPDATE companies SET billing_status = 'active', paid_until = ?, plan = ?, billing_term = ? WHERE id = ?").run(
+    paidUntil,
+    plan,
+    term,
+    company.id
+  );
+
+  logActivity(company.id, "pago", `Elegiste pagar el Plan ${PLANS[plan].name} (anual) con factura a ${CREDIT_DAYS} días. Referencia ${reference}.`);
+  notifyCompany(
+    company,
+    "credit_invoice_requested",
+    { plan: PLANS[plan].name, amount: formatSol(amount), reference, bankDetails: transferBankDetails(), days: String(CREDIT_DAYS) },
+    { dedupeKey: `credit:${id}:requested` }
+  );
+  return { ok: true, reference };
+}
+
 export type ConfirmTransferResult = { ok: true; paidUntil: string } | { ok: false; error: string };
 
 /** El operador confirma que llegó el dinero. Idempotente: un pago ya confirmado no se aplica dos veces. */
@@ -101,7 +150,9 @@ export function confirmTransferPaid(paymentRowId: string, operation: string): Co
 
   const term = payment.term === "yearly" ? "yearly" : "monthly";
   const paidAt = new Date();
-  const paidUntil = nextPaidUntil(company.paid_until, paidAt, termMonths(term));
+  // Crédito: el periodo ya se otorgó al pedirlo; confirmar solo registra el cobro.
+  const isCredit = payment.credit === 1;
+  const paidUntil = isCredit && company.paid_until ? company.paid_until : nextPaidUntil(company.paid_until, paidAt, termMonths(term));
 
   db.prepare("UPDATE payments SET status = 'approved', payment_id = ?, paid_at = ? WHERE id = ? AND status = 'pending'").run(
     providerId,
