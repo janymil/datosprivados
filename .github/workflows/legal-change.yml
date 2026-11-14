@@ -50,14 +50,14 @@ jobs:
           [[ "$DIFF_SHA256" =~ ^[0-9a-f]{64}$ ]] || { echo "hash del diff inválido"; exit 1; }
 
       - name: Reglas desde master
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: master
           path: rules
           persist-credentials: false
 
       - name: La rama aprobada
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.client_payload.branch }}
           path: change
@@ -143,7 +143,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: master
           fetch-depth: 0
