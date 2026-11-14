@@ -53,7 +53,17 @@ export function quoteFound(quote: string, articles: Array<{ text: string }>): bo
     .map((p) => normalize(normalize(p).replace(LABEL, "")).replace(/^[.,;:]\s*|[.,;:]$/g, ""))
     .filter(Boolean);
   const long = pieces.filter((p) => p.length >= 20);
-  return (long.length ? long : [normalize(quote)]).every((p) => corpus.includes(p) || shingleCoverage(p, corpus) >= 0.7);
+  return (long.length ? long : [normalize(quote)]).every(
+    (p) => corpus.includes(p) || (shingleCoverage(p, corpus) >= 0.7 && !addsMeaning(p, corpus))
+  );
+}
+
+/** Palabras que invierten o fijan el sentido; si la IA las agrega, no es una paráfrasis. */
+const MEANING_TOKENS = /^(?:no|nunca|jamás|sin|ni|tampoco|ningún|ninguna|ninguno|salvo|excepto|\d[\d.,]*)$/;
+
+function addsMeaning(piece: string, corpus: string): boolean {
+  const corpusWords = new Set(corpus.split(/[^\p{L}\p{N}.,]+/u));
+  return piece.split(/[^\p{L}\p{N}.,]+/u).some((w) => MEANING_TOKENS.test(w) && !corpusWords.has(w));
 }
 
 const SHINGLE = 5;
@@ -80,6 +90,8 @@ export function parseVerdict(raw: string | null, pass: "a" | "b"): AiVerdict | n
     const data = JSON.parse(raw.slice(start, end + 1)) as Record<string, unknown>;
     if (typeof data.verdict !== "string" || !VERDICTS.has(data.verdict)) return null;
     if (typeof data.quote !== "string" || typeof data.reason !== "string" || !data.reason.trim()) return null;
+    // Afirmar respaldo exige mostrarlo: sin cita, «supported» o «partial» no es evidencia.
+    if (data.verdict !== "not_supported" && !data.quote.trim()) return null;
     return { pass, verdict: data.verdict as AiVerdict["verdict"], quote: data.quote.trim(), reason: data.reason.trim() };
   } catch {
     return null;
@@ -97,8 +109,10 @@ async function runPass(pass: "a" | "b", input: MeaningInput, deps: Deps): Promis
     .createHash("sha256")
     .update(JSON.stringify([deps.model, pass, system, input.text, input.articles]))
     .digest("hex");
+  // Lo guardado pasa por las mismas reglas que una respuesta nueva (pueden haber cambiado).
   const cached = deps.cache.get(key);
-  if (cached) return cached;
+  const revalidated = cached ? parseVerdict(JSON.stringify(cached), pass) : null;
+  if (revalidated) return revalidated;
   const verdict = parseVerdict(await deps.call({ system, messages: [{ role: "user", content: userMessage(input) }], maxTokens: 4000 }), pass);
   if (verdict) deps.cache.set(key, verdict);
   return verdict;

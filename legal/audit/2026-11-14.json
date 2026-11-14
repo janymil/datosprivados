@@ -3658,6 +3658,28 @@
    ]
   },
   {
+   "id": "016e7ba5535f",
+   "check": "significado",
+   "rule": "meaning",
+   "source": "arco.2.canales",
+   "detail": "la cita de la IA no está en el artículo",
+   "severity": "revisar",
+   "verdicts": [
+    {
+     "pass": "a",
+     "verdict": "partial",
+     "quote": "puede también atender las solicitudes para el ejercicio de los derechos comprendidos en el presente título a través de dichos servicios, siempre que los plazos no sean mayores a los establecidos en el presente Reglamento. [...] El ejercicio por el titular de datos personales de sus derechos ante los bancos de datos personales de administración privada es de carácter gratuito, salvo lo establecido en normas especiales de la materia. [...] está obligado a establecer un procedimiento sencillo para el ejercicio de los derechos. [...] El ejercicio de alguno o algunos de los derechos no excluye la posibilidad de ejercer alguno o algunos de los otros, ni puede ser entendido como requisito previo para el ejercicio de cualquiera de ellos.",
+     "reason": "Los artículos respaldan que se usen servicios de atención si los plazos no superan los reglamentarios, que el procedimiento sea sencillo y que un derecho no sea requisito para ejercer otro. Pero la gratuidad del artículo 67.3 se refiere a bancos de datos privados y admite excepciones, y el artículo 62 no prohíbe condicionar el ejercicio a cualquier otro trámite."
+    },
+    {
+     "pass": "b",
+     "verdict": "partial",
+     "quote": "67.3 El ejercicio por el titular de datos personales de sus derechos ante los bancos de datos personales de administración privada es de carácter gratuito, salvo lo establecido en normas especiales de la materia. En ningún caso el ejercicio de estos derechos implica ingreso adicional para el titular del banco de datos personales o responsable del tratamiento o encargado de tratamiento ante el cual se ejercen. 62 El ejercicio de alguno o algunos de los derechos no excluye la posibilidad de ejercer alguno o algunos de los otros, ni puede ser entendido como requisito previo para el ejercicio de cualquiera de ellos. 65.1 ... puede también atender las solicitudes ... a través de dichos servicios, siempre que los plazos no sean mayores a los establecidos en el presente Reglamento.",
+     "reason": "La gratuidad se afirma con una excepción expresa para normas especiales, que la cláusula omite; además, el artículo 62 solo impide exigir el ejercicio de un derecho como requisito para ejercer otro, no cualquier otro trámite. La sencillez del procedimiento y la atención mediante canales de servicio sí tienen respaldo en los artículos citados."
+    }
+   ]
+  },
+  {
    "id": "aeb9bfdb44f7",
    "check": "significado",
    "rule": "meaning",
@@ -3676,28 +3698,6 @@
      "verdict": "partial",
      "quote": "“está obligado a establecer un procedimiento sencillo para el ejercicio de los derechos”; “es de carácter gratuito, salvo lo establecido en normas especiales de la materia”; “siempre que los plazos no sean mayores a los establecidos en el presente Reglamento”; “El ejercicio de alguno o algunos de los derechos no excluye la posibilidad de ejercer alguno o algunos de los otros, ni puede ser entendido como requisito previo para el ejercicio de cualquiera de ellos.”",
      "reason": "El artículo respalda la sencillez del procedimiento, la gratuidad —salvo normas especiales— y el uso de canales de atención si respetan los plazos reglamentarios. No sustenta que el ejercicio de los derechos no pueda condicionarse a cualquier otro trámite: el artículo 62 solo establece que un derecho no es requisito previo para ejercer otro."
-    }
-   ]
-  },
-  {
-   "id": "016e7ba5535f",
-   "check": "significado",
-   "rule": "meaning",
-   "source": "arco.2.canales",
-   "detail": "las dos pasadas ven respaldo parcial",
-   "severity": "revisar",
-   "verdicts": [
-    {
-     "pass": "a",
-     "verdict": "partial",
-     "quote": "puede también atender las solicitudes para el ejercicio de los derechos comprendidos en el presente título a través de dichos servicios, siempre que los plazos no sean mayores a los establecidos en el presente Reglamento. [...] El ejercicio por el titular de datos personales de sus derechos ante los bancos de datos personales de administración privada es de carácter gratuito, salvo lo establecido en normas especiales de la materia. [...] está obligado a establecer un procedimiento sencillo para el ejercicio de los derechos. [...] El ejercicio de alguno o algunos de los derechos no excluye la posibilidad de ejercer alguno o algunos de los otros, ni puede ser entendido como requisito previo para el ejercicio de cualquiera de ellos.",
-     "reason": "Los artículos respaldan que se usen servicios de atención si los plazos no superan los reglamentarios, que el procedimiento sea sencillo y que un derecho no sea requisito para ejercer otro. Pero la gratuidad del artículo 67.3 se refiere a bancos de datos privados y admite excepciones, y el artículo 62 no prohíbe condicionar el ejercicio a cualquier otro trámite."
-    },
-    {
-     "pass": "b",
-     "verdict": "partial",
-     "quote": "67.3 El ejercicio por el titular de datos personales de sus derechos ante los bancos de datos personales de administración privada es de carácter gratuito, salvo lo establecido en normas especiales de la materia. En ningún caso el ejercicio de estos derechos implica ingreso adicional para el titular del banco de datos personales o responsable del tratamiento o encargado de tratamiento ante el cual se ejercen. 62 El ejercicio de alguno o algunos de los derechos no excluye la posibilidad de ejercer alguno o algunos de los otros, ni puede ser entendido como requisito previo para el ejercicio de cualquiera de ellos. 65.1 ... puede también atender las solicitudes ... a través de dichos servicios, siempre que los plazos no sean mayores a los establecidos en el presente Reglamento.",
-     "reason": "La gratuidad se afirma con una excepción expresa para normas especiales, que la cláusula omite; además, el artículo 62 solo impide exigir el ejercicio de un derecho como requisito para ejercer otro, no cualquier otro trámite. La sencillez del procedimiento y la atención mediante canales de servicio sí tienen respaldo en los artículos citados."
     }
    ]
   },
@@ -4234,7 +4234,7 @@
    "check": "significado",
    "rule": "meaning",
    "source": "encargo.a.clausula-modelo",
-   "detail": "las dos pasadas ven respaldo parcial",
+   "detail": "la cita de la IA no está en el artículo",
    "severity": "revisar",
    "verdicts": [
     {
@@ -4362,6 +4362,28 @@
    ]
   },
   {
+   "id": "0ea03f540468",
+   "check": "significado",
+   "rule": "meaning",
+   "source": "encargo.d.checklist-firmas",
+   "detail": "la cita de la IA no está en el artículo",
+   "severity": "revisar",
+   "verdicts": [
+    {
+     "pass": "a",
+     "verdict": "partial",
+     "quote": "3. La identidad de los que son o pueden ser sus destinatarios, de ser el caso. 7. En su caso, la transferencia nacional e internacional de datos que se efectúen.",
+     "reason": "Los artículos exigen comunicar, cuando corresponda, la identidad de los destinatarios y la transferencia nacional o internacional, pero no exigen anotarlo específicamente en una Política de Privacidad ni indicar los países de destino. El artículo 33 sí establece que el subcontratado asume las mismas obligaciones que el encargado."
+    },
+    {
+     "pass": "b",
+     "verdict": "partial",
+     "quote": "32.1 El tratamiento de datos personales puede realizarse por un tercero diferente al encargado del tratamiento, a través de un convenio o contrato entre estos dos. 32.2 Para este supuesto se requiere, de manera previa, una autorización por parte del titular del banco de datos personales o responsable del tratamiento. Dicha autorización se entiende también concedida si estaba prevista en el instrumento jurídico mediante el cual se formalizó la relación entre el responsable del tratamiento y el encargado del mismo. 33 La persona natural o jurídica subcontratada asume las mismas obligaciones que se establezcan para el encargado del tratamiento en la Ley, el presente Reglamento y demás disposiciones aplicables. 3. La identidad de los que son o pueden ser sus destinatarios, de ser el caso. 7. En su caso, la transferencia nacional e internacional de datos que se efectúen.",
+     "reason": "Los artículos respaldan el contrato con el subcontratista, la autorización previa y que este asuma las mismas obligaciones del encargado. Sin embargo, no exigen anotar en la Política de Privacidad los países de destino ni especifican que esa sea la forma de comunicar destinatarios y transferencias; además, la lista de proveedores no es una obligación establecida por los artículos citados."
+    }
+   ]
+  },
+  {
    "id": "1ecd02e400e8",
    "check": "significado",
    "rule": "meaning",
@@ -4380,28 +4402,6 @@
      "verdict": "partial",
      "quote": "“La identidad de los que son o pueden ser sus destinatarios, de ser el caso.” “En su caso, la transferencia nacional e internacional de datos que se efectúen.” “La persona natural o jurídica subcontratada asume las mismas obligaciones que se establezcan para el encargado del tratamiento en la Ley, el presente Reglamento y demás disposiciones aplicables.”",
      "reason": "El artículo exige informar quiénes son o pueden ser destinatarios y, cuando corresponda, la transferencia nacional o internacional, pero no dice expresamente que deban anotarse los países de destino. Sí respalda que el subcontratista asuma las mismas obligaciones."
-    }
-   ]
-  },
-  {
-   "id": "0ea03f540468",
-   "check": "significado",
-   "rule": "meaning",
-   "source": "encargo.d.checklist-firmas",
-   "detail": "las dos pasadas ven respaldo parcial",
-   "severity": "revisar",
-   "verdicts": [
-    {
-     "pass": "a",
-     "verdict": "partial",
-     "quote": "3. La identidad de los que son o pueden ser sus destinatarios, de ser el caso. 7. En su caso, la transferencia nacional e internacional de datos que se efectúen.",
-     "reason": "Los artículos exigen comunicar, cuando corresponda, la identidad de los destinatarios y la transferencia nacional o internacional, pero no exigen anotarlo específicamente en una Política de Privacidad ni indicar los países de destino. El artículo 33 sí establece que el subcontratado asume las mismas obligaciones que el encargado."
-    },
-    {
-     "pass": "b",
-     "verdict": "partial",
-     "quote": "32.1 El tratamiento de datos personales puede realizarse por un tercero diferente al encargado del tratamiento, a través de un convenio o contrato entre estos dos. 32.2 Para este supuesto se requiere, de manera previa, una autorización por parte del titular del banco de datos personales o responsable del tratamiento. Dicha autorización se entiende también concedida si estaba prevista en el instrumento jurídico mediante el cual se formalizó la relación entre el responsable del tratamiento y el encargado del mismo. 33 La persona natural o jurídica subcontratada asume las mismas obligaciones que se establezcan para el encargado del tratamiento en la Ley, el presente Reglamento y demás disposiciones aplicables. 3. La identidad de los que son o pueden ser sus destinatarios, de ser el caso. 7. En su caso, la transferencia nacional e internacional de datos que se efectúen.",
-     "reason": "Los artículos respaldan el contrato con el subcontratista, la autorización previa y que este asuma las mismas obligaciones del encargado. Sin embargo, no exigen anotar en la Política de Privacidad los países de destino ni especifican que esa sea la forma de comunicar destinatarios y transferencias; además, la lista de proveedores no es una obligación establecida por los artículos citados."
     }
    ]
   },

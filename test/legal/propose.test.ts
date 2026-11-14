@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CHANGE_ID } from "@/lib/legal-changes";
-import { changeLog, newChangeId, proposalPayload } from "@/legal/propose";
+import { changeLog, newChangeId, proposalPayload, registeredChangeId, registrationSubject } from "@/legal/propose";
 import { validateChange } from "@/legal/validate-change";
 
 describe("propose-change", () => {
@@ -9,6 +9,13 @@ describe("propose-change", () => {
     expect(id).toMatch(CHANGE_ID);
     expect(id.startsWith("lc-20261114-")).toBe(true);
     expect(newChangeId()).not.toBe(newChangeId());
+  });
+
+  it("reconoce el commit de registro para reintentar con el mismo id", () => {
+    expect(registeredChangeId("legal: registro del cambio lc-20261114-abc123")).toBe("lc-20261114-abc123");
+    expect(registeredChangeId("legal: citar el art. III.6")).toBeNull();
+    expect(registeredChangeId("legal: registro del cambio lc-1")).toBeNull();
+    expect(registrationSubject("lc-20261114-abc123")).toBe("legal: registro del cambio lc-20261114-abc123");
   });
 
   it("el registro del cambio nombra los hallazgos", () => {

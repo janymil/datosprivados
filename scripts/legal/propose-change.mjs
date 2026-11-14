@@ -15,7 +15,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { changeLog, newChangeId, proposalPayload } from "../../src/legal/propose.ts";
+import { changeLog, newChangeId, proposalPayload, registeredChangeId, registrationSubject } from "../../src/legal/propose.ts";
 import { validateChange } from "../../src/legal/validate-change.ts";
 
 const git = (...args) => execFileSync("git", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
@@ -48,12 +48,19 @@ const findings = ids.map((id) => {
   return { id, source: found.source };
 });
 
-const id = newChangeId();
+// Reintento: si el último commit ya es el registro de un cambio, se reutilizan su id y su
+// commit (el servidor devuelve el cambio existente para la misma rama y el mismo commit).
+const previous = registeredChangeId(git("log", "-1", "--format=%s"));
+const id = previous && fs.existsSync(`legal/changes/${previous}.md`) ? previous : newChangeId();
 const log = `legal/changes/${id}.md`;
-fs.mkdirSync(path.dirname(log), { recursive: true });
-fs.writeFileSync(log, changeLog({ id, title: values.title, summary, findings: ids }));
-git("add", log);
-git("commit", "-q", "-m", `legal: registro del cambio ${id}`);
+if (id !== previous) {
+  fs.mkdirSync(path.dirname(log), { recursive: true });
+  fs.writeFileSync(log, changeLog({ id, title: values.title, summary, findings: ids }));
+  git("add", log);
+  git("commit", "-q", "-m", registrationSubject(id));
+} else {
+  console.log(`Reintento: se reutiliza ${id} y su commit.`);
+}
 
 git("fetch", "-q", "origin", "master");
 const changedFiles = git("diff", "--name-only", "origin/master...HEAD").split("\n").filter(Boolean);
@@ -66,18 +73,23 @@ const readBase = (p) => {
   }
 };
 const problems = validateChange({ id, changedFiles, read, readBase });
-if (problems.length) fail(`la rama no cumple las reglas (el commit del registro queda local):\n- ${problems.join("\n- ")}`);
+if (problems.length) fail(`la rama no cumple las reglas (el commit del registro queda local; al volver a correr se reutiliza ${id}):\n- ${problems.join("\n- ")}`);
 
 git("push", "-q", "origin", `HEAD:refs/heads/${branch}`);
 const headSha = git("rev-parse", "HEAD").trim();
 const diff = git("diff", "--no-color", "--no-ext-diff", "-M", `origin/master...${headSha}`);
 
 const url = `${(process.env.LEGAL_API_URL || "http://127.0.0.1:3000").replace(/\/$/, "")}/api/legal/changes`;
-const response = await fetch(url, {
-  method: "POST",
-  headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" },
-  body: JSON.stringify(proposalPayload({ id, title: values.title, summary, branch, headSha, diff, findings })),
-});
+let response;
+try {
+  response = await fetch(url, {
+    method: "POST",
+    headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" },
+    body: JSON.stringify(proposalPayload({ id, title: values.title, summary, branch, headSha, diff, findings })),
+  });
+} catch (error) {
+  fail(`no se pudo registrar (${error instanceof Error ? error.message : error}). Volver a correr es seguro: reutiliza ${id}.`);
+}
 const body = await response.json().catch(() => ({}));
 if (!response.ok) fail(`el registro respondió ${response.status}: ${body.error ?? "sin detalle"} (la rama ya está en GitHub; corrige y vuelve a registrar)`);
 console.log(`Cambio ${body.id} (${body.status}): /operador/legal/${body.id}`);

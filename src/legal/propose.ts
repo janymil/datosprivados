@@ -14,6 +14,18 @@ export function newChangeId(now: Date = new Date()): string {
   return `lc-${day}-${crypto.randomBytes(3).toString("hex")}`;
 }
 
+/** Asunto del commit que agrega legal/changes/<id>.md. */
+export const registrationSubject = (id: string) => `legal: registro del cambio ${id}`;
+
+/**
+ * Id del cambio si el último commit es el de su registro (reintento tras un fallo de red
+ * o de validación): se reutilizan id y commit para no crear un segundo cambio.
+ */
+export function registeredChangeId(subject: string): string | null {
+  const m = /^legal: registro del cambio (lc-\d{8}-[0-9a-f]{6})$/.exec(subject.trim());
+  return m ? m[1] : null;
+}
+
 /** Contenido de legal/changes/<id>.md: qué cambia, por qué y qué hallazgos corrige. */
 export function changeLog(p: { id: string; title: string; summary: string; findings: string[] }): string {
   const findings = p.findings.length ? p.findings.map((f) => `- \`${f}\``).join("\n") : "- (sin hallazgo de auditoría asociado)";

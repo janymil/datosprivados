@@ -61,14 +61,14 @@ Citados de memoria o de fuentes secundarias, no leídos en el texto oficial:
 - [ ] 2cc2ea8dd8a4 · retencion.2.plazos-bancos · las dos pasadas ven respaldo parcial
 - [ ] e19627f0e7bc · retencion.2.plazos-bancos · las dos pasadas ven respaldo parcial
 - [ ] 1b17c8e80dbb · retencion.4.bloqueo-eliminacion · las dos pasadas ven respaldo parcial
-- [ ] 60967f456157 · encargo.a.clausula-modelo · las dos pasadas ven respaldo parcial
+- [ ] 60967f456157 · encargo.a.clausula-modelo · la cita de la IA no está en el artículo
 - [ ] ad27de758018 · encargo.a.clausula-modelo · las dos pasadas ven respaldo parcial
 - [ ] 59c235c70c46 · encargo.b-anexo.proveedores · las dos pasadas ven respaldo parcial
 - [ ] 8026ca48032c · encargo.b-anexo.proveedores · las pasadas no coinciden
 - [ ] 4ba4781a2395 · encargo.c.transferencia-internacional · las dos pasadas ven respaldo parcial
 - [ ] 938727f94ec2 · encargo.c.transferencia-internacional · las dos pasadas ven respaldo parcial
 - [ ] 1ecd02e400e8 · encargo.d.checklist-firmas · las dos pasadas ven respaldo parcial
-- [ ] 0ea03f540468 · encargo.d.checklist-firmas · las dos pasadas ven respaldo parcial
+- [ ] 0ea03f540468 · encargo.d.checklist-firmas · la cita de la IA no está en el artículo
 - [ ] c2a868b70111 · clausulas.a.confidencialidad · las dos pasadas ven respaldo parcial
 - [ ] 00e2b06019a4 · clausulas.a.confidencialidad · las dos pasadas ven respaldo parcial
 - [ ] 3dad7269c2c6 · clausulas.b.encargo-proveedores · las pasadas no coinciden
@@ -91,7 +91,7 @@ Citados de memoria o de fuentes secundarias, no leídos en el texto oficial:
 - [ ] 269256ddb8f7 · arco.1.objeto-responsable · las dos pasadas ven respaldo parcial
 - [ ] 155001c6ab4a · arco.1.objeto-responsable · la cita de la IA no está en el artículo
 - [ ] aeb9bfdb44f7 · arco.2.canales · las dos pasadas ven respaldo parcial
-- [ ] 016e7ba5535f · arco.2.canales · las dos pasadas ven respaldo parcial
+- [ ] 016e7ba5535f · arco.2.canales · la cita de la IA no está en el artículo
 - [ ] 0cc85f31fc19 · arco.3.plazos · las dos pasadas ven respaldo parcial
 - [ ] 147407ed118f · arco.4.flujo · las dos pasadas ven respaldo parcial
 - [ ] 5029a710751c · arco.5.contenido-respuesta · las dos pasadas ven respaldo parcial

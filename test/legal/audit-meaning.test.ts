@@ -75,6 +75,20 @@ describe("chequeo de significado (dos pasadas)", () => {
     expect(quoteFound("deben ser recibidas dejándose constancia de su recepción. 68 El titular del banco de datos personales debe responder", [articles[0], { text: "68 El titular del banco de datos personales debe responder la solicitud." }])).toBe(true);
   });
 
+  it("supported o partial sin cita: no se acepta como respuesta", async () => {
+    expect(parseVerdict(JSON.stringify({ verdict: "supported", quote: "", reason: "ok" }), "a")).toBeNull();
+    expect(parseVerdict(JSON.stringify({ verdict: "partial", quote: " ", reason: "ok" }), "a")).toBeNull();
+    expect(parseVerdict(JSON.stringify({ verdict: "not_supported", quote: "", reason: "el artículo no lo dice" }), "a")).not.toBeNull();
+    const result = await run(fake(JSON.stringify({ verdict: "supported", quote: "", reason: "ok" }), json("supported")));
+    expect(result.finding?.severity).toBe("revisar");
+  });
+
+  it("una negación o un número añadidos por la IA no pasan como paráfrasis", () => {
+    const art = [{ text: "El titular de datos personales tiene derecho a obtener la información que sobre sí mismo sea objeto de tratamiento en bancos de datos." }];
+    expect(quoteFound("El titular de datos personales no tiene derecho a obtener la información que sobre sí mismo sea objeto de tratamiento en bancos de datos", art)).toBe(false);
+    expect(quoteFound("El titular de datos personales tiene derecho a obtener en 30 días la información que sobre sí mismo sea objeto de tratamiento en bancos de datos", art)).toBe(false);
+  });
+
   it("una paráfrasis mínima (una palabra cambiada o añadida) se acepta; una cita inventada no", () => {
     const art = [{ text: "El titular de datos personales tiene derecho a que se le comunique de forma clara, expresa e indubitable el tratamiento de sus datos y la finalidad para la que se recopilan." }];
     expect(quoteFound("El titular de datos personales tiene derecho a que se le comuniquen de forma clara, expresa e indubitable el tratamiento de sus datos y la finalidad para la que se recopilan", art)).toBe(true);
