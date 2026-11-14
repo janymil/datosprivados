@@ -503,6 +503,22 @@ plazo y no hay correos con más de 1 h sin salir; si no, 503 con el detalle. Apu
 verificar la alerta apagando el cron una vez. **Estado:** cron instalado y verificado el 2026-11-01 (`healthy: true`, 200, respaldo
 horario incluido); **pendiente:** el monitor externo y la prueba de la alerta en un monitor real.
 
+### Auditoría legal (motor legal, plan 5)
+
+`pnpm legal:audit` revisa cada cita, hecho y cláusula (diseño §7): primero corre los lints de
+`test/legal` (dejan `legal/known-failures/*.json` al día) y después la auditoría, que escribe
+`legal/audit/AAAA-MM-DD.{md,json}` y agrega a `legal/audit/abogado.md` lo que no puede decidir.
+
+- El chequeo de significado (dos pasadas de IA por cláusula) usa la IA configurada en
+  `src/lib/llm.ts`. Desde una copia de trabajo sin `.env`, apunta al de producción:
+  `LEGAL_AUDIT_ENV_DIR=/var/www/datosprivados pnpm legal:audit`. Sin IA configurada falla;
+  `LEGAL_AUDIT_AI=0` corre solo la parte mecánica.
+- Los veredictos se guardan en `.cache/legal-audit/verdicts.json` (no se versiona): repetir la
+  auditoría sin cambios no vuelve a llamar a la IA.
+- Cada error confirmado se corrige en una rama `legal/<tema>` y se registra con
+  `node --experimental-strip-types scripts/legal/propose-change.mjs`; el fundador lo aprueba en
+  `/operador/legal`. Nadie cambia el texto legal sin esa aprobación.
+
 ### Cambios legales: aprobación en un clic (motor legal, plan 4)
 
 Un cambio legal propuesto (rama `legal/<id>`) aparece en `/operador/legal`. Al aprobarlo:
@@ -515,6 +531,8 @@ Un cambio legal propuesto (rama `legal/<id>`) aparece en `/operador/legal`. Al a
    job, que no ejecuta nada de la rama, la fusiona. Si `master` se movió mientras tanto, falla:
    vuelve a aprobar. Quien registra un cambio debe enviar como `diff` exactamente
    `git diff --no-color --no-ext-diff -M origin/master...<commit>`.
+   El `id` (`lc-AAAAMMDD-xxxxxx`) también lo elige quien registra: la rama ya debe llevar
+   `legal/changes/<id>.md`, que el flujo exige (`scripts/legal/propose-change.mjs` lo hace solo).
 3. La tarea `legal-change-sync` (cada 10 min) lee el resultado: si falló, el cambio queda en
    «fallo» con el enlace al run y se avisa a `OPERATOR_EMAILS`; si fusionó, escribe el commit en
    `/var/lib/datosprivados/deploy-request`.

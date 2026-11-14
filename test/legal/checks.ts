@@ -10,9 +10,8 @@ import type { Clause } from "@/legal/types";
  * aprobación del fundador. La lista solo puede reducirse: una falla nueva rompe el
  * build y una falla ya corregida exige quitarla de la lista.
  */
-export type KnownFailure = { rule: string; clause: string; detail: string };
-
-export const KNOWN_FAILURES_DIR = path.join(process.cwd(), "legal", "known-failures");
+export { KNOWN_FAILURES_DIR, type KnownFailure } from "@/legal/audit/types";
+import { KNOWN_FAILURES_DIR, type KnownFailure } from "@/legal/audit/types";
 const key = (f: KnownFailure) => `${f.rule}|${f.clause}|${f.detail}`;
 const byKey = (a: KnownFailure, b: KnownFailure) => key(a).localeCompare(key(b));
 
