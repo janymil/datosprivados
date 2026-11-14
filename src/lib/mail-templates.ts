@@ -17,6 +17,7 @@ export type MailTemplate =
   | "payment_failed"
   | "invoice_issued"
   | "transfer_instructions"
+  | "credit_invoice_requested"
   | "payment_refunded"
   | "renewal_soon"
   | "renewal_manual"
@@ -50,6 +51,7 @@ const ESSENTIAL: Record<MailTemplate, boolean> = {
   payment_failed: true,
   invoice_issued: true,
   transfer_instructions: true,
+  credit_invoice_requested: true,
   payment_refunded: true,
   renewal_soon: true,
   renewal_manual: true,
@@ -233,6 +235,20 @@ export function renderMail(template: MailTemplate, payload: MailPayload): Render
             `Para activar el Plan ${s(payload, "plan")} paga ${s(payload, "amount")} (IGV incluido) por transferencia.`,
             s(payload, "bankDetails"),
             `Indica esta referencia en la transferencia: ${s(payload, "reference")}. Te enviaremos la factura electrónica a este correo y activaremos tu plan cuando recibamos el pago.`,
+          ],
+        },
+        company
+      );
+    case "credit_invoice_requested":
+      need("plan", "amount", "reference", "bankDetails", "days");
+      return layout(
+        {
+          subject: "Tu plan ya está activo: pago con factura a crédito",
+          paragraphs: [
+            `Activamos el Plan ${s(payload, "plan")} (anual). Te enviaremos la factura electrónica por ${s(payload, "amount")} (IGV incluido) a este correo.`,
+            `Tienes ${s(payload, "days")} días desde la emisión de la factura para pagarla por transferencia:`,
+            s(payload, "bankDetails"),
+            `Indica esta referencia en la transferencia: ${s(payload, "reference")}. Si la factura vence sin pago, tu cuenta queda en solo lectura hasta recibirlo; tus páginas públicas siguen activas.`,
           ],
         },
         company

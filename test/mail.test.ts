@@ -14,6 +14,7 @@ const SAMPLE: Record<MailTemplate, MailPayload> = {
   payment_failed: { plan: "Pro", company: "Casa Verde" },
   invoice_issued: { number: "F001-123", amount: "S/ 39.00", pdfUrl: "https://x.pe/f.pdf", dueNote: "Paga antes del 10 de noviembre.", company: "Casa Verde" },
   transfer_instructions: { plan: "Pro", amount: "S/ 390.00", reference: "DP-AB12CD", bankDetails: "Banco X · Cuenta 123 · CCI 456", company: "Casa Verde" },
+  credit_invoice_requested: { plan: "Pro", amount: "S/ 390.00", reference: "DP-AB12CD", bankDetails: "Banco X · Cuenta 123 · CCI 456", days: "15", company: "Casa Verde" },
   payment_refunded: { plan: "Pro", amount: "S/ 39.00", company: "Casa Verde" },
   renewal_soon: { plan: "Pro", paidUntil: "30 de noviembre de 2026", company: "Casa Verde" },
   renewal_manual: { plan: "Pro", paidUntil: "30 de noviembre de 2026", amount: "S/ 190", company: "Casa Verde" },
@@ -48,7 +49,7 @@ describe("plantillas", () => {
   it("hay un ejemplo por cada plantilla (que no se quede una sin probar)", () => {
     const templates = Object.keys(SAMPLE) as MailTemplate[];
     for (const template of templates) expect(() => renderMail(template, SAMPLE[template])).not.toThrow();
-    expect(templates).toHaveLength(26);
+    expect(templates).toHaveLength(27);
   });
 
   it.each(Object.keys(SAMPLE) as MailTemplate[])("%s: asunto, texto y HTML sin fugas de variables", (template) => {

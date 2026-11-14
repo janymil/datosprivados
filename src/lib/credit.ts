@@ -3,7 +3,9 @@ import "server-only";
 import { getDb, type Company } from "./db";
 import type { PaymentRow } from "./billing";
 import type { BillingTerm } from "./plans";
-import { isTransferConfigured } from "./transfers";
+
+/** Mismo criterio que `isTransferConfigured` (transfers.ts), sin importarlo: transfers.ts importa este módulo. */
+const transferConfigured = () => Boolean(process.env.TRANSFER_BANK_DETAILS?.trim());
 
 /**
  * Pago con factura a crédito (decisión del fundador, 14.11.2026).
@@ -26,7 +28,7 @@ const DAY = 24 * 60 * 60 * 1000;
 export type CreditEligibility = { ok: true } | { ok: false; reason: string };
 
 export function creditEligibility(company: Company): CreditEligibility {
-  if (!isTransferConfigured()) return { ok: false, reason: "El pago con factura a crédito no está disponible." };
+  if (!transferConfigured()) return { ok: false, reason: "El pago con factura a crédito no está disponible." };
   if (company.billing_status === "demo") return { ok: false, reason: "La cuenta de demostración no puede pagar." };
   if (!company.ruc.startsWith("20") || !company.ruc_verified_at) {
     return { ok: false, reason: "El pago a crédito es solo para empresas con RUC 20 verificado en la SUNAT." };
