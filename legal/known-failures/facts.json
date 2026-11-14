@@ -1,0 +1,22 @@
+[
+ {
+  "rule": "fact-unverified",
+  "clause": "uit.2026",
+  "detail": "Falta el decreto supremo que fija la UIT 2026 en la biblioteca."
+ },
+ {
+  "rule": "fact-unverified",
+  "clause": "cctv.conservacion",
+  "detail": "Falta la Directiva 01-2020-JUS/DGTAIPD; el número de artículo es provisional."
+ },
+ {
+  "rule": "fact-unverified",
+  "clause": "cctv.conservacion.educacion",
+  "detail": "Falta la Directiva 01-2020-JUS/DGTAIPD; el número de artículo es provisional."
+ },
+ {
+  "rule": "fact-unverified",
+  "clause": "reclamo.respuesta",
+  "detail": "Falta el DS 011-2011-PCM y sus modificaciones. Verificar: las páginas legales de DatosPrivados dicen 15 días hábiles y los documentos de clientes, 30 días calendario."
+ }
+]
