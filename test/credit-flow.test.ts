@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { getDb, nowIso } from "@/lib/db";
 import { getCompanyById } from "@/lib/billing";
 import { creditDueAt, getOpenCredit } from "@/lib/credit";
-import { getInvoiceByPayment, markInvoiceIssued } from "@/lib/invoicing";
-import { confirmTransferPaid, requestCreditInvoice } from "@/lib/transfers";
+import { getInvoiceByPayment, listPendingInvoices, markInvoiceIssued } from "@/lib/invoicing";
+import { confirmTransferPaid, getPendingTransfer, requestCreditInvoice, requestTransfer } from "@/lib/transfers";
 import { makeCompany } from "./helpers/db";
 
 const original = { ...process.env };
@@ -77,6 +77,26 @@ describe("pago con factura a crédito: pedir, emitir, confirmar", () => {
     expect(getCompanyById(company.id)!.paid_until).toBe(paidUntil);
     expect(getDb().prepare("SELECT status FROM payments WHERE id = ?").get(credit.id)).toEqual({ status: "approved" });
     expect(getOpenCredit(company.id)).toBeUndefined();
+  });
+
+  it("pedir una transferencia normal no cancela el crédito abierto (no regala un año)", () => {
+    const company = business();
+    requestCreditInvoice(company, "basico");
+    const credit = getOpenCredit(company.id)!;
+    expect(requestTransfer(getCompanyById(company.id)!, "pro", "yearly")).toEqual({
+      ok: false,
+      error: "Ya tienes una factura a crédito pendiente: págala por transferencia con su referencia.",
+    });
+    expect(getOpenCredit(company.id)?.id).toBe(credit.id);
+    expect(getInvoiceByPayment(credit.id)?.status).toBe("pending");
+    expect(getPendingTransfer(company.id)).toBeUndefined(); // un crédito no es una «transferencia pendiente» reemplazable
+  });
+
+  it("la alerta de facturas sin emitir (billing-sync) incluye las de crédito", () => {
+    const company = business();
+    requestCreditInvoice(company, "basico");
+    const credit = getOpenCredit(company.id)!;
+    expect(listPendingInvoices().some((i) => i.payment_id === credit.id)).toBe(true);
   });
 
   it("confirmar dos veces no aplica dos veces", () => {

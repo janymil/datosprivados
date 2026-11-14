@@ -47,7 +47,7 @@ export default async function PagoPage({
 
   // Factura a crédito sin pagar: aquí se ve cómo pagarla (el aviso de cuenta vencida enlaza esta página).
   const openCredit = getOpenCredit(company.id);
-  if (openCredit && !change) {
+  if (openCredit) {
     return (
       <div>
         <p className="label-mono">Suscripción</p>

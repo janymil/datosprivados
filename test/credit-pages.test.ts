@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import PagoPage from "@/app/pago/page";
 import OperatorPage from "@/app/operador/page";
-import { requestCreditAction } from "@/app/pago/actions";
+import { activateDevAction, requestCreditAction, requestTransferAction, startSubscriptionAction } from "@/app/pago/actions";
 import { createSession } from "@/lib/auth";
 import { getCompanyById } from "@/lib/billing";
 import { getOpenCredit } from "@/lib/credit";
@@ -48,6 +48,18 @@ describe("/pago: factura a crédito", () => {
     const companyId = await loginBusiness();
     await expect(requestCreditAction(form({ plan: "basico" }))).rejects.toThrow("REDIRECT:/app?credito=ok");
     expect(getCompanyById(companyId)!.billing_status).toBe("active");
+    expect(getOpenCredit(companyId)).toBeDefined();
+  });
+
+  it("con un crédito abierto no se puede pagar con tarjeta, transferencia ni modo desarrollo (ni con ?change=1)", async () => {
+    const companyId = await loginBusiness();
+    requestCreditInvoice(getCompanyById(companyId)!, "basico");
+    const page = await html(PagoPage({ searchParams: Promise.resolve({ change: "1" }) }));
+    expect(page).toContain("Factura a crédito pendiente");
+    expect(page).not.toContain("Prefiero pagar por transferencia");
+    for (const action of [startSubscriptionAction, requestTransferAction, activateDevAction]) {
+      await expect(action(form({ plan: "pro", change: "1" }))).rejects.toThrow("REDIRECT:/pago");
+    }
     expect(getOpenCredit(companyId)).toBeDefined();
   });
 

@@ -48,6 +48,17 @@ describe("recordatorios de la factura a crédito", () => {
     expect(sent(companyId)).toEqual(["credit_due_soon", "credit_due_today", "credit_overdue", "credit_readonly"]);
   });
 
+  it("el aviso de solo lectura no sale antes de que la cuenta lo esté de verdad", () => {
+    // Vence a las 23:00 Lima (04:00 UTC del día siguiente): el día +7 a las 11:00 aún no está bloqueada.
+    const lateDue = "2026-12-11T04:00:00.000Z";
+    const { companyId } = creditDue(lateDue);
+    const day7at11 = new Date(Date.parse("2026-12-17T16:00:00.000Z")); // 11:00 Lima del día +7
+    sendCreditReminders(day7at11);
+    expect(sent(companyId)).toEqual(["credit_overdue"]);
+    sendCreditReminders(new Date(Date.parse("2026-12-18T16:00:00.000Z"))); // día +8: ya bloqueada
+    expect(sent(companyId)).toEqual(["credit_overdue", "credit_readonly"]);
+  });
+
   it("correr dos veces el mismo día no duplica", () => {
     const { companyId } = creditDue(DUE);
     sendCreditReminders(at9(0));

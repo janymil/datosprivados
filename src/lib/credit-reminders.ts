@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getDb, type Company } from "./db";
-import { CREDIT_GRACE_DAYS, CREDIT_REMINDER_DAYS } from "./credit";
+import { CREDIT_GRACE_DAYS, CREDIT_REMINDER_DAYS, isCreditOverdue } from "./credit";
 import { formatDate, limaToday } from "./format";
 import { formatSol, invoiceNumber, type InvoiceRow } from "./invoicing";
 import type { MailTemplate } from "./mail-templates";
@@ -44,8 +44,10 @@ export function sendCreditReminders(now: Date = new Date()): number {
     .all() as Array<{ id: string; company_id: string; amount: number; due_at: string; external_reference: string | null }>;
   let sent = 0;
   for (const credit of credits) {
-    const stage = creditReminderStage(credit.due_at, now);
+    let stage = creditReminderStage(credit.due_at, now);
     if (!stage) continue;
+    // El día +7 de Lima puede llegar antes del bloqueo real (vencimiento + 7×24 h): hasta entonces, «vencida».
+    if (stage === "readonly" && !isCreditOverdue(credit.company_id, now)) stage = "overdue";
     const company = db.prepare("SELECT * FROM companies WHERE id = ?").get(credit.company_id) as unknown as Company | undefined;
     const invoice = db.prepare("SELECT * FROM invoices WHERE payment_id = ?").get(credit.id) as unknown as InvoiceRow | undefined;
     if (!company || !invoice) continue;

@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import { getDb, newId, nowIso, type Company } from "./db";
 import { logActivity } from "./data";
 import { checkoutCharge, getCompanyById, nextPaidUntil, type PaymentRow } from "./billing";
-import { CREDIT_DAYS, creditEligibility } from "./credit";
+import { CREDIT_DAYS, creditEligibility, getOpenCredit } from "./credit";
 import { createInvoiceForPayment, formatSol } from "./invoicing";
 import { notifyCompany } from "./notify";
 import { PLANS, planPrice, termMonths, type BillingTerm, type PlanId } from "./plans";
@@ -41,7 +41,7 @@ export function listPendingTransfers() {
 
 export function getPendingTransfer(companyId: string) {
   return getDb()
-    .prepare("SELECT * FROM payments WHERE company_id = ? AND provider = 'transfer' AND status = 'pending' ORDER BY created_at DESC LIMIT 1")
+    .prepare("SELECT * FROM payments WHERE company_id = ? AND provider = 'transfer' AND status = 'pending' AND credit = 0 ORDER BY created_at DESC LIMIT 1")
     .get(companyId) as unknown as PaymentRow | undefined;
 }
 
@@ -50,6 +50,8 @@ export type TransferRequestResult = { ok: true; reference: string } | { ok: fals
 export function requestTransfer(company: Company, plan: PlanId, term: BillingTerm): TransferRequestResult {
   if (!isTransferConfigured()) return { ok: false, error: "El pago por transferencia no está disponible." };
   if (company.billing_status === "demo") return { ok: false, error: "La cuenta de demostración no puede pagar." };
+  // Un crédito abierto se paga con su propia referencia; otra transferencia no lo reemplaza (si no, regalaría el año).
+  if (getOpenCredit(company.id)) return { ok: false, error: "Ya tienes una factura a crédito pendiente: págala por transferencia con su referencia." };
   // Con una suscripción de MercadoPago vigente, una transferencia cobraría dos veces.
   if (company.subscription_id && company.subscription_status === "authorized") {
     return { ok: false, error: "Tu cuenta ya tiene una suscripción con tarjeta. Cancélala antes de pagar por transferencia." };

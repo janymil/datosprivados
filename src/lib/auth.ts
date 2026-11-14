@@ -8,7 +8,6 @@ import { isCompanyActive } from "./billing";
 import { isDemoCompany } from "./demo";
 import { isCreditOverdue } from "./credit";
 
-
 const COOKIE = "pdp_session";
 const MAX_AGE = 60 * 60 * 24 * 30;
 

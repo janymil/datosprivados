@@ -23,6 +23,7 @@ import {
 import { isPlanId, planName, type BillingTerm } from "@/lib/plans";
 import { siteUrl } from "@/lib/site";
 import { isDemoCompany } from "@/lib/demo";
+import { getOpenCredit } from "@/lib/credit";
 import type { Company } from "@/lib/db";
 import { requestCreditInvoice, requestTransfer } from "@/lib/transfers";
 import { recordConsents } from "@/lib/platform-legal";
@@ -51,6 +52,7 @@ const CHECKOUT_TERM: BillingTerm = "yearly";
 export async function startSubscriptionAction(formData: FormData) {
   const { company, user } = await requireSession();
   if (isDemoCompany(company)) redirect("/app?demo=lectura");
+  refuseWithOpenCredit(company.id);
   const change = String(formData.get("change") ?? "") === "1";
   // Una cuenta activa solo vuelve aquí para cambiar de plan o, a menos de 60 días del vencimiento, para renovar.
   if (isCompanyActive(company) && !change && !canRenewNow(company)) redirect("/app");
@@ -106,6 +108,7 @@ export async function startSubscriptionAction(formData: FormData) {
 export async function activateDevAction(formData: FormData) {
   const { company } = await requireSession();
   if (isDemoCompany(company)) redirect("/app?demo=lectura");
+  refuseWithOpenCredit(company.id);
   if (!canBypassPayment()) redirect("/pago?error=dev");
 
   const rawPlan = String(formData.get("plan") ?? company.plan);
@@ -139,6 +142,11 @@ export async function cancelSubscriptionAction() {
   redirect("/app/ajustes?ok=cancel");
 }
 
+/** Con una factura a crédito abierta no se paga de otra forma: se paga esa factura (ver /pago). */
+function refuseWithOpenCredit(companyId: string) {
+  if (getOpenCredit(companyId)) redirect("/pago");
+}
+
 /** Una suscripción creada y todavía no autorizada cobraría además de la transferencia: se cancela antes. */
 async function cancelPendingSubscription(company: Company, errorKey: "transfer" | "credit") {
   if (!company.pending_subscription_id) return;
@@ -158,6 +166,7 @@ async function cancelPendingSubscription(company: Company, errorKey: "transfer" 
 export async function requestTransferAction(formData: FormData) {
   const { company } = await requireSession();
   if (isDemoCompany(company)) redirect("/app?demo=lectura");
+  refuseWithOpenCredit(company.id);
 
   const rawPlan = String(formData.get("plan") ?? company.plan);
   const plan = isPlanId(rawPlan) ? rawPlan : "basico";
