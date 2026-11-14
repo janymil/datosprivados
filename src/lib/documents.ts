@@ -37,6 +37,8 @@ import {
 } from "@/legal/shared";
 import { legalContext } from "@/legal/context";
 import { renderDocument } from "@/legal/render";
+import { cookiesSpec } from "@/legal/documents/cookies";
+import { reclamacionesSpec } from "@/legal/documents/reclamaciones";
 import { avisoSpec } from "@/legal/documents/aviso";
 
 export { legalBasisLabel, appUrl, companyShortId, companyIdentityLine, controllerParagraph } from "@/legal/shared";
@@ -682,77 +684,7 @@ Vigencia: desde el **${date}**.
  * cuando el sitio carga analítica o publicidad de terceros.
  */
 export function buildCookiePolicy(company: Company, providers: Provider[] = []): string {
-  const date = formatDate(new Date().toISOString(), "long");
-  const contact = company.dpo_email || company.email;
-  const policyUrl = `${appUrl()}/p/${company.slug}`;
-  const cookieType: Record<string, string> = { analitica: "Analítica", publicidad: "Publicitaria" };
-  const cookieProviders = providers.filter(
-    (provider) =>
-      provider.cookies ||
-      provider.category === "analitica" ||
-      provider.category === "publicidad" ||
-      (provider.is_custom && ["login", "pagos", "web", "hosting"].includes(provider.category))
-  );
-  const providerCookieRows = cookieProviders.map((provider) => [
-    provider.cookies || "[cookies de este proveedor: revísalas en tu navegador]",
-    provider.name,
-    provider.purpose || categoryLabel(provider.category),
-    "Según el proveedor",
-    cookieType[provider.category] ?? "Técnica o de terceros",
-  ]);
-
-  return `## 1. Qué son las cookies y por qué las usamos
-
-Una cookie es un archivo pequeño que el sitio guarda en tu navegador. Sirve para mantener tu sesión abierta, recordar tus preferencias y, solo si lo autorizas, medir cómo se usa el sitio. Cuando una cookie o identificador en línea permite identificarte, es un dato personal (art. 2.4 del DS N.° 016-2024-JUS) y su uso para analítica o publicidad requiere tu consentimiento previo, libre, informado e inequívoco (art. 5 y 6).
-
-## 2. Categorías
-
-| Categoría | Para qué sirve | ¿Requiere consentimiento? |
-| --- | --- | --- |
-| **Técnicas o esenciales** | Inicio de sesión, seguridad, prevención de fraude, balanceo de carga | No: son necesarias para prestar el servicio |
-| **De preferencias** | Idioma, tema claro/oscuro, último panel usado | No, si solo guardan tu elección |
-| **Analíticas** | Medir páginas vistas y uso de forma agregada | **Sí** |
-| **Publicitarias** | Medir conversiones de campañas y mostrarte anuncios | **Sí** |
-
-## 3. Nada se carga antes de que decidas
-
-El sitio **no ejecuta** scripts de analítica ni de publicidad antes de que pulses «Aceptar» en el banner. Si rechazas las no esenciales, no se descarga ninguna etiqueta de terceros. Guardamos tu decisión para no volver a preguntarte en cada visita.
-
-## 4. Cookies que usamos
-
-${providers.length ? "*Las filas de proveedores salen de las herramientas que declaraste en DatosPrivados.* " : ""}*Esta tabla debe reflejar lo que **realmente** carga tu sitio: abre tu web con las herramientas de desarrollo del navegador (pestaña Aplicación → Cookies) y completa cada fila. Si declaras cookies que no usas, o callas las que usas, la política deja de ser veraz.*
-
-| Cookie | Proveedor | Finalidad | Duración | Tipo |
-| --- | --- | --- | --- | --- |
-| [nombre de la cookie de sesión de tu web o plataforma] | ${company.name} | Mantener la sesión y la seguridad | Sesión | Técnica |
-| [decisión del banner de cookies] | ${company.name} | Recordar tu elección | Hasta que la borres | Preferencias |
-${providerCookieRows.length ? providerCookieRows.map((row) => `| ${row.join(" | ")} |`).join("\n") : "| [completar con cada cookie o etiqueta de terceros] | [proveedor] | [finalidad] | [duración] | [tipo] |"}
-
-**Ejemplos habituales, para que los reconozcas (úsalos solo si tu sitio realmente los carga):** \`_ga\` y \`_ga_*\` (Google Analytics, analítica, hasta 2 años), \`_gcl_*\` (Google Ads, publicidad, hasta 90 días), \`_fbp\` (Meta Pixel, publicidad, hasta 90 días), \`__cf_bm\` (Cloudflare, técnica, 30 minutos).
-
-## 5. Terceros
-
-Algunos proveedores pueden instalar sus propias cookies cuando usas funciones concretas (por ejemplo, la pasarela de pagos en la pantalla de cobro). No controlamos esas cookies: revisa sus políticas. La lista de proveedores y transferencias está en la Política de Privacidad (${policyUrl}).
-
-## 6. Cómo revocar o cambiar tu decisión
-
-1. Abre el enlace **«Preferencias de cookies»** del pie de página y cambia las categorías.
-2. Borra las cookies del sitio desde la configuración de tu navegador.
-3. Para analítica de Google, puedes instalar el complemento de inhabilitación de Google Analytics.
-
-Revocar el consentimiento no afecta la licitud del tratamiento previo.
-
-## 7. Almacenamiento local
-
-Además de cookies, usamos almacenamiento local del navegador para preferencias de interfaz (tema, idioma, decisión del banner). Esos datos se quedan en tu equipo y no viajan en cada solicitud.
-
-## 8. Vigencia y contacto
-
-Vigencia: **${date}**. Cambios relevantes se anuncian en esta página. Consultas: **${contact}**.
-
----
-
-*Borrador generado con DatosPrivados. Verifica la tabla de cookies con las herramientas de desarrollo del navegador antes de publicar.*`;
+  return renderDocument(cookiesSpec, legalContext(company, [], providers));
 }
 
 /**
@@ -768,75 +700,7 @@ export function buildShortNotices(company: Company): string {
  * (Ley N.° 29571, arts. 150 a 152, y su Reglamento.)
  */
 export function buildComplaintBook(company: Company): string {
-  const name = company.name;
-  const contact = company.dpo_email || company.email;
-  const complaintsUrl = complaintsLink(company);
-  const idLine = isForeign(company)
-    ? `${name} — ${companyShortId(company)} — Representante en el Perú: ${company.representative_name || "[por designar]"} — ${company.address || "[completar domicilio]"}`
-    : `${name} — RUC ${company.ruc} — ${company.address || "[completar domicilio]"}`;
-
-  return `## A. Aviso obligatorio (visible en la web y en el local)
-
-Debe estar en el pie de página y en la pantalla de pago, con enlace directo al libro. *DatosPrivados todavía no aloja tu Libro de Reclamaciones virtual: reemplaza el texto entre corchetes por el enlace del libro que uses (por ejemplo, el servicio gratuito del INDECOPI o el de tu plataforma de ventas).* Los datos de las hojas son un banco de datos personales: declara el banco «Libro de Reclamaciones».
-
-> **LIBRO DE RECLAMACIONES**
-> Conforme al Código de Protección y Defensa del Consumidor (Ley N.° 29571) y su Reglamento del Libro de Reclamaciones (DS N.° 011-2011-PCM), este establecimiento cuenta con un **Libro de Reclamaciones** a tu disposición.
-> Regístralo aquí: ${complaintsUrl}
-> También puedes escribir a ${contact}.
-> Si no atendemos tu reclamo, puedes acudir al **INDECOPI**: www.indecopi.gob.pe
-
-Para establecimientos físicos, además: libro en formato físico en el mostrador, con aviso visible en el ingreso.
-
-## B. Hoja de reclamación (formato)
-
-> **HOJA DE RECLAMACIÓN N.° ____________**
-> Fecha: ____/____/______  Hora: ______
->
-> **1. Proveedor**
-> ${idLine}
->
-> **2. Identificación del consumidor**
-> Nombre completo: ______________________________________________
-> Documento: DNI / CE / Pasaporte N.° ____________________________
-> Domicilio: ____________________________________________________
-> Teléfono: ____________________  Correo: ________________________
-> ¿Es menor de edad? ☐ No ☐ Sí (en ese caso, datos del padre/madre/apoderado: ____________________)
->
-> **3. Identificación del servicio contratado**
-> Servicio o producto: __________________________________________
-> Monto reclamado (si aplica): S/ ______________
-> N.° de pedido, contrato o comprobante: ________________________
->
-> **4. Detalle del reclamo o queja**
-> ☐ **Reclamo** (disconformidad con el servicio o el cobro)
-> ☐ **Queja** (malestar por la atención recibida)
-> Descripción de los hechos: _____________________________________
-> Pedido del consumidor: ________________________________________
->
-> **5. Constancia**
-> El consumidor declara que la información es veraz. Recibe una copia de esta hoja.
-> Firma del consumidor: ____________________  Firma del proveedor: ____________________
->
-> *Plazo de respuesta: máximo 30 días calendario. La respuesta se envía al correo o domicilio indicados.*
-
-## C. Procedimiento interno de atención (5 pasos)
-
-1. **Registro (día 0):** toda hoja se numera y se ingresa el mismo día, con fecha y hora, en ${complaintsUrl} o en el registro interno. Nunca se rechaza una hoja por el motivo del reclamo.
-2. **Acuse (día 1):** se envía copia al consumidor con el número asignado.
-3. **Investigación (días 2 a 7):** se reúne el pedido, el comprobante, los correos y la grabación o registro de atención.
-4. **Respuesta (máximo 30 días calendario):** se responde por escrito, con decisión, fundamento y medidas adoptadas. Se guarda evidencia del envío.
-5. **Cierre y reporte:** se archiva la hoja con su respuesta por un mínimo de **2 años** y se revisan los reclamos repetidos para corregir la causa.
-
-## D. Qué NO hacer
-
-- No condicionar la atención a que el consumidor retiere el reclamo por otra vía.
-- No responder verbalmente sin dejar constancia.
-- No usar el libro como canal de marketing ni pedir datos innecesarios.
-- No eliminar hojas: son registro obligatorio y prueba ante INDECOPI.
-
----
-
-*Borrador generado con DatosPrivados. El aviso y el formato deben coincidir con el canal realmente habilitado.*`;
+  return renderDocument(reclamacionesSpec, legalContext(company, [], []));
 }
 
 /* -------------------------------------------------------------------------- */
