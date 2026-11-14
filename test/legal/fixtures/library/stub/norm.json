@@ -1,0 +1,14 @@
+{
+  "id": "stub",
+  "title": "Norma sin texto oficial",
+  "type": "ley",
+  "number": "0",
+  "publishedAt": null,
+  "officialUrl": null,
+  "sourceSha256": null,
+  "retrievedAt": null,
+  "status": "no-verificada",
+  "consolidated": false,
+  "amendedBy": [],
+  "aliases": ["Ley de prueba"]
+}

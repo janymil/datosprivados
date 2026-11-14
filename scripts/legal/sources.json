@@ -1,0 +1,34 @@
+{
+  "ds-016-2024-jus": {
+    "url": "https://www3.congreso.gob.pe/Docs/DGP/DIDP/files/ds_016-2024-jus.pdf",
+    "start": "^TÍTULO PRELIMINAR",
+    "startOccurrence": 1,
+    "end": null,
+    "norm": {
+      "title": "Reglamento de la Ley N.° 29733, Ley de Protección de Datos Personales",
+      "type": "decreto-supremo",
+      "number": "016-2024-JUS",
+      "publishedAt": "2024-11-30",
+      "status": "vigente",
+      "consolidated": true,
+      "amendedBy": [],
+      "aliases": ["DS N.° 016-2024-JUS", "DS 016-2024-JUS", "Decreto Supremo N.° 016-2024-JUS", "Reglamento"]
+    }
+  },
+  "ley-29733": {
+    "url": "https://cdn.www.gob.pe/uploads/document/file/272360/Ley%20N%C2%BA%2029733.pdf.pdf",
+    "start": "^TÍTULO PRELIMINAR",
+    "startOccurrence": 1,
+    "end": "^DECRETO SUPREMO",
+    "norm": {
+      "title": "Ley N.° 29733, Ley de Protección de Datos Personales",
+      "type": "ley",
+      "number": "29733",
+      "publishedAt": "2011-07-03",
+      "status": "modificada",
+      "consolidated": false,
+      "amendedBy": ["dleg-1353"],
+      "aliases": ["Ley N.° 29733", "Ley 29733", "Ley"]
+    }
+  }
+}

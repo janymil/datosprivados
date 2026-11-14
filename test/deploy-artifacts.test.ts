@@ -112,6 +112,7 @@ describe("cron: la tabla y el wrapper", () => {
       ["/usr/local/bin/datosprivados-cron", wrapperFile],
       ["/etc/cron.d/datosprivados", cronFile],
       ["/etc/logrotate.d/datosprivados", logrotateFile],
+      ["/usr/local/bin/datosprivados-autodeploy", path.join(deployDir, "datosprivados-autodeploy.sh")],
     ];
     for (const [live, repoCopy] of installed) {
       if (!fs.existsSync(live)) continue;

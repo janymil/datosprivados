@@ -1,0 +1,14 @@
+{
+  "id": "demo",
+  "title": "Norma de prueba",
+  "type": "decreto-supremo",
+  "number": "999-2099-JUS",
+  "publishedAt": "2099-01-01",
+  "officialUrl": "https://example.invalid/demo.pdf",
+  "sourceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "retrievedAt": "2099-01-02",
+  "status": "vigente",
+  "consolidated": true,
+  "amendedBy": [],
+  "aliases": ["DS N.° 999-2099-JUS"]
+}

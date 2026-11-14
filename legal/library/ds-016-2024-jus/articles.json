@@ -1,0 +1,914 @@
+[
+ {
+  "num": "I",
+  "title": "Objeto",
+  "text": "El presente Reglamento tiene por objeto establecer disposiciones para la adecuada aplicación de la Ley N.o 29733, Ley de Protección de Datos Personales, en adelante la Ley, a fin de garantizar el derecho fundamental a la protección de datos personales, regulando un adecuado tratamiento por parte de las personas naturales, entidades públicas y las instituciones pertenecientes al sector privado, particularmente, en el entorno digital.",
+  "sha256": "7bfb0b39fe9fbcac0224106a2847808947215be0465398863e7435a2ee5f2057"
+ },
+ {
+  "num": "II",
+  "title": "Finalidad",
+  "text": "El presente Reglamento tiene por finalidad garantizar una adecuada tutela del derecho fundamental a la protección de datos personales establecido en el numeral 6 del artículo 2 de la Constitución Política del Perú y la Ley N.o 29733, Ley de Protección de Datos Personales, frente a los riesgos que pueden generar el uso de las nuevas tecnologías digitales.",
+  "sha256": "d0e678f0bb16aea01cd08bede6efa0c69ef49232efce8f0697f55fc115514acb"
+ },
+ {
+  "num": "III",
+  "title": "Definiciones",
+  "text": "Para la aplicación del presente Reglamento, sin perjuicio de las definiciones contenidas en la Ley, complementariamente, se debe entender las siguientes definiciones: 1. Banco de datos personales: Es el conjunto de datos de personas naturales computarizado o no, y estructurado conforme a criterios específicos, que permita acceder sin esfuerzos desproporcionados a los datos personales, ya sea aquel centralizado, descentralizado o repartido de forma funcional o geográfica. 2. Bloqueo: Es la medida que consiste en la identificación y reserva de los datos personales adoptando medidas técnicas y organizativas para impedir su tratamiento, incluyendo su visualización, durante el periodo en que se esté procesando alguna solicitud de actualización, inclusión, rectificación o supresión, en concordancia con lo que dispone el tercer párrafo del artículo 20 de la Ley. Se dispone también como paso previo a la cancelación por el tiempo necesario para determinar posibles responsabilidades en relación a los tratamientos durante el plazo de prescripción legal o prevista contractualmente. 3. Cancelación: Es la acción o medida que en la Ley se describe como supresión, cuando se refiere a datos personales, que consiste en eliminar o suprimir los datos personales. 4. Datos personales: Es aquella información numérica, alfabética, gráfica, fotográfica, acústica, sobre hábitos personales, de localización, identificadores en línea o de cualquier otro tipo concerniente a aspectos físicos, económicos, culturales o sociales de las personas naturales que las identifica o las hace identificables. Se considera identificable cuando se puede verificar la identidad de la persona de manera directa o indirectamente a partir de la combinación de datos a través de medios que puedan ser razonablemente utilizados. 5. Datos personales relacionados con la salud: Es aquella información concerniente a la salud pasada, presente o pronosticada, física o mental, de una persona, incluyendo la información que se derive de un acto médico, el grado de discapacidad y su información genética. 6. Datos sensibles: Es aquella información relativa a datos genéticos o biométricos de la persona natural, datos neuronales, datos morales o emocionales, hechos o circunstancias de su vida afectiva o familiar, los hábitos personales que corresponden a la esfera más íntima, la información relativa a la afiliación sindical, salud física o mental u otras análogas que afecten su intimidad. 7. Desindexación: Es el proceso mediante el cual una dirección URL o contenido específico de un sitio web es eliminado o excluido de los resultados de motores de búsqueda. Este procedimiento, dependiendo de la situación y las circunstancias específicas, puede ser efectuado por el propietario del sitio web o por el motor de búsqueda. 8. Días: Días hábiles. 9. Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales: Es el órgano encargado de ejercer la Autoridad Nacional de Protección de Datos Personales a que se refiere el artículo 32 de la Ley, pudiendo usarse indistintamente cualquiera de dichas denominaciones en el presente Reglamento. 10. Encargado de tratamiento de datos personales: Es la persona natural, persona jurídica de derecho privado o entidad pública que realiza tratamiento de datos por cuenta u orden del responsable de tratamiento o titular del banco de datos personales. 11. Elaboración de perfiles: Es la forma de tratamiento automatizado de datos personales que permite evaluar aspectos de una persona natural, de manera específica y continua, para analizar o predecir aspectos relativos a su rendimiento profesional, situación económica, salud, preferencias personales, intereses, fiabilidad, comportamientos o hábitos, ubicación o movimientos. 12. Emisor o exportador de datos personales: Es el titular del banco de datos personales o aquel que resulte responsable del tratamiento de dichos datos, situado dentro del territorio nacional y que realiza una transferencia de datos personales a otro país, conforme a lo dispuesto en el presente Reglamento. 13. Evaluación de impacto relativo a la protección de datos personales: Es el mecanismo de responsabilidad proactiva que consiste en que el titular del banco de datos personales o responsable del tratamiento de datos realice, de forma previa al tratamiento de los mismos, un análisis o evaluación del impacto o riesgos que implica el tratamiento de esos datos. 14. Fines de tránsito: Implica que los medios no son usados para la finalidad específica de realizar el tratamiento de datos personales, tales como procesamiento, almacenamiento, descarga, visualización y/o similares, sino exclusivamente para hacer pasar datos personales de un lugar a otro. 15. Flujo transfronterizo de datos personales: Se denomina flujo transfronterizo o transferencia internacional de datos personales a la transferencia de datos personales a un destinatario situado en un país distinto al país de origen de los datos personales, sin importar el soporte REGLAMENTO DE LA LEY No 29733, en que estos se encuentren, los medios por los cuales se efectuó la transferencia ni el tratamiento que reciban. 16. Incidente de seguridad de datos personales: Es toda vulneración de la seguridad que ocasione la destrucción, pérdida, alteración ilícita de los datos personales o la comunicación o exposición no autorizada a dichos datos. 17. Oficial de Datos Personales: Es la persona designada por el responsable de tratamiento o encargado del tratamiento de datos personales para la verificación, asesoramiento e implementación del cumplimiento del régimen jurídico sobre protección de datos personales. 18. Receptor o importador de datos personales: Es toda persona natural o jurídica de derecho privado, incluyendo las sucursales, filiales, vinculadas o similares o entidades públicas, que recibe los datos en caso de transferencia internacional, ya sea como titular del banco de datos personales o encargado del tratamiento. 19. Rectificación: Es aquella acción destinada a afectar o modificar un dato personal ya sea para actualizarlo o corregirlo con datos exactos. 20. Representante: Es la persona natural o jurídica designada de manera expresa, por el titular del banco de datos personales o responsable, para fines del tratamiento de datos personales. 21. Repertorio de jurisprudencia: Es el banco de resoluciones judiciales o administrativas, dictámenes fiscales, laudos arbitrales, resoluciones de comités de ética o similares, que se encuentra en soporte físico o digital, y organiza, entre otros, datos personales como fuente de consulta y habitualmente pública. 22. Responsable del tratamiento: Es la persona natural, persona jurídica de derecho privado o entidad pública que decide sobre la finalidad y medios del tratamiento de datos personales. Esta definición no se restringe al titular del banco de datos, sino que incluye a cualquier persona que decida sobre el tratamiento de datos personales, aun cuando no se encuentre en un banco de datos personales. 23. Tratamiento: Es cualquier operación o conjunto de operaciones, automatizados o no, que se realicen sobre los datos personales o conjuntos de datos personales. 24. Tercero: Es toda persona natural, persona jurídica de derecho privado o entidad pública, distinta del titular de los datos personales, del titular del banco de datos o responsable del tratamiento, del encargado del tratamiento y de las personas autorizadas para tratar los datos bajo la autoridad directa de aquellos. La referencia a “tercero” que hace el artículo 30 de la Ley constituye una excepción al significado previsto en este numeral.",
+  "sha256": "4f8b2e0fec2b084835493280ea63d032e876ddb7a59f51ec9408c3c6423cea8d"
+ },
+ {
+  "num": "IV",
+  "title": "Ámbito de aplicación",
+  "text": "4.1 El presente Reglamento es de aplicación al tratamiento de los datos personales, aun cuando no se encuentren en un banco de datos personales. 4.2 Se aplica a toda modalidad de tratamiento de datos personales, ya sea efectuado por personas naturales, entidades públicas o instituciones del sector privado, independientemente del soporte en el que se encuentren. 4.3 La existencia de normas o regímenes particulares o especiales, aun cuando incluyan regulaciones sobre datos personales, no excluye a las entidades públicas o instituciones privadas a las que dichos regímenes se aplican del ámbito de aplicación de la Ley y del presente Reglamento. 4.4 Lo dispuesto en el párrafo precedente no implica la derogatoria o inaplicación de las normas particulares, en tanto su aplicación no genere la afectación del derecho a la protección de datos personales.",
+  "sha256": "b5a1fcfc9ec54edfeea544663f9044244d39ad34cc0cad79f77046a9157e45a6"
+ },
+ {
+  "num": "V",
+  "title": "Excepciones al ámbito de aplicación",
+  "text": "5.1 Las disposiciones de la Ley y del presente Reglamento no son de aplicación a los siguientes supuestos: 1. El tratamiento de datos personales realizado por personas naturales para fines exclusivamente domésticos, personales o relacionados con su vida privada o familiar. 2. Los datos personales contenidos o destinados a ser contenidos en bancos de datos personales de la administración pública, solo en tanto la finalidad vigente del tratamiento resulte necesaria para el estricto cumplimiento de competencias asignadas por ley a las respectivas entidades públicas y siempre que tengan por objeto: a) La defensa nacional, b) La seguridad pública, c) El desarrollo de actividades en materia penal para la investigación y represión del delito. 5.2 En el caso de que las entidades públicas referidas en el numeral 2 del párrafo 5.1. del presente artículo realicen el tratamiento de datos personales para una finalidad distinta a la vinculada al estricto cumplimiento de sus competencias, o para fines de archivo, administrativos, investigación histórica, científica o estadística, les es aplicable lo dispuesto en la Ley y en el presente Reglamento en lo pertinente.",
+  "sha256": "70d36b9ab5935d4b0d851c6eaaf272ce2b53b56f425f7aba227fc7c82b5f9ab2"
+ },
+ {
+  "num": "VI",
+  "title": "Ámbito de aplicación en y para territorio peruano",
+  "text": "Las disposiciones de la Ley y del presente Reglamento son de aplicación al tratamiento de datos personales cuando: 1. Sea efectuado en un establecimiento ubicado en territorio peruano correspondiente al titular del banco de datos personales o de quien resulte responsable del tratamiento. 2. Sea efectuado por un encargado del tratamiento, con independencia de su ubicación, a nombre de un titular de banco de datos personales establecido en territorio peruano o de quien sea el responsable del tratamiento. 3. El titular del banco de datos personales o quien resulte responsable no se encuentre establecido en territorio peruano, pero utilice medios situados en dicho territorio, salvo que tales medios se utilicen únicamente con fines de tránsito que no impliquen un tratamiento de datos personales. Esta disposición comprende los siguientes supuestos: 3.1. El titular del banco de datos personales o quien resulte responsable del tratamiento no se encuentre en territorio peruano, pero realiza actividades relacionadas a la oferta de bienes o servicios dirigidos a los titulares de datos personales ubicados en territorio peruano. 3.2. El titular del banco de datos personales o quien resulte responsable del tratamiento no se encuentre en territorio peruano, pero realiza actividades orientadas al análisis de comportamiento de los titulares de datos personales ubicados en territorio peruano, así como la elaboración de perfiles que busquen predeterminar conductas, preferencias, hábitos o similares. 4. El titular del banco de datos personales o quien resulte responsable del tratamiento no esté establecido en territorio peruano, pero le resulte aplicable la legislación peruana, por disposición contractual o del derecho internacional.",
+  "sha256": "434aaa9d9a173fc7b2d36db791b619f16f87f6f64b5a5907de1c397635816029"
+ },
+ {
+  "num": "VII",
+  "title": "Representante del titular del banco de datos personales o responsable del tratamiento de datos personales",
+  "text": "7.1 Para efectos de lo dispuesto en los numerales 3 y 4 del artículo VI, salvo se realice el tratamiento con fines de tránsito, el titular del banco de datos personales o quien resulte responsable, ubicado en el territorio peruano o fuera de este, debe proveer los medios necesarios para el efectivo cumplimiento de las obligaciones previstas en la Ley y el Reglamento, y, designar un representante en el territorio peruano o para el territorio peruano, el cual es el punto de contacto con la Autoridad Nacional de Protección de Datos Personales. 7.2 El titular del banco de datos personales o quien resulte responsable puede realizar la designación del representante, de manera alternativa, de las siguientes formas: 1. Puede informarlo públicamente en la política de privacidad del titular del banco de datos personales o responsable del tratamiento; o, 2. Puede comunicarlo a la Autoridad Nacional de Protección de Datos Personales, para lo cual debe tomar en cuenta lo establecido en el párrafo 7.3 siguiente. 7.3 En el caso de que la designación del representante sea comunicada a la Autoridad Nacional de Protección de Datos Personales, debe tomarse en cuenta los siguientes supuestos: 1. Para un representante en territorio peruano: debe realizarse de forma expresa a través de un documento válido a efectos de materializar su representación, de conformidad con los artículos 53 y 115 de la Ley No 27444, Ley del Procedimiento Administrativo General o norma que lo sustituya. 2. Para un representante para el territorio peruano: la designación debe comunicarse a la Autoridad por el canal establecido por el titular o encargado de tratamiento. Este representante debe estar acreditado para gestionar toda comunicación, solicitud de los titulares de datos personales, reclamación, denuncia o similar que se derive de los procedimientos administrativos, debiendo precisar para tales fines un correo electrónico para comunicaciones y contacto correspondiente.",
+  "sha256": "ba2e1a29d410d2ef866f41e0a7b850bd5113a39257078ea79db84df4aded3d52"
+ },
+ {
+  "num": "VIII",
+  "title": "Determinación de establecimiento",
+  "text": "8.1.Enelcasodepersonasnaturales,elestablecimiento se entiende como el local en donde se encuentre el principal asiento de sus negocios o el que utilicen para el desempeño de sus actividades o su domicilio. 8.2. Tratándose de personas jurídicas, se entiende como el establecimiento el local en el que se encuentre la administración principal del negocio. Si se trata de personas jurídicas residentes en el extranjero, se entiende que es el local en el que se encuentre la administración principal del negocio en territorio peruano, o en su defecto el que designen, o cualquier instalación estable que permita el ejercicio efectivo o real de una actividad. 8.3. Si no fuera posible establecer la dirección del establecimiento o del domicilio, se le considera con domicilio desconocido en territorio peruano.",
+  "sha256": "63d611714948ed8731601a2b265e5654b642e2218195cf11e1e72ae6238a7aea"
+ },
+ {
+  "num": "IX",
+  "title": "Principios rectores",
+  "text": "El titular del banco de datos personales, o en su caso, quien resulte responsable del tratamiento de datos personales, debe cumplir con el régimen jurídico en materia de protección de los datos personales de acuerdo con los principios rectores establecidos en la Ley; y, asimismo, conforme a los siguientes principios específicos: 1. Principio de transparencia: El tratamiento de datos personales debe ser informado de manera permanente, clara, fácil de entender y accesible al titular de los datos personales. Este principio exige que el titular del dato personal tome conocimiento de las condiciones del tratamiento de sus datos personales, así como de los derechos que puede hacer valer respecto a aquellos y de las demás condiciones establecidas en el artículo 18 de la Ley. 2. Principio de responsabilidad proactiva: En el tratamiento de datos personales se deben aplicar las medidas legales, técnicas y organizativas a fin de garantizar el cumplimiento efectivo de la normativa de datos personales, y el titular del banco de datos personales o quien resulte responsable, debe ser capaz de demostrar tal cumplimiento.",
+  "sha256": "7054ea3057c88ce092905b5cedbb4bb2b4b8a07266fb68402b5a589a717a52ce"
+ },
+ {
+  "num": "1",
+  "title": "El consentimiento para el tratamiento de datos personales",
+  "text": "1.1 El titular del banco de datos personales o quien resulte como responsable del tratamiento, debe obtener el consentimiento para el tratamiento de los datos personales, de conformidad con lo establecido en la Ley y en el presente Reglamento, salvo los supuestos establecidos en el artículo 14 de la Ley, en cuyo numeral 1 queda comprendido el tratamiento de datos personales que resulte imprescindible para ejecutar la interoperabilidad entre las entidades públicas. 1.2 La solicitud del consentimiento debe estar referida a un tratamiento o serie de tratamientos determinados, con expresa identificación de la finalidad o finalidades para las que se recaban los datos; así como las demás condiciones que concurran en el tratamiento o tratamientos, sin perjuicio de lo dispuesto en el siguiente artículo sobre las características del consentimiento. 1.3 Cuando el tratamiento de datos personales se refiera a finalidades distintas a los supuestos previstos en el artículo 14 de la Ley, debe obtenerse el consentimiento. 1.4 Cuando se solicite el consentimiento para una forma de tratamiento que incluya o pueda incluir la transferencia nacional o internacional de los datos, del titular de los mismos debe ser informado de forma que conozca inequívocamente tal circunstancia, además de la finalidad a la que se destinan sus datos y el tipo de actividad desarrollada por quien va a recibir los mismos.",
+  "sha256": "9154b5292db5b4b2705fdd30afe93eeaab4c71e86515b0db98063b659fae4cd3"
+ },
+ {
+  "num": "2",
+  "title": "Características del consentimiento válido",
+  "text": "El consentimiento para el tratamiento de datos personales es válido si se cumplen las siguientes características: 1. Libre 2. Previo 3. Expreso e inequívoco 4. Informado",
+  "sha256": "036a3adc5f5e57dd0a1de8dd8ff055cee3d8c9a68819ee336a841a6ee0df0d9d"
+ },
+ {
+  "num": "3",
+  "title": "Consentimiento libre",
+  "text": "3.1. Se considera que el consentimiento del titular de los datos personales es libre cuando se otorgue sin que medie error, mala fe, violencia o dolo que puedan afectar la manifestación de voluntad del titular de los datos personales. 3.2. El condicionamiento de la prestación de un servicio o la advertencia o la amenaza de denegar el acceso a beneficios o servicios que normalmente son de acceso no restringido, sí afecta la libertad de quien otorga consentimiento para el tratamiento de sus datos personales, si los datos solicitados no son indispensables para la prestación de los beneficios o servicios. 3.3. La entrega de obsequios o beneficios al titular de los datos personales con ocasión de su consentimiento no afectan la condición de libertad que aquel tiene para otorgar tal consentimiento. Excepcionalmente, en el caso de niños, niñas y adolescentes, en los supuestos en que se admite su consentimiento, no se considera libre tal consentimiento otorgado mediando obsequios o beneficios.",
+  "sha256": "df529fe60b45affc4042e1f4d9a321162af6dcf60fd43c7123499bd1387405d7"
+ },
+ {
+  "num": "4",
+  "title": "Consentimiento previo",
+  "text": "El consentimiento debe ser solicitado al titular de los datos personales con anterioridad a la recopilación de tales datos o, en su caso, antes del tratamiento distinto a aquel por el cual ya se recopilaron dichos datos.",
+  "sha256": "7e682f3175cad3751ab8178e91b60ed3cb5a2de27f6c52db246ea6d71a60b123"
+ },
+ {
+  "num": "5",
+  "title": "Consentimiento expreso e inequívoco",
+  "text": "5.1. Se considera que el consentimiento del titular de los datos personales es expreso cuando se haya exteriorizado a través de una acción que demuestre una aceptación concreta, directa y explícita respecto al tratamiento de los datos personales. Se puede considerar expreso cuando se realice en las siguientes formas: 1. Verbal, cuando el titular del dato personal lo exterioriza oralmente de manera presencial o mediante el uso de cualquier tecnología que permita la interlocución oral. 2. Escrito, cuando se exterioriza mediante un documento o medio electrónico con su firma autógrafa, electrónica o digital, huella dactilar o cualquier otro mecanismo electrónico autorizado por el ordenamiento jurídico que pueda reflejar la manifestación de voluntad expresa. 3. Por canales digitales, cuando se firma un documento a través de medios electrónicos o digitales, o cualquier otro mecanismo electrónico autorizado por el ordenamiento jurídico que pueda reflejar la manifestación expresa, así como la manifestación consistente en “hacer clic”, “cliquear” o “pinchar”, “dar un toque”, “touch” o “pad” u otros similares. 4. Mediante cualquier otro medio conforme a lo establecido en el artículo 141 del Código Civil. 5.2. Se considera que el consentimiento es inequívoco cuando se pueda apreciar que los actos materiales por parte del titular del dato personal manifiestan la aceptación indubitable respecto a un determinado tratamiento de sus datos personales, sin generar posibilidad de duda o equivocación. 5.3. La sola expresión de voluntad en cualquiera de las formas reguladas en el presente artículo no exime del cumplimiento de los demás requisitos del consentimiento referidos a las características de libre, previo e informado.",
+  "sha256": "d1208bec7be7fdb4a739239a63163160be58236eccddb9385ebe85c3d85e9213"
+ },
+ {
+  "num": "6",
+  "title": "Consentimiento informado",
+  "text": "6.1. Cuando los datos personales son obtenidos directamente del titular de los datos personales se le debe comunicar de forma clara, con lenguaje sencillo, cuando menos lo siguiente: 1.Laidentidadydomicilioodireccióndeltitulardelbanco de datos personales o del responsable del tratamiento al que puede dirigirse para revocar el consentimiento o ejercer sus derechos, y, cuando corresponda, del representante. 2. La finalidad o finalidades del tratamiento a las que sus datos son sometidos. 3. La identidad de los que son o pueden ser sus destinatarios, de ser el caso. 4. La existencia e identificación del banco de datos personales en que se almacenarán, cuando corresponda. 5. El carácter obligatorio o facultativo de sus respuestas al cuestionario que se le proponga, cuando sea el caso. 6. Las consecuencias de proporcionar sus datos personales y de su negativa a hacerlo. 7. En su caso, la transferencia nacional e internacional de datos que se efectúen. 8. La existencia de decisiones automatizadas, incluida la elaboración de perfiles, y se transmita información relativa a las consecuencias para el titular del dato personal. 9. El plazo de conservación de los datos personales. 10. Los mecanismos para el ejercicio de los derechos del Título III de la Ley. 6.2. Adicionalmente a lo previsto en el párrafo 6.1, cuando los datos personales no hayan sido recopilados de forma directa del titular de datos personales, el titular del banco de datos o quien resulte responsable debe estar en condiciones de informar, en el primer contacto y a requerimiento del titular de los datos personales, la fuente de recopilación de los datos personales.",
+  "sha256": "c00811a4351f9c03f115a643b59471230231d700f33f78b9271abf07a02fd2b9"
+ },
+ {
+  "num": "7",
+  "title": "Políticas de privacidad",
+  "text": "La publicación de políticas de privacidad, de acuerdo con el segundo párrafo del artículo 18 de la Ley, se entiende como una forma de cumplimiento del deber de información y del principio de transparencia que no exonera del requisito de obtener el consentimiento del titular de los datos personales para el tratamiento de los mismos.",
+  "sha256": "8046a6ba0c626dd1e9f9fb57e268b4d45c38de683446ccbd51b4f4b210822590"
+ },
+ {
+  "num": "8",
+  "title": "Consentimiento y datos sensibles",
+  "text": "Tratándose de datos sensibles, además del cumplimiento de los requisitos para el consentimiento válido, este debe ser otorgado por escrito, a través de su firma manuscrita, digital, electrónica o cualquier otra modalidad que garantice la voluntad del titular de los datos personales.",
+  "sha256": "ec8e08771e5372dc3f5dbfe3fc9d564c9976a085b03148ff99928c55b0d3b711"
+ },
+ {
+  "num": "9",
+  "title": "Consentimiento y carga de la prueba",
+  "text": "Para efectos de demostrar el consentimiento, en los términos establecidos en la Ley y en el presente Reglamento, la carga de la prueba recae en todos los casos en el titular del banco de datos personales o quien resulte el responsable del tratamiento.",
+  "sha256": "127a48bf6875efee5e63e3235335d3a5424c41c05933480d99ade6d903fb6af9"
+ },
+ {
+  "num": "10",
+  "title": "Negación, revocación y alcances del consentimiento",
+  "text": "10.1 El titular de los datos personales puede revocar su consentimiento para el tratamiento de sus datos personales en cualquier momento, sin justificación previa y sin que le atribuyan efectos retroactivos. Para la revocación del consentimiento se cumplen los mismos requisitos observados con ocasión de su otorgamiento, pudiendo ser estos más simples, si así se hubiera señalado en tal oportunidad. 10.2 El titular de los datos personales puede negar o revocar su consentimiento al tratamiento de sus datos personales para finalidades adicionales a aquellas que dan lugar a su tratamiento autorizado, sin que ello afecte la relación que da lugar al consentimiento que sí ha otorgado o no ha revocado. En caso de revocatoria, es obligación de quien efectúa el tratamiento de los datos personales adecuar los nuevos tratamientos a la revocatoria y los tratamientos que estuvieran en proceso de efectuarse, en el plazo que resulte de una actuación diligente, que no puede ser mayor a diez (10) días. 10.3 Si la revocatoria afecta la totalidad del tratamiento de datos personales que se venía haciendo, el titular del banco de datos personales, encargado del tratamiento, o en su caso el responsable del tratamiento, aplica las reglas de cancelación o supresión de datos personales. 10.4Eltitulardelbancodedatospersonalesoquienresulte responsable del tratamiento debe establecer mecanismos fácilmente accesibles e incondicionales, sencillos, rápidos y gratuitos para hacer efectiva la revocación.",
+  "sha256": "7431b56bc974c0dbe95a197ca40e43561292684b53727ec5f6397f67e36ed47f"
+ },
+ {
+  "num": "11",
+  "title": "Tratamiento de los datos personales obtenidos a través de fuentes accesibles para el público",
+  "text": "11.1 Para los efectos de la Ley y el presente Reglamento, se consideran fuentes accesibles para el público, con independencia de que el acceso requiera contraprestación, las siguientes: 1. Los medios de comunicación electrónica, óptica y de otra tecnología, siempre que el lugar en el que se encuentren los datos personales esté concebido para facilitar información al público y esté abierto a la consulta general, salvo una norma determine lo contrario. 2. Las guías telefónicas, independientemente del soporte en el que estén a disposición y en los términos de su regulación específica. 3. Los diarios y revistas independientemente del soporte en el que estén a disposición y en los términos de su regulación específica. 4. Los medios de comunicación social. 5. Las listas de personas pertenecientes a grupos profesionales que contengan únicamente los datos de nombre, título, profesión, actividad, grado académico, dirección postal, número telefónico, número de fax, dirección de correo electrónico y aquellos que establezcan su pertenencia al grupo. En el caso de colegios profesionales, podrán indicarse además los siguientes datos de sus miembros: número de colegiatura, fecha de incorporación y situación gremial en relación al ejercicio profesional. 6. Los repertorios de jurisprudencia publicados conforme a ley. 7. Los Registros Públicos administrados por la Superintendencia Nacional de Registros Públicos - SUNARP, así como todo otro registro o banco de datos calificado como público conforme a ley. 8. Las entidades de la Administración Pública, en relación a la información que deba ser entregada en aplicación de la Ley No 27806, Ley de Transparencia y Acceso a la Información Pública. 11.2 Lo dispuesto en el numeral 8 del presente artículo no implica que todo dato personal contenido en información administrada por las entidades sujetas a la Ley de Transparencia y Acceso a la Información Pública sea considerado información de fuente accesible para el público. La evaluación del acceso a datos personales en posesión de entidades de administración pública se realiza atendiendo a las circunstancias de cada caso concreto, valorando la afectación probable a otros derechos fundamentales. 11.3 El tratamiento de los datos personales obtenidos a través de fuentes de acceso público debe respetar los principios establecidos en la Ley y en el presente Reglamento.",
+  "sha256": "1980f9bc4c641ff294259b25c0bd2ac2515065fc65f984c5aeac187004147f27"
+ },
+ {
+  "num": "12",
+  "title": "Aspectos generales de la transferencia de datos personales",
+  "text": "12.1 La transferencia de datos personales es la comunicación de datos personales dentro o fuera del territorio nacional realizada a persona distinta al titular de los datos personales. 12.2 Aquel a quien se transfieran los datos personales se obliga, por el solo hecho de la transferencia, a la observancia de la Ley y del presente Reglamento.",
+  "sha256": "73eefed1f7a350b26a9fb5b02a58d6dd8d1627aceca4ff33a87f9965c30fe0e1"
+ },
+ {
+  "num": "13",
+  "title": "Condiciones para la transferencia de datos personales",
+  "text": "13.1 Toda transferencia de datos personales requiere el consentimiento de su titular, salvo las excepciones previstas en el artículo 14 de la Ley. Dicha transferencia debe limitarse a la finalidad que la justifique. 13.2 En todos los casos, la transferencia de datos personales debe ser informada al titular de los datos personales, conforme lo establece en el artículo 18 de la Ley.",
+  "sha256": "e2edb3d08ccd019920cc6029a8b610287fa40b755eb56e4052ea051d088e3efd"
+ },
+ {
+  "num": "14",
+  "title": "Carga de la prueba en la transferencia de datos personales",
+  "text": "Para efectos de demostrar que la transferencia se ha realizado conforme a lo que establece la Ley y el presente Reglamento, la carga de la prueba recae, en todos los casos, en el emisor o aquel que transfiere los datos personales.",
+  "sha256": "9d38649627d16bac242e627117ee9c74926c90150055798d629a16ee5a86822b"
+ },
+ {
+  "num": "15",
+  "title": "Transferencia dentro de un sector o grupo empresarial",
+  "text": "En el caso de transferencias de datos personales dentro de un grupo empresarial, sociedades subsidiarias afiliadas o vinculadas bajo el control común del mismo grupo empresarial o de aquellas afiliadas o vinculadas a una sociedad matriz o a cualquier sociedad del mismo grupo del titular del banco de datos o responsable del tratamiento, se debe solicitar el consentimiento del titular de los datos personales a menos que el tratamiento se enmarque en alguna de las excepciones previstas en el artículo 14 de la Ley, particularmente cuando se trate de un encargo de tratamiento de datos personales en el marco de una relación contractual previa.",
+  "sha256": "77f8898593efd533b718cbd9d84743733ccac3f6b1595df92e5f37076f80b9ef"
+ },
+ {
+  "num": "16",
+  "title": "Receptor de los datos personales",
+  "text": "El receptor de los datos personales debe realizar el tratamiento de los datos personales cumpliendo con lo que el emisor informó al titular de los datos personales y respetando el contenido del consentimiento otorgado por el titular de datos personales. Para finalidades adicionales, debe recabar el consentimiento cuando así corresponda.",
+  "sha256": "3041b3b38eb6afb334a64251f9f3f95523fe22cb29596865b346fbe32de07c6f"
+ },
+ {
+  "num": "17",
+  "title": "Formalización de las transferencias nacionales",
+  "text": "La transferencia nacional se formaliza mediante mecanismos que permitan demostrar que el titular del banco de datos personales o el responsable del tratamiento cumple con comunicar al receptor de los datos personales las condiciones en las que el titular de los datos personales consintió el tratamiento de los mismos.",
+  "sha256": "eaf7659b117d2d729cf009a4e7c8a3bb2dce2834b10e80073e9eca6a5f693382"
+ },
+ {
+  "num": "18",
+  "title": "Flujo transfronterizo de datos personales",
+  "text": "18.1 El flujo transfronterizo de datos personales se debe realizar cuando el receptor o importador de los datos personales se encuentre en un país que cuente con un nivel adecuado de protección de datos conforme a lo dispuesto en la Ley y el presente Reglamento. 18.2 En caso de que el país no cuente con el nivel adecuado de protección de datos, el emisor o exportador debe otorgar las garantías adecuadas para asegurar el tratamiento adecuado de datos personales fuera del territorio nacional, salvo las excepciones contempladas en el artículo 15 de la Ley.",
+  "sha256": "d8a2ee8a87dd79060cae3ead9403cf21fe5b8638de6650f621dbb6849886dd0c"
+ },
+ {
+  "num": "19",
+  "title": "Nivel adecuado de protección de datos para el flujo transfronterizo",
+  "text": "19.1 Para determinar el nivel adecuado de protección de datos de un país, la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales emite una resolución a efectos de determinar si este cuenta con una protección equiparable a lo dispuesto en la Ley y el presente Reglamento. 19.2 La evaluación precitada considera como mínimo y de modo concurrente, los siguientes criterios: 1. La existencia de un marco jurídico legal de protección de datos personales. 2. La existencia de principios para el tratamiento de los datos personales. 3. La existencia de normas que reconozcan y garanticen los derechos de los titulares de datos y que puedan disponer de vías para ejercer los mismos. 4. La existencia de una autoridad encargada de la protección de datos personales, o aquellas que hagan sus veces, para supervisar y sancionar por infracciones a la normativa, cuando corresponda. 19.3 La evaluación a la que se refiere el párrafo anterior es prescindible si el país, cuyo nivel adecuado de protección de datos que es materia de análisis, ha negociado y suscrito estándares comunes y generales de protección de datos personales con el Perú. 19.4 La resolución a la que se refiere el párrafo 19.1 se emite de oficio, a solicitud de parte o como consecuencia de las normas sectoriales que compelen a los sectores a recabar opinión técnica de la Autoridad Nacional de Protección de Datos Personales.",
+  "sha256": "0b0ad5a4796fc547d065d8cb77dffba6602d81a741720df3f4e55a68d6949c4e"
+ },
+ {
+  "num": "20",
+  "title": "Garantías para el flujo transfronterizo de datos personales",
+  "text": "20.1 Para efectos de lo señalado en el párrafo 18.2 del artículo 18 del presente Reglamento, el emisor o exportador puede valerse de cláusulas contractuales modelo u otros instrumentos jurídicos en los que se establezcan cuando menos las mismas obligaciones a las que se encuentra sujeto, así como las condiciones en las que el titular consintió el tratamiento de sus datos personales. 20.2 La Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales emite modelos de cláusulas contractuales a fin de que los receptores o importadores asuman las obligaciones que corresponden al titular del banco de datos o responsable del tratamiento, y se establezca los derechos y libertades de los titulares de los datos personales y las obligaciones de los responsables de tratamiento.",
+  "sha256": "944ba30b2d0fc4a4a62d18c7f9867b97fcd1e0816bd5d490c3030eda3cf8fb3c"
+ },
+ {
+  "num": "21",
+  "title": "Opinión y registro del flujo transfronterizo de datos personales",
+  "text": "21.1 Sin perjuicio de lo señalado en los artículos 19 y 20 del presente Reglamento, los titulares del banco de datos personales o responsables del tratamiento, pueden solicitar opinión a la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales respecto de si el flujo transfronterizo de datos personales que realizan cumple con la Ley y el presente Reglamento. Dicha opinión es emitida en un plazo máximo de treinta (30) días. 21.2 En cualquier caso, el flujo transfronterizo de datos personales debe ponerse en conocimiento de la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales, incluyendo la información que se requiere para la transferencia de datos personales y el registro de banco de datos. Dicha comunicación es inscrita en el Registro Nacional de Protección de Datos Personales a través del formato aprobado para tal efecto.",
+  "sha256": "1abeff5d9202ff5a547632d02ad1435eed9d91d59e2956ba178ce8f482639ce5"
+ },
+ {
+  "num": "22",
+  "title": "Tratamiento de los datos personales de niños, niñas y adolescentes",
+  "text": "22.1 El tratamiento de los datos personales de niños, niñas y adolescentes se considera lícito cuando se obtenga el consentimiento de aquel o aquellos que ejercen la patria potestad o tutela, según corresponda. 22.2 Los mayores de catorce y menores de dieciocho años, de acuerdo a su capacidad, pueden otorgar el consentimiento para el tratamiento de sus datos personales siempre que la información proporcionada haya sido expresada en un lenguaje comprensible para ellos, conforme a la normativa de la materia. 22.3Enningúncasoelconsentimientoparaeltratamiento de datos personales de niños, niñas y adolescentes puede otorgarse para que accedan a actividades, vinculadas con bienes o servicios restringidos para su edad.",
+  "sha256": "334d1432b310869810a1d00d30d87a43b180b6e97e0d8c4f15a4667a1663e7d1"
+ },
+ {
+  "num": "23",
+  "title": "Prohibición de recopilación de datos a través niños, niñas y adolescentes",
+  "text": "23.1 No se puede recopilar datos personales de niños, niñas y adolescentes que permitan obtener información sobre los demás miembros de su grupo familiar, como son los datos relativos a la actividad profesional de sus progenitores, información económica, datos sociológicos o cualquier otro, sin el consentimiento de los titulares de tales datos. 23.2 Solo puede recopilarse los datos de identidad y dirección de los padres o de los tutores con la finalidad de obtener el consentimiento, en los casos en que así corresponda.",
+  "sha256": "f4a84d8713703c3b303dcb76c17bd1615a933b398840653dfae46a60f9986c3c"
+ },
+ {
+  "num": "24",
+  "title": "Fomento de la protección de los datos de niños, niñas y adolescentes",
+  "text": "Es obligación de todos los titulares de bancos de datos personales, especialmente de las entidades públicas, colaborar con el fomento del conocimiento del derecho a la protección de datos personales de los niños, niñas y adolescentes, así como de la necesidad de que su tratamiento se realice con especial responsabilidad y seguridad.",
+  "sha256": "031a70b8f09eb97177ac0b3a6579b375906897ec86bdfd482e08ed0a69ba35aa"
+ },
+ {
+  "num": "25",
+  "title": "Tratamiento de datos personales de niños, niñas y adolescentes en internet",
+  "text": "25.1 Es obligación de los titulares de bancos de datos personales, o de quien resulte responsable del tratamiento de datos de niños, niñas y adolescentes, garantizar la protección del interés superior del niño y de sus derechos fundamentales en el entorno digital. 25.2 En el marco de la oferta de servicios digitales para mayores de catorce y menores de dieciocho años, el tratamiento de datos personales es lícito cuando se haya obtenido su consentimiento. 25.3 En el marco de la oferta de servicios digitales dirigida a menores de catorce años de edad, el tratamiento de datos personales es lícito siempre que se cuente con el consentimiento de aquel o aquellos que ejercen la patria potestad o tutela, según corresponda. 25.4 El titular del banco de datos personales o responsable del tratamiento de datos en plataformas o servicios en el entorno digital realiza esfuerzos razonables para verificar, en los casos descritos en los párrafos 25.2 y 25.3, la identidad de quienes otorgan el consentimiento, teniendo en cuenta la tecnología disponible.",
+  "sha256": "1e9728362074f1a5b50ca4e974dc04e76ce87dda52b98e3d66da95bf30be09cc"
+ },
+ {
+  "num": "26",
+  "title": "Tratamiento de datos para publicidad y prospección comercial",
+  "text": "26.1 El tratamiento de datos personales para fines de publicidad y prospección comercial de productos y servicios es lícito cuando se obtiene el consentimiento de forma directa por parte del titular del dato personal. 26.2 Es posible obtener el consentimiento para el tratamiento de datos personales mediante un primer contacto, luego del cual, de no haberse logrado obtener el consentimiento, no es lícito realizar un nuevo contacto o tratamiento de datos personales. 26.3 Para el primer contacto, los datos personales pueden haber sido obtenidos de fuentes accesibles al público, en dicho supuesto, el responsable del tratamiento de datos personales debe estar en condiciones de informar, en el primer contacto y a requerimiento del titular de los datos personales, la fuente de recopilación de los datos personales. 26.4 Se presume que la responsabilidad del tratamiento de datos personales para publicidad y prospección comercial es de aquel en cuyo interés se realiza tal tratamiento, salvo prueba en contrario. 26.5 En todos los casos, el titular de datos personales tiene derecho de negarse, revocar u oponerse al tratamiento de sus datos personales para fines de publicidad y prospección comercial, para lo cual el responsable del tratamiento debe brindar un medio sencillo y gratuito para tramitar dicha solicitud, la cual se debe atender dentro del plazomáximodediez(10)días.Negarse,revocaruoponerse al tratamiento de datos personales para fines de publicidad y prospección comercial no debe tener mayor complejidad que la empleada para otorgar el consentimiento. 26.6 El responsable del tratamiento establece los procedimientos necesarios a efectos de asegurar que aquellas solicitudes presentadas ante un encargado de tratamiento le sean remitidas a efectos de brindarles la atención oportuna. 26.7 La Autoridad Nacional de Protección de Datos Personales emite las disposiciones que considere pertinentes sobre lo regulado en el presente artículo.",
+  "sha256": "a0585336a48d9e476ee21540d27db483d9c093e019a80a362dc6864505d24590"
+ },
+ {
+  "num": "27",
+  "title": "Tratamiento de datos personales en el sector comunicaciones y telecomunicaciones",
+  "text": "27.1 Los operadores de los servicios de comunicaciones o telecomunicaciones tienen la responsabilidad de velar por la confidencialidad, disponibilidad, uso adecuado e integridad de los datos personales que obtengan de sus abonados y usuarios, en el curso de sus operaciones comerciales. 27.2 Los operadores de los servicios de comunicaciones o telecomunicaciones no pueden realizar un tratamiento de los citados datos personales para finalidades distintas a las autorizadas por su titular, salvo orden judicial o mandato legal expreso.",
+  "sha256": "84e52a81f66a8b630991bf1d72b6bc8a1128a149e94ebbbda03ccb327d53a152"
+ },
+ {
+  "num": "28",
+  "title": "Tratamiento de los datos por medios tecnológicos tercerizados",
+  "text": "28.1 El tratamiento de datos personales por medios tecnológicos tercerizados, entre los que se encuentran servicios, aplicaciones, infraestructura, entre otros, está referido a aquellos en los que el procesamiento es automático, sin intervención humana. 28.2 Para los casos en los que en el tratamiento exista intervención humana se aplican los artículos 32 y 33 del presente Reglamento. 28.3 El tratamiento de datos personales por medios tecnológicos tercerizados, sea completo o parcial, puede ser contratado por el responsable del tratamiento de datos personales siempre y cuando para la ejecución de aquel se garantice el cumplimiento de lo establecido en la Ley y el presente Reglamento.",
+  "sha256": "ff9ad4cde5ff52c24746dfa86cec094de42d41deef506b8182857768ea1d3949"
+ },
+ {
+  "num": "29",
+  "title": "Criterios a considerar para el tratamiento de datos personales por medios tecnológicos tercerizados",
+  "text": "Al realizar el tratamiento de los datos personales por medios tecnológicos tercerizados se debe considerar como prestaciones mínimas las siguientes: 1. Informar a los titulares de datos personales con transparencia las subcontrataciones que involucren la información sobre la que presta el servicio. 2. No incluir condiciones que autoricen o permitan al prestador asumir la titularidad sobre los bancos de datos personales tratados en la tercerización. 3. Garantizar la confidencialidad, integridad y disponibilidad respecto de los datos personales sobre los que preste el servicio. 4. Mantener el control, las decisiones y la responsabilidad sobre el proceso mediante el cual se realiza el tratamiento de los datos personales. 5. Garantizar y evidenciar la destrucción o la imposibilidad de acceder a los datos personales después de concluida la prestación.",
+  "sha256": "8478bfee9564b249857a983c2971f82444efd23040808f61369d348e2a9809a0"
+ },
+ {
+  "num": "30",
+  "title": "Mecanismos para la prestación del servicio de tratamiento de datos personales por medios tecnológicos tercerizados",
+  "text": "El prestador del servicio debe cumplir con los siguientes mecanismos: 1. Dar a conocer los cambios en sus políticas de privacidad o en las condiciones del servicio que presta al responsable del tratamiento, para obtener el consentimiento si ello significara incrementar sus facultades de tratamiento. 2. Permitir al responsable del tratamiento limitar el tipo de tratamiento de los datos personales sobre los que presta el servicio. 3. Establecer y mantener medidas de seguridad adecuadas para la protección de los datos personales sobre los que presta el servicio. 4. Garantizar y evidenciar la supresión de los datos personales una vez que haya concluido el servicio prestado al responsable y que este último los haya podido recuperar. 5. Impedir el acceso a los datos personales a quienes no cuenten con privilegios de acceso, o bien en caso sea solicitada por la autoridad competente, informar de ese hecho al responsable.",
+  "sha256": "60beafbe70e2bf73eed3211e8a35fe904dbf51f3be6e2bb955707b23c866421e"
+ },
+ {
+  "num": "31",
+  "title": "Prestación de servicios o tratamiento por encargo",
+  "text": "31.1 El encargado del tratamiento de datos personales se encuentra prohibido de transferir a terceros los datos personales objeto de la prestación de servicios de tratamiento, a menos que el titular del banco de datos personales o responsable del tratamiento que le encargó el tratamiento lo haya autorizado y el titular del dato personal haya brindado su consentimiento, en los supuestos que dicho consentimiento sea requerido conforme a Ley. 31.2 El plazo para la conservación de datos personales al que hace referencia el artículo 30 de la Ley es como máximo de dos (2) años contados desde la finalización del último encargo realizado. La conservación de datos personales en un plazo mayor al establecido sólo puede realizarse en el supuesto previsto en el segundo párrafo del artículo 30 de la Ley o porque así lo dispone expresamente una disposición normativa vigente, para tal caso los datos deben ser devueltos al responsable de tratamiento para su conservación mientras la obligación legal persista. La conservación indeterminada de los datos personales, por regla general, está prohibida. 31.3 Lo dispuesto en el presente artículo es aplicable, en lo que corresponda, a la subcontratación de la prestación de servicios de tratamiento de datos personales.",
+  "sha256": "75c9255fc097a5b035a2687d19bb3a5072a01949e9d39c8c4bcf699b2d006acc"
+ },
+ {
+  "num": "32",
+  "title": "Tratamiento a través de subcontratación",
+  "text": "32.1 El tratamiento de datos personales puede realizarse por un tercero diferente al encargado del tratamiento, a través de un convenio o contrato entre estos dos. 32.2 Para este supuesto se requiere, de manera previa, una autorización por parte del titular del banco de datos personales o responsable del tratamiento. Dicha autorización se entiende también concedida si estaba prevista en el instrumento jurídico mediante el cual se formalizó la relación entre el responsable del tratamiento y el encargado del mismo. 32.3 El tratamiento que haga el subcontratista se realiza en nombre y por cuenta del responsable del tratamiento, pero la carga de probar la autorización le corresponde al encargado del tratamiento.",
+  "sha256": "bbfef1de1bf429e7359e8ddad91379d7bb0e7f490bc2d677ad48c60714e0e20e"
+ },
+ {
+  "num": "33",
+  "title": "Responsabilidad del tercero subcontratado",
+  "text": "La persona natural o jurídica subcontratada asume las mismas obligaciones que se establezcan para el encargado del tratamiento en la Ley, el presente Reglamento y demás disposiciones aplicables. Sin embargo, asume las obligaciones del titular del banco de datos personales cuando: 1. Destine o utilice los datos personales con una finalidad distinta a la autorizada por el titular del banco de datos o responsable del tratamiento; o, 2. Efectúe una transferencia, incumpliendo las instrucciones del titular del banco de datos personales, aun cuando sea para la conservación de dichos datos.",
+  "sha256": "46605fd7b1452c79b1ce8ea479511e5742a534dcb639c92273aecf0b3abc0f80"
+ },
+ {
+  "num": "34",
+  "title": "Notificación del incidente de seguridad de datos personales",
+  "text": "34.1 En caso de un incidente de seguridad de datos personales que genere exposición de grandes volúmenes de los mismos, en cantidad o tipo de datos, o que pueda afectar a un gran número de personas o cuando se trate de datos sensibles o cuando se produzca un perjuicio evidente a otros derechos o libertades del titular del dato personal, el titular del banco de datos o el responsable del tratamiento debe notificar a la Autoridad Nacional de Protección de Datos Personales como máximo dentro de las 48 horas posteriores a haber tomado conocimiento o constancia de ello. Si dicha notificación se efectúa en un tiempo superior a 48 horas, debe ir acompañada de la indicación de los motivos y/o sustento probatorio de tal dilación. Esta obligación permanece aun cuando el responsable de tratamiento de datos personales considere que tal incidente haya sido subsanado o resuelto internamente. 34.2 La notificación del incidente de seguridad de datos personales debe señalar y describir como mínimo lo siguiente: 1. La naturaleza del incidente de seguridad de los datos personales, inclusive, cuando sea posible, los tipos de datos y el número aproximado de titulares de datos afectados. 2. El nombre y los datos de contacto del Oficial de datos personales o de otro punto de contacto en el que pueda obtenerse más información. 3. Las posibles consecuencias del incidente de seguridad de los datos personales. 4. Las medidas adoptadas o propuestas por el titular del banco de datos o responsable del tratamiento para poner remedio a la violación de la seguridad de los datos personales, incluyendo, si procede, las medidas adoptadas para mitigar los posibles efectos negativos. 34.3 El titular del banco de datos o responsable del tratamiento que advierta un incidente de seguridad de datos personales que afecte al titular de los mismos en otros de sus derechos, debe comunicarlo dentro de las 48 horas a dicho titular sin dilación indebida, en un lenguaje sencillo y claro para su comprensión, así como de las medidas adoptadas para mitigar sus efectos. Si dicha comunicación se efectúa en un tiempo superior a las 48 horas debe ir acompañada de la indicación de los motivos de tal dilación. 34.4 Cuando el incidente de seguridad de datos personales no produjo la afectación antes descrita y fue superado totalmente por las medidas adoptadas no subsiste la obligación de comunicar dicho incidente al titular de los datos personales. 34.5 En caso de que el incidente de seguridad de datos personales se desarrolle en y/o mediante el entorno digital la notificación se realiza, además de la Autoridad Nacional de Protección de Datos Personales, al Centro Nacional de Seguridad Digital para su incorporación al Registro Nacional de Incidentes de Seguridad Digital conforme a lo establecido en el Decreto de Urgencia No 007-2020, Decreto de Urgencia que aprueba el Marco de Confianza Digital y dispone medidas para su fortalecimiento, su Reglamento y normas complementarias. 34.6 Siempre que sea indispensable para la gestión de incidentes de seguridad de datos personales, la recopilación y transferencia de dichos datos hacia o entre entidades públicas, con competencia legal para realizar dicha gestión, no requiere consentimiento, en el marco de lo dispuesto en el numeral 1 del artículo 14 de la Ley 29733, Ley de Protección de Datos Personales. 34.6 La Secretaría de Gobierno y Transformación Digital de la Presidencia del Consejo de Ministros y la Autoridad Nacional de Protección de Datos Personales proponen y establecen protocolos para asegurar la interoperabilidad, colaboración e intercambio de información sobre las notificaciones de incidentes de seguridad de datos personales cuando se desarrollen en y mediante el entorno digital. 34.7 La Autoridad Nacional de Protección de Datos Personas aprueba las disposiciones y/o lineamientos necesarios para el debido cumplimiento del presente artículo.",
+  "sha256": "4500f14ab58fa1412d18fb04e8f6a057a4985489dc35e8d4fa10d4a537832234"
+ },
+ {
+  "num": "35",
+  "title": "Documentación de incidentes de seguridad",
+  "text": "El responsable del tratamiento de datos personales debe documentar cualquier incidente de seguridad, incluyendo los hechos relacionados a ello, sus efectos y las medidas adoptadas. Dicha documentación permite a la Autoridad Nacional de Protección de Datos Personales verificar el cumplimiento de las obligaciones referidas a esta materia.",
+  "sha256": "2aa39f9ffc46385ed3052df631569173d350b13cce61bbe207b0b1dc49b005bb"
+ },
+ {
+  "num": "36",
+  "title": "Obligación del encargado del tratamiento",
+  "text": "El encargado del tratamiento debe informar de forma inmediata al titular del banco de datos personales o responsable del tratamiento del incidente de seguridad de los datos personales de las que tenga conocimiento.",
+  "sha256": "65970e352a3dab4491bfc53d11005dbc95cdf8c3eadce670db5c3b01bff77a57"
+ },
+ {
+  "num": "37",
+  "title": "Designación del Oficial de Datos",
+  "text": "Personales 37.1 El titular del banco de datos personales o responsable y el encargado de tratamiento deben designar a un Oficial de Datos Personales cuando: 1. El tratamiento lo lleve a cabo una entidad pública, de conformidad con lo establecido en el párrafo 68.6 del artículo 68 del Reglamento del Decreto Legislativo No 1412, Decreto Legislativo que aprueba la Ley de Gobierno Digital, y establece disposiciones sobre las condiciones, requisitos y uso de las tecnologías y medios electrónicos en el procedimiento administrativo, aprobado por Decreto Supremo N.o 029-2021-PCM. 2. El titular del banco de datos o responsable del tratamiento o el encargado de tratamiento realicen tratamientos de grandes volúmenes de datos personales, en cantidad o tipo de datos, o que pueda afectar a un gran número de personas o cuando se trate de datos sensibles o cuando se produzca un perjuicio evidente a otros derechos o libertades del titular del dato personal. 3. El titular del banco de datos o responsable de tratamiento o el encargado del tratamiento realicen actividades principales o de giro de negocio que comprendan el tratamiento de datos sensibles. 37.2 Un grupo empresarial puede nombrar un único Oficial de datos personales siempre que sea fácil contactarlo desde cada establecimiento. 37.3 Cuando el titular del banco de datos o el responsable del tratamiento sea una autoridad u organismo público, se puede designar un único Oficial de datos personales para varias de estas autoridades u organismos, teniendo en cuenta su estructura organizativa y tamaño. 37.4 El titular del banco de datos o el responsable o encargado del tratamiento debe publicar los datos de contacto del Oficial de datos personales en un lugar visible que permita a los titulares de datos personales tomar conocimiento de ello. 37.5 Los datos de contacto del Oficial de datos personales designado, y cualquier actualización, deben ser comunicados a la Autoridad Nacional de Protección de Datos Personales dentro de los 15 días siguientes a la designación o actualización respectiva.",
+  "sha256": "ecfd3fe2916b9151983684431cf33550a68e7ac3d26feeecad640ca894baf660"
+ },
+ {
+  "num": "38",
+  "title": "Perfil del Oficial de datos personales",
+  "text": "38.1 El Oficial de datos personales es designado atendiendo a sus cualidades profesionales y, en particular, a sus conocimientos y práctica en materia de protección de datos personales, debidamente acreditados, lo cual le debe permitir desempeñar eficientemente las funciones del artículo 39 del presente Reglamento. 38.2 El Oficial de datos personales puede ser una persona que desempeñe otras funciones en la empresa, entidad pública, sin que sea necesario que desempeñe con exclusividad las funciones vinculadas a su designación, pudiendo incluso ser una persona externa a la organización privada.",
+  "sha256": "0d5e15ea35c5cd4d2144f7352ffdb4e7f553a2072c86a4ad091f3cec7ca6e4f7"
+ },
+ {
+  "num": "39",
+  "title": "Funciones del Oficial de Datos",
+  "text": "Personales 39.1 El Oficial de datos personales tiene como mínimo las siguientes funciones: 1. Informar y asesorar al titular del banco de datos personales o al responsable del tratamiento y a los empleados que se ocupen del tratamiento de los datos personales respecto de las obligaciones que les incumben en virtud de la Ley, el presente Reglamento y de otras disposiciones de protección de datos. 2. Verificar e informar sobre el cumplimiento de lo dispuesto en la Ley, el presente Reglamento y de otras disposiciones de protección de datos personales, así como del cumplimiento de las políticas del titular del banco de datos o del encargado del tratamiento en materia de protección de datos personales, incluida la asignación de responsabilidades, la sensibilización y formación del personal que participa en las operaciones de tratamiento, y las auditorías que se realicen. 3. Cooperar, en lo que resulte pertinente, con la Autoridad Nacional de Protección de Datos Personales para el desempeño de sus fines y atribuciones. 4. Actuar como punto de contacto de la Autoridad Nacional de Protección de Datos Personales para cuestiones relativas al tratamiento de datos personales. 39.2 El Oficial de datos personales desempeña sus funciones prestando la debida atención a los riesgos asociados a las operaciones de tratamiento de datos personales, teniendo en cuenta la naturaleza, el alcance, el contexto y fines de tal tratamiento.",
+  "sha256": "192abd34f3bf891a006823425f898ca848134319deb721ce633135c9e90ab546"
+ },
+ {
+  "num": "40",
+  "title": "Evaluación de impacto relativo a la protección de datos personales",
+  "text": "40.1 De manera facultativa y previa al tratamiento de datos personales, el titular del banco de datos o responsable del tratamiento puede realizar la Evaluación de impacto relativa a la protección de datos personales, especialmente cuando se trate de datos sensibles, datos con fines de crear perfiles personales, datos de personas en especial situación de vulnerabilidad como niños, niñas y adolescentes, personas pertenecientes a pueblos indígenas en situación de aislamiento y/o contacto inicial o personas con discapacidad; o cuando se realice tratamiento de grandes volúmenes de datos u otros supuestos determinados por la Autoridad Nacional de Protección de Datos Personales. 40.2 La evaluación de impacto relativo a la protección de datos personales se puede elaborar tomando como referencia la guía, lineamientos y procedimientos establecidos en la NTP-ISO/IEC 27005 y la NTP-ISO 31000 en su edición vigente u otros estándares relacionados con el análisis y la evaluación de riesgos para la protección de datos personales. 40.3 La Autoridad Nacional de Protección de Datos Personales emite las disposiciones complementarias que resulten pertinentes para la realización de la Evaluación de impacto relativo a la protección de datos personales.",
+  "sha256": "02e329bc3b983607e45ff9dfb8eef19ada0fe2077f0a767660122b921630434a"
+ },
+ {
+  "num": "41",
+  "title": "Procedimiento de disociación",
+  "text": "41.1 La disociación es el procedimiento que impide la identificación o que no hace identificable al titular de los datos personales. Este procedimiento es reversible. 41.2 El responsable o encargado del tratamiento de datos personales debe elegir la técnica adecuada al momento de realizar el procedimiento de disociación, atendiendo siempre al tipo de datos objeto de tratamiento, el número de titulares de datos y el factor de riesgo (gravedad, la probabilidad, las consecuencias para el responsable y el titular) y los que la Autoridad Nacional determine para tal efecto. 41.3 La Autoridad Nacional de Protección de Datos Personales aprueba las disposiciones complementarias u orientativas para la realización del procedimiento de disociación y de anonimización.",
+  "sha256": "8b4d6cc46fd7b2c412702facf038f769ba3497bd9f159c3afcfbefce96f52f55"
+ },
+ {
+  "num": "42",
+  "title": "Obligación de inscripción",
+  "text": "42.1 Las personas naturales o jurídicas del sector privado o entidades públicas que creen, modifiquen o cancelen bancos de datos personales están obligadas a tramitar la inscripción de dichos actos ante el Registro Nacional de Protección de Datos Personales. 42.2 El Registro Nacional de Protección de Datos Personales es la unidad de almacenamiento destinada a contener principalmente la información sobre los bancos de datos personales de titularidad pública o privada y tiene por finalidad dar publicidad de la inscripción de dichos bancos de tal forma que sea posible ejercer los derechos de acceso a la información, rectificación, cancelación, oposición y otros regulados en la Ley y el presente Reglamento.",
+  "sha256": "c44250396fe1950307634f28411fdd8fc310a06ce9370318a6d67844079866bb"
+ },
+ {
+  "num": "43",
+  "title": "Actos y documentos inscribibles en el",
+  "text": "Registro Nacional 43.1 Son objeto de inscripción en el Registro Nacional de Protección de Datos Personales con arreglo a lo dispuesto en la Ley y en este título: 1. Los bancos de datos personales de la administración pública, con las excepciones previstas en la Ley y el presente Reglamento. 2. Los bancos de datos personales de administración privada, con la excepción prevista en el numeral 1 del artículo 3 de la Ley. 3. Las sanciones, medidas cautelares o correctivas impuestas por la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales conforme a la Ley y el presente Reglamento. 43.2 Cualquier persona puede consultar la información a que se refiere el artículo 34 de la Ley y cualquier otra contenida en el Registro Nacional. 43.3 La inscripción de los actos precitados en el Registro Nacional de Protección de Datos Personales es gratuita, incluyendo la modificación y cancelación de la inscripción de acuerdo a lo señalado en el presente Reglamento.",
+  "sha256": "91c923f163e9ecf3ad9756248277c6316b1913129dc0bb9034d169dcdbb509eb"
+ },
+ {
+  "num": "44",
+  "title": "Modificación o cancelación de bancos de datos personales en el",
+  "text": "Registro Nacional de Inscripción de bancos de datos personales 44.1 La inscripción de un banco de datos personales de la administración pública o privada en el Registro Nacional de Inscripción de bancos de datos personales debe mantenerse actualizada en todo momento. 44.3 Los titulares de los bancos de datos personales o responsables de su tratamiento, comunican la modificación o cancelación que se realice a la inscripción del banco de datos inscritos ante el Registro Nacional de Protección de Datos Personales presentando la solicitud vía formulario de cancelación o modificación dirigida a la Dirección de Protección de Datos Personales.",
+  "sha256": "46d70d9fd46dba8afeb0a6f7c64a73b35c5b507c5120106cdcfa20fa1cab50ec"
+ },
+ {
+  "num": "45",
+  "title": "Procedimiento",
+  "text": "45.1 Los titulares de los bancos de datos personales solicitan la inscripción de los bancos de datos ante el Registro Nacional de Protección de Datos Personales, vía formulario, ante la Dirección de Protección de Datos Personales. 45.2 El procedimiento de inscripción es de aprobación automática y se rige conforme las disposiciones establecidas en el artículo 31 de la Ley No 27444, Ley del Procedimiento Administrativo General o norma que lo sustituya.",
+  "sha256": "96dd2afcb457f2f754788dd76a5d990f169228a89a1bff73d566741d66cb8e9a"
+ },
+ {
+  "num": "46",
+  "title": "Seguridad para el tratamiento de datos a través de medios digitales",
+  "text": "Las plataformas, sitios web, aplicaciones móviles, servicios digitales y los sistemas informáticos que son empleados para realizar tratamiento de datos personales deben tener documentado e implementado lo siguiente: 1. El control de acceso a los datos personales que incluye: a) Gestión de accesos desde el registro de un usuario hasta su eliminación o baja, incluyendo eventualidades periódicas como periodos vacacionales o permisos esporádicos. b) Procedimientos de identificación y autenticación. c) Gestión de los privilegios asignados a dicho usuario, incluyendo la verificación periódica de los mismos, que debe ser ejecutado periódicamente en un intervalo mínimo de tiempo semestral. d) Mecanismos de autenticación del usuario ante el sistema que implica la asignación de uso de usuariocontraseña, uso de certificados digitales, tokens, entre otros. 2. El monitoreo y revisión periódica de las medidas de seguridad y los planes de capacitación del personal, dependiendo de sus roles y responsabilidades, respecto al tratamiento de datos personales que efectúan. 3. La generación y el mantenimiento de registros que provean evidencia de las interacciones con los datos lógicos, incluyendo para los fines de la trazabilidad, la información de cuentas de usuario con acceso al sistema, horas de inicio y cierre de sesión y acciones referidas a procesamiento, visualización, modificación, eliminación, importación y exportación de datos personales. Estos registros deben ser legibles, oportunos y tener un procedimiento de disposición, almacenamiento, transferencia, destrucción una vez que los registros ya no sean útiles y generarse y/o ejecutarse de manera periódica. Dichos registros deben conservarse por un periodo mínimo de dos (2) años. Los registros de interacción lógica correspondientes a trazabilidad de las acciones realizadas por los operadores de los sistemas empleados para realizar el tratamiento de los datos personales deben generarse de manera continua y deben encontrarse disponibles de manera inmediata. 4. Las medidas de seguridad que impidan al personal no autorizado la generación de copias o la reproducción de documentos digitales que contengan datos personales. En el caso de uso de sistemas, aplicaciones de mensajería instantánea, uso de cuentas de correo electrónico y/o redes sociales no institucionales, estos deben ser debidamente aprobados y formalmente establecidos, a efectos de evitar generar riesgos y transferencias no autorizadas de datos personales.",
+  "sha256": "b724e8ccf9d87025a731875290e9b00c851de177903d350902e27a601c11f174"
+ },
+ {
+  "num": "47",
+  "title": "Documento de Seguridad",
+  "text": "47.1 El responsable del tratamiento de datos personales debe contar con un documento de seguridad el cual debe ser aprobado formalmente y contar con fecha cierta. El documento de seguridad debe estar actualizado y contener como mínimo los procedimientos de gestión de accesos, la gestión de privilegios y la verificación periódica de los privilegios asignados referentes a los sistemas de información, incluyendo, plataformas tecnológicas, aplicaciones móviles, motores de bases de datos, entre otros, empleados para realizar el tratamiento de datos personales. Puede tomar como referencia los requisitos y controles indicados en la NTP-ISO/IEC 27001 vigente o alguna mejor práctica o estándar ampliamente reconocido en su sector. En el caso de las entidades públicas aplican lo dispuesto en las normas de gobierno digital y seguridad digital vigentes. 47.2 El documento de seguridad es de obligatorio cumplimiento para el personal con acceso a los sistemas de información. El responsable de su elaboración debe determinar las medidas necesarias para que el personal conozca adecuadamente las consecuencias de su incumplimiento y aplique las medidas de seguridad necesarias para su sustento. 47.3 El documento de seguridad debe contener políticas internas para la gestión y el tratamiento de los datos personales que tomen en cuenta el contexto y el ciclo de vida de los datos personales, es decir su obtención, uso y posterior supresión. Asimismo, debe elaborar un inventario de datos personales y de los sistemas empleados para el tratamiento debiendo especificar si se trata datos sensibles.",
+  "sha256": "55d531f76cbbf0c1933282e69fd593d7fca8e2557753755671b8e9f8f625ce84"
+ },
+ {
+  "num": "48",
+  "title": "Conservación, respaldo y recuperación de los datos personales",
+  "text": "48.1 En los ambientes en los que se procese, almacene o transmita la información se debe diseñar e implementar como mínimo los siguientes controles de seguridad: 1. Controles para mantener las áreas seguras. 2. Controles para mantener los equipos seguros dentro y fuera de las instalaciones. 3. Controles para garantizar la generación de copias de respaldo seguras y continuas y verificación de integridad de las mismas. 48.2 El responsable del tratamiento de datos personales puede tomar como referencia las recomendaciones indicadas en la “NTP-ISO/IEC 27001:2022 Tecnología de la información. Técnicas de Seguridad. Sistemas de Seguridad de la información. Requisitos” en la edición que se encuentre vigente.",
+  "sha256": "ec67450e91512c16b6520a029c211b6897f8ae8fd91763dad8a60cce000d80ca"
+ },
+ {
+  "num": "49",
+  "title": "Controles para mantener las áreas seguras",
+  "text": "49.1 Los controles para mantener las áreas seguras son los siguientes: 1. Perímetros de seguridad que protegen áreas donde se realice el tratamiento de datos personales. 2. Controles apropiados de ingreso para asegurar que se le permita el acceso solo al personal autorizado. 3. Sistema contra desastres naturales, ataque maliciosos o accidentes. 4. Procedimientos para el trabajo en áreas seguras. 5. Control de puntos de acceso, áreas de despacho, carga y otros donde personas no autorizadas pueden ingresar al local, y de ser el caso aislar las instalaciones de procesamiento de la información para evitar el acceso no autorizado.",
+  "sha256": "878b062f8e3214e3fd291c661fb3db4276db3e2e0f52d0834d1c0503b844d7a8"
+ },
+ {
+  "num": "50",
+  "title": "Controles para mantener los equipos seguros dentro y fuera de las instalaciones",
+  "text": "50.1. Los controles para mantener los equipos seguros dentro y fuera de las instalaciones son los siguientes: 1. Ubicación y protección de equipos para reducir los riesgos de amenazas y peligros ambientales, así como las oportunidades para el acceso no autorizado. 2. Protección de equipos contra fallas de electricidad y otras alteraciones causadas por desperfectos en los servicios de suministro. 3. Protección de interceptación, interferencia y/o daño del cableado de energía y telecomunicaciones que llevan datos o servicios de información de soporte. 4. Imposibilidad de retirar equipos, información o software sin la autorización previa. 5. Asegurar, antes de su disposición o reutilización, que los equipos que contengan medios de almacenamiento de datos sensibles, hayan sido eliminados o sobre escritos. 6. Asegurar que los equipos informáticos cuenten con protección apropiada en caso sean desatendidos por los usuarios. 7. Implementación de una política de escritorio y pantalla limpios de papeles y de medios de almacenamiento removibles, para las instalaciones de procesamiento de la información.",
+  "sha256": "62a1281c0d674a2d95c91051b743e7e04f5395693a656427671de28046a58f7b"
+ },
+ {
+  "num": "51",
+  "title": "Controles para garantizar la generación de copias de respaldo seguras y continúas y verificación de integridad de las mismas",
+  "text": "51.1 Las copias de respaldo se realizan con una frecuencia semanal como mínimo, salvo que en dicho período no se hubiera producido ninguna actualización de los datos personales. Dicho procedimiento debe contar con las medidas de seguridad para su almacenamiento, transferencia y destrucción si fuese el caso. 51.2 Se debe verificar la integridad de los datos almacenados en las copias respaldo, incluyendo, de ser el caso, la recuperación completa ante una interrupción o daño que garantice el retorno al estado en el que se encontraba al momento en que se produjo la interrupción o daño.",
+  "sha256": "633609fe66064be69097c7c0acb1cca1d69d47315d4e8aae7456c3f965b933ed"
+ },
+ {
+  "num": "52",
+  "title": "Transferencia lógica o electrónica de los datos personales",
+  "text": "El intercambio de datos personales desde los ambientes de procesamiento o almacenamiento hacia cualquier destino fuera de las instalaciones físicas de la entidad, solo procede con la autorización del titular del banco de datos personales y se realiza utilizando los medios de transporte autorizados por el mismo, implementando las medidas necesarias (entre las que se encuentran el cifrado de datos, uso de firmas y certificados digitales, checksum de verificación, entre otros) para evitar el acceso no autorizado, pérdida o corrupción durante el tránsito hacia su destino.",
+  "sha256": "a930761db7fa4663d158c920eb9b4a2e34455628b0f924b624632172dab79296"
+ },
+ {
+  "num": "53",
+  "title": "Almacenamiento de documentación no automatizada",
+  "text": "53.1 Los armarios, archivadores u otros elementos en los que se almacenen datos personales contenidos en documentos no automatizados son protegidos con puertas dotadas de sistemas de apertura mediante llave u otro dispositivo equivalente. Las áreas en las que se encuentren los datos personales permanecen cerradas cuando no sea preciso el acceso a los documentos. Todas las llaves o mecanismos de apertura deben ser asignadas de manera formal, y de ser el caso, deben contar con procedimientos de traspaso y asignación. 53.2 Si por las características de los locales que se dispusiera no fuera posible mantener cerradas las áreas donde se encuentran los armarios, archivadores u otros elementos en los que se almacenen documentos no automatizados con datos personales, se deben adoptar las medidas alternativas, conforme a las directivas de seguridad brindadas por la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales.",
+  "sha256": "0d57a6a584e74f452d8026fda07680fdc139a666dd995a3670ce773d6dee1686"
+ },
+ {
+  "num": "54",
+  "title": "Copiaoreproduccióndedocumentación automatizada y no automatizada",
+  "text": "54.1 La generación de copias o la reproducción de los documentos que contienen datos personales, únicamente pueden ser realizadas bajo el control del personal autorizado. 54.2 Debe procederse a la destrucción de las copias o reproducciones desechadas de forma que se evite el acceso a la información contenida en las mismas o su recuperación posterior.",
+  "sha256": "ee7d4f96a853194ca814d83b078ee64eef5bd682d841af39e5f331f495087342"
+ },
+ {
+  "num": "55",
+  "title": "Acceso a la documentación",
+  "text": "55.1 El acceso a la documentación se limita exclusivamente al personal autorizado. 55.2 Se deben establecer mecanismos que permitan identificar los accesos realizados en el caso de documentos que puedan ser utilizados por múltiples usuarios. 55.3 El acceso de personas no incluidas en el párrafo anterior debe quedar adecuadamente registrado.",
+  "sha256": "2fccc66ec52b704eb980d7567978b4be216c1cc74fad7f5ddc62413ea43856bd"
+ },
+ {
+  "num": "56",
+  "title": "Traslado de documentación no automatizada",
+  "text": "Siempre que se proceda al traslado físico de la documentación contenida en un banco de datos, debe adoptarse medidas dirigidas a impedir el acceso no autorizado, el mal uso, la manipulación y alteración de los datos personales objeto de traslado.",
+  "sha256": "c204878cb250fed955ab3dbfd976869824fb8280480c43d4d9ea82e40df4af07"
+ },
+ {
+  "num": "57",
+  "title": "Prestaciones de servicios sin acceso a datos personales",
+  "text": "57.1 El responsable o el encargado de la información o tratamiento debe implementar los mecanismos o medidas de seguridad adecuadas para limitar el acceso del personal a datos personales, a los soportes que los contengan o a los recursos del sistema de información, para la realización de trabajos que no impliquen el tratamiento de datos personales. 57.2 Cuando se trate de personal ajeno, el contrato de prestación de servicios recoge expresamente la prohibición de acceder a los datos personales y la obligación de secreto respecto a los datos que el personal hubiera podido conocer con motivo de la prestación del servicio.",
+  "sha256": "5b725a8d24af115e5f93d80ff32ee8b54f78e51f877150e1f80dede690e5b1f3"
+ },
+ {
+  "num": "58",
+  "title": "Determinación de fecha cierta de documentos",
+  "text": "La fecha cierta de los documentos presentados por los administrados como medios probatorios debe ser determinada conforme a la valoración probatoria realizada por el órgano competente, para la cual se considera los siguientes criterios alternativos: 1. Que el documento haya sido presentado ante funcionario o notario público; o, 2. Que el documento se haya difundido a través de un medio público de fecha determinada o determinable; o, 3. Que existan otros medios técnicos idóneos que generen convicción sobre ello.",
+  "sha256": "aae68b7bb81c6ec257b1f769aa50dc7fc35550776da6a4f294df27ca11b171be"
+ },
+ {
+  "num": "59",
+  "title": "Alcances de los Códigos de conducta",
+  "text": "59.1 Los códigos de conducta son un mecanismo de responsabilidad proactiva que permite demostrar el cumplimiento de las obligaciones establecidas en la Ley y el presente Reglamento para el tratamiento de datos personales. Los Códigos de conducta tienen carácter voluntario. 59.2 Los códigos de conducta de carácter sectorial pueden referirse a la totalidad o a parte de los tratamientos llevados a cabo por el sector, debiendo ser formulados por organizaciones representativas del mismo. 59.3 Los códigos de conducta promovidos por una empresa o grupo empresarial deben referirse a la totalidad de los tratamientos llevados a cabo por los mismos. 59.4 La implementación del Código de Conducta, debidamente acreditada de manera previa al inicio del procedimiento administrativo sancionador, conforme a los requisitos regulados en el presente Reglamento, se considera atenuante de responsabilidad.",
+  "sha256": "fa0a086a78363969adbe1fed5fc0641588b5da65b9ba84ad51c8c38f27290c51"
+ },
+ {
+  "num": "60",
+  "title": "Contenido",
+  "text": "60.1 Los códigos de conducta deben redactarse en términos claros y accesibles. 60.2 Los códigos de conducta se adecuan a lo establecido en la Ley e incluyen como mínimo los siguientes aspectos: 1. La delimitación clara y precisa de su ámbito de aplicación, las actividades a que el código se refiere y los tratamientos sometidos al mismo. 2. Las disposiciones para el cumplimiento de los principios de protección de datos personales a los tratamientos sometidos al código de conducta. 3. El establecimiento de procedimientos que faciliten el ejercicio de los derechos de información, acceso, rectificación, cancelación y oposición de los afectados. 4. La determinación de las transferencias nacionales e internacionales de datos personales que, en su caso, se prevean con indicación de las garantías que deban adoptarse. 5. Las acciones de fomento y difusión en materia de protección de datos personales dirigidas a quienes los traten. 6. Mecanismos para asegurar la confidencialidad de los datos personales por parte de quienes los traten. 7. Los mecanismos de supervisión a través de los cuales se garantice el cumplimiento por los adheridos de lo establecido en el código de conducta. 8. Cláusulas para la obtención del consentimiento de los titulares de los datos personales al tratamiento o transferencia de sus datos personales. 9. Cláusulas para informar a los titulares de los datos personales del tratamiento. 10. Formatos para el ejercicio de los derechos de información, acceso, rectificación, cancelación y oposición. 11. En caso de que se realice el tratamiento de datos personales por encargo, se presenta formatos de cláusulas para la contratación del encargado del tratamiento, conforme lo establece la Ley y el presente Reglamento.",
+  "sha256": "824b3fc219e7b0cd29aa6871400d63ca10f9be790d1352a7dd56011dfd1e0309"
+ },
+ {
+  "num": "61",
+  "title": "Carácter personal",
+  "text": "Los derechos de información, acceso, rectificación, cancelación, oposición y tratamiento objetivo de datos personales sólo pueden ser ejercidos por el titular de datos personales, sin perjuicio de las normas que regulan la representación.",
+  "sha256": "da28eb26a81f84f1007f24e28a8c73740490ffe824def4f7ef0391dd9dd92fd4"
+ },
+ {
+  "num": "62",
+  "title": "Ejercicio de los derechos del titular de datos personales",
+  "text": "El ejercicio de alguno o algunos de los derechos no excluye la posibilidad de ejercer alguno o algunos de los otros, ni puede ser entendido como requisito previo para el ejercicio de cualquiera de ellos.",
+  "sha256": "89c2d80ebd426af95158c1547199fce4dd8b82ae7668deb047a6a2f2af980bcf"
+ },
+ {
+  "num": "63",
+  "title": "Legitimidad para ejercer los derechos",
+  "text": "63.1 El ejercicio de los derechos contenidos en el presente título se realiza: 1. Por el titular de datos personales, acreditando su identidad y presentando copia del Documento Nacional de Identidad o documento equivalente. El empleo de la firma digital conforme a la normatividad vigente sustituye la presentación del Documento Nacional de Identidad y su copia. 2. Mediante representante legal acreditado como tal. 3. Mediante representante expresamente facultado para el ejercicio del derecho, adjuntando la copia de su Documento Nacional de Identidad o documento equivalente, y del título que acredite la representación. 63.2 Cuando el titular del banco de datos personales sea una entidad pública, puede acreditarse la representación por cualquier medio válido en derecho que deje constancia fidedigna, conforme al artículo 115 de la Ley No 27444, Ley del Procedimiento Administrativo General u otra que la sustituya. 63.2 En caso se opte por el procedimiento señalado en el artículo 65 del presente Reglamento, la acreditación de la identidad del titular se sujeta a lo dispuesto en dicha disposición.",
+  "sha256": "0f250dceccda9d44c558b65c50cf765836e3763eae6490013bc3d2e380133a0b"
+ },
+ {
+  "num": "64",
+  "title": "Requisitos de la solicitud",
+  "text": "El ejercicio de los derechos se lleva a cabo mediante solicitud dirigida al titular del banco de datos personales o responsable del tratamiento o ante el encargado de tratamiento, si como consecuencia del encargo se establece en el contrato o relación jurídica que los vincule a la obligación de atender las solicitudes o se considere un responsable de tratamiento por administrar la base de datos personales, la misma que debe contener: 1. Nombres y apellidos del titular del derecho y acreditación de los mismos, y en su caso de su representante conforme al artículo precedente. 2. Petición concreta que da lugar a la solicitud. 3. Domicilio, o dirección que puede ser electrónica, a efectos de las notificaciones que correspondan. 4. Fecha y firma del solicitante. 5. Documentos que sustenten la petición, de ser el caso. 6. Pago de la contraprestación, tratándose de entidades públicas siempre que lo tengan previsto en sus procedimientos de fecha anterior a la vigencia del presente Reglamento.",
+  "sha256": "3d7b514d07ffe286dfe818c9dd93c976592b59883e28da6827676756b7d03110"
+ },
+ {
+  "num": "65",
+  "title": "Servicios de atención al público",
+  "text": "65.1 Cuando el titular del banco de datos personales o responsable del tratamiento disponga de servicios de cualquier naturaleza para la atención a su público o el ejercicio de reclamaciones relacionadas con el servicio prestado o productos ofertados, puede también atender las solicitudes para el ejercicio de los derechos comprendidos en el presente título a través de dichos servicios, siempre que los plazos no sean mayores a los establecidos en el presente Reglamento. 65.2 En este caso, la identidad del titular de datos personales se considera acreditada por los medios establecidos por el titular del banco de datos personales o responsable del tratamiento para la identificación de aquel, siempre que se acredite la misma, conforme a la naturaleza de la prestación del servicio o producto ofertado.",
+  "sha256": "ae8fb202459fbe4b618aebfb4febd3a14f5d642fbfc0c35975967a45a20f044c"
+ },
+ {
+  "num": "66",
+  "title": "Recepción y subsanación de la solicitud",
+  "text": "66.1 Todas las solicitudes presentadas deben ser recibidas dejándose constancia de su recepción por parte del titular del banco de datos personales o responsable del tratamiento o encargado de tratamiento, cuando así corresponda. 66.2 En caso de que la solicitud no cumpla con los requisitos del artículo 63, el titular del banco de datos personales o responsable de su tratamiento, en un plazo de cinco (5) días, contado desde el día siguiente de la recepción de la solicitud, formula las observaciones que no puedan ser salvadas de oficio, invitando al titular a subsanarlas dentro de un plazo máximo de cinco (5) días. Transcurrido el plazo señalado sin que ocurra la subsanación se tiene por no presentada la solicitud. 66.3 Las entidades públicas aplican el artículo 126 de la Ley No 27444, Ley del Procedimiento Administrativo General u otra que la sustituya, sobre observaciones a la documentación presentada. 66.4 Cuando la solicitud del ejercicio del derecho es presentada ante el encargado de tratamiento de datos personales, este debe trasladarlo en un plazo máximo de tres (3) días al titular del banco de datos o responsable del tratamiento a fin de que se atienda la solicitud correspondiente. 66.5 Cuando la solicitud del ejercicio del derecho es presentada ante el encargado de tratamiento de datos personales, siendo quien cumple el encargo con la base de datos del titular del banco de datos o responsable del tratamiento, debe recepcionar la solicitud y trasladarla de inmediato a fin de que se atienda el derecho del titular de los datos personales, conforme establece el párrafo 65.1 del presente artículo, y además debe comunicarlo al titular del dato personal.",
+  "sha256": "f43d166f59c0d7fb0b0fa0123b59a8e410e6f3d75b71d4512e36cfd2e40ced92"
+ },
+ {
+  "num": "67",
+  "title": "Facilidades para el ejercicio del derecho",
+  "text": "67.1 El titular del banco de datos personales o responsable del tratamiento o encargado de tratamiento cuando corresponda, está obligado a establecer un procedimiento sencillo para el ejercicio de los derechos. Independientemente de los medios o mecanismos que la Ley y el presente Reglamento establezcan para el ejercicio de los derechos del titular de datos personales, el titular del banco de datos personales o el responsable del tratamiento o encargado de tratamiento puede ofrecer mecanismos que faciliten el ejercicio de tales derechos en beneficio del titular de datos personales. 67.2 Para efectos de la contraprestación que debe abonar el titular de datos personales para el ejercicio de sus derechos ante la administración pública se aplica lo dispuesto en el primer párrafo del artículo 26 de la Ley. 67.3 El ejercicio por el titular de datos personales de sus derechos ante los bancos de datos personales de administración privada es de carácter gratuito, salvo lo establecido en normas especiales de la materia. En ningún caso el ejercicio de estos derechos implica ingreso adicional para el titular del banco de datos personales o responsable del tratamiento o encargado de tratamiento ante el cual se ejercen. 67.4 No se puede establecer como medios para el ejercicio de los derechos ninguno que implique el cobro de una tarifa adicional al solicitante o cualquier otro medio que suponga un costo excesivo en el caso de bancos de datos personales de entidades públicas.",
+  "sha256": "158075cf371fead436a1a8ba594ab2b2bc9e4acc460926e83e171d11e5893c3a"
+ },
+ {
+  "num": "68",
+  "title": "Forma de la respuesta para el ejercicio del derecho",
+  "text": "68.1 El titular del banco de datos personales o responsable del tratamiento o encargado cuando corresponda, debe responder a la solicitud en la forma y plazo establecido en el presente Reglamento, con independencia de que figuren o no datos personales del titular de los mismos en los bancos de datos personales que administre. 68.2 La respuesta al titular de datos personales debe presentarse en forma clara, legible, comprensible y de fácil acceso. 68.3 En caso de ser necesario el empleo de claves o códigos, debe proporcionarse los significados correspondientes. 68.4 Corresponde al titular del banco de datos personales o responsable del tratamiento la prueba del cumplimiento del deber de respuesta, debiendo conservar los medios para hacerlo. Lo señalado también es de aplicación, en lo que fuera pertinente, para acreditar la realización de lo establecido en el segundo párrafo del artículo 20 de la Ley.",
+  "sha256": "cb64280b0dc0d4d4e95a7311ef8d3b87a239736df5f1f00687a16c255f160898"
+ },
+ {
+  "num": "69",
+  "title": "Plazos de respuesta para el ejercicio del derecho",
+  "text": "69.1 El plazo máximo de respuesta del titular del banco de datos personales o responsable o encargado del tratamiento cuando corresponda, ante el ejercicio del derecho de información, es de ocho (08) días contados desde el día siguiente de la presentación de la solicitud. 69.2 El plazo máximo para la respuesta del titular del banco de datos personales o responsable o encargado del tratamiento cuando corresponda, ante el ejercicio del derecho de acceso es de veinte (20) días contados desde el día siguiente de la presentación de la solicitud por el titular de datos personales. 69.3 Tratándose del ejercicio de los otros derechos como los de rectificación, cancelación u oposición, el plazo máximo de respuesta del titular del banco de datos personales o responsable o encargado del tratamiento cuando corresponda, es de diez (10) días contados desde el día siguiente de la presentación de la solicitud.",
+  "sha256": "da5644cf578b3bc93ca375db364086bb6a5129b88dbb37cb8f86b1cf131745e6"
+ },
+ {
+  "num": "70",
+  "title": "Requerimiento de información o documentación adicional",
+  "text": "70.1 En el caso que la información proporcionada en la solicitud sea insuficiente o errónea de forma que no permita su atención, el titular del banco de datos personales o responsable del tratamiento, cuando corresponda, puede requerir dentro de los siete (7) días siguientes de recibida la solicitud, información o documentación adicional al titular de los datos personales para atenderla. 70.2 En un plazo de diez (10) días de recibido el requerimiento, contado desde el día siguiente de la recepción del mismo, el titular de datos personales debe acompañar la documentación adicional que estime pertinente para fundamentar su solicitud. En caso contrario, se tiene por no presentada dicha solicitud. 70.3 El plazo aplicable para brindar la respuesta se suspende hasta que el titular de datos personales atienda el requerimiento de información o documentación adicional.",
+  "sha256": "151710c07db1e0c2a1028570c7d19450e09307638b51e365070e6c1c142dd8cf"
+ },
+ {
+  "num": "71",
+  "title": "Ampliación de los plazos",
+  "text": "71.1 Salvo el plazo establecido para el ejercicio del derecho de información, los plazos que correspondan para la respuesta o la atención de los demás derechos, pueden ser ampliados una sola vez, y por un plazo igual, como máximo, siempre y cuando las circunstancias lo justifiquen. 71.2 La justificación de la ampliación del plazo debe comunicarse al titular del dato personal dentro del plazo que se pretenda ampliar.",
+  "sha256": "7f7419b24aa23dba937c68f3c35f35cd1cf2c1773f02f698600e47dae048794b"
+ },
+ {
+  "num": "72",
+  "title": "Aplicación de disposiciones específicas",
+  "text": "Cuando las disposiciones aplicables a determinados bancos de datos personales, conforme a la legislación especial que los regule, establezcan un procedimiento específico para el ejercicio de los derechos regulados en el presente Título, son de aplicación tales disposiciones en cuanto ofrezcan iguales o mayores garantías al titular de los datos personales y no contravengan la Ley y el presente Reglamento.",
+  "sha256": "4663b35ae0002b2f065b1d27487b02aa47351ed730f84274477efaf839a9009f"
+ },
+ {
+  "num": "73",
+  "title": "Denegación parcial o total ante el ejercicio de un derecho",
+  "text": "La respuesta total o parcialmente negativa por parte del titular del banco de datos personales o del responsable del tratamiento ante la solicitud de un derecho debe estar debidamente justificada e indicar al titular de datos personales que puede recurrir ante la Dirección de Protección de Datos Personales en vía de reclamación o al Poder Judicial para los efectos de acción del hábeas data, conforme al artículo 24 de la Ley.",
+  "sha256": "0313b7257dbacab7f6cab8434f1cfbad8507152e494f4ed5b0df16132137318f"
+ },
+ {
+  "num": "74",
+  "title": "Derecho a la información",
+  "text": "74.1 El titular de datos personales tiene derecho, en vía de acceso, a que se le brinde toda la información señalada en el artículo 18 de la Ley. La respuesta debe contener los extremos previstos en el artículo 18 antes mencionado. 74.2 Para la respuesta al ejercicio del derecho a la información, es de aplicación, en lo que fuere pertinente, los artículos 77 y 78 del presente Reglamento.",
+  "sha256": "1f0867211e5644e00e0033284323305907105ca94679f6e43d067f8a3f9ccf5e"
+ },
+ {
+  "num": "75",
+  "title": "Derecho de acceso",
+  "text": "75.1 El titular de datos personales tiene derecho a que se le comunique de forma clara, expresa e indubitablemente con lenguaje sencillo lo siguiente: 1. Sus datos personales objeto de tratamiento; 2. La forma en que sus datos personales fueron recopilados; 3. Las razones que motivaron la recopilación de los datos personales; 4. La indicación de a solicitud de quién se realizó la recopilación; y, 5. Las transferencias realizadas o que se prevén hacer con los datos personales. 75.2 Al amparo del derecho de acceso no se puede obtener información o documentación que, aunque corresponda al titular del dato personal, no se encuentre estrictamente comprendida dentro de los supuestos previstos en el párrafo 75.1.",
+  "sha256": "8170c705d3aca33bcd5f5c13bc246b4064d87e508fd49a79c55f7f4eb056284f"
+ },
+ {
+  "num": "76",
+  "title": "Portabilidad de datos personales",
+  "text": "76.1 Como manifestación del derecho de acceso, el titular del dato puede solicitar los datos personales sobre sí mismo, que haya facilitado a un responsable o titular de banco de datos, en un formato estructurado, de uso común y lectura mecánica, y a transmitirlos a otro responsable o titular de banco de datos personales cuando: 1. El tratamiento esté basado en el consentimiento o en una relación contractual en la que el titular del dato es parte; o, 2. El tratamiento se ejerza mediante medios automatizados. 76.2 Al ejercer la portabilidad, el titular del dato tiene derecho a que sus datos se transmitan directamente de un responsable o titular del banco de datos a otro cuando sea técnicamente posible lo que no incluye su ejercicio imponga una carga financiera excesiva, técnica excesiva o irrazonable al responsable o encargado del tratamiento. 76.3 El titular del banco de datos personales o responsable del tratamiento que considere que no cuenta con la posibilidad técnica precitada debe poder acreditar tal situación ante un eventual requerimiento de la Autoridad Nacional de Protección de Datos Personales en el marco de un procedimiento trilateral de tutela, cuando así corresponda. 76.4 Los datos derivados, inferidos o construidos a partir de datos personales pueden ser objeto de portabilidad siempre que el titular del banco de datos personales o el responsable del tratamiento así lo determinen. Se considera dato derivado, inferido o construido aquel dato que ha sido sometido, por lo menos, a un proceso de personalización, categorización o elaboración de perfiles. 76.5 La portabilidad que este artículo reconoce no afecta negativamente a los derechos de terceros. 76.6 La portabilidad no se aplica al tratamiento necesario para el cumplimiento de las competencias o funciones conferidas a las entidades públicas. 76.7 La Autoridad Nacional de Protección de Datos Personales emite las disposiciones complementarias necesarias para la correcta aplicación de la portabilidad de datos personales.",
+  "sha256": "969b9ff8c7a129c6f9366bc04070d58275af7a0b38a2f90008a6df9d445212d2"
+ },
+ {
+  "num": "77",
+  "title": "Medios para el cumplimiento del derecho de acceso",
+  "text": "77.1 La información correspondiente al derecho de acceso, a opción del titular de los datos personales, puede suministrarse por escrito, por medios electrónicos, telefónicos, de imagen u otro idóneo para tal fin. 77.2 El titular de los datos personales puede optar por alguna de las siguientes formas: 1. Visualización en sitio. 2. Escrito, copia, fotocopia o facsímil. 3. Transmisión electrónica de la respuesta, siempre que esté garantizada la identidad del interesado y la seguridad y recepción de la información. 4. Cualquier otra forma o medio que sea adecuado a la configuración o implantación material del banco de datos personales o a la naturaleza del tratamiento, establecido por el titular del banco de datos personales o responsable del tratamiento. 77.3 Cualquiera sea la forma a emplear, el acceso debe ser en formato claro, legible e inteligible, sin utilizar claves o códigos que requieran de dispositivos mecánicos para su adecuada comprensión y en su caso acompañada de una explicación. El acceso debe ser en lenguaje accesible al conocimiento medio de la población, de los términos que se utilicen. 77.4 Sin perjuicio de lo anterior, con el objeto de usar los medios de comunicación más ecológicos disponibles en cada caso, el responsable del tratamiento puede acordar con el titular el uso de medios de reproducción de la información distintos a los establecidos en el presente Reglamento.",
+  "sha256": "4a818dbecad6ba27b25138a5d320b502a6934c332d82db457f17875dc2c30782"
+ },
+ {
+  "num": "78",
+  "title": "Contenido de la información",
+  "text": "La información que, con ocasión del ejercicio del derecho de acceso, se ponga a disposición del titular de los datos personales, debe ser amplia y comprender lo indicado en el artículo 75 del presente Reglamento, aun cuando el requerimiento solo comprenda un aspecto de dicha información. El informe no puede revelar datos pertenecientes a terceros, aun cuando se vinculen con el interesado.",
+  "sha256": "17579ce6e7e20ae3a92aef052545e79e5e85c1b6d304872f2b411daa4ef02c05"
+ },
+ {
+  "num": "79",
+  "title": "Actualización",
+  "text": "79.1 Es derecho del titular de datos personales, en vía de rectificación, actualizar aquellos datos que han sido modificados a la fecha del ejercicio del derecho. 79.2 La solicitud de actualización debe señalar los datos personales a que se refiere, así como la modificación que haya de realizarse en ellos, acompañando la documentación que sustente la procedencia de la actualización solicitada.",
+  "sha256": "e23e1b4ee1ef1318273d6a270c08ffc611010c92deaadfb8e2a4643d95e31dcf"
+ },
+ {
+  "num": "80",
+  "title": "Rectificación",
+  "text": "80.1 Es derecho del titular de datos personales que se modifiquen los datos que resulten ser inexactos, erróneos o falsos. 80.2 La solicitud de rectificación deberá indicar a qué datos personales se refiere, así como la corrección que haya de realizarse en ellos, acompañando la documentación que sustente la procedencia de la rectificación solicitada.",
+  "sha256": "d8fafc78c7949f3dd19c264d91e7d89669979c17b07a663d69fc2c5948e14b32"
+ },
+ {
+  "num": "81",
+  "title": "Inclusión",
+  "text": "81.1 Es derecho del titular de datos personales que, en vía de rectificación, sus datos sean incorporados a un banco de datos personales, así como que al tratamiento de sus datos personales se incorpore aquella información faltante que la hace incompleta, omitida o eliminada en atención a su relevancia para dicho tratamiento. 81.2 La solicitud de inclusión debe indicar los datos personales a que se refiere, así como la incorporación que haya de realizarse en ellos, acompañando la documentación que sustente la procedencia e interés fundado para el mismo.",
+  "sha256": "a17db8fb4de86b115da1c8c1b64e4d359568687ab37bcbf7e3689a05fe38576f"
+ },
+ {
+  "num": "82",
+  "title": "Supresión o cancelación",
+  "text": "82.1 El titular de los datos personales puede solicitar la supresión o cancelación de sus datos personales cuando estos hayan dejado de ser necesarios o pertinentes para la finalidad para la cual hayan sido recopilados, cuando hubiere vencido el plazo establecido para su tratamiento, cuando ha revocado su consentimiento para el tratamiento y en los demás casos en los que no están siendo tratados conforme a la Ley y al presente Reglamento. 82.2 La solicitud de supresión o cancelación puede referirse a todos los datos personales del titular contenidos en un banco de datos personales o solo a alguna parte de ellos. 82.3 Dentro de lo establecido por el artículo 20 de la Ley y el numeral 3 del artículo III del presente Reglamento, la presentación de la solicitud de supresión al responsable del tratamiento implica el cese en el tratamiento de los datos personales a partir de un bloqueo de los mismos en tanto se evalúe su posterior eliminación.",
+  "sha256": "6305065abb44e23075d08e95761511749a5e180391e3172fae497d6b0a7a4c97"
+ },
+ {
+  "num": "83",
+  "title": "Comunicación de la supresión o cancelación",
+  "text": "El titular del banco de datos personales o responsable del tratamiento debe documentar ante el titular de los datos personales haber cumplido con lo solicitado e indicar las transferencias de los datos suprimidos, identificando a quién o a quiénes fueron transferidos, así como la comunicación de la supresión correspondiente.",
+  "sha256": "37653ca353eba4457de1a7870b88a2901aa1c4667f0a5961d9082c2cc09d9330"
+ },
+ {
+  "num": "84",
+  "title": "Improcedencia de la supresión o cancelación",
+  "text": "La supresión no procede cuando los datos personales deban ser conservados en virtud de razones históricas, estadísticas o científicas de acuerdo con la legislación aplicable o, en su caso, en las relaciones contractuales entre el responsable y el titular de los datos personales, que justifiquen el tratamiento de los mismos.",
+  "sha256": "e8a5e048e503cb18feaee0ca3a6ed17d78c7ae04842e7c8bbba3c74823270c47"
+ },
+ {
+  "num": "85",
+  "title": "Protección en caso de denegatoria de supresión o cancelación",
+  "text": "Siempre que sea posible, según la naturaleza de las razones que sustenten la denegatoria prevista en el artículo precedente, se deben emplear medios de disociación o anonimización para continuar el tratamiento.",
+  "sha256": "f36eca0fb2b2924d40e56795ee635c75b01154b89ea4fe422b8e16170c85d095"
+ },
+ {
+  "num": "86",
+  "title": "Oposición",
+  "text": "86.1 El titular de datos personales tiene derecho a oponerse en cualquier momento, a efectos de que no se lleve a cabo el tratamiento de sus datos personales o se cese en el mismo, cuando no hubiere prestado su consentimiento para su recopilación por haber sido tomados de fuente de acceso al público. 86.2 Aun cuando hubiera prestado consentimiento, el titular de datos personales tiene derecho a oponerse al tratamiento de sus datos, si acredita la existencia de motivos fundados y legítimos relativos a una concreta situación personal que justifiquen el ejercicio de este derecho. 86.3 En caso de que la oposición resulte justificada el titular del banco de datos personales o responsable de tratamiento debe proceder al cese del tratamiento que ha dado lugar a la oposición. 86.4 Salvo que exista relación contractual previa que sustente dicho tratamiento, cuando los datos personales son tratados para fines de publicidad y prospección comercial, incluido la elaboración de perfiles, el titular de datos personales puede ejercer su derecho de oposición, en cualquier momento, de acuerdo con los requisitos del presente Reglamento. 86.5 Cuando los datos personales son tratados en internet, el ejercicio de derecho de oposición puede incluir la desindexación de los datos personales.",
+  "sha256": "b09e938f5d7765ff6645979fe5a6b0bc50947df697b3f100c757f0f9324eff0c"
+ },
+ {
+  "num": "87",
+  "title": "Derecho al tratamiento objetivo de datos personales",
+  "text": "87.1 El titular del dato personal tiene derecho a no ser objeto de decisiones, automatizadas o no, que le produzcan efectos jurídicos, discriminación o le afecten de manera significativa incluyendo aquellas que se basen únicamente en tratamientos automatizados destinados a evaluar, analizar o predecir, sin intervención humana, determinados aspectos personales del mismo, en particular, su rendimiento profesional, situación económica, estado de salud, orientación o identidad sexual, fiabilidad o comportamiento, entre otros, debiéndose considerar las excepciones contempladas en el artículo 23 de la Ley. 87.2 Para garantizar el ejercicio del derecho al tratamiento objetivo, de conformidad con lo establecido en el artículo 23 de la Ley, cuando se traten datos personales como parte de un proceso de toma de decisiones sin participación del titular de los datos personales, el titular del banco de datos personales o responsable del tratamiento debe informárselo a la brevedad posible, sin perjuicio de lo regulado para el ejercicio de los demás derechos en la Ley y el presente Reglamento.",
+  "sha256": "716bae021f195266e0720add580df798ecdead2cd96e6f58a3b198350d44ade3"
+ },
+ {
+  "num": "88",
+  "title": "Procedimiento de tutela directa",
+  "text": "88.1 El ejercicio de los derechos regulados por la Ley y el presente Reglamento se inicia con la solicitud que el titular de los datos personales debe dirigir directamente al titular del banco de datos personales o responsable del tratamiento. 88.2 El titular del banco de datos personales o responsable del tratamiento debe dar respuesta, en los plazos previstos en el presente Reglamento, expresando lo correspondiente a cada uno de los extremos de la solicitud. Transcurrido el plazo sin haber recibido la respuesta el solicitante puede considerar denegada su solicitud. 88.3 La denegatoria o la respuesta insatisfactoria habilitan al solicitante a iniciar el procedimiento administrativo ante la Dirección de Protección de Datos Personales.",
+  "sha256": "03545e69e971aa727097ddae30da5a20d7f3e35baa777774c629a668c0f3c00a"
+ },
+ {
+  "num": "89",
+  "title": "Requisitos para el inicio del procedimiento trilateral de tutela",
+  "text": "El procedimiento trilateral de tutela de los derechos del titular de los datos personales se sujeta a lo dispuesto en el presente Reglamento y en la Ley No 27444, Ley del Procedimiento Administrativo General u otra que la sustituya, en lo que le sea aplicable. Sin perjuicio de ello, la solicitud del titular de los datos personales debe cumplir con los siguientes requisitos: 1. La solicitud de inicio del procedimiento administrativo de tutela o reclamación debe contener los requisitos conforme a la Ley No 27444, Ley de Procedimiento Administrativo General u otra que la sustituya. 2. El cargo de la solicitud que previamente envió al titular del banco de datos personales o responsable del tratamiento para obtener, directamente, la tutela de sus derechos. 3. El documento que contenga la respuesta del titular del banco de datos personales o responsable del tratamiento que, a su vez, contenga la denegatoria de su pedido o la respuesta que considere no satisfactoria, de haberla recibido. 4. Documentos que acrediten la afectación del derecho del titular del dato personal conforme a las condiciones reguladas en la Ley y el presente Reglamento, cuando así corresponda.",
+  "sha256": "06a1d6620882c40215cf6b860128ed34af32f422170cb1071210e60cceac7694"
+ },
+ {
+  "num": "90",
+  "title": "Contestación a la reclamación",
+  "text": "Cuando la Dirección de Protección de Datos Personales haya admitido a trámite la reclamación, se corre traslado al reclamado y se otorga un plazo de quince (15) días sujetándose a lo dispuesto por el artículo 223 de la Ley No 27444, Ley de Procedimiento Administrativo General u otra que la sustituya.",
+  "sha256": "76055a0fd7272a053ff5f923d68644f2f786c7fcff5019d793f1f26946f63075"
+ },
+ {
+  "num": "91",
+  "title": "Plazo para resolver",
+  "text": "91.1 El plazo máximo en que debe resolverse el procedimiento trilateral de tutela es de treinta (30) días, contado desde el día siguiente de recibida la contestación del reclamado o desde el vencimiento del plazo para formularla, y puede ampliarse hasta por un máximo de treinta (30) días adicionales, atendiendo a la complejidad del caso. 91.2 En caso se realice acciones de fiscalización a requerimiento de la Dirección de Protección de Datos Personales, se suspende el plazo previsto para resolver hasta que se reciba el informe correspondiente.",
+  "sha256": "1afa16f7937a376317f17b75b23c38050d413e38eb25ceceaea72253f366ce7d"
+ },
+ {
+  "num": "92",
+  "title": "Impugnación",
+  "text": "92.1 Contra la resolución del procedimiento trilateral de tutela solo procede el recurso de apelación conforme con lo establecido en el artículo 227 de la Ley No 27444, Ley del Procedimiento Administrativo General u otro que la sustituya. 92.2 El recurso de apelación se presenta ante la Dirección de Protección de Datos Personales, la cual debe emitir la concesión del recurso de apelación. Posteriormente, la Dirección de Protección de Datos Personales debe elevar el expediente administrativo a la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales en el plazo de dos (02) días de haberse notificado la concesión antes mencionada. 92.3 La Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales, dentro del plazo de quince (15) días de recibido el expediente administrativo, corre traslado de la apelación a la otra parte, la cual debe presentar su absolución en un plazo máximo de quince (15) días. 92.4 Recibida la absolución precitada o vencido el plazo establecido para tal efecto, el recurso de apelación es resuelto por la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales en un plazo máximo de treinta (30) días. Dicha resolución agota la vía administrativa.",
+  "sha256": "32d3f84105cd555fa6a94a80daf59525f71fe79e88a75f15e4ffca8afc59fd49"
+ },
+ {
+  "num": "93",
+  "title": "Medidas cautelares",
+  "text": "Las medidas cautelares proceden en cualquier etapa del procedimiento trilateral de tutela ante la Dirección de Protección de Datos Personales, sujetándose a lo dispuesto en la Ley No 27444, Ley del Procedimiento Administrativo General u otra que la sustituya, en lo que le sea aplicable.",
+  "sha256": "b475e8e4128ed9f52101eee855b8cbcc81db5384049ad9c18db2a03314e18327"
+ },
+ {
+  "num": "94",
+  "title": "Acciones de fiscalización",
+  "text": "Para mejor resolver, la Dirección de Protección de Datos Personales puede requerir a la Dirección de Fiscalización e Instrucción la realización de acciones de fiscalización, lo cual se debe efectuar dentro de los cinco (5) días siguientes de recibido tal requerimiento.",
+  "sha256": "e9e92d5ff4a15bd98424e32ad9403446fc33695e247a54eee9872d64a4115356"
+ },
+ {
+  "num": "95",
+  "title": "Objeto",
+  "text": "La actividad de fiscalización tiene por objeto la realización de un conjunto de actos y diligencias de investigación, supervisión, control o inspección sobre el cumplimiento de las obligaciones en materia de protección de datos personales, prohibiciones y otras limitaciones exigibles a los administrados que realizan tratamiento de datos personales, derivados de una norma legal o reglamentaria, contratos con el Estado u otra fuente jurídica, bajo un enfoque de cumplimiento normativo, de prevención del riesgo, de gestión del riesgo y tutela de los bienes jurídicos protegidos.",
+  "sha256": "68269bf1f6ad6cc5b65bf960a5a86f9e0fa59efe5304a7c7a7be249de012e603"
+ },
+ {
+  "num": "96",
+  "title": "Inicio de la actividad de fiscalización",
+  "text": "96.1 La actividad de fiscalización se inicia siempre de oficio como consecuencia de: 1. Iniciativa directa de la Dirección de Fiscalización e Instrucción; o, 2. Por denuncia de cualquier entidad pública, persona natural o jurídica. 96.2 En todos los casos, la Dirección de Fiscalización e Instrucción requiere al titular del banco de datos personales, al encargado o a quien resulte responsable, información relativa al tratamiento de datos personales o la documentación necesaria. 96.3 Para efectos de la actividad fiscalizadora, la Dirección de Fiscalización e Instrucción está facultada para ejecutar las actividades dispuestas en el artículo 228- B de la Ley No 27444, Ley del Procedimiento Administrativo General u otro que la sustituya.",
+  "sha256": "1177ffc72c0e13eebf3213b4e9d6cec13c791c9784c49a9b25c32cc6912be3bc"
+ },
+ {
+  "num": "97",
+  "title": "Tipos de actividad de fiscalización",
+  "text": "La actividad de fiscalización se clasifica en: 1. Presencial: Acción de fiscalización que se realiza fuera de las sedes de la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales, en presencia del titular del banco de datos personales, el encargado o quien resulte responsable o sus representantes. 2. En gabinete: Acción de fiscalización que se realiza desde las sedes de la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales y que implica el acceso y evaluación a través de medios digitales a las actividades que realiza el titular del banco de datos personales, el encargado o quien resulte responsable del tratamiento de datos personales.",
+  "sha256": "5033930c02856b8ad7da42a9d6c43aa2f1784115f5c2d87aac129e42bc354de6"
+ },
+ {
+  "num": "98",
+  "title": "Reconducción",
+  "text": "En caso de que, de la denuncia presentada, se advierta que no se dirige a los objetivos de una fiscalización, sino a la tutela de derechos, se reconduce la misma a una reclamación en el marco de un procedimiento trilateral de tutela.",
+  "sha256": "9a7073428a386e4fe761ea432069572436ecfd7e9cfcf46dc5e69f58ed46d210"
+ },
+ {
+  "num": "99",
+  "title": "Fe pública",
+  "text": "En el ejercicio de las actividades de fiscalización, el personal de la Dirección de Fiscalización e Instrucción está dotado de fe pública para constatar la veracidad de los hechos en relación con los trámites a su cargo.",
+  "sha256": "d7da5e418fe96a20ca4c79f96a892707e871120384f2946333d567324f1fc360"
+ },
+ {
+  "num": "100",
+  "title": "Requisitos de la denuncia",
+  "text": "La denuncia debe indicar lo siguiente: 1. Nombre del denunciante y el domicilio para efectos de recibir las notificaciones conforme con lo señalado en el artículo 20 de la Ley 27444. 2. Relación de los hechos en los que basa su denuncia y los documentos que la sustenten. 3. Nombre y domicilio del denunciado o, en su caso, datos para su ubicación.",
+  "sha256": "db90be18a5aaa523db11259773735871e2533850d54576dca4ae086f8c68f8bb"
+ },
+ {
+  "num": "101",
+  "title": "Forma de la denuncia",
+  "text": "101.1 La denuncia puede presentarse en soporte físico o según los formularios publicados en el Portal Institucional del Ministerio de Justicia y Derechos Humanos. 101.2 Cuando la denuncia se presente por medios digitales, a través del sistema que establezca la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales, se entiende que se acepta que las notificaciones sean efectuadas por dicho sistema o a través de otros medios electrónicos generados por este. 101.3 El denunciante puede solicitar que se mantenga la reserva de su identidad.",
+  "sha256": "5c82d3fe16322344b68e37e0d8797a07124a58de05de8af3f66c7ce9f15712ac"
+ },
+ {
+  "num": "102",
+  "title": "Requerimiento de información",
+  "text": "Cuando se formule denuncia, la Dirección de Fiscalización e Instrucción puede solicitar la documentación que estime oportuna al denunciante para el desarrollo de la fiscalización.",
+  "sha256": "49857236e6b868671743ed4085dc862603275d184a836d19fa6168a9721d57a4"
+ },
+ {
+  "num": "103",
+  "title": "Acción de fiscalización presencial",
+  "text": "103.1 La acción de fiscalización presencial se realiza sin previo aviso, salvo en determinadas circunstancias y para garantizar la eficacia de la fiscalización. La Dirección de Fiscalización e Instrucción, cuando estime conveniente, en un plazo razonable, comunica al fiscalizado la fecha y hora en que se efectúa la acción de fiscalización. 103.2 La acción de fiscalización presencial puede incluir diversas visitas para obtener los elementos de convicción necesarios. Luego de la primera visita inopinada, de ser el caso, las siguientes visitas se notifican previamente al administrado fiscalizado. 103.3 Las visitas de fiscalización requieren el levantamiento del acta correspondiente, en la que se deja constancia de las actuaciones practicadas durante dicha visita. Dicha acta debe ser suscrita por el personal fiscalizador, el administrado o el personal que participó en la diligencia. En caso estos últimos, se nieguen a recibir o firmar el acta, se deja constancia de ello en el acta, no afectando su validez. La firma del fiscalizado no supone su conformidad con el contenido, sino tan sólo su participación y la recepción de la misma. 103.4 El acta se elabora por duplicado y se entrega una copia al administrado. El acta puede incluir la manifestación que los participantes consideren que conviene a su derecho. 103.5 En el caso no se lleve a cabo la visita de fiscalización por obstrucción y obstaculización del administrado o de su personal, se elabora el acta respectiva dejando constancia del motivo que impidió se lleve a cabo.",
+  "sha256": "6cfc5449798539a6ea91ef2c5bd40837bde7b89c2e7496e60312a993f7385cfe"
+ },
+ {
+  "num": "104",
+  "title": "Identificación del personal fiscalizador",
+  "text": "104.1 Al iniciar la visita, el personal fiscalizador debe exhibir credencial vigente con fotografía, expedida por la Dirección de Fiscalización e Instrucción que lo acredite como tal. 104.2 El personal que lleve a cabo las visitas de fiscalización debe estar provisto de orden escrita con firma autógrafa del funcionario, de la que deja copia, con cargo, a la persona que atendió la visita. 104.3 En la orden debe precisarse el lugar o los lugares en donde se encuentra la entidad pública o privada o la persona natural que se fiscaliza, o donde se encuentren los bancos de datos personales objeto de fiscalización, el objeto genérico de la visita y las disposiciones legales que lo fundamenten.",
+  "sha256": "0ebe69de67395072fc714a13b29905168e9e05fab7de85ef1d409987e04c224d"
+ },
+ {
+  "num": "105",
+  "title": "Contenido de las actas de fiscalización",
+  "text": "En las actas de fiscalización se debe hacer constar: 1. Nombre, denominación o razón social del fiscalizado. 2. Hora, día, mes y año en que se inicie y concluya la fiscalización. 3. Los datos que identifiquen plenamente el lugar donde se realizó la fiscalización, tales como calle, avenida, pasaje, número, distrito, código postal, la entidad pública o privada en que se encuentre ubicado el lugar en que se practicó la fiscalización, así como el número telefónico u otra forma de comunicación disponible con el fiscalizado. 4. Tipo de acción de fiscalización. 5. Número y fecha de la orden de fiscalización que la motivó. 6. Nombre y cargo de la persona que atendió a los fiscalizadores. 7. Datos y detalles relativos a la actuación. 8. Declaración del fiscalizado si lo solicitase. 9. Requerimiento de información efectuado y el plazo otorgado para su entrega, de ser el caso. 10. Nombre y firma de quienes intervinieron en la fiscalización, incluyendo quienes la hubieran llevado a cabo.",
+  "sha256": "de40c3e9b82862cddc6b9d7c48292a6ea355fcbae1b32edf3b4fe1e0694ce2f4"
+ },
+ {
+  "num": "106",
+  "title": "Obstrucción a la fiscalización",
+  "text": "Si el fiscalizado se niega directamente a colaborar u observa una conducta obstructiva, demorando injustificadamente su colaboración, planteando cuestionamientos no razonables a la labor fiscalizadora, desatendiendo las indicaciones de los fiscalizadores o cualquier otra conducta similar o equivalente, debe dejarse constancia de ello en el acta, con precisión del acto o los actos obstructivos y de su reiteración, de ser el caso.",
+  "sha256": "28cbb8f2d0c4609594bdacaa94190981966eec460bfdeb37e1a13b34c1c5cc49"
+ },
+ {
+  "num": "107",
+  "title": "Observaciones en el acto de fiscalización o posteriores",
+  "text": "Sin perjuicio de que los fiscalizados puedan formular observaciones en el acto de la fiscalización y manifestar lo que a su derecho convenga en relación con los hechos contenidos en el acta, también pueden hacerlo por escrito dentro del término de los cinco (5) días siguientes a la fecha de realización de la acción de fiscalización.",
+  "sha256": "2ab29366cfa2b173bf3041a7173de08bc4242ee54b23a61236f59ca4258f9959"
+ },
+ {
+  "num": "108",
+  "title": "Informe de fiscalización",
+  "text": "108.1 La fiscalización concluye con la emisión de un informe que puede contener: 1. Constancia de conformidad de la actividad desarrollada por el administrado. 2. La recomendación de mejoras o correcciones de la actividad desarrollada por el administrado. 3. La advertencia de la existencia de incumplimientos no susceptibles de ameritar la determinación de responsabilidades administrativas. 4. La recomendación del inicio de un procedimiento con el fin de determinar las responsabilidades administrativas que correspondan. 5. Disposición de adopción de medidas correctivas, bajo apercibimiento de recomendar inicio de procedimiento sancionador. 108.2 El informe de la conclusión de la fiscalización debe ser elaborado en un plazo máximo de noventa (90) días, este plazo se inicia desde la fecha en que la Dirección de Fiscalización e Instrucción recibe la denuncia o da inicio de oficio a las actuaciones de fiscalización. El plazo establecido puede ser ampliado por una sola vez y hasta por un periodo de cuarenta y cinco (45) días, por decisión motivada, atendiendo a la complejidad de la materia fiscalizada.",
+  "sha256": "97250270703d9d4408d4a5df6080a75bcc82ce0b00f8dfa4c39072cf9e943907"
+ },
+ {
+  "num": "109",
+  "title": "Improcedencia de medios de impugnación",
+  "text": "En contra de cualquiera de las formas de conclusión de la actividad de fiscalización que expide la Dirección de Fiscalización e Instrucción no procede la interposición de recurso alguno, la contradicción de su contenido y cualquier forma de defensa respecto de él se hacen valer en el trámite del procedimiento administrativo sancionador, de ser el caso.",
+  "sha256": "a7168cdeec979c55921c26e2cdb464f135e62b506f265a0088023c35ffb5ab00"
+ },
+ {
+  "num": "110",
+  "title": "Autoridades del procedimiento sancionador",
+  "text": "Para efectos de la aplicación de las normas sobre el procedimiento administrativo sancionador establecido en la Ley, las autoridades son las siguientes: 1. La Dirección de Fiscalización e Instrucción es competenteparaconducirydesarrollarlafasedeinvestigación y es responsable de llevar a cabo las actuaciones necesarias para determinar las circunstancias de la comisión, de actuación de pruebas, imputar cargos de los actos contrarios a lo establecido en la Ley y el presente Reglamento, y emitir el Informe Final de Instrucción, según corresponda. 2. La Dirección de Protección de Datos Personales es competente para resolver en primera instancia sobre la existencia de infracción e imposición de sanciones y de dictar medidas cautelares y correctivas tendientes a la protección de los datos personales, así como resolver el recurso de reconsideración interpuesto contra sus resoluciones, según corresponda. 3. La Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales ejerce funciones como segunda y última instancia administrativa del procedimiento administrativo sancionador y su decisión agota la vía administrativa.",
+  "sha256": "2072d1a3553856baef2d0cae733f961b7944fadabb822b9865756a30ff4bfadd"
+ },
+ {
+  "num": "111",
+  "title": "Inicio del procedimiento sancionador",
+  "text": "111.1 El procedimiento sancionador se inicia con la notificación de la resolución de imputación de cargos a los administrados, la cual es realizada por la Dirección de Fiscalización e Instrucción, de conformidad con lo dispuesto en el numeral 3 del artículo 234 de la Ley No 27444, Ley de Procedimiento Administrativo General u otro que la sustituya. 111.2 El denunciante puede interponer recurso de apelación contra la resolución que declara el archivo o la improcedencia total o parcial de su denuncia.",
+  "sha256": "97fdd07d56611a65c03fe931c4091543ec1adeea94b3fc7aafa5d5408b97b37f"
+ },
+ {
+  "num": "112",
+  "title": "Contenido de la resolución de inicio del procedimiento sancionador",
+  "text": "112.1 La Dirección de Fiscalización e Instrucción notifica la resolución de imputación de cargos que contiene lo siguiente: 1. La identificación de la autoridad competente de imponer la sanción, identificando la norma que otorga dicha competencia. 2. Los hechos que motivan el inicio del procedimiento administrativo sancionador, que incluye la manifestación de los hechos que se atribuyen al administrado y de la calificación de las infracciones que tales hechos puedan constituir. 3. La identificación del administrado a quien se le abre procedimiento. 4. La sanción o sanciones, que en su caso se pudieran imponer. 5. El plazo para presentar los descargos y pruebas. 6. Las normas que tipifican los actos u omisiones como infracción administrativa. 112.2 A la notificación de la resolución de imputación de cargos se le anexa el Informe de fiscalización.",
+  "sha256": "5cb7eb05bfe8cf4b93b36bdbac59640626b36e93a29e807cd6f1ee73b616a59c"
+ },
+ {
+  "num": "113",
+  "title": "Presentación de descargos y pruebas",
+  "text": "113.1 El administrado en un plazo máximo de quince (15) días, contado a partir del día siguiente de la notificación correspondiente puede presentar su descargo, en el cual puede pronunciarse concretamente respecto de cada uno de los hechos que se le imputan de manera expresa, afirmándolos, negándolos, señalando que los ignora por no ser propios o exponiendo como ocurrieron, según sea el caso. Asimismo, puede presentar los medios probatorios correspondientes. 113.2 En los descargos, el administrado puede reconocer su responsabilidad de forma expresa y por escrito, cuya evaluación es considerada como un supuesto de atenuación de responsabilidad para efectos del cálculo de la sanción.",
+  "sha256": "248da313dce990fc489727e727ca3099620ae7fbbb26e11a02e5515b56a074a6"
+ },
+ {
+  "num": "114",
+  "title": "Actuaciones para la instrucción de los hechos",
+  "text": "Vencido el plazo de los quince (15) días para la presentación del descargo, con o sin él, la Dirección de Fiscalización e Instrucción realiza de oficio todas las actuaciones necesarias para el examen de los hechos y puede disponer visitas de fiscalización o de presentación de medios probatorios, si no las hubiera realizado antes, con la finalidad de recabar la información que sea necesaria o relevante para determinar, en su caso, la existencia de infracciones susceptibles de sanción.",
+  "sha256": "60fe259aab011b4f4e6562bde9b48837e53d0c01843bc15d365d9899b7ae8b04"
+ },
+ {
+  "num": "115",
+  "title": "Informe Final de Instrucción",
+  "text": "115.1 La Dirección de Fiscalización e Instrucción emite el Informe Final de Instrucción, en un plazo máximo de cincuenta (50) días, este plazo inicia desde la fecha en que se notifica la resolución de inicio del procedimiento sancionador. El plazo establecido puede ser ampliado por una vez y hasta por un periodo de cincuenta (50) días. En el informe de instrucción se determina de forma motivada las conductas que se consideren constitutivas de infracción, la norma que prevé la imposición de sanción, la propuesta de sanción que corresponda o el archivo del procedimiento, según sea el caso. 115.2 Si luego de la evaluación correspondiente, la Dirección de Fiscalización e Instrucción concluye que no existen infracciones, debe dejar constancia de ello en el Informe Final de Instrucción, en el que recomienda a la Dirección de Protección de Datos Personales se declare el archivo del procedimiento administrativo sancionador. 115.3 Cuando se determine la existencia de responsabilidad administrativa de una o más infracciones, la Dirección de Fiscalización e Instrucción notifica el informe al administrado otorgándole un plazo de cinco (5) días, contado desde el día siguiente de la notificación, para que presente sus descargos ante la Dirección de Protección de Datos Personales. El informe no constituye un acto impugnable.",
+  "sha256": "0e5d7166c2decd0e44888902d4091fe46dc127ccaeb3b6c545e52f12701be2a6"
+ },
+ {
+  "num": "116",
+  "title": "Resolución del procedimiento sancionador",
+  "text": "116.1 La resolución que emite la Dirección de Protección de Datos Personales, puede acoger o no la recomendación del Informe Final de Instrucción, y debe encontrarse debidamente motivada y pronunciarse respecto de los descargos y a los hechos imputados a fin de determinar la responsabilidad del administrado, la sanción aplicable y las medidas correctivas, de ser el caso. 116.2 La resolución del procedimiento administrativo sancionador es notificada a las partes del procedimiento, así como al denunciante cuando el procedimiento se haya originado por alguna acción de fiscalización debido a una denuncia.",
+  "sha256": "287401d51f488c4c1fedf84147dc592bef60a9635e880797db04c5725e92d04c"
+ },
+ {
+  "num": "117",
+  "title": "Concurso de infracciones",
+  "text": "117.1 Cuando una misma conducta o hecho califique como más de una infracción se aplica la multa determinada para la infracción de mayor gravedad, conforme al numeral 6 del artículo 230 de la Ley No 27444, Ley del Procedimiento Administrativo General u otro que la sustituya. 117.2 Cuando varias conductas o hechos califiquen como infracciones independientes, se aplica la suma de las multas determinadas previamente y de manera individualizada, hasta un máximo del doble de la sanción aplicable por la infracción más grave.",
+  "sha256": "2ac654ebcd80c1143b20c50e197f3162c6f481335dda48968a52bf8e3008b362"
+ },
+ {
+  "num": "118",
+  "title": "Impugnación",
+  "text": "118.1 El recurso de reconsideración se debe sustentar en nueva prueba y es resuelto por la Dirección de Protección de Datos Personales en un plazo que no excede de los quince (15) días. En caso de que la Dirección de Protección de Datos Personales determine que el recurso de reconsideración es improcedente por no sustentarse en prueba nueva, debe encauzarlo como recurso de apelación, según corresponda. 118.2 El recurso de apelación se presenta ante el mismo órgano que expidió la resolución que se apela, el que lo eleva a la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales junto con el expediente. El recurso de apelación debe ser resuelto en un plazo no mayor de treinta (30) días contado a partir de la recepción del expediente administrativo. 118.3 Las resoluciones emitidas por la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales que resuelven los recursos de apelación agotan la vía administrativa. No cabe interposición de recurso alguno en la vía administrativa y únicamente puede presentarse demanda contenciosa administrativa según la legislación de la materia.",
+  "sha256": "a61539705601bd20cbff01c86cee814669d00cbf7d7b7087dca1fb4d9c2ba797"
+ },
+ {
+  "num": "119",
+  "title": "Audiencia de informe oral",
+  "text": "119.1 En el marco de los procedimientos de su competencia, la Dirección de Protección de Datos Personales y la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales pueden, por decisión propia o a solicitud de parte y en atención a su evaluación del caso concreto, programar la realización de la audiencia de informe oral. 119.2 La audiencia de informe oral puede ser presencial o virtual, según determine el órgano competente en atención a las circunstancias de cada caso en concreto. En caso de ser virtual, se debe dejar registrada por el órgano a cargo de la audiencia, en video, audio o mediante cualquier otro medio que permita dejar constancia de su realización. Una copia es archivada en el expediente administrativo correspondiente. 119.3 En la audiencia solo pueden participar y hacer uso de la palabra los representantes o apoderados de los administrados, quienes deben identificarse como tales antes del inicio de la audiencia de informe oral.",
+  "sha256": "75bff24d2c1be40f6e4b854ee5ef8c941bbc6a95139b0f2961fb82873adc05a2"
+ },
+ {
+  "num": "120",
+  "title": "Sobre la confidencialidad de la información",
+  "text": "120.1 Se considera confidencial aquella información que posee dicha naturaleza conforme al régimen previsto en la Ley N.o 27806, Ley de Transparencia y Acceso a la Información Pública, que haya sido presentada por las partes o terceros en el marco de un procedimiento de competencia de la Autoridad Nacional de Protección de Datos Personales, o generada por la misma en el trámite de la investigación propia del ejercicio de la potestad sancionadora. 120.2 De manera enunciativa y no limitativa, se considera información confidencial el secreto bancario, comercial, industrial, tributario o bursátil; así como aquella que afecte la intimidad personal y familiar. 120.3 La información debe ser de uso exclusivo de los servidores públicos encargados del trámite del procedimiento. Dicha información no debe ser puesta en conocimiento de las demás partes del procedimiento ni de terceros; por lo cual, la Autoridad Nacional de Protección de Datos Personales puede aplicar procedimientos de disociación y/o anonimización, según corresponda.",
+  "sha256": "8ca8e808b0687853f6836cc9778023a39eb454b271ba122f825a7757d7e5dc1a"
+ },
+ {
+  "num": "121",
+  "title": "Medidas de carácter provisional y cautelares",
+  "text": "121.1 Una vez iniciado el procedimiento sancionador, la Dirección de Protección de Datos Personales, a solicitud de la Dirección de Fiscalización e Instrucción, puede disponer la adopción de medidas de carácter provisional que aseguren la eficacia de la resolución final que pudiera recaer en el referido procedimiento, con observancia de las normas aplicables de la Ley No 27444, Ley del Procedimiento Administrativo General u otra que la sustituya. 121.2 La Dirección de Protección de Datos Personales, mediante decisión motivada, puede dictar medida cautelar, sustentándose en la verosimilitud de la existencia de una infracción administrativa, peligro en la demora y la razonabilidad de la medida, a fin de salvaguardar el derecho de protección de datos personales.",
+  "sha256": "6774f218237ebd16befbecbc24cd4736d849f51e28c4abb5b85f5953011e0877"
+ },
+ {
+  "num": "122",
+  "title": "Medidas correctivas",
+  "text": "122.1 La medida correctiva es la medida dictada por la Dirección de Protección de Datos Personales, sin perjuicio de la sanción administrativa que corresponda, destinada a revertir, corregir o disminuir, en la medida de lo posible, el efecto nocivo que la conducta infractora hubiera producido al titular del dato personal. 122.2 La Dirección de Protección de Datos Personales puede dictar las siguientes medidas correctivas: 1. Cese de tratamiento de datos personales obtenidos de forma desproporcional y/o sin consentimiento. 2. Eliminación de datos que fueron obtenidos sin el consentimiento del titular del dato personal. 3. Acciones para revertir o disminuir en lo posible el efecto nocivo de la conducta infractora sobre el titular del dato personal. 4. Atención inmediata del derecho solicitado por el titular del dato personal. 5. Otras que se deriven del ordenamiento vigente en materia de protección de datos personales.",
+  "sha256": "26dad560cab1a24690a6871d04c3a29a640264cf36cc03fd5b3f6c5d1bd11f24"
+ },
+ {
+  "num": "123",
+  "title": "Graduación del monto de la sanción administrativa de multa",
+  "text": "123.1 Para graduar la sanción a imponerse en el caso concreto debe observarse el principio de razonabilidad de la potestad sancionadora reconocido en el numeral 3 del artículo 230 de la Ley No 27444, Ley del Procedimiento Administrativo General u otra norma que la sustituya. 123.2 La determinación de las multas se realiza conforme con lo establecido en la Metodología para el cálculo de multas, aprobada por Resolución Ministerial No 0326-2020-JUS o norma que la sustituya.",
+  "sha256": "6dece417c0c6ddbeb5845c9216886b6f70d098a0ed574d88fcbcd69a1d01ff9b"
+ },
+ {
+  "num": "124",
+  "title": "Límite al monto de la sanción administrativa de multa",
+  "text": "124.1 Conforme a lo establecido en el segundo párrafo del artículo 39 de la Ley, el administrado puede acreditar en el descargo de la imputación de cargos el monto de ingreso bruto anual que percibió el año anterior a la fecha en la que cometió la infracción, a través de declaraciones juradas de la Superintendencia Nacional de Aduanas y de Administración Tributaria, estados financieros u otro documento de naturaleza similar. 124.2 En caso el administrado acredite que no esté percibiendo ingresos, remite a la Dirección de Fiscalización e Instrucción la información necesaria para que se efectúe la estimación de los ingresos que proyecta percibir.",
+  "sha256": "1a7912193f2a4228648ba8d42ae425088bfa77ffe7c77e4c483848c5f72146ca"
+ },
+ {
+  "num": "125",
+  "title": "Atenuantes de responsabilidad administrativa",
+  "text": "Se consideran atenuantes de responsabilidad las siguientes: 125.1 El reconocimiento expreso y por escrito de la infracción cometida, el cual debe ser efectuado de manera clara, precisa y sin ambigüedades o contradicciones. 125.2 La colaboración con la Autoridad Nacional y la adopción medidas de enmienda que permiten mitigar los efectos de la conducta infractora, después de la notificación de imputación de cargos. Tales medidas deben ser debidamente acreditadas. 125.3 La implementación debidamente acreditada y de manera previa al inicio del procedimiento administrativo sancionador del Código de Conducta, conforme a los requisitos regulados en el presente Reglamento. 125.4 La implementación debidamente acreditada y de manera previa al inicio del procedimiento administrativo sancionador de la Evaluación de impacto relativa a la protección de datos personales respecto del tratamiento cuestionado, conforme a los requisitos regulados en el presente Reglamento.",
+  "sha256": "6b3aaedc8d485b80b2b3bcf53cd535609a5bd61cbf213377c7c5d1c4ca212c91"
+ },
+ {
+  "num": "126",
+  "title": "Mora en el pago de las multas",
+  "text": "126.1 El administrado que no realiza el pago oportuno de las multas incurre en mora automática, en consecuencia, el monto de las multas impagas devenga interés moratorio que se aplica diariamente desde el día siguiente de la fecha del vencimiento del plazo de cancelación de la multa hasta la fecha de pago inclusive, multiplicando el monto de la multa impaga por la Tasa de Interés Moratoria (TIM) diaria vigente. 126.2 La Tasa de Interés Moratoria (TIM) diaria vigente resulta de dividir la Tasa de Interés Moratoria (TIM) vigente entre treinta (30).",
+  "sha256": "bfb22bddabb7fe31878153579360ee9ecad023521b837f01a555388b960c4eae"
+ },
+ {
+  "num": "127",
+  "title": "Beneficio de pronto pago de la multa",
+  "text": "127.1 El administrado puede acogerse al beneficio de pronto pago mediante la cancelación de la multa dentro del plazo establecido por la Dirección de Protección de Datos Personales en la resolución emitida en primera instancia, siempre que no se interponga recurso de apelación contra tal resolución y, en consecuencia, esta quede consentida. 127.2 El beneficio del pronto pago corresponde a una reducción del 40% respecto al importe de la multa impuesta. 127.3. Para que surta efecto el beneficio de pronto pago se deben cumplir las condiciones mencionadas en el presente Reglamento y, adicionalmente, se debe comunicar tal circunstancia a la Dirección de Protección de Datos Personales adjuntando el comprobante del depósito bancario correspondiente.",
+  "sha256": "019e1c91f7fe845194acd07fc16894f28192cd0f33167c01f49e7b1cbf170fe7"
+ },
+ {
+  "num": "128",
+  "title": "Ejecución coactiva de la multa",
+  "text": "La ejecución de la sanción de multa se rige por la ley de la materia referida al procedimiento de ejecución coactiva.",
+  "sha256": "2085a4a4a64fd88cc1bad8594ea6a2bcc90e4d37bc38891feb2f7e0c8f844fa1"
+ },
+ {
+  "num": "129",
+  "title": "Registro de sanciones, medidas cautelares y correctivas",
+  "text": "La Dirección de Protección de Datos Personales tiene a su cargo el Registro Nacional de Protección de Datos Personales, en el cual se inscriben los sancionados por incumplimiento de la Ley y el presente Reglamento, las medidas cautelares y medidas correctivas, lo cual es publicado en la sede digital del Ministerio de Justicia y Derechos Humanos, ubicada en la Plataforma Digital Única del Estado Peruano para Orientación al Ciudadano (Gob.pe).",
+  "sha256": "b7b3ff10aeb38163bd7dcb27dec5fbc460c1b0dc8ab143ce50d5aabccb11939d"
+ },
+ {
+  "num": "130",
+  "title": "Aplicación de multas coercitivas",
+  "text": "130.1Encasodeincumplimientodemedidascorrectivas y medidas cautelares, la Dirección de Protección de Datos Personales impone multas coercitivas, de manera automática y sin necesidad de requerimiento previo, de acuerdo con la siguiente graduación: 1. Por infracciones leves, la multa coercitiva debe ser de hasta dos (2) Unidades Impositivas Tributarias. 2. Por infracciones graves, la multa coercitiva debe ser no menor de dos (2) hasta seis (6) Unidades Impositivas Tributarias. 3. Por infracciones muy graves, la multa coercitiva debe ser no menor de seis (6) hasta diez (10) Unidades Impositivas Tributarias. 130.2 En caso de persistir en el incumplimiento de cualquiera de los mandatos a los que se refiere el párrafo 130.1, se puede imponer una nueva multa coercitiva, duplicando sucesivamente el monto de la última multa impuesta hasta el límite de cien (100) Unidades Impositivas Tributarias (UIT). 130.3 La multa que corresponda debe ser pagada dentro del plazo de cinco (5) días, vencido el cual se ordena su cobranza coactiva. 130.4 Contra la imposición de una multa coercitiva no procede la interposición de recurso impugnativo. 130.5 La Autoridad Nacional de Protección de Datos Personales aprueba las disposiciones necesarias para regular la aplicación de las multas coercitivas.",
+  "sha256": "ccdaccb541f04fffd24cd893689af1ddada3be761dbb361280bc1d8ea0059b89"
+ },
+ {
+  "num": "131",
+  "title": "Infracciones",
+  "text": "Las infracciones a la Ley o al presente Reglamento se califican como leves, graves y muy graves, y se sancionan con multa de acuerdo con el artículo 39 de la citada Ley.",
+  "sha256": "9c0b4b3e5d8b9b640aee95a4d1eedd643b9104309ada179219dd16fe5b069a6f"
+ },
+ {
+  "num": "132",
+  "title": "Infracciones leves",
+  "text": "Son infracciones leves, las siguientes: 1. Realizar tratamiento de datos personales que no sean necesarios, pertinentes ni adecuados con relación a las finalidades determinadas, explícitas y lícitas para las que requieren ser obtenidos. 2. No modificar o rectificar los datos personales objeto de tratamiento cuando se tenga conocimiento de su carácter inexacto o incompleto. 3. No suprimir los datos personales objeto de tratamiento cuando hayan dejado de ser necesarios, pertinentes o adecuados para la finalidad para la cual fueron recopilados o cuando hubiese vencido el plazo para su tratamiento. En estos casos, no se configura la infracción cuando medie procedimiento de anonimización o disociación. 4. No inscribir o actualizar en el Registro Nacional de Protección de Datos Personales los actos establecidos en el artículo 34 de la Ley. 5. Informar de forma incompleta de dos o menos de dos condiciones del tratamiento de los datos personales señaladas en el artículo 18 de la Ley. 6. Realizar tratamiento de datos personales incumpliendo las medidas de seguridad establecidas en la normativa sobre la materia. 7. Atender fuera de plazo el ejercicio material de los derechos del titular de datos personales, cuando legalmente proceda. 8. No comunicar el flujo transfronterizo de datos personales a la Dirección de Protección de Datos Personales de la Dirección General de Transparencia, Acceso a la Información Pública y Protección de Datos Personales para su inscripción en el Registro Nacional de Protección de Datos Personales. 9. No designar al Oficial de Datos Personales, cuando así corresponda.",
+  "sha256": "f61f037a675fa2fb93b6cfa6abfd4a331815cd5f3fe2d0f36138090c0d87d523"
+ },
+ {
+  "num": "133",
+  "title": "Infracciones graves",
+  "text": "Son infracciones graves, las siguientes: 1. No atender, impedir u obstaculizar el ejercicio material de los derechos del titular de datos personales. 2. No cumplir con el deber de informar o informar de forma incompleta de tres a más condiciones del tratamiento de los datos personales a los titulares de datos personales, de acuerdo con lo establecido en el artículo 18 de la Ley. 3. Dar tratamiento a los datos personales sin el consentimiento libre, expreso, inequívoco, previo e informado del titular, cuando el mismo sea necesario conforme a lo dispuesto en la Ley y su Reglamento. 4. Realizar tratamiento de datos personales incumpliendo las medidas de seguridad establecidas en la normativa sobre la materia, y generando con ello un perjuicio al titular del dato personal o una exposición no autorizada de sus datos personales. 5. Realizar tratamiento de datos personales sensibles incumpliendo las medidas de seguridad establecidas en la normativa sobre la materia. 6. Realizar tratamiento de datos personales sensibles que no sean necesarios, pertinentes ni adecuados con relación a las finalidades determinadas, explícitas y lícitas para las que requieren ser obtenidos. 7. Utilizar los datos personales obtenidos lícitamente para finalidades distintas de aquellas que motivaron su recopilación, salvo que medie procedimiento de anonimización o disociación. 8. Negar o demorar injustificadamente a la Autoridad Nacional de Protección de Datos Personales el ingreso a las instalaciones objeto de la fiscalización. 9. Negarse injustificadamente a proporcionar a la Autoridad Nacional de Protección de Datos Personales la información o la documentación relativa al tratamiento de datos personales que esta le requiera en el marco de una fiscalización o procedimiento administrativo en curso. 10. Obstruir el ejercicio de la función fiscalizadora de la Autoridad Nacional de Protección de Datos Personales. 11. Incumplir la obligación de confidencialidad establecida en el artículo 17 de la Ley. 12. No comunicar a la Autoridad Nacional de Protección de Datos Personales un incidente de seguridad de datos personales cuando así corresponda conforme a lo previsto en el artículo 34 del presente Reglamento. 13. No inscribir o actualizar en el Registro Nacional de Protección de Datos Personales los actos establecidos en el artículo 34 de la Ley, luego de que ello hubiera sido requerido por la Autoridad Nacional de Protección de Datos Personales.",
+  "sha256": "71af37d3dec77e3c5bb809ff20f0919e40b2b2df6526139f7d0595ace271c550"
+ },
+ {
+  "num": "134",
+  "title": "Infracciones muy graves",
+  "text": "Son infracciones muy graves, las siguientes: 1. Realizar tratamiento de datos personales mediante medios fraudulentos, desleales o ilícitos. 2. Suministrar documentos o información falsa o inexacta a la Autoridad Nacional de Protección de Datos Personales. 3. No cumplir con las medidas correctivas o medidas cautelares ordenadas en un procedimiento trilateral de tutela, pese al apercibimiento efectuado previamente. 4. Realizar tratamiento de datos personales sensibles incumpliendo las medidas de seguridad establecidas en la normativa sobre la materia, y generando con ello un perjuicio al titular del dato personal sensible o una exposición no autorizada de sus datos personales sensibles.",
+  "sha256": "de58443d82e9b54cb18c6c98b8f8fef3fb0a3dfa525e9e09c879a5fa2b7f5b02"
+ },
+ {
+  "num": "135",
+  "title": "Reincidencia",
+  "text": "135.1 Se considera que existe reincidencia en la comisión de una infracción, cuando se cometen los mismos actos u omisiones que dieron lugar a una infracción anterior, siempre que el tiempo transcurrido entre la fecha de la resolución de sanción de los actos u omisiones que dieron lugar a la infracción inmediata anterior quede firme, o haya causado estado, y la fecha de realización de los mismos actos u omisiones que dan lugar a la comisión de una nueva infracción sea igual o menor a un (1) año. 135.2 Para efectos de la reincidencia se consideran también las infracciones que no fueron sancionadas debido a un concurso de infracciones según el numeral 6 del artículo 230 de la Ley N.o 27444, Ley de Procedimiento Administrativo General u otra que la sustituya. 135.3 La reincidencia es considerada como un factor agravante al momento de la determinación de la multa.",
+  "sha256": "001ec11ff86d34830a8b1411f08e059bdc4cdd8cb654e007342a3fd0c6bd5fbe"
+ },
+ {
+  "num": "1DCF",
+  "title": "Vigencia",
+  "text": "El presente Reglamento entra en vigencia a partir de los 120 días calendario siguientes de su publicación en el diario oficial El Peruano. Las disposiciones previstas para el titular del banco de datos personales, responsable o encargado de tratamiento que se encuentren comprendidos en los supuestos previstos en los numerales 2 y 3 del párrafo 37.1 del artículo 37 del presente Reglamento, referidas a la designación del Oficial de datos personales, entran en vigencia de modo progresivo, de acuerdo al siguiente cronograma: Titular del banco de datos personales, responsable o encargado de tratamiento de datos personales Fecha de entrada en vigencia y carácter obligatorio Para empresas con ventas anuales superiores a 2300 UIT 1 año después de la fecha de publicación del presente Reglamento Para empresas medianas con ventas anuales superiores a 1700 UIT y hasta el monto máximo de 2300 UIT 2 años después de la fecha de publicación del presente Reglamento Para pequeñas empresas con ventas anuales superiores a 150 UIT y hasta el monto máximo de 1700 UIT 3 años después de la fecha de publicación del presente Reglamento Para microempresas con ventas anuales hasta el monto máximo de 150 UIT y otros equivalentes 4 años después de la fecha de publicación del presente Reglamento La disposición prevista en el artículo 76, referida la Portabilidad de Datos Personales, surte efecto a partir de los 6 meses posteriores a la entrada en vigencia del presente Reglamento.",
+  "sha256": "78c1bc9dbe5ffaadbe864f64135bb77d6fb5616ec0bd290901185d32ae041e25"
+ },
+ {
+  "num": "2DCF",
+  "title": "Normas complementarias",
+  "text": "La Autoridad Nacional de Protección de Datos Personales emite las normas complementarias para la aplicación del presente Reglamento. La Autoridad Nacional de Protección de Datos Personales emite disposición o lineamiento referido a la obligación de notificar incidente de seguridad de datos personales, para la imputación e imposición de sanción como consecuencia de un incumplimiento en el marco de un procedimiento administrativo sancionador.",
+  "sha256": "7995d6ff31ada81a99f8e56ccc6361179cd863a707f3c97842fea0b6d036f956"
+ },
+ {
+  "num": "3DCF",
+  "title": "Interoperabilidad entre entidades públicas",
+  "text": "La definición, los alcances y el contenido de la interoperabilidad, así como los lineamientos para su aplicaciónyfuncionamientoenconcordanciaconlasnormas de protección de datos personales, son competencia de la Secretaría de Gobierno y Transformación Digital de la Presidencia del Consejo de Ministros, en su calidad de Ente Rector del Sistema Nacional de Transformación Digital. La interoperabilidad entre entidades se regula, en cuanto a su implementación, de acuerdo a las disposiciones establecidas en la Ley de Gobierno Digital y su Reglamento, aprobados mediante Decreto Legislativo No 1412 y Decreto Supremo No 029-2021-PCM, respectivamente; y, en el marco de lo dispuesto por el párrafo 76.2 del artículo 76 de la Ley No 27444, Ley del Procedimiento Administrativo General u otra que la sustituya.",
+  "sha256": "a6d834825d341b2389015f50a41cd8c071170bb026911469808a8b2953b81992"
+ },
+ {
+  "num": "4DCF",
+  "title": "Plataforma “Yo cuido mis datos personales”",
+  "text": "Créase la plataforma digital “Yo cuido mis datos personales” que tiene como finalidad que la Autoridad Nacional de Protección de Datos Personales brinde atención al ciudadano, en vía de reclamación, cuando no se atienda, se atienda parcialmente o se deniegue el ejercicio de los derechos establecidos en la Ley No 29733, Ley de Protección de Datos Personales, así como para la presentación de denuncias de parte por presuntos actos contrarios a la normativa de protección de datos personales. La plataforma es administrada por la Autoridad Nacional de Protección de Datos Personales. La Secretaría de Gobierno y Transformación Digital de la Presidencia del Consejo de Ministros pone a disposición de la Autoridad Nacional de Protección de Datos Personales las capacidades de la Plataforma Nacional de Gobierno Digital (PNGD) para la implementación de la plataforma digital “Yo cuido mis datos personales”.",
+  "sha256": "524c27166d97dd7aaf3529f63d3739205d25e6680ff735ee4bf1bd270ba6186e"
+ },
+ {
+  "num": "5DCF",
+  "title": "Competencias y promoción de la cultura de",
+  "text": "protección de datos personales en el uso de servicios digitales El Ministerio de Justicia y Derechos Humanos a través de la Autoridad Nacional de Protección de Datos Personales, en coordinación con la Secretaría de Gobierno y Transformación Digital, en su calidad de ente rector, promueven acciones para el desarrollo de la cultura de protección de datos personales de los ciudadanos en el entorno digital para el acceso y uso de servicios digitales.",
+  "sha256": "394c89e26107362e65c5e35c9cb373f5ba3941b97e465eb9b56a79456b2c22a8"
+ },
+ {
+  "num": "6DCF",
+  "title": "Absolución de consultas en materia de",
+  "text": "protección de datos personales La Autoridad Nacional de Protección de Datos personales absuelve consultas sobre protección de datos personales y el sentido de las normas vigentes, en los términos previstos en el numeral 10 del artículo 33 de la Ley en el plazo de 30 días.",
+  "sha256": "b15b26df32f7290924c748590aed56b4b88c250ba221b318b8c07ce2acbf3671"
+ },
+ {
+  "num": "1DCT",
+  "title": "Conductas infractoras cometidas previo",
+  "text": "a la entrada en vigencia del presente Reglamento Las conductas infractoras cometidas previo a la entrada en vigencia del presente Reglamento, conforme a lo establecido en la Primera Disposición Complementaria Final, se rigen por lo dispuesto por el Reglamento de la Ley N.o 29733, Ley de Protección de Datos Personales aprobada por el Decreto Supremo",
+  "sha256": "df80f05295a4705b0d3ec48a88026f53ba95667e77e56dbb356219444f12f077"
+ },
+ {
+  "num": "2DCT",
+  "title": "Actividades de fiscalización y",
+  "text": "procedimientos en trámite Las actividades de fiscalización y los procedimientos administrativos iniciados a la entrada en vigencia del presente Reglamento y que se encuentren en trámite se rigen conforme a las disposiciones del Reglamento de la Ley N.o 29733, Ley de Protección de Datos Personales aprobada por Decreto Supremo 003-2013-JUS.",
+  "sha256": "ad4bc8131e5e48b31819f96c2cb81c7a4c443ca4754bbf351bc753de4d10e7a0"
+ }
+]

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { fact, factNumber } from "@/legal/facts";
+
 import type { ArcoRequest, Company, DataBank, Incident } from "./db";
 import { arcoLegalBusinessDays, businessDaysBetween } from "./db";
 import {
@@ -27,6 +29,11 @@ export const AI_MODEL_ID = activeModelId();
  * Conocimiento normativo estructurado de la Ley N.° 29733 y su Reglamento
  * aprobado por Decreto Supremo N.° 016-2024-JUS (vigente en el Perú).
  */
+/** Cifras del prompt legal: salen de los hechos legales verificados (src/legal/facts.ts). */
+const n = (id: string) => factNumber(id);
+const year = (id: string) => String(fact(id).value).slice(0, 4);
+const range = (id: string) => String(fact(id).value).replace("-", " a ");
+
 export const PERU_LEGAL_RAG = `
 MARCO NORMATIVO PERUANO OBLIGATORIO:
 1. Ley N.° 29733 — Ley de Protección de Datos Personales (LPDP) del Perú.
@@ -34,19 +41,19 @@ MARCO NORMATIVO PERUANO OBLIGATORIO:
 3. Autoridad fiscalizadora: Autoridad Nacional de Protección de Datos Personales (ANPD) del Ministerio de Justicia y Derechos Humanos (MINJUSDH).
 4. Registro Nacional de Protección de Datos Personales (RNPDP) a través del portal virtual SIPDP (https://sipdp.minjus.gob.pe). Tasa estatal: 100 % GRATUITO (S/ 0.00) y aprobación automática.
 5. Plazos máximos de respuesta (días hábiles, contados desde el día siguiente de presentada la solicitud; art. 69 del DS N.° 016-2024-JUS):
-   - Derecho de Información: 8 días.
-   - Derechos de Rectificación, Cancelación (Supresión) y Oposición: 10 días.
-   - Derecho de Acceso: 20 días. La Portabilidad es una manifestación del derecho de acceso (art. 76): 20 días.
-   - Revocación del consentimiento: máximo 10 días (art. 10).
+   - Derecho de Información: ${n("arco.plazo.informacion")} días.
+   - Derechos de Rectificación, Cancelación (Supresión) y Oposición: ${n("arco.plazo.otros")} días.
+   - Derecho de Acceso: ${n("arco.plazo.acceso")} días. La Portabilidad es una manifestación del derecho de acceso (art. 76): ${n("arco.plazo.acceso")} días.
+   - Revocación del consentimiento: máximo ${n("revocacion.plazo")} días (art. 10).
    - Salvo Información, los plazos se pueden ampliar una sola vez por un plazo igual, comunicándolo dentro del plazo original (art. 71).
    - Sin respuesta en plazo o con denegatoria: el titular puede iniciar el Procedimiento Trilateral de Tutela ante la Dirección de Protección de Datos Personales de la ANPD (arts. 73 y 88) o acudir al Poder Judicial (hábeas data). El reglamento NO fija un plazo de 15 días para presentar la reclamación: no lo menciones.
 6. Notificación de Incidentes de Seguridad (art. 34 del DS N.° 016-2024-JUS):
-   - Notificar a la ANPD en máximo 48 horas desde que se toma conocimiento cuando el incidente expone grandes volúmenes de datos, puede afectar a un gran número de personas, involucra datos sensibles o produce un perjuicio evidente a derechos del titular. Si se notifica después, se deben explicar los motivos de la demora.
+   - Notificar a la ANPD en máximo ${n("incidente.notificacion")} horas desde que se toma conocimiento cuando el incidente expone grandes volúmenes de datos, puede afectar a un gran número de personas, involucra datos sensibles o produce un perjuicio evidente a derechos del titular. Si se notifica después, se deben explicar los motivos de la demora.
    - Si ocurre en el entorno digital, también se reporta al Centro Nacional de Seguridad Digital (CNSD).
-   - Si el incidente afecta a los titulares, se les comunica en lenguaje claro dentro de las 48 horas (art. 34.3), salvo que no haya producido afectación y se haya superado totalmente (art. 34.4).
+   - Si el incidente afecta a los titulares, se les comunica en lenguaje claro dentro de las ${n("incidente.notificacion")} horas (art. 34.3), salvo que no haya producido afectación y se haya superado totalmente (art. 34.4).
    - Todo incidente se documenta internamente, aunque no corresponda notificarlo (art. 35).
-7. Oficial de Datos Personales (ODP), art. 37: obligatorio solo para entidades públicas, para quien trata grandes volúmenes de datos o datos sensibles, o cuya actividad principal implica datos sensibles. Cronograma por ventas anuales: más de 2,300 UIT desde nov. 2025; medianas (1,700–2,300 UIT) desde nov. 2026; pequeñas (150–1,700 UIT) desde nov. 2027; microempresas (hasta 150 UIT) desde el 30 de noviembre de 2028. Sus datos de contacto se comunican a la ANPD dentro de 15 días de la designación.
-8. Multas (art. 39 de la Ley): leves 0.5 a 5 UIT, graves 5 a 50 UIT, muy graves 50 a 100 UIT. UIT 2026 = S/ 5,500.
+7. Oficial de Datos Personales (ODP), art. 37: obligatorio solo para entidades públicas, para quien trata grandes volúmenes de datos o datos sensibles, o cuya actividad principal implica datos sensibles. Cronograma por ventas anuales: más de 2,300 UIT desde nov. ${year("odp.desde.grande")}; medianas (1,700–2,300 UIT) desde nov. ${year("odp.desde.mediana")}; pequeñas (150–1,700 UIT) desde nov. ${year("odp.desde.pequena")}; microempresas (hasta 150 UIT) desde el 30 de noviembre de ${year("odp.desde.micro")}. Sus datos de contacto se comunican a la ANPD dentro de ${n("odp.comunicacion")} días de la designación.
+8. Multas (art. 39 de la Ley): leves ${range("multa.leve")} UIT, graves ${range("multa.grave")} UIT, muy graves ${range("multa.muy-grave")} UIT. UIT 2026 = S/ ${n("uit.2026").toLocaleString("en-US")}.
 9. Conservación vs. Cancelación (Regla SUNAT / Laboral):
    - Si un cliente pide Cancelación (borrar sus datos), se le elimina de inmediato de listas de marketing/WhatsApp, pero los comprobantes de pago (boletas/facturas) y planilla se mantienen BLOQUEADOS por 5 años por mandato legal tributario (SUNAT) y laboral.
 `;
@@ -308,7 +315,8 @@ Genera únicamente el cuerpo de la carta/correo formal de respuesta al titular.`
   };
 }
 
-function buildTailoredArcoDraft(ctx: {
+/** Carta ARCO del modo básico (sin IA). Exportada para la instantánea de textos legales. */
+export function buildTailoredArcoDraft(ctx: {
   detectedRight: "informacion" | "acceso" | "rectificacion" | "cancelacion" | "oposicion";
   declaredType: string;
   sanitizedDescription: string;

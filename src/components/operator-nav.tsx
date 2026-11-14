@@ -4,6 +4,7 @@ export const OPERATOR_LINKS = [
   { key: "cobros", href: "/operador", label: "Comprobantes y transferencias" },
   { key: "clientes", href: "/operador/clientes", label: "Clientes" },
   { key: "feriados", href: "/operador/feriados", label: "Feriados" },
+  { key: "legal", href: "/operador/legal", label: "Cambios legales" },
   { key: "hoja-de-ruta", href: "/operador/hoja-de-ruta", label: "Hoja de ruta" },
 ] as const;
 

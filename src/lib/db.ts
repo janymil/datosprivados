@@ -1,4 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
+import { factNumber } from "@/legal/facts";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -226,6 +227,33 @@ export type DocumentKind =
   | "trabajadores"
   | "arco"
   | "sectorial";
+
+export type LegalChangeStatus = "nuevo" | "aprobado" | "rechazado" | "abogado" | "fusionado" | "aplicado" | "fallo";
+
+/** Cambio legal propuesto: una rama legal/<id> con su diff, pendiente de la aprobación del fundador. */
+export type LegalChange = {
+  id: string;
+  kind: "auditoria" | "norma";
+  title: string;
+  /** Markdown: qué cambia y por qué, con la cita textual de la norma. */
+  summary: string;
+  source_url: string | null;
+  branch: string;
+  head_sha: string;
+  diff: string;
+  /** JSON: Array<{ kind; source }> de affectedBy (plan 3). */
+  affected: string;
+  status: LegalChangeStatus;
+  reason: string | null;
+  decided_by: string | null;
+  decided_at: string | null;
+  dispatched_at: string | null;
+  merged_sha: string | null;
+  deployed_at: string | null;
+  error: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 export type DocumentRow = {
   id: string;
@@ -466,7 +494,7 @@ function initSchema(db: DatabaseSync) {
  * cacheada en `globalThis` (en `next dev` la conexión sobrevive a los recargos
  * en caliente y `initSchema` no vuelve a correr).
  */
-const SCHEMA_VERSION = 16;
+const SCHEMA_VERSION = 17;
 
 function migrate(db: DatabaseSync) {
   const companyColumns = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
@@ -864,6 +892,34 @@ function migrate(db: DatabaseSync) {
   if (!hasBankColumn("cancelled_at")) db.exec("ALTER TABLE data_banks ADD COLUMN cancelled_at TEXT");
   if (!hasBankColumn("cancel_reference")) db.exec("ALTER TABLE data_banks ADD COLUMN cancel_reference TEXT");
 
+  // v17: cambios legales propuestos (motor legal, plan 4). Cada uno es una rama
+  // legal/<id> en GitHub; el fundador lo aprueba en /operador/legal.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS legal_changes (
+      id TEXT PRIMARY KEY,
+      kind TEXT NOT NULL,
+      title TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      source_url TEXT,
+      branch TEXT NOT NULL,
+      head_sha TEXT NOT NULL,
+      diff TEXT NOT NULL,
+      affected TEXT NOT NULL DEFAULT '[]',
+      status TEXT NOT NULL DEFAULT 'nuevo',
+      reason TEXT,
+      decided_by TEXT,
+      decided_at TEXT,
+      dispatched_at TEXT,
+      merged_sha TEXT,
+      deployed_at TEXT,
+      error TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      UNIQUE (branch, head_sha)
+    );
+    CREATE INDEX IF NOT EXISTS idx_legal_changes_status ON legal_changes(status, created_at);
+  `);
+
   seedHolidays(db);
 }
 
@@ -1252,8 +1308,8 @@ export function verifyPassword(password: string, stored: string): boolean {
  * rectificación, cancelación y oposición 10.
  */
 export function arcoLegalBusinessDays(type: string): number {
-  if (type === "informacion") return 8;
-  return type === "acceso" ? 20 : 10;
+  if (type === "informacion") return factNumber("arco.plazo.informacion");
+  return type === "acceso" ? factNumber("arco.plazo.acceso") : factNumber("arco.plazo.otros");
 }
 
 /**

@@ -1,0 +1,100 @@
+import { vi } from "vitest";
+import { CLAUSE_DEFAULT_NORM, parseCitations } from "@/legal/citations";
+import { legalContext } from "@/legal/context";
+import { allClauses } from "@/legal/registry";
+import type { Citation } from "@/legal/types";
+import type { buildDocument } from "@/lib/document-catalog";
+import type { DocumentKind } from "@/lib/db";
+import { FIXED_APP_URL, FIXED_NOW, legalFixtures } from "./fixtures";
+
+/** Los 14 tipos, en el orden del `switch` de `buildDocument`. */
+export const DOCUMENT_KINDS: DocumentKind[] = [
+  "politica",
+  "terminos",
+  "cookies",
+  "aviso",
+  "reclamaciones",
+  "consentimiento",
+  "seguridad",
+  "retencion",
+  "encargo",
+  "clausulas",
+  "eipd",
+  "trabajadores",
+  "arco",
+  "sectorial",
+];
+
+/** Fija la fecha y el host público para que cada render sea reproducible. */
+export function withFrozenWorld<T>(fn: () => T): T {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(FIXED_NOW));
+  vi.stubEnv("NEXT_PUBLIC_APP_URL", FIXED_APP_URL);
+  try {
+    return fn();
+  } finally {
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
+  }
+}
+
+/** Primera línea distinta entre dos textos, o "" si son iguales. */
+export function firstDiff(expected: string, actual: string): string {
+  if (expected === actual) return "";
+  const a = expected.split("\n");
+  const b = actual.split("\n");
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if (a[i] !== b[i]) return `line ${i + 1}\n- ${a[i] ?? "<fin>"}\n+ ${b[i] ?? "<fin>"}`;
+  }
+  return "line ?\n- (difieren solo en saltos finales)";
+}
+
+/**
+ * Compara huellas guardadas con las actuales y agrupa por tipo los fixtures que
+ * cambiaron o faltan. Claves `${fixture.id}|${kind}`. Las claves nuevas no cuentan.
+ */
+export function changedByKind(expected: Record<string, string>, current: Record<string, string>): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const [key, hash] of Object.entries(expected)) {
+    if (current[key] === hash) continue;
+    const [id, kind] = key.split("|");
+    (out[kind] ??= []).push(key in current ? id : `${id} (falta)`);
+  }
+  return out;
+}
+
+const byNormThenArt = (a: Citation, b: Citation) =>
+  a.norm.localeCompare(b.norm) || a.art.localeCompare(b.art, "es", { numeric: true });
+
+/**
+ * Citas que cada cláusula produce de verdad: unión, sobre todas las fixtures donde
+ * la cláusula aplica, de lo que `parseCitations` lee en su texto. Clave: id de cláusula.
+ * Las cláusulas que nunca aplican en ninguna fixture no aparecen.
+ */
+export function clauseCitationsOverFixtures(): Map<string, Citation[]> {
+  return withFrozenWorld(() => {
+    const found = new Map<string, Map<string, Citation>>();
+    for (const f of legalFixtures()) {
+      const ctx = legalContext(f.company, f.banks, f.providers);
+      for (const clause of allClauses()) {
+        if (clause.when && !clause.when(ctx)) continue;
+        const seen = found.get(clause.id) ?? new Map<string, Citation>();
+        for (const c of parseCitations(clause.text(ctx), clause.defaultNorm ?? CLAUSE_DEFAULT_NORM)) seen.set(`${c.norm}:${c.art}`, c);
+        found.set(clause.id, seen);
+      }
+    }
+    return new Map([...found].map(([id, cites]) => [id, [...cites.values()].sort(byNormThenArt)]));
+  });
+}
+
+export const sortCitations = (cites: Citation[]) => [...cites].sort(byNormThenArt);
+
+/** Renderiza cada tipo para cada fixture. Clave: `${fixture.id}|${kind}`. */
+export function renderAll(build: typeof buildDocument): Map<string, string> {
+  return withFrozenWorld(() => {
+    const out = new Map<string, string>();
+    for (const f of legalFixtures())
+      for (const kind of DOCUMENT_KINDS) out.set(`${f.id}|${kind}`, build(kind, f.company, f.banks, f.providers));
+    return out;
+  });
+}

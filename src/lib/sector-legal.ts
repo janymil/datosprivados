@@ -1,5 +1,6 @@
 import type { Company, DataBank, DocumentKind } from "./db";
 import { SECTORS, findSectorByLabel } from "./sectors";
+import { fact } from "@/legal/facts";
 
 /**
  * Perfil legal por rubro.
@@ -899,10 +900,10 @@ export type SalesBand = "micro" | "pequena" | "mediana" | "grande";
  * Datos Personales (art. 37.1, numerales 2 y 3) entra en vigor por tamaño de empresa.
  */
 export const SALES_BANDS: Array<{ id: SalesBand; label: string; hint: string; odpFrom: string }> = [
-  { id: "micro", label: "Hasta 150 UIT al año", hint: "Microempresa: hasta unos S/ 825,000 al año", odpFrom: "2028-11-30" },
-  { id: "pequena", label: "Más de 150 y hasta 1,700 UIT", hint: "Pequeña empresa: hasta unos S/ 9.35 millones", odpFrom: "2027-11-30" },
-  { id: "mediana", label: "Más de 1,700 y hasta 2,300 UIT", hint: "Mediana empresa: hasta unos S/ 12.65 millones", odpFrom: "2026-11-30" },
-  { id: "grande", label: "Más de 2,300 UIT al año", hint: "Gran empresa: más de unos S/ 12.65 millones", odpFrom: "2025-11-30" },
+  { id: "micro", label: "Hasta 150 UIT al año", hint: "Microempresa: hasta unos S/ 825,000 al año", odpFrom: String(fact("odp.desde.micro").value) },
+  { id: "pequena", label: "Más de 150 y hasta 1,700 UIT", hint: "Pequeña empresa: hasta unos S/ 9.35 millones", odpFrom: String(fact("odp.desde.pequena").value) },
+  { id: "mediana", label: "Más de 1,700 y hasta 2,300 UIT", hint: "Mediana empresa: hasta unos S/ 12.65 millones", odpFrom: String(fact("odp.desde.mediana").value) },
+  { id: "grande", label: "Más de 2,300 UIT al año", hint: "Gran empresa: más de unos S/ 12.65 millones", odpFrom: String(fact("odp.desde.grande").value) },
 ];
 
 export function salesBand(id: string | null | undefined) {
