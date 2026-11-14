@@ -78,24 +78,6 @@ export function checkTextCitations(items: Array<{ source: string; text: string }
   return [...out.values()].sort(byKey);
 }
 
-/** Código fuente de páginas y componentes, sin comentarios: sus citas son cadenas estáticas. */
-export function pageSourceTexts(): Array<{ source: string; text: string }> {
-  const out: Array<{ source: string; text: string }> = [];
-  const visit = (dir: string) => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) visit(full);
-      else if (entry.name.endsWith(".tsx"))
-        out.push({
-          source: path.relative(process.cwd(), full).replace(/\\/g, "/"),
-          text: fs.readFileSync(full, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, ""),
-        });
-    }
-  };
-  for (const dir of ["src/app", "src/components"]) visit(path.join(process.cwd(), dir));
-  return out;
-}
-
 /** Compara con legal/known-failures/<name>.json. Devuelve las fallas nuevas y las entradas que ya no fallan. */
 export function ratchet(name: string, current: KnownFailure[]): { added: KnownFailure[]; stale: KnownFailure[] } {
   const file = path.join(KNOWN_FAILURES_DIR, `${name}.json`);

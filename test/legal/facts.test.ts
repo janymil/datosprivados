@@ -27,7 +27,51 @@ function checkFacts(): KnownFailure[] {
   return out;
 }
 
+/** Formas en que la norma escribe un número: «diez (10)», «(08)», «48 horas», «semestral»… */
+const NUMBER_WORDS: Record<string, string[]> = {
+  "0.5": ["cero coma cinco"],
+  "1": ["una sola vez", "(1)"],
+  "2": ["dos (2)"],
+  "3": ["tres (3)"],
+  "5": ["cinco (5)", "cinco unidades"],
+  "6": ["semestral", "seis (6)"],
+  "7": ["siete (7)"],
+  "8": ["ocho (08)", "ocho (8)"],
+  "10": ["diez (10)"],
+  "15": ["15 días", "quince (15)"],
+  "20": ["veinte (20)"],
+  "48": ["48 horas"],
+  "50": ["cincuenta unidades"],
+  "100": ["cien unidades"],
+};
+
+/** El valor del hecho está dicho en su propia frase (o, para fechas del ODP, se deduce de ella). */
+export function valueStatedInQuote(f: { value: number | string; unit: string; quote: string | null; cites: Array<{ norm: string }> }): boolean {
+  if (f.quote === null) return true;
+  const q = squash(f.quote);
+  const says = (n: string) => (NUMBER_WORDS[n] ?? [`(${n})`]).some((form) => q.includes(squash(form)));
+  if (f.unit === "fecha") {
+    const years = /(\d+)años?después/.exec(q);
+    const published = lib.norms[f.cites[0].norm]?.publishedAt;
+    if (!years || !published) return false;
+    const date = new Date(`${published}T00:00:00Z`);
+    date.setUTCFullYear(date.getUTCFullYear() + Number(years[1]));
+    return date.toISOString().slice(0, 10) === f.value;
+  }
+  if (typeof f.value === "string") return f.value.split("-").every(says);
+  return says(String(f.value));
+}
+
 describe("hechos legales", () => {
+  it("el valor de cada hecho está dicho en su frase textual", () => {
+    const wrong = Object.values(FACTS).filter((f) => !valueStatedInQuote(f)).map((f) => `${f.id} = ${f.value}`);
+    expect(wrong).toEqual([]);
+    // Un valor cambiado sin cambiar la frase se detecta.
+    expect(valueStatedInQuote({ ...FACTS["arco.plazo.otros"], value: 15 })).toBe(false);
+    expect(valueStatedInQuote({ ...FACTS["odp.desde.mediana"], value: "2026-12-31" })).toBe(false);
+    expect(valueStatedInQuote({ ...FACTS["multa.grave"], value: "5-60" })).toBe(false);
+  });
+
   it("cada id coincide con su clave y fact() rechaza ids desconocidos", () => {
     for (const [key, f] of Object.entries(FACTS)) expect(f.id).toBe(key);
     expect(() => fact("no-existe")).toThrow(/no-existe/);

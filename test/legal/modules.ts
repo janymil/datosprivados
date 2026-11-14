@@ -1,19 +1,10 @@
-import * as aiPolicy from "@/lib/ai-policy";
-import { buildTailoredArcoDraft, PERU_LEGAL_RAG } from "@/lib/ai";
-import * as bankPresets from "@/lib/bank-presets";
+import { legalDataModuleTexts, walkTexts } from "@/legal/index-texts";
+import { buildTailoredArcoDraft } from "@/lib/ai";
 import { computeCompliance } from "@/lib/compliance";
 import type { Incident } from "@/lib/db";
-import * as fines from "@/lib/fines";
-import * as glossary from "@/lib/glossary";
-import * as guides from "@/lib/guides";
 import * as help from "@/lib/help-content";
-import * as tips from "@/lib/help-tips";
-import * as incidentCriteria from "@/lib/incident-criteria";
 import { buildAuthorityNotice } from "@/lib/incident-notice";
 import { answerWithoutLlm } from "@/lib/legal-faq";
-import * as platformLegal from "@/lib/platform-legal";
-import { FAMILIES, SALES_BANDS } from "@/lib/sector-legal";
-import * as securityChecks from "@/lib/security-checks";
 import { representativeFixtures } from "./fixtures";
 import { withFrozenWorld } from "./render-all";
 
@@ -23,19 +14,6 @@ import { withFrozenWorld } from "./render-all";
  * los textos que se arman al vuelo se renderizan con entradas fijas.
  */
 export type ModuleText = { source: string; text: string };
-
-/** Recorre un valor exportado y guarda cada hoja (cadena, número, booleano) con su ruta. */
-function walk(prefix: string, value: unknown, out: ModuleText[]): void {
-  if (typeof value === "string") out.push({ source: prefix, text: value });
-  else if (typeof value === "number" || typeof value === "boolean") out.push({ source: prefix, text: String(value) });
-  else if (Array.isArray(value)) value.forEach((item, i) => walk(`${prefix}[${i}]`, item, out));
-  else if (value && typeof value === "object") for (const [k, v] of Object.entries(value)) walk(`${prefix}.${k}`, v, out);
-}
-
-/** Exportaciones de datos de un módulo (las funciones se ignoran). */
-function walkModule(name: string, mod: Record<string, unknown>, out: ModuleText[]): void {
-  for (const [key, value] of Object.entries(mod)) if (typeof value !== "function") walk(`${name}:${key}`, value, out);
-}
 
 const FAQ_QUESTIONS = [
   "¿me ayudas a redactar una carta?",
@@ -84,20 +62,8 @@ const INCIDENTS: Array<Pick<Incident, "title" | "description" | "severity" | "de
 export function legalModuleTexts(): ModuleText[] {
   return withFrozenWorld(() => {
     const out: ModuleText[] = [];
-    walkModule("guides", guides, out);
-    walkModule("help", help, out);
+    out.push(...legalDataModuleTexts(true));
     help.TOPICS.forEach((topic) => out.push({ source: `help:topicToPlainText:${topic.slug}`, text: help.topicToPlainText(topic) }));
-    walkModule("fines", fines, out);
-    walkModule("incident-criteria", incidentCriteria, out);
-    walkModule("security-checks", securityChecks, out);
-    walkModule("glossary", glossary, out);
-    walkModule("platform-legal", platformLegal, out);
-    walkModule("tips", tips, out);
-    walkModule("bank-presets", bankPresets, out);
-    walkModule("ai-policy", aiPolicy, out);
-    walk("sector-legal:FAMILIES", FAMILIES, out);
-    walk("sector-legal:SALES_BANDS", SALES_BANDS, out);
-    out.push({ source: "ai:PERU_LEGAL_RAG", text: PERU_LEGAL_RAG });
 
     const fixture = representativeFixtures()[0];
     for (const right of ["informacion", "acceso", "rectificacion", "cancelacion", "oposicion"] as const) {
@@ -123,7 +89,7 @@ export function legalModuleTexts(): ModuleText[] {
       out.push({ source: `incident-notice:${i}`, text: buildAuthorityNotice({ company: fixture.company, incident, now: new Date("2026-11-11T10:00:00.000Z") }) })
     );
     for (const f of representativeFixtures()) {
-      walk(`compliance:${f.id}`, computeCompliance({ company: f.company, banks: f.banks, requests: [], incidents: [], documents: [], providers: f.providers }), out);
+      walkTexts(`compliance:${f.id}`, computeCompliance({ company: f.company, banks: f.banks, requests: [], incidents: [], documents: [], providers: f.providers }), out, true);
     }
     return out;
   });

@@ -6,7 +6,7 @@
  },
  {
   "rule": "cite-item-missing",
-  "clause": "help:TOPICS[15].blocks[5].items[0]",
+  "clause": "help:TOPICS[casos-especiales].blocks[5].items[0]",
   "detail": "ds-016-2024-jus:13.6"
  },
  {
@@ -15,13 +15,28 @@
   "detail": "ds-016-2024-jus:13.6"
  },
  {
+  "rule": "cite-item-missing",
+  "clause": "src/lib/ai.ts",
+  "detail": "ds-016-2024-jus:13.6"
+ },
+ {
+  "rule": "cite-item-missing",
+  "clause": "src/lib/help-content.ts",
+  "detail": "ds-016-2024-jus:13.6"
+ },
+ {
+  "rule": "cite-item-missing",
+  "clause": "src/lib/legal-faq.ts",
+  "detail": "ds-016-2024-jus:13.6"
+ },
+ {
   "rule": "cite-misnumbered",
-  "clause": "guides:GUIDES[2].sections[5].bullets[1]",
+  "clause": "guides:GUIDES[ds-016-2024-jus-reglamento].sections[5].bullets[1]",
   "detail": "ds-016-2024-jus:2.4 → III.4"
  },
  {
   "rule": "cite-misnumbered",
-  "clause": "incident-criteria:INCIDENT_CRITERIA[1].hint",
+  "clause": "incident-criteria:INCIDENT_CRITERIA[datos_sensibles].hint",
   "detail": "ds-016-2024-jus:2.6 → III.6"
  },
  {
@@ -33,6 +48,26 @@
   "rule": "cite-misnumbered",
   "clause": "sector-legal:FAMILIES.venta_online.norms[3]",
   "detail": "ds-016-2024-jus:2.4 → III.4"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "src/lib/guides.ts",
+  "detail": "ds-016-2024-jus:2.4 → III.4"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "src/lib/incident-criteria.ts",
+  "detail": "ds-016-2024-jus:2.6 → III.6"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "src/lib/sector-legal.ts",
+  "detail": "ds-016-2024-jus:2.4 → III.4"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "src/lib/sector-legal.ts",
+  "detail": "ds-016-2024-jus:2.6 → III.6"
  },
  {
   "rule": "cite-norm-unverified",
@@ -77,6 +112,16 @@
  {
   "rule": "cite-norm-unverified",
   "clause": "sector-legal:FAMILIES.vehiculos.retention[0].basis",
+  "detail": "ds-020-2017-jus:24"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "src/lib/sector-legal.ts",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "src/lib/sector-legal.ts",
   "detail": "ds-020-2017-jus:24"
  }
 ]

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { checkTextCitations, pageSourceTexts, ratchet } from "./checks";
+import { sourceFileTexts } from "@/legal/index-texts";
+import { checkTextCitations, ratchet } from "./checks";
 import { legalModuleTexts } from "./modules";
 
 /**
@@ -8,7 +9,7 @@ import { legalModuleTexts } from "./modules";
  * legal/known-failures/modules.json, que solo puede reducirse.
  */
 describe("lint de citas en módulos y páginas", () => {
-  const current = checkTextCitations([...legalModuleTexts(), ...pageSourceTexts()]);
+  const current = checkTextCitations([...legalModuleTexts(), ...sourceFileTexts()]);
   const { added, stale } = ratchet("modules", current);
 
   it("no hay fallas fuera de la lista de fallas conocidas", () => {
@@ -20,7 +21,7 @@ describe("lint de citas en módulos y páginas", () => {
   });
 
   it("las páginas y componentes se leen", () => {
-    const pages = pageSourceTexts().map((p) => p.source);
+    const pages = sourceFileTexts().map((p) => p.source);
     expect(pages).toContain("src/app/herramientas/calculadora-multas-ley-29733/page.tsx");
   });
 }, 180_000);

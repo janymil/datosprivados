@@ -14,6 +14,8 @@ import * as incidentCriteria from "@/lib/incident-criteria";
 import * as platformLegal from "@/lib/platform-legal";
 import { FAMILIES, SALES_BANDS } from "@/lib/sector-legal";
 import * as securityChecks from "@/lib/security-checks";
+import { DOCUMENT_TABS } from "@/lib/document-catalog";
+import { SECTORS } from "@/lib/sectors";
 import { CLAUSE_DEFAULT_NORM, parseCitations } from "./citations";
 import { FACTS } from "./facts";
 import { allClauses } from "./registry";
@@ -30,14 +32,32 @@ import type { Citation } from "./types";
 export type IndexKind = "clause" | "fact" | "module" | "page";
 export type IndexEntry = { kind: IndexKind; source: string; cites: Citation[] };
 
-function walk(prefix: string, value: unknown, out: Array<{ source: string; text: string }>): void {
-  if (typeof value === "string") out.push({ source: prefix, text: value });
-  else if (Array.isArray(value)) value.forEach((item, i) => walk(`${prefix}[${i}]`, item, out));
-  else if (value && typeof value === "object") for (const [k, v] of Object.entries(value)) walk(`${prefix}.${k}`, v, out);
+export type SourceText = { source: string; text: string };
+
+/** Etiqueta estable de un elemento de lista: su slug, id o key si lo tiene; si no, su posición. */
+function label(item: unknown, index: number): string {
+  if (item && typeof item === "object") {
+    const o = item as Record<string, unknown>;
+    for (const k of ["slug", "id", "key"]) if (typeof o[k] === "string" && o[k]) return o[k] as string;
+  }
+  return String(index);
 }
 
-function moduleTexts(): Array<{ source: string; text: string }> {
-  const out: Array<{ source: string; text: string }> = [];
+/** Recorre un valor y guarda cada hoja de texto (y, si se pide, cada número o booleano) con su ruta. */
+export function walkTexts(prefix: string, value: unknown, out: SourceText[], withScalars = false): void {
+  if (typeof value === "string") out.push({ source: prefix, text: value });
+  else if (withScalars && (typeof value === "number" || typeof value === "boolean")) out.push({ source: prefix, text: String(value) });
+  else if (Array.isArray(value)) value.forEach((item, i) => walkTexts(`${prefix}[${label(item, i)}]`, item, out, withScalars));
+  else if (value && typeof value === "object")
+    for (const [k, v] of Object.entries(value)) walkTexts(`${prefix}.${k}`, v, out, withScalars);
+}
+
+/**
+ * Lista única de módulos con textos legales como datos (la usan el índice, la
+ * instantánea y el lint). Agregar un módulo aquí lo cubre en los tres.
+ */
+export function legalDataModuleTexts(withScalars = false): SourceText[] {
+  const out: SourceText[] = [];
   const modules: Record<string, Record<string, unknown>> = {
     guides,
     help,
@@ -49,30 +69,37 @@ function moduleTexts(): Array<{ source: string; text: string }> {
     tips,
     "bank-presets": bankPresets,
     "ai-policy": aiPolicy,
+    sectors: { SECTORS },
+    "document-catalog": { DOCUMENT_TABS },
   };
   for (const [name, mod] of Object.entries(modules))
-    for (const [key, value] of Object.entries(mod)) if (typeof value !== "function") walk(`${name}:${key}`, value, out);
-  walk("sector-legal:FAMILIES", FAMILIES, out);
-  walk("sector-legal:SALES_BANDS", SALES_BANDS, out);
+    for (const [key, value] of Object.entries(mod)) if (typeof value !== "function") walkTexts(`${name}:${key}`, value, out, withScalars);
+  walkTexts("sector-legal:FAMILIES", FAMILIES, out, withScalars);
+  walkTexts("sector-legal:SALES_BANDS", SALES_BANDS, out, withScalars);
   out.push({ source: "ai:PERU_LEGAL_RAG", text: PERU_LEGAL_RAG });
   return out;
 }
 
-function pageTexts(root: string): Array<{ source: string; text: string }> {
-  const out: Array<{ source: string; text: string }> = [];
+/**
+ * Código fuente de páginas, componentes, acciones y librerías (.ts y .tsx), sin
+ * comentarios: cubre los textos que se arman dentro de funciones (correos, avisos,
+ * respuestas sin IA). No incluye src/legal, que tiene sus propias pruebas.
+ */
+export function sourceFileTexts(root: string = process.cwd()): SourceText[] {
+  const out: SourceText[] = [];
   const visit = (dir: string) => {
     if (!fs.existsSync(dir)) return;
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) visit(full);
-      else if (entry.name.endsWith(".tsx"))
+      else if (/\.tsx?$/.test(entry.name))
         out.push({
           source: path.relative(root, full).replace(/\\/g, "/"),
           text: fs.readFileSync(full, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, ""),
         });
     }
   };
-  for (const dir of ["src/app", "src/components"]) visit(path.join(root, dir));
+  for (const dir of ["src/app", "src/components", "src/lib"]) visit(path.join(root, dir));
   return out;
 }
 
@@ -84,13 +111,15 @@ export function legalTextIndex(root: string = process.cwd()): IndexEntry[] {
   return [
     ...allClauses().map((clause) => ({ kind: "clause" as const, source: clause.id, cites: clause.cites })),
     ...Object.values(FACTS).map((f) => ({ kind: "fact" as const, source: f.id, cites: f.cites })),
-    ...parsed("module", moduleTexts()),
-    ...parsed("page", pageTexts(root)),
+    ...parsed("module", legalDataModuleTexts()),
+    ...parsed("page", sourceFileTexts(root)),
   ];
 }
 
+let cachedIndex: IndexEntry[] | undefined;
+
 /** Entradas que citan el artículo `art` de `norm` o cualquiera de sus incisos («26» alcanza «26.5»). */
-export function affectedBy(norm: string, art: string, index: IndexEntry[] = legalTextIndex()): Array<{ kind: IndexKind; source: string }> {
+export function affectedBy(norm: string, art: string, index: IndexEntry[] = (cachedIndex ??= legalTextIndex())): Array<{ kind: IndexKind; source: string }> {
   return index
     .filter((entry) => entry.cites.some((c) => c.norm === norm && (c.art === art || c.art.startsWith(`${art}.`))))
     .map(({ kind, source }) => ({ kind, source }));
