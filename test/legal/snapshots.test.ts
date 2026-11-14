@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { allClauses, SPECS } from "@/legal/registry";
 import { buildDocument } from "@/lib/document-catalog";
-import { sectorLegalProfile } from "@/lib/sector-legal";
-import { representativeFixtures } from "./fixtures";
+import { FAMILIES, sectorLegalProfile } from "@/lib/sector-legal";
+import { extraRepresentatives, legalFixtures, representativeFixtures } from "./fixtures";
 import { DOCUMENT_KINDS, withFrozenWorld } from "./render-all";
 
 /**
@@ -27,19 +27,28 @@ describe("registro de cláusulas", () => {
     for (const clause of allClauses()) expect(clause.id).toMatch(/^[a-z]+\.[a-z0-9-]+\.[a-z0-9-]+$/);
   });
 
-  it("hay un fixture representativo por familia legal", () => {
+  it("hay exactamente un fixture representativo por cada familia legal", () => {
     const families = representativeFixtures().map((f) => sectorLegalProfile(f.company).family);
     expect(new Set(families).size).toBe(families.length);
-    expect(families.length).toBeGreaterThanOrEqual(20);
+    expect(families.length).toBe(Object.keys(FAMILIES).length);
+  });
+
+  it("las fixtures son de solo lectura (una prueba no puede alterar las de otra)", () => {
+    const [first] = legalFixtures();
+    expect(Object.isFrozen(legalFixtures())).toBe(true);
+    expect(Object.isFrozen(first)).toBe(true);
+    expect(Object.isFrozen(first.company)).toBe(true);
   });
 });
 
 describe("instantáneas de texto por familia", () => {
-  const cases = representativeFixtures().flatMap((fixture) => DOCUMENT_KINDS.map((kind) => [fixture, kind] as const));
+  const byFamily = representativeFixtures().map((fixture) => ({ dir: sectorLegalProfile(fixture.company).family, fixture }));
+  const cases = [...byFamily, ...extraRepresentatives()].flatMap(({ dir, fixture }) =>
+    DOCUMENT_KINDS.map((kind) => [dir, fixture, kind] as const)
+  );
 
-  it.each(cases)("%#", async (fixture, kind) => {
+  it.each(cases)("%s %#", async (dir, fixture, kind) => {
     const text = withFrozenWorld(() => buildDocument(kind, fixture.company, fixture.banks, fixture.providers));
-    const family = sectorLegalProfile(fixture.company).family;
-    await expect(text).toMatchFileSnapshot(`./__snapshots__/${family}/${kind}.md`);
+    await expect(text).toMatchFileSnapshot(`./__snapshots__/${dir}/${kind}.md`);
   });
 });

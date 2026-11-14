@@ -227,8 +227,21 @@ export function legalFixtures(): LegalFixture[] {
   if (cache) return cache;
   const rows = pairwise(COMPANY_DIMENSIONS);
   const sectors: SectorLike[] = [...SECTORS.map((s) => ({ id: s.id, label: s.label, banks: s.banks })), UNKNOWN_SECTOR];
-  cache = sectors.flatMap((sector) => rows.map((row, index) => buildFixture(sector, row, `${sector.id}__${index}`)));
+  cache = deepFreeze(sectors.flatMap((sector) => rows.map((row, index) => buildFixture(sector, row, `${sector.id}__${index}`))));
   return cache;
+}
+
+/** Congela fixtures (y sus empresas, bancos y proveedores): una prueba no puede alterar las de otra. */
+function deepFreeze(fixtures: LegalFixture[]): LegalFixture[] {
+  for (const f of fixtures) {
+    Object.freeze(f.company);
+    f.banks.forEach((bank) => Object.freeze(bank));
+    f.providers.forEach((provider) => Object.freeze(provider));
+    Object.freeze(f.banks);
+    Object.freeze(f.providers);
+    Object.freeze(f);
+  }
+  return Object.freeze(fixtures) as unknown as LegalFixture[];
 }
 
 /** Fila más completa: activa casi todas las ramas de los documentos. */
@@ -257,4 +270,23 @@ export function representativeFixtures(): LegalFixture[] {
     out.push(buildFixture({ id: sector.id, label: sector.label, banks: sector.banks }, RICH_ROW, `${sector.id}__rep`));
   }
   return out;
+}
+
+/**
+ * Instantáneas legibles fuera de las familias: el rubro que no está en el catálogo
+ * (cae en el perfil base) y una sociedad extranjera sin país ni representante.
+ */
+export function extraRepresentatives(): Array<{ dir: string; fixture: LegalFixture }> {
+  const ecommerce = SECTORS.find((s) => s.id === "ecommerce")!;
+  return [
+    { dir: "unknown", fixture: buildFixture(UNKNOWN_SECTOR, RICH_ROW, "unknown__rep") },
+    {
+      dir: "extranjera",
+      fixture: buildFixture(
+        { id: ecommerce.id, label: ecommerce.label, banks: ecommerce.banks },
+        { ...RICH_ROW, entity: "extranjera", rep: "empty" },
+        "ecommerce__extranjera"
+      ),
+    },
+  ];
 }
