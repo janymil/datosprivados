@@ -40,6 +40,27 @@ describe("DS N.° 016-2024-JUS", () => {
   });
 });
 
+describe("texto limpio de las normas", () => {
+  it("ningún artículo arrastra cabeceras de página ni sellos de El Peruano", () => {
+    for (const id of ["ds-016-2024-jus", "ley-29733"])
+      for (const a of lib.articlesOf(id)) expect(`${id}:${a.num} ${a.text}`).not.toMatch(/NORMAS LEGALES|ElPeruano|\d{4} El Peruano \/|Fecha: \d{2}\//);
+  });
+
+  it("el último artículo no arrastra disposiciones ni firmas", () => {
+    expect(lib.findArticle("ds-016-2024-jus", "135")?.article.text).not.toMatch(/Disposici|POR TANTO|Comuníquese|Primera\./);
+    expect(lib.findArticle("ley-29733", "40")?.article.text).not.toMatch(/Disposici|POR TANTO|Comuníquese|Primera\./);
+  });
+
+  it("las disposiciones complementarias se separan y se pueden citar", () => {
+    expect(lib.findArticle("ds-016-2024-jus", "1DCF")?.article.title).toMatch(/vigencia/i);
+    expect(lib.findArticle("ds-016-2024-jus", "1DCT")).not.toBeNull();
+    expect(lib.findArticle("ley-29733", "1DCF")?.article.title).toMatch(/reglamento/i);
+    // El calendario del Oficial de Datos está en una disposición complementaria final del DS.
+    const odp = lib.articlesOf("ds-016-2024-jus").filter((a) => /DCF$/.test(a.num) && /Oficial de Datos/i.test(a.text));
+    expect(odp.length).toBeGreaterThan(0);
+  });
+});
+
 describe("Ley N.° 29733", () => {
   const id = "ley-29733";
 

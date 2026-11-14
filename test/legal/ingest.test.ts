@@ -72,6 +72,53 @@ describe("splitArticles", () => {
     expect(out[0].text).toBe("El titular de datos personales tiene derecho a ser informado.");
   });
 
+  it("quita cabeceras de página, sellos y códigos de El Peruano del texto", () => {
+    const out = splitArticles(
+      [
+        "REGLAMENTO",
+        "Artículo 26. Publicidad",
+        "26.1 El tratamiento de productos y",
+        "9 Sábado 30 de noviembre de 2024 El Peruano /",
+        "2 NORMAS LEGALES Sábado 30 de noviembre de 2024 ElPeruano",
+        "/",
+        "NORMAS LEGALES actualizadas",
+        "Fecha: 30/11/2024 02:31",
+        "12",
+        "servicios es lícito.",
+        "2349653-1",
+      ].join("\n"),
+      { start: /^REGLAMENTO/m }
+    );
+    expect(out[0].text).toBe("26.1 El tratamiento de productos y servicios es lícito.");
+  });
+
+  it("separa las disposiciones complementarias y corta en la firma", () => {
+    const out = splitArticles(
+      [
+        "REGLAMENTO",
+        "Artículo 135. Reincidencia",
+        "135.1 Texto final.",
+        "DISPOSICIONES COMPLEMENTARIAS",
+        "FINALES",
+        "Primera. Vigencia",
+        "El Reglamento entra en vigencia.",
+        "Segunda. Oficial de Datos Personales",
+        "El ODP es exigible según el calendario.",
+        "DISPOSICIONES COMPLEMENTARIAS",
+        "TRANSITORIAS",
+        "PRIMERA. Conductas infractoras",
+        "Se rigen por la norma anterior.",
+        "POR TANTO:",
+        "Mando se publique y cumpla.",
+      ].join("\n"),
+      { start: /^REGLAMENTO/m }
+    );
+    expect(out.map((a) => a.num)).toEqual(["135", "1DCF", "2DCF", "1DCT"]);
+    expect(out[0].text).toBe("135.1 Texto final.");
+    expect(out[2].title).toBe("Oficial de Datos Personales");
+    expect(out[3].text).toBe("Se rigen por la norma anterior.");
+  });
+
   it("rechaza un número de artículo repetido", () => {
     expect(() => splitArticles("REGLAMENTO DE LA LEY\nArtículo 1. A\nx\nArtículo 1. B\ny", { start: /^REGLAMENTO/m })).toThrow(/repetido/);
   });
