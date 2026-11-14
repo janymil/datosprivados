@@ -52,7 +52,7 @@ describe("parseCitations (formas reales de los documentos)", () => {
   });
 
   it("«Ley» y «Reglamento» a secas no capturan otra ley u otro reglamento con nombre propio", () => {
-    expect(refs("art. 24 de la Ley N.° 29571")).toEqual(["desconocida:Ley N.° 29571:24"]);
+    expect(refs("art. 24 de la Ley N.° 27693")).toEqual(["desconocida:Ley N.° 27693:24"]);
     expect(refs("art. 25 de la Ley General de Salud")).toEqual(["desconocida:Ley General de Salud:25"]);
     expect(refs("art. 69 del Reglamento de la Ley N.° 29733 aprobado por Decreto Supremo N.° 003-2013-JUS")).toEqual([
       "desconocida:Decreto Supremo N.° 003-2013-JUS:69",
