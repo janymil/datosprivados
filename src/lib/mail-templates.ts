@@ -18,6 +18,10 @@ export type MailTemplate =
   | "invoice_issued"
   | "transfer_instructions"
   | "credit_invoice_requested"
+  | "credit_due_soon"
+  | "credit_due_today"
+  | "credit_overdue"
+  | "credit_readonly"
   | "payment_refunded"
   | "renewal_soon"
   | "renewal_manual"
@@ -52,6 +56,10 @@ const ESSENTIAL: Record<MailTemplate, boolean> = {
   invoice_issued: true,
   transfer_instructions: true,
   credit_invoice_requested: true,
+  credit_due_soon: true,
+  credit_due_today: true,
+  credit_overdue: true,
+  credit_readonly: true,
   payment_refunded: true,
   renewal_soon: true,
   renewal_manual: true,
@@ -253,6 +261,31 @@ export function renderMail(template: MailTemplate, payload: MailPayload): Render
         },
         company
       );
+    case "credit_due_soon":
+    case "credit_due_today":
+    case "credit_overdue":
+    case "credit_readonly": {
+      need("amount", "invoice", "dueDate", "reference", "bankDetails", "path");
+      const lead = {
+        credit_due_soon: { subject: `Tu factura ${s(payload, "invoice")} vence el ${s(payload, "dueDate")}`, text: `Te recordamos que la factura ${s(payload, "invoice")} por ${s(payload, "amount")} vence el ${s(payload, "dueDate")}.` },
+        credit_due_today: { subject: `Tu factura ${s(payload, "invoice")} vence hoy`, text: `La factura ${s(payload, "invoice")} por ${s(payload, "amount")} vence hoy, ${s(payload, "dueDate")}.` },
+        credit_overdue: { subject: `Factura ${s(payload, "invoice")} vencida`, text: `La factura ${s(payload, "invoice")} por ${s(payload, "amount")} venció el ${s(payload, "dueDate")} y aún no registramos el pago. Si no se paga, en unos días tu cuenta quedará en solo lectura.` },
+        credit_readonly: { subject: "Tu cuenta quedó en solo lectura", text: `La factura ${s(payload, "invoice")} por ${s(payload, "amount")} venció el ${s(payload, "dueDate")} sin pago: tu cuenta queda en solo lectura hasta registrarlo. Tus páginas públicas (política de privacidad y formulario ARCO) siguen activas.` },
+      }[template];
+      return layout(
+        {
+          subject: lead.subject,
+          paragraphs: [
+            lead.text,
+            "Paga por transferencia a:",
+            s(payload, "bankDetails"),
+            `Indica la referencia ${s(payload, "reference")}. Si ya pagaste, responde este correo con el número de operación.`,
+          ],
+          action: { label: "Ver cómo pagar", url: s(payload, "path") },
+        },
+        company
+      );
+    }
     case "payment_refunded":
       need("plan", "amount");
       return layout(

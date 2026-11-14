@@ -8,6 +8,7 @@ Fuente de verdad del comportamiento de cobro. El código vive en `src/lib/{billi
 |---|---|---|
 | **Tarjeta (suscripción MercadoPago)** | Mensual o anual, cobro automático | Webhook `subscription_preapproval` autorizado → periodo inicial; cada `subscription_authorized_payment` aprobado → registra el cobro |
 | **Transferencia con factura** | Clientes que no pagan con tarjeta (sobre todo anual) | `/pago` → «Pagar por transferencia» → el operador emite la factura y, al llegar el dinero, confirma en `/operador` |
+| **Factura a crédito (15 días)** | Empresas con RUC 20 verificado, plan anual (`src/lib/credit.ts`) | `/pago` → «Pagar con factura a 15 días» → **acceso inmediato**; el operador emite la factura a mano y la registra en `/operador`: el plazo corre desde la emisión. 7 días después del vencimiento sin pago la cuenta queda en **solo lectura** (las páginas públicas siguen activas) hasta confirmar el pago |
 | Yape / Plin | **No se ofrecen**: son billeteras personales, sin cobro recurrente | — |
 
 Los precios del catálogo **incluyen IGV (18 %)**. La factura desglosa base e IGV (`splitIgv`).
@@ -31,6 +32,11 @@ Los precios del catálogo **incluyen IGV (18 %)**. La factura desglosa base e IG
 | Transferencia pedida | pago `pending`, sin activar | factura pendiente | `transfer_instructions` |
 | Factura registrada | — | `issued` con serie y número | `invoice_issued` |
 | Transferencia confirmada | activa/renueva; `paid_until` + periodo | — | `payment_receipt` |
+| Factura a crédito pedida | activa al instante; `paid_until` + 12 meses; pago `pending`, `credit = 1` | factura pendiente | `credit_invoice_requested` |
+| Factura a crédito registrada | `due_at` = emisión + 15 días | `issued` | `invoice_issued` («vence el …») |
+| Crédito: −3, 0 y +3 días del vencimiento | — | — | `credit_due_soon` / `credit_due_today` / `credit_overdue` (tarea `credit-reminders`) |
+| Crédito: vencimiento + 7 días sin pago | solo lectura (`requireActiveSession` redirige a `/app?pago=vencido`) | — | `credit_readonly` |
+| Crédito confirmado | pago `approved`; **no** extiende `paid_until` (ya se otorgó al pedirlo) | — | `payment_receipt` |
 | `paid_until` vencido | `billing_status = expired` (tarea `billing-reconcile`) | — | `subscription_expiring` / `lapsed_notice` |
 
 Los webhooks se registran en `webhook_events` (tipo, id, resultado y error; se purgan a los 180 días). Un fallo
