@@ -116,5 +116,25 @@
         "DS N.° 301-2025-EF"
       ]
     }
+  },
+  "ley-29571": {
+    "url": "https://cdn.www.gob.pe/uploads/document/file/4265044/Co%CC%81digo%20de%20Proteccio%CC%81n%20y%20Defensa%20del%20Consumidor%20-%202023%20(1).pdf.pdf",
+    "extract": "default",
+    "start": "^TÍTULO PRELIMINAR$",
+    "startOccurrence": 1,
+    "end": "^DISPOSICIONES COMPLEMENTARIAS\nMODIFICATORIAS$",
+    "norm": {
+      "title": "Ley N.° 29571, Código de Protección y Defensa del Consumidor (texto actualizado, Indecopi 2023)",
+      "type": "ley",
+      "number": "29571",
+      "publishedAt": "2010-09-02",
+      "status": "vigente",
+      "consolidated": true,
+      "amendedBy": [],
+      "aliases": [
+        "Ley N.° 29571",
+        "Código de Protección y Defensa del Consumidor"
+      ]
+    }
   }
 }

@@ -108,7 +108,16 @@ export function splitArticles(raw: string, opts: SplitOptions): Article[] {
       continue;
     }
 
-    const heading = HEADING.exec(line);
+    const rawHeading = HEADING.exec(line);
+    // «…conforme a lo señalado en el / Artículo 59.»: referencia partida a mitad de frase, no un encabezado.
+    const last: string | undefined = (current as { body: string[] } | null)?.body.at(-1);
+    const midSentence: boolean = last !== undefined && !/[.:;]$/.test(last);
+    const heading: RegExpExecArray | null =
+      rawHeading && !(rawHeading[2].trim() === "" && !/-/.test(line) && midSentence) ? rawHeading : null;
+    if (rawHeading && !heading) {
+      (current as { body: string[] } | null)?.body.push(line);
+      continue;
+    }
     if (heading && opts.sumilla) {
       // La línea anterior, si es una sumilla, quedó en el cuerpo del artículo previo: va de título.
       const open: { body: string[] } | null = current;

@@ -160,6 +160,22 @@ describe("splitArticles", () => {
     expect(out[1].text).toBe("La imagen y la voz de una persona no pueden ser aprovechadas sin autorización expresa de ella.");
   });
 
+  it("una referencia «Artículo 59.» partida a mitad de frase no abre un artículo", () => {
+    const text = [
+      "LEY",
+      "Artículo 59.- Derecho a la restitución",
+      "El consumidor tiene derecho a la restitución.",
+      "Artículo 60.- Irrenunciabilidad",
+      "Es nula la renuncia anticipada, conforme a lo señalado en el",
+      "Artículo 59.",
+      "Artículo 61.- Métodos",
+      "Texto.",
+    ].join("\n");
+    const out = splitArticles(text, { start: /^LEY$/m });
+    expect(out.map((a) => a.num)).toEqual(["59", "60", "61"]);
+    expect(out[1].text).toBe("Es nula la renuncia anticipada, conforme a lo señalado en el Artículo 59.");
+  });
+
   it("rechaza un número de artículo repetido", () => {
     expect(() => splitArticles("REGLAMENTO DE LA LEY\nArtículo 1. A\nx\nArtículo 1. B\ny", { start: /^REGLAMENTO/m })).toThrow(/repetido/);
   });
