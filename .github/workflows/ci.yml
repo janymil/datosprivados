@@ -1,9 +1,16 @@
 name: CI
 
+# Mientras la app está en desarrollo (decisión del fundador, 14.11.2026): los PR y
+# master corren solo las comprobaciones rápidas (~3 min); el E2E corre una vez al día
+# (04:00 Lima) y a mano (Run workflow). Antes del lanzamiento vuelve a cada PR.
+# Los cambios legales aprobados corren su propio E2E completo (legal-change.yml).
 on:
   push:
     branches: [master]
   pull_request:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -36,6 +43,7 @@ jobs:
           # suite pruebe de verdad ese modo.
           CSP_ENFORCE: "1"
       - name: Guardar la compilación para E2E
+        if: github.event_name == schedule || github.event_name == workflow_dispatch
         uses: actions/upload-artifact@v4
         with:
           name: next-build
@@ -46,6 +54,7 @@ jobs:
   e2e:
     name: E2E (Playwright)
     needs: checks
+    if: github.event_name == schedule || github.event_name == workflow_dispatch
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
