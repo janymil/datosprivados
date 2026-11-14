@@ -308,7 +308,8 @@ Genera únicamente el cuerpo de la carta/correo formal de respuesta al titular.`
   };
 }
 
-function buildTailoredArcoDraft(ctx: {
+/** Carta ARCO del modo básico (sin IA). Exportada para la instantánea de textos legales. */
+export function buildTailoredArcoDraft(ctx: {
   detectedRight: "informacion" | "acceso" | "rectificacion" | "cancelacion" | "oposicion";
   declaredType: string;
   sanitizedDescription: string;
