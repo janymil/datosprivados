@@ -19,7 +19,11 @@ export const eipdSpec: DocumentSpec = {
   clauses: [
     {
       id: "eipd.0.cuando-corresponde",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "40.1" },
+        { norm: "ds-016-2024-jus", art: "40.2" },
+        { norm: "ds-016-2024-jus", art: "125.4" },
+      ],
       text: (ctx) => {
         const { company, profile } = ctx;
         return `## 0. Cuándo corresponde hacerla
@@ -83,7 +87,19 @@ ${table(["Riesgo", "Probabilidad", "Impacto", "Nivel"], riskRows)}
     },
     {
       id: "eipd.4.mitigacion",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "29" },
+        { norm: "ds-016-2024-jus", art: "30" },
+        { norm: "ds-016-2024-jus", art: "31" },
+        { norm: "ds-016-2024-jus", art: "32" },
+        { norm: "ds-016-2024-jus", art: "33" },
+        { norm: "ds-016-2024-jus", art: "46" },
+        { norm: "ds-016-2024-jus", art: "46.1.c" },
+        { norm: "ds-016-2024-jus", art: "46.2" },
+        { norm: "ds-016-2024-jus", art: "46.3" },
+        { norm: "ds-016-2024-jus", art: "50.1.5" },
+        { norm: "ds-016-2024-jus", art: "87" },
+      ],
       text: ({ profile }) => `## 4. Medidas de mitigación
 
 1. Consentimiento escrito y separado para datos sensibles y de menores; no condicionar el servicio a finalidades adicionales.
@@ -108,6 +124,7 @@ Condiciones: ______________________________________________`,
     {
       id: "eipd.6.aprobacion",
       cites: [],
+      nonLegal: "Firma y constancia de aprobación",
       text: ({ company, date }) => `## 6. Aprobación y revisión
 
 - Responsable: ${company.dpo_name || "[responsable de privacidad]"} (${company.dpo_email || company.email}).

@@ -1,0 +1,4 @@
+# Archivos que las pruebas comparan byte a byte: siempre LF, también en Windows.
+test/legal/__snapshots__/** text eol=lf
+test/legal/baseline-hashes.json text eol=lf
+legal/**/*.json text eol=lf

@@ -33,6 +33,11 @@ export type Clause = {
   cites: Citation[];
   /** Por qué una cláusula no tiene base legal (por ejemplo, un título). */
   nonLegal?: string;
+  /**
+   * Norma de las menciones sin norma explícita («(art. 87)»). Por defecto, el
+   * DS N.° 016-2024-JUS (`CLAUSE_DEFAULT_NORM`).
+   */
+  defaultNorm?: string;
 };
 
 export type DocumentSpec = {

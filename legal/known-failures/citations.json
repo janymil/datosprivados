@@ -1,0 +1,477 @@
+[
+ {
+  "rule": "cite-misnumbered",
+  "clause": "arco.3.plazos",
+  "detail": "ds-016-2024-jus:2.8 → III.8"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "consentimiento.d-uso.si-aplica",
+  "detail": "ds-016-2024-jus:2.6 → III.6"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "consentimiento.d.encabezado",
+  "detail": "ds-016-2024-jus:2.6 → III.6"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "cookies.1.que-son",
+  "detail": "ds-016-2024-jus:2.4 → III.4"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "politica.10-sensibles.no",
+  "detail": "ds-016-2024-jus:2.6 → III.6"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "politica.10.normas",
+  "detail": "ds-016-2024-jus:2.4 → III.4"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "politica.10.normas",
+  "detail": "ds-016-2024-jus:2.6 → III.6"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "politica.11.cookies-vigencia",
+  "detail": "ds-016-2024-jus:2.4 → III.4"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "politica.7.derechos-arco",
+  "detail": "ds-016-2024-jus:2.8 → III.8"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "sectorial.4.normas",
+  "detail": "ds-016-2024-jus:2.4 → III.4"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "sectorial.4.normas",
+  "detail": "ds-016-2024-jus:2.6 → III.6"
+ },
+ {
+  "rule": "cite-misnumbered",
+  "clause": "seguridad.7.conservacion-supresion",
+  "detail": "ds-016-2024-jus:2.2 → III.2"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "consentimiento.g.imagen-voz",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "politica.10.normas",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "retencion.3.plazos-rubro",
+  "detail": "ds-020-2017-jus:24"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sectorial.2.especial-rubro",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sectorial.4.normas",
+  "detail": "codigo-civil:15"
+ },
+ {
+  "rule": "cite-norm-unverified",
+  "clause": "sectorial.5.conservacion",
+  "detail": "ds-020-2017-jus:24"
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "arco.8.evidencia",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "arco.nota.borrador",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "aviso.a.formulario-web",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "aviso.b-checkout.plataforma",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "aviso.b-checkout.venta",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "aviso.c.whatsapp",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "aviso.d.firma-correo",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "aviso.e.comprobante",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "aviso.f.registro-app",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "aviso.g.datos-sensibles",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "clausulas.c.cartel-cctv",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "clausulas.e.informativo-cctv",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "consentimiento.a.formulario-web",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "consentimiento.c.doble-opt-in",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "consentimiento.d-uso.obligatorio",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "consentimiento.d.autorizacion",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "consentimiento.e.aviso-corto",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "cookies.2.categorias",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "cookies.3.nada-antes",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "cookies.4.tabla",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "cookies.5.terceros",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "cookies.6.revocar",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "cookies.7.almacenamiento-local",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "cookies.8.vigencia",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "eipd.1.descripcion",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "eipd.2.necesidad-proporcionalidad",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "eipd.3.riesgos",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "eipd.5.riesgo-residual",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "encargo.b-anexo.local",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "encargo.b-anexo.plataforma",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "politica.1.responsable",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "politica.10-menores.no",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "politica.3.obligatorio-facultativo",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "politica.5.conservacion",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "politica.6-transferencia.no",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "politica.6.destinatarios",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "politica.nota.elaborado",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "reclamaciones.a.aviso-obligatorio",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "reclamaciones.b.hoja",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "reclamaciones.c.procedimiento",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "reclamaciones.d.que-no-hacer",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "retencion.1.regla-general",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "retencion.5.registro-purgas",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "sectorial.1.para-quien",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "sectorial.6.riesgos",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "sectorial.7-herramientas.ninguna",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "seguridad.2.inventario",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "seguridad.8.auditoria",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-1.quien-presta",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-10.disponibilidad",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-11.responsabilidad",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-12.terminacion",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-13.libro-reclamaciones",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-14.ley-jurisdiccion",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-15.contacto-vigencia",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-2.objeto-aceptacion",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-3.descripcion",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-4.cuenta",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-5-precio.extranjera",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-5-precio.peruana",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-5.renovacion",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-6.cancelacion-reembolsos",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-7.uso-aceptable",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-8.datos-privacidad",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.plataforma-9.propiedad-intelectual",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.venta-1.quien-vende",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.venta-10.ley-jurisdiccion",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.venta-11.contacto-vigencia",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.venta-2.aceptacion",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.venta-3.productos-servicios",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.venta-4.precios-pagos",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.venta-5.entrega-garantia",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.venta-6.datos-personales",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.venta-7.uso-aceptable",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.venta-8.libro-reclamaciones",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "terminos.venta-9.responsabilidad",
+  "detail": ""
+ },
+ {
+  "rule": "clause-without-basis",
+  "clause": "trabajadores.d.monitoreo",
+  "detail": ""
+ }
+]

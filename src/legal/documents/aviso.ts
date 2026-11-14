@@ -25,17 +25,27 @@ export const avisoSpec: DocumentSpec = {
       },
     },
     {
-      id: "aviso.b.checkout",
+      id: "aviso.b.encabezado",
       cites: [],
+      nonLegal: "Encabezado de sección",
+      text: () => `## B. Checkout o pantalla de pago (antes de confirmar)`,
+    },
+    {
+      id: "aviso.b-checkout.plataforma",
+      cites: [],
+      when: ({ profile }) => profile.terms === "plataforma",
       text: (ctx) => {
         const { name, policyUrl } = v(ctx);
-        const checkoutNotice =
-          ctx.profile.terms === "plataforma"
-            ? `> Al suscribirte, ${name} tratará tus datos de cuenta y de pago para cobrar la suscripción, emitir la constancia de pago y atender reclamos. El cobro se renueva automáticamente hasta que canceles desde tu perfil. Política de Privacidad: ${policyUrl}`
-            : `> Al comprar, ${name} tratará tus datos de contacto, entrega y pago para atender tu pedido, emitir el comprobante y gestionar garantías o reclamos. No te enviaremos publicidad sin tu permiso aparte. Política de Privacidad: ${policyUrl}`;
-        return `## B. Checkout o pantalla de pago (antes de confirmar)
-
-${checkoutNotice}`;
+        return `> Al suscribirte, ${name} tratará tus datos de cuenta y de pago para cobrar la suscripción, emitir la constancia de pago y atender reclamos. El cobro se renueva automáticamente hasta que canceles desde tu perfil. Política de Privacidad: ${policyUrl}`;
+      },
+    },
+    {
+      id: "aviso.b-checkout.venta",
+      cites: [],
+      when: ({ profile }) => profile.terms !== "plataforma",
+      text: (ctx) => {
+        const { name, policyUrl } = v(ctx);
+        return `> Al comprar, ${name} tratará tus datos de contacto, entrega y pago para atender tu pedido, emitir el comprobante y gestionar garantías o reclamos. No te enviaremos publicidad sin tu permiso aparte. Política de Privacidad: ${policyUrl}`;
       },
     },
     {
@@ -93,7 +103,9 @@ ${checkoutNotice}`;
     },
     {
       id: "aviso.nota.regla-practica",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "7" },
+      ],
       text: () => `---
 
 *Regla práctica: el aviso corto no reemplaza a la política; la ubica (art. 7 del DS N.° 016-2024-JUS). Debe estar visible antes de que la persona entregue el dato, no después, e incluir al menos quién eres, para qué usas el dato y dónde ejercer derechos.*`,

@@ -29,7 +29,11 @@ export const cookiesSpec: DocumentSpec = {
   clauses: [
     {
       id: "cookies.1.que-son",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "2.4" },
+        { norm: "ds-016-2024-jus", art: "5" },
+        { norm: "ds-016-2024-jus", art: "6" },
+      ],
       text: () => `## 1. Qué son las cookies y por qué las usamos
 
 Una cookie es un archivo pequeño que el sitio guarda en tu navegador. Sirve para mantener tu sesión abierta, recordar tus preferencias y, solo si lo autorizas, medir cómo se usa el sitio. Cuando una cookie o identificador en línea permite identificarte, es un dato personal (art. 2.4 del DS N.° 016-2024-JUS) y su uso para analítica o publicidad requiere tu consentimiento previo, libre, informado e inequívoco (art. 5 y 6).`,

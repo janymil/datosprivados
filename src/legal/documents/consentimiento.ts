@@ -33,7 +33,11 @@ export const consentimientoSpec: DocumentSpec = {
     },
     {
       id: "consentimiento.b.whatsapp",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "9" },
+        { norm: "ds-016-2024-jus", art: "26.2" },
+        { norm: "ds-016-2024-jus", art: "26.5" },
+      ],
       text: (ctx) => {
         const { name, shortId, policyUrl, arcoUrl } = v(ctx);
         return `## B. WhatsApp / Redes Sociales — Solicitud de permiso (Opt-in)
@@ -63,22 +67,40 @@ export const consentimientoSpec: DocumentSpec = {
       },
     },
     {
-      id: "consentimiento.d.datos-sensibles",
+      id: "consentimiento.d.encabezado",
+      cites: [
+        { norm: "ds-016-2024-jus", art: "2.6" },
+        { norm: "ds-016-2024-jus", art: "8" },
+        { norm: "ds-016-2024-jus", art: "9" },
+        { norm: "ley-29733", art: "13.6" },
+      ],
+      text: ({ profile }) => `## D. Autorización para el tratamiento de datos sensibles${profile.sensitive || profile.biometric ? ` — ${profile.title}` : ""}
+
+*Base legal:* art. 13.6 de la Ley N.° 29733 y art. 8 del DS N.° 016-2024-JUS: el consentimiento para datos sensibles debe darse **por escrito**, con firma manuscrita, digital, electrónica u otra modalidad que garantice la voluntad del titular. La carga de la prueba es tuya (art. 9). Son sensibles, entre otros, los datos genéticos y biométricos, neuronales, de salud física o mental, de afiliación sindical, de la vida afectiva o familiar y los hábitos de la esfera más íntima (art. 2.6).`,
+    },
+    {
+      id: "consentimiento.d-uso.obligatorio",
+      cites: [],
+      when: ({ profile }) => profile.sensitive || profile.biometric,
+      text: ({ profile }) =>
+        `*Tu rubro (${profile.title}) trata datos sensibles de forma habitual: esta autorización es obligatoria antes de la primera atención y debe archivarse firmada.*`,
+    },
+    {
+      id: "consentimiento.d-uso.si-aplica",
+      cites: [
+        { norm: "ds-016-2024-jus", art: "2.6" },
+      ],
+      when: ({ profile }) => !(profile.sensitive || profile.biometric),
+      text: () =>
+        `*Úsala solo si recoges datos sensibles (salud, biometría, afiliación sindical, vida afectiva o familiar u otros del art. 2.6 del DS N.° 016-2024-JUS). Si no los recoges, no la uses: pedir datos de más viola el principio de proporcionalidad.*`,
+    },
+    {
+      id: "consentimiento.d.autorizacion",
       cites: [],
       text: (ctx) => {
         const { company, profile } = ctx;
         const { name, shortId, contact, arcoUrl } = v(ctx);
-        const sensitiveLine =
-          profile.sensitive || profile.biometric
-            ? `*Tu rubro (${profile.title}) trata datos sensibles de forma habitual: esta autorización es obligatoria antes de la primera atención y debe archivarse firmada.*`
-            : `*Úsala solo si recoges datos sensibles (salud, biometría, afiliación sindical, vida afectiva o familiar u otros del art. 2.6 del DS N.° 016-2024-JUS). Si no los recoges, no la uses: pedir datos de más viola el principio de proporcionalidad.*`;
-        return `## D. Autorización para el tratamiento de datos sensibles${profile.sensitive || profile.biometric ? ` — ${profile.title}` : ""}
-
-*Base legal:* art. 13.6 de la Ley N.° 29733 y art. 8 del DS N.° 016-2024-JUS: el consentimiento para datos sensibles debe darse **por escrito**, con firma manuscrita, digital, electrónica u otra modalidad que garantice la voluntad del titular. La carga de la prueba es tuya (art. 9). Son sensibles, entre otros, los datos genéticos y biométricos, neuronales, de salud física o mental, de afiliación sindical, de la vida afectiva o familiar y los hábitos de la esfera más íntima (art. 2.6).
-
-${sensitiveLine}
-
-> **AUTORIZACIÓN EXPRESA PARA EL TRATAMIENTO DE DATOS SENSIBLES**
+        return `> **AUTORIZACIÓN EXPRESA PARA EL TRATAMIENTO DE DATOS SENSIBLES**
 > Yo, ________________________________________, identificado(a) con DNI/CE N.° ______________, declaro haber sido informado(a) de la Política de Privacidad de **${name}** (${shortId}) y otorgo mi consentimiento libre, previo, expreso, informado, inequívoco y por escrito para el tratamiento de mis datos personales sensibles consistentes en ${profile.consent.data}, con la única finalidad de ${profile.consent.purpose}.
 >
 > Entiendo que estos datos serán conservados con acceso restringido, que ${name} no los usará para publicidad ni para finalidades distintas, y que no se transfieren a terceros salvo los indicados en la Política de Privacidad o por mandato legal.
@@ -100,7 +122,11 @@ ${sensitiveLine}
     },
     {
       id: "consentimiento.f.menores",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "22" },
+        { norm: "ds-016-2024-jus", art: "23" },
+        { norm: "ds-016-2024-jus", art: "23.2" },
+      ],
       when: ({ profile }) => profile.minors,
       text: (ctx) => {
         const { name, shortId, contact, policyUrl, arcoUrl } = v(ctx);
@@ -121,7 +147,10 @@ ${sensitiveLine}
     },
     {
       id: "consentimiento.g.imagen-voz",
-      cites: [],
+      cites: [
+        { norm: "codigo-civil", art: "15" },
+        { norm: "ds-016-2024-jus", art: "10.2" },
+      ],
       when: ({ profile }) => profile.imageUse,
       text: (ctx) => {
         const { name, contact } = v(ctx);
@@ -137,7 +166,20 @@ ${sensitiveLine}
     },
     {
       id: "consentimiento.nota.borrador",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "5" },
+        { norm: "ds-016-2024-jus", art: "6" },
+        { norm: "ds-016-2024-jus", art: "7" },
+        { norm: "ds-016-2024-jus", art: "8" },
+        { norm: "ds-016-2024-jus", art: "9" },
+        { norm: "ds-016-2024-jus", art: "10" },
+        { norm: "ds-016-2024-jus", art: "22" },
+        { norm: "ds-016-2024-jus", art: "23" },
+        { norm: "ds-016-2024-jus", art: "26" },
+        { norm: "ley-29733", art: "5" },
+        { norm: "ley-29733", art: "13" },
+        { norm: "ley-29733", art: "18" },
+      ],
       text: () => `---
 
 *Textos elaborados con DatosPrivados conforme al Art. 5, 13 y 18 de la Ley N.° 29733 y al DS N.° 016-2024-JUS (arts. 5 a 10, 22, 23 y 26). Son un borrador: valida con un abogado las cláusulas de datos sensibles y de menores.*`,

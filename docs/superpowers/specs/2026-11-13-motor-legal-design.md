@@ -138,17 +138,26 @@ calculator, AI prompt) reads the fact instead of hard-coding the number. The
 `quote` must be found verbatim in the cited article's text: that check is
 mechanical.
 
-### 4.3 Clause library (`src/legal/clauses/`)
+### 4.3 Clause library (`src/legal/documents/`)
 
 ```ts
 type Clause = {
   id: string;                       // "politica.derechos.arco"
-  doc: DocumentKind;                // where it is used
   when?: (ctx: LegalContext) => boolean;   // conditions over profile + company
   text: (ctx: LegalContext) => string;     // exactly today's wording
-  cites: Citation[];                // required; [] only with nonLegal reason
-  nonLegal?: string;                // why a clause has no legal basis (e.g. formatting)
+  cites: Citation[];                // exactly the articles the text cites (lint-enforced); [] needs nonLegal or a known-failures entry
+  nonLegal?: string;                // structural clause (heading, note, signature); never with a cite or a norm name
+  defaultNorm?: string;             // norm of bare mentions; default ds-016-2024-jus
 };
+```
+
+As built (plan 1): one file per document kind under `src/legal/documents/`, each
+exporting a `DocumentSpec` (`{ kind, join, clauses }`); the kind lives in the
+spec and in the clause id prefix, so clauses carry no `doc` field. `SPECS` and
+`allClauses()` are in `src/legal/registry.ts`.
+
+```ts
+// (continuation of the type above)
 type Citation = { norm: string; art: string; claim?: string };
 ```
 

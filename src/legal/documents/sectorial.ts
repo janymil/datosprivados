@@ -26,7 +26,15 @@ Este protocolo es el complemento operativo del Documento de Seguridad de **${com
     },
     {
       id: "sectorial.2.especial-rubro",
-      cites: [],
+      cites: [
+        { norm: "codigo-civil", art: "15" },
+        { norm: "ds-016-2024-jus", art: "8" },
+        { norm: "ds-016-2024-jus", art: "22" },
+        { norm: "ds-016-2024-jus", art: "31" },
+        { norm: "ds-016-2024-jus", art: "32" },
+        { norm: "ds-016-2024-jus", art: "33" },
+        { norm: "ds-016-2024-jus", art: "47.3" },
+      ],
       text: ({ profile }) => `## 2. Qué tiene de especial tu rubro
 
 ${bullets([
@@ -40,21 +48,61 @@ ${bullets([
     },
     {
       id: "sectorial.3.procedimientos",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "8" },
+      ],
       text: ({ profile }) => `## 3. Procedimientos diarios
 
 ${sectorProtocol(profile.family).map((step, index) => `${index + 1}. ${step}`).join("\n")}`,
     },
     {
       id: "sectorial.4.normas",
-      cites: [],
+      cites: [
+        { norm: "codigo-civil", art: "15" },
+        { norm: "ds-016-2024-jus", art: "2.4" },
+        { norm: "ds-016-2024-jus", art: "2.6" },
+        { norm: "ds-016-2024-jus", art: "6.1.7" },
+        { norm: "ds-016-2024-jus", art: "6.1.8" },
+        { norm: "ds-016-2024-jus", art: "7" },
+        { norm: "ds-016-2024-jus", art: "8" },
+        { norm: "ds-016-2024-jus", art: "18" },
+        { norm: "ds-016-2024-jus", art: "19" },
+        { norm: "ds-016-2024-jus", art: "20" },
+        { norm: "ds-016-2024-jus", art: "21" },
+        { norm: "ds-016-2024-jus", art: "22" },
+        { norm: "ds-016-2024-jus", art: "23" },
+        { norm: "ds-016-2024-jus", art: "25" },
+        { norm: "ds-016-2024-jus", art: "26" },
+        { norm: "ds-016-2024-jus", art: "26.5" },
+        { norm: "ds-016-2024-jus", art: "28" },
+        { norm: "ds-016-2024-jus", art: "29" },
+        { norm: "ds-016-2024-jus", art: "29.2" },
+        { norm: "ds-016-2024-jus", art: "30" },
+        { norm: "ds-016-2024-jus", art: "30.4" },
+        { norm: "ds-016-2024-jus", art: "31" },
+        { norm: "ds-016-2024-jus", art: "32" },
+        { norm: "ds-016-2024-jus", art: "33" },
+        { norm: "ds-016-2024-jus", art: "37" },
+        { norm: "ds-016-2024-jus", art: "40" },
+        { norm: "ds-016-2024-jus", art: "46" },
+        { norm: "ds-016-2024-jus", art: "87" },
+        { norm: "ley-29733", art: "14" },
+        { norm: "ley-29733", art: "17" },
+      ],
       text: ({ profile }) => `## 4. Normas que debes tener presentes
 
 ${bullets(profile.norms)}`,
     },
     {
       id: "sectorial.5.conservacion",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "10" },
+        { norm: "ds-016-2024-jus", art: "26" },
+        { norm: "ds-016-2024-jus", art: "30.4" },
+        { norm: "ds-016-2024-jus", art: "31.2" },
+        { norm: "ds-016-2024-jus", art: "46.3" },
+        { norm: "ds-020-2017-jus", art: "24" },
+      ],
       text: ({ profile }) => `## 5. Cuánto tiempo guardas cada cosa
 
 ${table(["Tipo de dato", "Plazo sugerido", "Fundamento"], profile.retention.map((row) => [row.data, row.term, row.basis]))}`,
@@ -67,15 +115,29 @@ ${table(["Tipo de dato", "Plazo sugerido", "Fundamento"], profile.retention.map(
 ${table(["Riesgo", "Probabilidad", "Impacto", "Nivel"], profile.risks.map((r) => [r.risk, r.probability, r.impact, r.level]))}`,
     },
     {
-      id: "sectorial.7.herramientas",
+      id: "sectorial.7.encabezado",
       cites: [],
+      nonLegal: "Encabezado de sección",
+      text: () => `## 7. Tus herramientas`,
+    },
+    {
+      id: "sectorial.7-herramientas.ninguna",
+      cites: [],
+      when: ({ providers }) => providers.length === 0,
+      text: () =>
+        "Aún no declaraste tus herramientas. Hazlo en la sección «Herramientas» para completar este apartado y la Política de Privacidad.",
+    },
+    {
+      id: "sectorial.7-herramientas.tabla",
+      cites: [
+        { norm: "ds-016-2024-jus", art: "6.1.7" },
+        { norm: "ds-016-2024-jus", art: "20" },
+        { norm: "ds-016-2024-jus", art: "21.2" },
+      ],
+      when: ({ providers }) => providers.length > 0,
       text: ({ providers }) => {
         const abroad = foreignProviders(providers);
-        return `## 7. Tus herramientas
-
-${
-  providers.length
-    ? `${table(
+        return `${table(
         ["Herramienta", "Categoría", "País", "Contrato", "Flujo transfronterizo"],
         providers.map((provider) => [
           provider.name,
@@ -86,14 +148,14 @@ ${
         ])
       )}
 
-${abroad.length ? `**${abroad.length} ${abroad.length === 1 ? "herramienta trata" : "herramientas tratan"} datos fuera del Perú (o en un país por verificar).** Para cada una: contrato de encargo con cláusulas que impongan al menos las mismas obligaciones (art. 20), comunicación a la ANPD para su inscripción (art. 21.2), y mención en la Política de Privacidad (art. 6.1.7).` : "Todas tus herramientas declaradas tratan los datos en el Perú."}`
-    : "Aún no declaraste tus herramientas. Hazlo en la sección «Herramientas» para completar este apartado y la Política de Privacidad."
-}`;
+${abroad.length ? `**${abroad.length} ${abroad.length === 1 ? "herramienta trata" : "herramientas tratan"} datos fuera del Perú (o en un país por verificar).** Para cada una: contrato de encargo con cláusulas que impongan al menos las mismas obligaciones (art. 20), comunicación a la ANPD para su inscripción (art. 21.2), y mención en la Política de Privacidad (art. 6.1.7).` : "Todas tus herramientas declaradas tratan los datos en el Perú."}`;
       },
     },
     {
       id: "sectorial.8.revision-mensual",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "46.1" },
+      ],
       text: ({ company }) => `## 8. Revisión mensual (10 minutos)
 
 - [ ] ¿Alguien nuevo entró o salió del equipo? Actualiza accesos (art. 46.1).
@@ -105,6 +167,7 @@ ${abroad.length ? `**${abroad.length} ${abroad.length === 1 ? "herramienta trata
     {
       id: "sectorial.nota.aprobacion",
       cites: [],
+      nonLegal: "Firma y constancia de aprobación",
       text: ({ banks, date }) => `---
 
 *Aprobado el ${date}. Complementa el «Documento de Seguridad». Los bancos declarados: ${banks.length ? banks.map((b) => `«${b.name}»`).join(", ") : "ninguno todavía"}.*`,
