@@ -33,3 +33,6 @@ test-results/
 .deploy/
 .next.prev/
 .next.failed/
+
+# Caché de veredictos de la auditoría legal (pnpm legal:audit)
+.cache/
