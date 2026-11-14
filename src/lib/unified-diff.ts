@@ -48,3 +48,19 @@ export function parseUnifiedDiff(diff: string): DiffFile[] {
   }
   return files;
 }
+
+/**
+ * Archivos que las pruebas regeneran (instantáneas, huellas, fallas conocidas). Un
+ * cambio de texto legal los toca por miles de líneas; el fundador revisa primero el
+ * texto y el registro, y lo generado queda plegado al final.
+ */
+const GENERATED = [/^test\/legal\/__snapshots__\//, /^test\/legal\/baseline-hashes\.json$/, /^legal\/known-failures\//];
+
+export function isGeneratedFile(file: string): boolean {
+  return GENERATED.some((re) => re.test(file));
+}
+
+/** Orden para revisar: primero lo escrito a mano, después lo generado (orden estable). */
+export function reviewOrder(files: DiffFile[]): DiffFile[] {
+  return [...files.filter((f) => !isGeneratedFile(f.file)), ...files.filter((f) => isGeneratedFile(f.file))];
+}
