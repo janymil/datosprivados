@@ -1,16 +1,17 @@
 import Link from "next/link";
 
-const LINKS = [
+export const OPERATOR_LINKS = [
   { key: "cobros", href: "/operador", label: "Comprobantes y transferencias" },
   { key: "clientes", href: "/operador/clientes", label: "Clientes" },
   { key: "feriados", href: "/operador/feriados", label: "Feriados" },
+  { key: "hoja-de-ruta", href: "/operador/hoja-de-ruta", label: "Hoja de ruta" },
 ] as const;
 
 /** Navegación del panel de operador. */
-export function OperatorNav({ current }: { current: (typeof LINKS)[number]["key"] }) {
+export function OperatorNav({ current }: { current: (typeof OPERATOR_LINKS)[number]["key"] }) {
   return (
     <nav aria-label="Operador" className="flex flex-wrap gap-x-5 gap-y-2 font-mono text-xs uppercase tracking-[0.08em]">
-      {LINKS.map((link) => (
+      {OPERATOR_LINKS.map((link) => (
         <Link
           key={link.key}
           href={link.href}
