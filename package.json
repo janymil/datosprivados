@@ -14,6 +14,7 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "test:e2e": "CSP_ENFORCE=1 next build && playwright test",
+    "legal:audit": "vitest run test/legal && vitest run --config vitest.audit.config.ts",
     "audit:prod": "pnpm audit --prod",
     "scan:secrets": "node scripts/scan-secrets.mjs",
     "ops:weekly": "node scripts/weekly-report.mjs",
