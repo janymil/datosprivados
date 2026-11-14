@@ -1,6 +1,6 @@
 # Legal engine for DatosPrivados — design
 
-Date: 2026-11-13 · Status: draft for founder approval · Repo: `/var/www/datosprivados`
+Date: 2026-11-13 · Status: open questions answered; awaiting founder approval of the whole document · Repo: `/var/www/datosprivados`
 (GitHub `janymil/datosprivados`, branch `master` at `9659c1d`).
 
 ## 1. Intent
@@ -293,16 +293,36 @@ miss something.
 6. Create a `legal_changes` row (`nuevo → aprobado | descartado → aplicado`)
    and email the operator.
 
-**Approval:** operator panel `/operador/legal` lists changes with the source,
-analysis, affected items and the proposed diff. Approve ⇒ the server sends a
-`repository_dispatch` event to GitHub with the approved change (design call:
-the server never writes into `/var/www/datosprivados`, which `deploy.sh`
-deploys from, and never runs the test suite on the production box). A GitHub
-Actions workflow applies the data-file change, regenerates snapshots, bumps
-`TEMPLATE_VERSIONS`, writes the change log, runs all checks and opens a pull
-request. Merging is the founder's click; deploy follows the normal
-`scripts/deploy.sh`. The server needs only a fine-grained GitHub token limited
-to `repository_dispatch` on this repo. After
+**Approval dashboard `/operador/legal`** (new section of the existing operator
+panel, same login and protection as `/operador/clientes`):
+
+- **Pending list**, newest first, each marked as *law change* (monitor) or
+  *audit finding* (§7).
+- **Detail of one change:** origin (El Peruano / ANPD link, or the audit
+  finding); the official article text quoted; today's clause next to the
+  proposed wording with differences highlighted; impact (document kinds,
+  business types, number of clients affected); for audit findings, both AI
+  verdicts with their reasoning.
+- **Actions:** Approve · Reject (reason required) · Send to lawyer list.
+- **History:** every decision with date, reason and resulting commit.
+- **Source health:** last successful check of each monitor source.
+- **Email** to the operator when a new change arrives.
+
+**One-click approval (decided 2026-11-13).** Approve is final:
+1. The server sends a `repository_dispatch` event with the approved change.
+   It never writes into `/var/www/datosprivados` (the deploy folder) and never
+   runs the test suite on the production box. It needs only a fine-grained
+   GitHub token limited to `repository_dispatch` on this repo.
+2. A GitHub Actions workflow applies the data-file change, regenerates
+   snapshots, bumps `TEMPLATE_VERSIONS`, writes the change log and runs all
+   checks.
+3. All green ⇒ the workflow merges to `master` by itself. Any failure ⇒ no
+   merge; the change returns to the dashboard as *falló* with the error.
+4. Deploy is pull-based: a server job checks the change's status through the
+   GitHub API and, once merged, runs `scripts/deploy.sh`. No GitHub secret
+   gives SSH access to the server.
+5. After deploy, the existing staleness machinery marks clients' documents
+   and emails them. The dashboard shows each step's state. After
 deploy, the existing staleness machinery marks client documents and emails
 them.
 
@@ -332,13 +352,18 @@ as evidence in the company file ("revisado por <nombre>, CAL N.° …, fecha").
 Systemic findings from any lawyer review feed `legal/audit/abogado.md` and
 become clause changes through §5.
 
-## 10a. Who approves content fixes from the audit — OPEN, founder decides
+## 10a. Who approves content fixes from the audit — decided 2026-11-13
 
-Proposed default until the founder answers: every content change found by the
-audit goes through the same `/operador/legal` approval flow as law changes
-(founder approves; meaning disputes go to `legal/audit/abogado.md`). If
-chosen, the `legal_changes` table and approval page move from phase 7 to
-before phase 6.
+**The founder approves each fix.** Every content change found by the audit
+(§7) goes through the same `/operador/legal` approval flow as law changes:
+the change is shown with the clause, the cited article text, both AI verdicts
+and the proposed new wording; the founder approves or rejects it. Meaning
+disputes the founder cannot settle go to `legal/audit/abogado.md`. No
+developer or job changes legal wording without that approval.
+
+Consequence: the `legal_changes` table, the `/operador/legal` page and the
+GitHub `repository_dispatch` → pull request workflow are built **before** the
+audit (new phase 5b), not with the monitor.
 
 ## 11. Developer skill
 
@@ -356,11 +381,13 @@ app (§8, §9), never depends on someone invoking the skill.
 | 2 | Law library: fetch official texts, split articles, `norm.json` | — | 0, 1 |
 | 3 | `facts.ts` + move numbers from all ~40 files (byte-identical) | 0 | 2 |
 | 4 | Fill `cites` for every clause/fact, citation lint | 1, 2, 3 | — |
-| 5 | Rule checks (§6) | 1 | 4 |
-| 6 | Correctness audit + deliberate fixes + lawyer list | 4 | — |
-| 7 | `legal-watch` monitor + operator panel + PR creation | 2, 4 | 6 |
+| 5 | Rule checks (§6) + known-failures baseline | 1 | 4 |
+| 5b | Approval flow: `legal_changes` table, `/operador/legal` dashboard, `repository_dispatch` → GitHub Actions apply/test/auto-merge, pull-based deploy | 1 | 4, 5 |
+| 6 | Correctness audit; each fix approved by the founder through 5b; lawyer list | 4, 5b | — |
+| 7 | `legal-watch` monitor (El Peruano + ANPD gob.pe), feeding the 5b flow | 2, 4, 5b | 6 |
+| 7b | Run-time AI output check (§4.5) + evals | 2, 3 | 6, 7 |
 | 8 | Quarterly re-audit job | 6 | 7 |
-| 9 | Lawyer add-on | 1 | 7, 8 |
+| 9 | Lawyer add-on — separate design (§10) | — | — |
 | 10 | Developer skill | 4 | any |
 
 Phase 2 touches only `legal/library/` and is a good candidate for a separate
