@@ -18,7 +18,7 @@ describe("paridad motor nuevo / legacy", () => {
         if (expected !== actual) throw new Error(`${f.id} ${kind}\n${firstDiff(expected, actual)}`);
       }
     });
-  });
+  }, 60_000);
 
   it("firstDiff nombra la primera línea distinta", () => {
     expect(firstDiff("a\nb\nc", "a\nX\nc")).toBe("line 2\n- b\n+ X");

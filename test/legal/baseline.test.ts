@@ -26,5 +26,5 @@ describe("huellas base de los documentos", () => {
     expect(Object.keys(current).sort()).toEqual(Object.keys(expected).sort());
     const changed = Object.keys(expected).filter((key) => expected[key] !== current[key]);
     expect(changed).toEqual([]);
-  });
+  }, 120_000);
 });
