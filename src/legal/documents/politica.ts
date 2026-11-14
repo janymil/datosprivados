@@ -11,9 +11,28 @@ import {
   table,
   usesAutomation,
 } from "@/legal/shared";
-import type { DocumentSpec } from "@/legal/types";
+import type { DocumentSpec, LegalContext } from "@/legal/types";
 
 /** Política de privacidad (antes `buildPrivacyPolicy`). */
+
+const hasTransfers = ({ banks, providers }: LegalContext) =>
+  banks.some((b) => b.transfers === "si") || foreignProviders(providers).length > 0;
+
+/** Tabla de proveedores que sigue, sin línea en blanco propia, al párrafo de transferencias. */
+function providerTable({ providers }: LegalContext): string {
+  return providers.length
+    ? `
+
+**Herramientas y proveedores que reciben o alojan datos, y país de destino:**
+
+${table(
+  ["Proveedor", "Para qué", "País donde se tratan los datos"],
+  providers.map((provider) => [provider.name, provider.purpose || categoryLabel(provider.category), COUNTRY_LABEL(provider.country)])
+)}`
+    : "";
+}
+
+const sensitiveBanksOf = ({ banks }: LegalContext) => banks.filter(isSensitiveBank);
 
 export const politicaSpec: DocumentSpec = {
   kind: "politica",
@@ -77,35 +96,33 @@ La publicación de esta política cumple nuestro deber de informar (art. 7 del D
 Conservamos tus datos personales únicamente durante el tiempo necesario para cumplir la finalidad para la cual fueron recopilados (detallado en la sección 2) y, posteriormente, durante los plazos legales de prescripción tributaria, laboral, civil o administrativa aplicables en el Perú. Cuando el tratamiento se basa en tu consentimiento para fines publicitarios, los conservamos hasta que revoques dicho consentimiento o solicites su cancelación. Vencidos los plazos, los datos son eliminados, suprimidos o anonimizados de manera segura.`,
     },
     {
-      id: "politica.6.destinatarios-transferencias",
+      id: "politica.6.destinatarios",
       cites: [],
-      text: ({ company, banks, providers }) => {
+      text: ({ company }) => `## 6. Destinatarios, encargados del tratamiento y transferencias internacionales
+
+Tienen acceso a los datos nuestro personal autorizado bajo deber de confidencialidad y los proveedores terceros que nos brindan soporte operativo (logística y courier, pasarelas de pago, facturación electrónica, estudio contable, alojamiento tecnológico y mensajería), quienes actúan únicamente como **encargados del tratamiento** siguiendo nuestras instrucciones y bajo garantías contractuales de seguridad. **${company.name} no vende ni comercializa datos personales a terceros.**`,
+    },
+    {
+      id: "politica.6-transferencia.si",
+      cites: [],
+      when: hasTransfers,
+      text: (ctx) => {
+        const { company, banks, providers } = ctx;
         const transfers = banks.filter((b) => b.transfers === "si");
         const abroad = foreignProviders(providers);
         const countries = Array.from(new Set(abroad.map((provider) => COUNTRY_LABEL(provider.country))));
         const transferTarget = transfers.length
           ? `de los bancos de datos (${transfers.map((t) => `«${t.name}»`).join(", ")})`
           : "de nuestras herramientas";
-        const providerTable = providers.length
-          ? `
-
-**Herramientas y proveedores que reciben o alojan datos, y país de destino:**
-
-${table(
-  ["Proveedor", "Para qué", "País donde se tratan los datos"],
-  providers.map((provider) => [provider.name, provider.purpose || categoryLabel(provider.category), COUNTRY_LABEL(provider.country)])
-)}`
-          : "";
-        return `## 6. Destinatarios, encargados del tratamiento y transferencias internacionales
-
-Tienen acceso a los datos nuestro personal autorizado bajo deber de confidencialidad y los proveedores terceros que nos brindan soporte operativo (logística y courier, pasarelas de pago, facturación electrónica, estudio contable, alojamiento tecnológico y mensajería), quienes actúan únicamente como **encargados del tratamiento** siguiendo nuestras instrucciones y bajo garantías contractuales de seguridad. **${company.name} no vende ni comercializa datos personales a terceros.**
-
-${
-  transfers.length > 0 || abroad.length > 0
-    ? `Para la operación tecnológica ${transferTarget}, realizamos **flujo transfronterizo (transferencia internacional) de datos personales** hacia servidores en la nube y plataformas tecnológicas ubicadas fuera del territorio peruano. Solo los enviamos a países con nivel adecuado de protección reconocido por la Autoridad o, en los demás casos, con garantías adecuadas: cláusulas contractuales que imponen al receptor, como mínimo, las mismas obligaciones que a nosotros (art. 18 y 20 del DS N.° 016-2024-JUS). Comunicamos cada flujo transfronterizo a la Autoridad Nacional de Protección de Datos Personales para su inscripción en el RNPDP (art. 21.2). ${countries.length ? `Los países de destino son: ${countries.join(", ")}. ` : ""}Puedes pedir más detalle escribiendo a ${company.dpo_email || company.email}.`
-    : `Actualmente almacenamos y procesamos los datos en el Perú y no realizamos flujo transfronterizo (transferencias internacionales) de datos personales. Si en el futuro contratáramos servidores en el exterior, actualizaremos esta política y lo declararemos ante el RNPDP.`
-}${providerTable}`;
+        return `Para la operación tecnológica ${transferTarget}, realizamos **flujo transfronterizo (transferencia internacional) de datos personales** hacia servidores en la nube y plataformas tecnológicas ubicadas fuera del territorio peruano. Solo los enviamos a países con nivel adecuado de protección reconocido por la Autoridad o, en los demás casos, con garantías adecuadas: cláusulas contractuales que imponen al receptor, como mínimo, las mismas obligaciones que a nosotros (art. 18 y 20 del DS N.° 016-2024-JUS). Comunicamos cada flujo transfronterizo a la Autoridad Nacional de Protección de Datos Personales para su inscripción en el RNPDP (art. 21.2). ${countries.length ? `Los países de destino son: ${countries.join(", ")}. ` : ""}Puedes pedir más detalle escribiendo a ${company.dpo_email || company.email}.${providerTable(ctx)}`;
       },
+    },
+    {
+      id: "politica.6-transferencia.no",
+      cites: [],
+      when: (ctx) => !hasTransfers(ctx),
+      text: (ctx) =>
+        `Actualmente almacenamos y procesamos los datos en el Perú y no realizamos flujo transfronterizo (transferencias internacionales) de datos personales. Si en el futuro contratáramos servidores en el exterior, actualizaremos esta política y lo declararemos ante el RNPDP.${providerTable(ctx)}`,
     },
     {
       id: "politica.7.derechos-arco",
@@ -137,15 +154,23 @@ Salvo el plazo del derecho de información, estos plazos pueden ampliarse una so
 Si tu solicitud no es atendida, se atiende parcialmente o es denegada, la respuesta debe estar justificada e indicarte que puedes presentar una reclamación ante la **Dirección de Protección de Datos Personales de la Autoridad Nacional de Protección de Datos Personales (ANPD)** del Ministerio de Justicia y Derechos Humanos, a través de la plataforma «Yo cuido mis datos personales» (www.gob.pe/anpd), o acudir al Poder Judicial mediante acción de hábeas data (art. 73).`,
     },
     {
-      id: "politica.8.decisiones-automatizadas",
+      id: "politica.8.encabezado",
       cites: [],
-      text: ({ company, profile, banks }) => `## 8. Decisiones automatizadas y elaboración de perfiles
-
-${
-  usesAutomation(profile, banks)
-    ? `${company.name} utiliza tratamientos automatizados (por ejemplo, categorización, extracción de texto, reconocimiento de voz, evaluación de perfiles o inteligencia artificial) como apoyo a su servicio. Te informamos que existen y las consecuencias que pueden tener para ti (art. 6.1.8 del DS N.° 016-2024-JUS). No adoptamos decisiones que te produzcan efectos jurídicos o te afecten de modo significativo basadas **únicamente** en ese tratamiento: siempre puedes pedir la intervención de una persona, corregir el resultado o ejercer tu derecho al tratamiento objetivo (art. 87). Antes de enviar contenido a un proveedor de IA, retiramos o enmascaramos los identificadores cuando es posible, y el proveedor no puede usar tus datos para entrenar sus modelos.`
-    : `${company.name} no adopta decisiones basadas únicamente en tratamientos automatizados (incluyendo algoritmos o inteligencia artificial) que produzcan efectos jurídicos negativos o te afecten significativamente de modo similar sin intervención humana. Si esto cambiara, te lo informaremos antes y podrás ejercer tu derecho al tratamiento objetivo (art. 87 del DS N.° 016-2024-JUS).`
-}`,
+      text: () => `## 8. Decisiones automatizadas y elaboración de perfiles`,
+    },
+    {
+      id: "politica.8-automatizado.si",
+      cites: [],
+      when: ({ profile, banks }) => usesAutomation(profile, banks),
+      text: ({ company }) =>
+        `${company.name} utiliza tratamientos automatizados (por ejemplo, categorización, extracción de texto, reconocimiento de voz, evaluación de perfiles o inteligencia artificial) como apoyo a su servicio. Te informamos que existen y las consecuencias que pueden tener para ti (art. 6.1.8 del DS N.° 016-2024-JUS). No adoptamos decisiones que te produzcan efectos jurídicos o te afecten de modo significativo basadas **únicamente** en ese tratamiento: siempre puedes pedir la intervención de una persona, corregir el resultado o ejercer tu derecho al tratamiento objetivo (art. 87). Antes de enviar contenido a un proveedor de IA, retiramos o enmascaramos los identificadores cuando es posible, y el proveedor no puede usar tus datos para entrenar sus modelos.`,
+    },
+    {
+      id: "politica.8-automatizado.no",
+      cites: [],
+      when: ({ profile, banks }) => !usesAutomation(profile, banks),
+      text: ({ company }) =>
+        `${company.name} no adopta decisiones basadas únicamente en tratamientos automatizados (incluyendo algoritmos o inteligencia artificial) que produzcan efectos jurídicos negativos o te afecten significativamente de modo similar sin intervención humana. Si esto cambiara, te lo informaremos antes y podrás ejercer tu derecho al tratamiento objetivo (art. 87 del DS N.° 016-2024-JUS).`,
     },
     {
       id: "politica.9.seguridad-incidentes",
@@ -155,27 +180,45 @@ ${
 Contamos con un **Documento de Seguridad** interno y aplicamos medidas técnicas, organizativas y legales acordes con el DS N.° 016-2024-JUS: control de accesos por perfil con revisión de privilegios al menos semestral, registro de las interacciones con los datos conservado por mínimo dos años, contraseñas robustas, copias de respaldo semanales con verificación de integridad, cifrado en tránsito y acuerdos de confidencialidad (arts. 46 a 51). Si se produce un incidente de seguridad que exponga grandes volúmenes de datos, pueda afectar a un gran número de personas, involucre datos sensibles o cause un perjuicio evidente a tus derechos, lo notificaremos a la ANPD dentro de las **48 horas** de haber tomado conocimiento y, si te afecta, te lo comunicaremos en el mismo plazo en lenguaje claro junto con las medidas adoptadas (art. 34 del DS N.° 016-2024-JUS).`,
     },
     {
-      id: "politica.10.sensibles-menores-normas",
+      id: "politica.10.encabezado",
       cites: [],
-      text: ({ profile, banks }) => {
-        const sensitiveBanks = banks.filter(isSensitiveBank);
-        return `## 10. Datos sensibles, menores y normas de nuestra actividad
-
-${
-  sensitiveBanks.length || profile.sensitive
-    ? `**Datos sensibles.** En el marco de nuestra actividad (${profile.title.toLowerCase()}) tratamos datos sensibles${sensitiveBanks.length ? ` en los bancos ${sensitiveBanks.map((b) => `«${b.name}»`).join(", ")}` : ""}. Solo los tratamos con tu consentimiento otorgado **por escrito** (firma manuscrita, digital, electrónica u otra modalidad que garantice tu voluntad, art. 8 del DS N.° 016-2024-JUS), para la finalidad específica que te informamos, con acceso restringido al personal que lo necesita y con medidas de seguridad reforzadas.`
-    : `**Datos sensibles.** No necesitamos datos sensibles (salud, datos biométricos, afiliación sindical u otros del art. 2.6 del DS N.° 016-2024-JUS) para prestarte nuestro servicio principal. Si en algún caso fuera necesario, te pediremos tu autorización por escrito antes de recogerlos.`
-}
-
-${
-  profile.minors
-    ? `**Menores de edad.** Si eres menor de 14 años, el tratamiento de tus datos requiere el consentimiento de tus padres o tutores; si tienes entre 14 y 17 años, puedes consentir según tu capacidad, y te informaremos en lenguaje comprensible (art. 22 del DS N.° 016-2024-JUS). No recogemos datos de tu grupo familiar más allá de la identidad y dirección de tus padres o tutores cuando se necesita su consentimiento (art. 23).`
-    : `**Menores de edad.** Nuestros servicios no están dirigidos a menores de 14 años. Si tomamos conocimiento de que hemos recogido datos de un menor sin la autorización de sus padres o tutores, los eliminaremos.`
-}
-
-**Normas que además aplican a nuestra actividad:**
-${bullets(profile.norms)}`;
+      text: () => `## 10. Datos sensibles, menores y normas de nuestra actividad`,
+    },
+    {
+      id: "politica.10-sensibles.si",
+      cites: [],
+      when: (ctx) => sensitiveBanksOf(ctx).length > 0 || ctx.profile.sensitive,
+      text: (ctx) => {
+        const sensitiveBanks = sensitiveBanksOf(ctx);
+        return `**Datos sensibles.** En el marco de nuestra actividad (${ctx.profile.title.toLowerCase()}) tratamos datos sensibles${sensitiveBanks.length ? ` en los bancos ${sensitiveBanks.map((b) => `«${b.name}»`).join(", ")}` : ""}. Solo los tratamos con tu consentimiento otorgado **por escrito** (firma manuscrita, digital, electrónica u otra modalidad que garantice tu voluntad, art. 8 del DS N.° 016-2024-JUS), para la finalidad específica que te informamos, con acceso restringido al personal que lo necesita y con medidas de seguridad reforzadas.`;
       },
+    },
+    {
+      id: "politica.10-sensibles.no",
+      cites: [],
+      when: (ctx) => !(sensitiveBanksOf(ctx).length > 0 || ctx.profile.sensitive),
+      text: () =>
+        `**Datos sensibles.** No necesitamos datos sensibles (salud, datos biométricos, afiliación sindical u otros del art. 2.6 del DS N.° 016-2024-JUS) para prestarte nuestro servicio principal. Si en algún caso fuera necesario, te pediremos tu autorización por escrito antes de recogerlos.`,
+    },
+    {
+      id: "politica.10-menores.si",
+      cites: [],
+      when: ({ profile }) => profile.minors,
+      text: () =>
+        `**Menores de edad.** Si eres menor de 14 años, el tratamiento de tus datos requiere el consentimiento de tus padres o tutores; si tienes entre 14 y 17 años, puedes consentir según tu capacidad, y te informaremos en lenguaje comprensible (art. 22 del DS N.° 016-2024-JUS). No recogemos datos de tu grupo familiar más allá de la identidad y dirección de tus padres o tutores cuando se necesita su consentimiento (art. 23).`,
+    },
+    {
+      id: "politica.10-menores.no",
+      cites: [],
+      when: ({ profile }) => !profile.minors,
+      text: () =>
+        `**Menores de edad.** Nuestros servicios no están dirigidos a menores de 14 años. Si tomamos conocimiento de que hemos recogido datos de un menor sin la autorización de sus padres o tutores, los eliminaremos.`,
+    },
+    {
+      id: "politica.10.normas",
+      cites: [],
+      text: ({ profile }) => `**Normas que además aplican a nuestra actividad:**
+${bullets(profile.norms)}`,
     },
     {
       id: "politica.11.cookies-vigencia",

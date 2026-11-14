@@ -69,18 +69,31 @@ ${
 3. Debes informarnos de inmediato cualquier acceso no autorizado a ${v(ctx).contact}.`,
   },
   {
-    id: "terminos.plataforma-5.precios-suscripciones",
+    id: "terminos.plataforma-5.encabezado",
     cites: [],
     when: plataforma,
-    text: ({ company }) => {
-      const priceClause = isForeign(company)
-        ? `Los precios se muestran en dólares estadounidenses (USD) salvo que la página de pago indique soles peruanos (PEN). Cuando la venta se realice a un consumidor final en el Perú, el precio incluye el Impuesto General a las Ventas (IGV, 18%): actuamos como proveedor de servicios digitales no domiciliado e inscribimos nuestro RUC para recaudar el impuesto en cada cobro (Decreto Legislativo N.° 1623). El comprobante que recibes es la constancia de pago de la pasarela; no emitimos comprobantes de pago electrónicos peruanos.`
-        : `Los precios se muestran en soles peruanos (PEN) e incluyen el Impuesto General a las Ventas (IGV, 18%). Emitimos comprobante de pago electrónico por cada cobro y lo enviamos al correo de la cuenta.`;
-      return `## 5. Precios, impuestos y suscripciones
-
-${priceClause}
-
-**Renovación automática.** Los planes de pago se renuevan automáticamente al final de cada ciclo (mensual o anual) por el mismo medio de pago, salvo que canceles antes de la fecha de renovación. El precio de la renovación es el vigente a esa fecha y te lo mostramos antes de cobrarlo.
+    text: () => `## 5. Precios, impuestos y suscripciones`,
+  },
+  {
+    id: "terminos.plataforma-5-precio.extranjera",
+    cites: [],
+    when: (ctx) => plataforma(ctx) && isForeign(ctx.company),
+    text: () =>
+      `Los precios se muestran en dólares estadounidenses (USD) salvo que la página de pago indique soles peruanos (PEN). Cuando la venta se realice a un consumidor final en el Perú, el precio incluye el Impuesto General a las Ventas (IGV, 18%): actuamos como proveedor de servicios digitales no domiciliado e inscribimos nuestro RUC para recaudar el impuesto en cada cobro (Decreto Legislativo N.° 1623). El comprobante que recibes es la constancia de pago de la pasarela; no emitimos comprobantes de pago electrónicos peruanos.`,
+  },
+  {
+    id: "terminos.plataforma-5-precio.peruana",
+    cites: [],
+    when: (ctx) => plataforma(ctx) && !isForeign(ctx.company),
+    text: () =>
+      `Los precios se muestran en soles peruanos (PEN) e incluyen el Impuesto General a las Ventas (IGV, 18%). Emitimos comprobante de pago electrónico por cada cobro y lo enviamos al correo de la cuenta.`,
+  },
+  {
+    id: "terminos.plataforma-5.renovacion",
+    cites: [],
+    when: plataforma,
+    text: () => {
+      return `**Renovación automática.** Los planes de pago se renuevan automáticamente al final de cada ciclo (mensual o anual) por el mismo medio de pago, salvo que canceles antes de la fecha de renovación. El precio de la renovación es el vigente a esa fecha y te lo mostramos antes de cobrarlo.
 
 **Pagos rechazados.** Si un cobro es rechazado, intentamos el cobro nuevamente durante un periodo de gracia y te avisamos por correo. Si el pago no se regulariza, la cuenta pasa al plan gratuito y sus funciones de pago se desactivan.`;
     },

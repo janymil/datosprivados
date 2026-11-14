@@ -13,15 +13,20 @@ import type { DocumentSpec, LegalContext } from "@/legal/types";
 
 const digital = ({ profile }: LegalContext) => profile.terms === "plataforma";
 
+/** Proveedores que necesitan contrato de encargo o tratan datos fuera del Perú. */
+const contractProviders = ({ providers }: LegalContext) =>
+  providers.filter((provider) => provider.dpa_status !== "no_aplica" || isAbroad(provider.country));
+
+/** Tabla del Anexo I: proveedores declarados o, si no hay, la plantilla de plataforma o de negocio local. */
 function annexRows(ctx: LegalContext): string {
-  const { banks, providers } = ctx;
+  const { banks } = ctx;
   const bankList = banks.length ? banks.map((bank) => `«${bank.name}»`).join(", ") : "los bancos declarados en el inventario";
   const head = ["Proveedor", "Servicio", "Datos a los que accede", "País", "Base del flujo transfronterizo", "Subencargados"];
-  const contractProviders = providers.filter((provider) => provider.dpa_status !== "no_aplica" || isAbroad(provider.country));
-  if (contractProviders.length)
+  const declared = contractProviders(ctx);
+  if (declared.length)
     return table(
       [...head, "Contrato de encargo"],
-      contractProviders.map((provider) => [
+      declared.map((provider) => [
         provider.name,
         provider.purpose || categoryLabel(provider.category),
         provider.data || "[datos a los que accede]",
@@ -95,13 +100,29 @@ Se firma con cada proveedor que trate datos personales por cuenta de ${name}: ${
       },
     },
     {
-      id: "encargo.b.anexo-encargados",
+      id: "encargo.b.encabezado",
       cites: [],
-      text: (ctx) => `## B. Anexo I — Relación de encargados
+      text: () => `## B. Anexo I — Relación de encargados
 
-Una fila por proveedor. Si un proveedor cambia de país o de subencargados, se actualiza la fila y se avisa a los titulares si afecta la información publicada.
-
-${annexRows(ctx)}`,
+Una fila por proveedor. Si un proveedor cambia de país o de subencargados, se actualiza la fila y se avisa a los titulares si afecta la información publicada.`,
+    },
+    {
+      id: "encargo.b-anexo.proveedores",
+      cites: [],
+      when: (ctx) => contractProviders(ctx).length > 0,
+      text: (ctx) => annexRows(ctx),
+    },
+    {
+      id: "encargo.b-anexo.plataforma",
+      cites: [],
+      when: (ctx) => contractProviders(ctx).length === 0 && digital(ctx),
+      text: (ctx) => annexRows(ctx),
+    },
+    {
+      id: "encargo.b-anexo.local",
+      cites: [],
+      when: (ctx) => contractProviders(ctx).length === 0 && !digital(ctx),
+      text: (ctx) => annexRows(ctx),
     },
     {
       id: "encargo.c.transferencia-internacional",

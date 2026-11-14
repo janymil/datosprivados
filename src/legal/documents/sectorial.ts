@@ -67,15 +67,24 @@ ${table(["Tipo de dato", "Plazo sugerido", "Fundamento"], profile.retention.map(
 ${table(["Riesgo", "Probabilidad", "Impacto", "Nivel"], profile.risks.map((r) => [r.risk, r.probability, r.impact, r.level]))}`,
     },
     {
-      id: "sectorial.7.herramientas",
+      id: "sectorial.7.encabezado",
       cites: [],
+      text: () => `## 7. Tus herramientas`,
+    },
+    {
+      id: "sectorial.7-herramientas.ninguna",
+      cites: [],
+      when: ({ providers }) => providers.length === 0,
+      text: () =>
+        "Aún no declaraste tus herramientas. Hazlo en la sección «Herramientas» para completar este apartado y la Política de Privacidad.",
+    },
+    {
+      id: "sectorial.7-herramientas.tabla",
+      cites: [],
+      when: ({ providers }) => providers.length > 0,
       text: ({ providers }) => {
         const abroad = foreignProviders(providers);
-        return `## 7. Tus herramientas
-
-${
-  providers.length
-    ? `${table(
+        return `${table(
         ["Herramienta", "Categoría", "País", "Contrato", "Flujo transfronterizo"],
         providers.map((provider) => [
           provider.name,
@@ -86,9 +95,7 @@ ${
         ])
       )}
 
-${abroad.length ? `**${abroad.length} ${abroad.length === 1 ? "herramienta trata" : "herramientas tratan"} datos fuera del Perú (o en un país por verificar).** Para cada una: contrato de encargo con cláusulas que impongan al menos las mismas obligaciones (art. 20), comunicación a la ANPD para su inscripción (art. 21.2), y mención en la Política de Privacidad (art. 6.1.7).` : "Todas tus herramientas declaradas tratan los datos en el Perú."}`
-    : "Aún no declaraste tus herramientas. Hazlo en la sección «Herramientas» para completar este apartado y la Política de Privacidad."
-}`;
+${abroad.length ? `**${abroad.length} ${abroad.length === 1 ? "herramienta trata" : "herramientas tratan"} datos fuera del Perú (o en un país por verificar).** Para cada una: contrato de encargo con cláusulas que impongan al menos las mismas obligaciones (art. 20), comunicación a la ANPD para su inscripción (art. 21.2), y mención en la Política de Privacidad (art. 6.1.7).` : "Todas tus herramientas declaradas tratan los datos en el Perú."}`;
       },
     },
     {
