@@ -33,7 +33,8 @@ export type MailTemplate =
   | "lapsed_notice"
   | "email_changed"
   | "account_deleted"
-  | "ops_alert";
+  | "ops_alert"
+  | "legal_change_new";
 
 export type MailPayload = Record<string, string | number>;
 
@@ -65,6 +66,7 @@ const ESSENTIAL: Record<MailTemplate, boolean> = {
   email_changed: true,
   account_deleted: true,
   ops_alert: true,
+  legal_change_new: true,
 };
 
 export function isEssential(template: MailTemplate): boolean {
@@ -420,6 +422,19 @@ export function renderMail(template: MailTemplate, payload: MailPayload): Render
           ],
         },
         company
+      );
+    case "legal_change_new":
+      need("title", "kind", "path");
+      return layout(
+        {
+          subject: `Cambio legal por aprobar: ${s(payload, "title")}`,
+          paragraphs: [
+            `Hay un cambio legal propuesto (${s(payload, "kind") === "norma" ? "por un cambio de norma" : "por la auditoría"}): «${s(payload, "title")}».`,
+            `Afecta a ${s(payload, "affected") || "0"} textos o cláusulas. No llega a tus clientes hasta que lo apruebes.`,
+          ],
+          action: { label: "Revisar el cambio", url: s(payload, "path") },
+        },
+        ""
       );
     case "ops_alert":
       need("subject", "message");

@@ -41,6 +41,11 @@ export function registerLegalChange(input: LegalChangeInput): LegalChange {
   return getLegalChange(id)!;
 }
 
+/** Cambio ya registrado para esa rama y ese commit, si existe. */
+export function findLegalChange(branch: string, headSha: string): LegalChange | null {
+  return (getDb().prepare("SELECT * FROM legal_changes WHERE branch = ? AND head_sha = ?").get(branch, headSha) as LegalChange | undefined) ?? null;
+}
+
 export function getLegalChange(id: string): LegalChange | null {
   return (getDb().prepare("SELECT * FROM legal_changes WHERE id = ?").get(id) as LegalChange | undefined) ?? null;
 }
