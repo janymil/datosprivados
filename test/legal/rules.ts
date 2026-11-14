@@ -40,7 +40,8 @@ export const RULES: Rule[] = [
     id: "sensibles-consentimiento-escrito",
     applies: ({ profile }) => profile.sensitive || profile.biometric,
     check: ({ consentimiento }) =>
-      report("consentimiento", missing(consentimiento, ["AUTORIZACIÓN EXPRESA PARA EL TRATAMIENTO DE DATOS SENSIBLES", "por escrito"])),
+      // «esta autorización es obligatoria» solo aparece en la variante de rubros con datos sensibles.
+      report("consentimiento", missing(consentimiento, ["AUTORIZACIÓN EXPRESA PARA EL TRATAMIENTO DE DATOS SENSIBLES", "por escrito", "esta autorización es obligatoria"])),
   },
   {
     id: "menores-consentimiento-padres",
@@ -54,7 +55,8 @@ export const RULES: Rule[] = [
     check: ({ politica, encargo }, { providers }) => {
       const abroad = providers.filter((p) => isAbroad(p.country));
       return (
-        report("politica", missing(politica, ["flujo transfronterizo", ...abroad.map((p) => COUNTRY_LABEL(p.country))])) ??
+        // Texto propio de la rama «sí transfiere»: «no realizamos flujo transfronterizo» no cuenta.
+        report("politica", missing(politica, ["realizamos **flujo transfronterizo", "Los países de destino son", ...abroad.map((p) => COUNTRY_LABEL(p.country))])) ??
         report("encargo", missing(encargo, abroad.map((p) => p.name)))
       );
     },
