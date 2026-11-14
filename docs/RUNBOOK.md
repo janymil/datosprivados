@@ -538,8 +538,10 @@ apagada (no cuenta para la salud) y aprobar responde «falta GITHUB_DISPATCH_TOK
 - Token de grano fino en GitHub (Settings → Developer settings → Fine-grained tokens): solo el
   repositorio `janymil/datosprivados`, permiso **Contents: Read and write** (el `repository_dispatch`
   lo exige) y **Actions: Read** (para leer los runs). Caducidad: 1 año, con recordatorio.
-- Añadirlo a `/etc/datosprivados.env` (600) como `GITHUB_DISPATCH_TOKEN=...` y reiniciar con
-  `pm2 restart datosprivados --update-env`.
+- Añadirlo al `.env` de la aplicación, `/var/www/datosprivados/.env` (600), como
+  `GITHUB_DISPATCH_TOKEN=...` y reiniciar con `pm2 restart datosprivados --update-env`. La
+  aprobación la envía la aplicación, que lee ese `.env`; en este servidor no existe
+  `/etc/datosprivados.env`.
 - Instalar el script y la tabla de cron **antes** de desplegar esta versión (`scripts/deploy.sh`
   corre las pruebas, y `test/deploy-artifacts.test.ts` falla si las copias instaladas difieren):
 
