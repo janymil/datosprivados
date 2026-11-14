@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DEMO_EMAIL, requireSession } from "@/lib/auth";
 import { isCompanyActive } from "@/lib/billing";
+import { getOpenCredit, isCreditOverdue } from "@/lib/credit";
 import { getStats, listBanks, listDocuments, listIncidents, listRequests, listProviders, listEvidence, overdueIncidents } from "@/lib/data";
 import { computeCompliance } from "@/lib/compliance";
 import { logoutAction } from "@/app/actions/auth";
@@ -21,6 +22,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { company, user } = await requireSession();
   if (!isCompanyActive(company)) redirect("/pago");
   const isDemo = user.email === DEMO_EMAIL;
+  // Factura a crédito vencida: el panel se ve, pero las acciones redirigen (requireActiveSession).
+  const creditDue = isCreditOverdue(company.id) ? getOpenCredit(company.id)?.due_at : null;
   const stats = getStats(company.id);
   const overdue = overdueIncidents(company.id).map((incident) => incident.id);
   const compliance = computeCompliance({
@@ -129,6 +132,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                     Salir de la demo
                   </Link>
                 </div>
+              </div>
+            )}
+            {creditDue && (
+              <div role="status" className="no-print mb-6 flex flex-col gap-2 border-l-3 border-crimson bg-crimson/[0.05] px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                <p>
+                  <strong>
+                    Tu factura a crédito venció el{" "}
+                    {new Date(creditDue).toLocaleDateString("es-PE", { timeZone: "America/Lima", day: "2-digit", month: "long", year: "numeric" })}.
+                  </strong>{" "}
+                  Tu cuenta queda en solo lectura hasta registrar el pago. Tus páginas públicas siguen activas.
+                </p>
+                <Link href="/pago" className="font-mono text-xs font-semibold uppercase tracking-[0.08em] text-crimson hover:underline">
+                  Ver cómo pagar
+                </Link>
               </div>
             )}
             <PageHelpLink />
