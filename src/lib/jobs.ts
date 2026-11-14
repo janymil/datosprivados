@@ -12,6 +12,7 @@ import { enqueueEmail, processOutbox, stuckOutboxCount } from "./mail";
 import { logEvent } from "./log";
 import { notifyCompany } from "./notify";
 import { planName, renewalPrice } from "./plans";
+import { syncLegalChanges } from "./legal-change-sync";
 
 /**
  * Tareas programadas. Cada una es idempotente (repetirla no duplica correos ni
@@ -443,6 +444,11 @@ const JOBS = {
     }
     return { sin_decreto_confirmado: pending.join(",") || "ninguno" };
   },
+
+  /** Sigue los cambios legales aprobados: resultado del flujo en GitHub y despliegue (plan 4). */
+  async "legal-change-sync"({ now }: JobContext): Promise<JobResult> {
+    return { ...(await syncLegalChanges({ now })) };
+  },
 } satisfies Record<string, (context: JobContext) => JobResult | Promise<JobResult>>;
 
 export type JobName = keyof typeof JOBS;
@@ -467,6 +473,7 @@ export const JOB_MAX_AGE_HOURS: Record<JobName, number> = {
   "demo-reset": 8 * 24,
   "weekly-digest": 8 * 24,
   "holidays-check": 8 * 24,
+  "legal-change-sync": 1,
 };
 
 /**
@@ -476,6 +483,8 @@ export const JOB_MAX_AGE_HOURS: Record<JobName, number> = {
  */
 export function jobEnabled(job: JobName, env: NodeJS.ProcessEnv = process.env): boolean {
   if (job === "weekly-digest") return env.WEEKLY_DIGEST === "1";
+  // Sin token no hay aprobación en un clic, y por tanto nada que seguir.
+  if (job === "legal-change-sync") return Boolean(env.GITHUB_DISPATCH_TOKEN);
   return true;
 }
 

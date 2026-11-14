@@ -4,6 +4,7 @@ const LINKS = [
   { key: "cobros", href: "/operador", label: "Comprobantes y transferencias" },
   { key: "clientes", href: "/operador/clientes", label: "Clientes" },
   { key: "feriados", href: "/operador/feriados", label: "Feriados" },
+  { key: "legal", href: "/operador/legal", label: "Cambios legales" },
 ] as const;
 
 /** Navegación del panel de operador. */
