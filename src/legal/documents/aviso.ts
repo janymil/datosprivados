@@ -27,6 +27,7 @@ export const avisoSpec: DocumentSpec = {
     {
       id: "aviso.b.encabezado",
       cites: [],
+      nonLegal: "Encabezado de sección",
       text: () => `## B. Checkout o pantalla de pago (antes de confirmar)`,
     },
     {
@@ -102,7 +103,9 @@ export const avisoSpec: DocumentSpec = {
     },
     {
       id: "aviso.nota.regla-practica",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "7" },
+      ],
       text: () => `---
 
 *Regla práctica: el aviso corto no reemplaza a la política; la ubica (art. 7 del DS N.° 016-2024-JUS). Debe estar visible antes de que la persona entregue el dato, no después, e incluir al menos quién eres, para qué usas el dato y dónde ejercer derechos.*`,

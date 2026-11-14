@@ -18,7 +18,24 @@ export const seguridadSpec: DocumentSpec = {
   clauses: [
     {
       id: "seguridad.1.objeto",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "46" },
+        { norm: "ds-016-2024-jus", art: "47" },
+        { norm: "ds-016-2024-jus", art: "47.1" },
+        { norm: "ds-016-2024-jus", art: "47.2" },
+        { norm: "ds-016-2024-jus", art: "48" },
+        { norm: "ds-016-2024-jus", art: "49" },
+        { norm: "ds-016-2024-jus", art: "50" },
+        { norm: "ds-016-2024-jus", art: "51" },
+        { norm: "ds-016-2024-jus", art: "52" },
+        { norm: "ds-016-2024-jus", art: "53" },
+        { norm: "ds-016-2024-jus", art: "54" },
+        { norm: "ds-016-2024-jus", art: "55" },
+        { norm: "ds-016-2024-jus", art: "56" },
+        { norm: "ds-016-2024-jus", art: "57" },
+        { norm: "ds-016-2024-jus", art: "58" },
+        { norm: "ley-29733", art: "16" },
+      ],
       text: ({ company, date }) => `## 1. Objeto, marco normativo y fecha cierta
 
 El presente **Documento de Seguridad** establece las medidas técnicas, organizativas y legales adoptadas por **${company.name}** (${companyShortId(company)}), con domicilio en **${company.address || "por completar"}**, para garantizar la confidencialidad, integridad y disponibilidad de los bancos de datos personales bajo su responsabilidad, en cumplimiento de la **Ley N.° 29733** (art. 16) y de los **arts. 46 a 58 del Decreto Supremo N.° 016-2024-JUS**. Puede tomar como referencia la NTP-ISO/IEC 27001 vigente u otro estándar reconocido (art. 47.1). Es de obligatorio cumplimiento para todo el personal con acceso a los sistemas de información (art. 47.2).
@@ -45,7 +62,9 @@ ${inventory || "Aún no se han declarado bancos de datos personales en el invent
     },
     {
       id: "seguridad.3.gobernanza",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "47.3" },
+      ],
       text: ({ company, providers }) => `## 3. Gobernanza, responsables y encargados del tratamiento
 
 - **Responsable del tratamiento:** ${company.name} (${companyShortId(company)}).
@@ -64,7 +83,19 @@ ${inventory || "Aún no se han declarado bancos de datos personales en el invent
     },
     {
       id: "seguridad.4.control-accesos",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "46" },
+        { norm: "ds-016-2024-jus", art: "46.1.a" },
+        { norm: "ds-016-2024-jus", art: "46.1.c" },
+        { norm: "ds-016-2024-jus", art: "46.2" },
+        { norm: "ds-016-2024-jus", art: "46.3" },
+        { norm: "ds-016-2024-jus", art: "46.4" },
+        { norm: "ds-016-2024-jus", art: "47" },
+        { norm: "ds-016-2024-jus", art: "53" },
+        { norm: "ds-016-2024-jus", art: "54" },
+        { norm: "ds-016-2024-jus", art: "55" },
+        { norm: "ds-016-2024-jus", art: "56" },
+      ],
       text: () => `## 4. Control de accesos y gestión de privilegios (arts. 46 y 47 del DS N.° 016-2024-JUS)
 
 0. **Gestión de accesos de principio a fin (art. 46.1.a):** se documenta quién tiene acceso desde que se crea su usuario hasta su baja, incluyendo periodos de vacaciones, licencias o permisos esporádicos.
@@ -78,7 +109,15 @@ ${inventory || "Aún no se han declarado bancos de datos personales en el invent
     },
     {
       id: "seguridad.5.respaldos-cifrado",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "49" },
+        { norm: "ds-016-2024-jus", art: "50" },
+        { norm: "ds-016-2024-jus", art: "50.1.4" },
+        { norm: "ds-016-2024-jus", art: "50.1.5" },
+        { norm: "ds-016-2024-jus", art: "51.1" },
+        { norm: "ds-016-2024-jus", art: "51.2" },
+        { norm: "ds-016-2024-jus", art: "52" },
+      ],
       text: () => `## 5. Copias de respaldo (Backups), cifrado y baja segura de equipos
 
 1. **Copias de respaldo periódicas (art. 51.1):** Se realizan copias de seguridad (backups) de los bancos de datos con frecuencia **semanal como mínimo** (salvo que en ese periodo no se hubiera actualizado ningún dato), almacenadas en un soporte o nube segura independiente del equipo principal, con medidas de seguridad para su almacenamiento, transferencia y destrucción.
@@ -89,7 +128,13 @@ ${inventory || "Aún no se han declarado bancos de datos personales en el invent
     },
     {
       id: "seguridad.6.incidentes-48h",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "34.1" },
+        { norm: "ds-016-2024-jus", art: "34.3" },
+        { norm: "ds-016-2024-jus", art: "34.4" },
+        { norm: "ds-016-2024-jus", art: "34.5" },
+        { norm: "ds-016-2024-jus", art: "35" },
+      ],
       text: () => `## 6. Protocolo de respuesta y notificación de incidentes en 48 horas (DS N.° 016-2024-JUS)
 
 Ante cualquier incidente de seguridad (robo o pérdida de equipos, acceso no autorizado, ransomware, extravío de archivos o envío masivo erróneo de datos):
@@ -101,7 +146,16 @@ Ante cualquier incidente de seguridad (robo o pérdida de equipos, acceso no aut
     },
     {
       id: "seguridad.7.conservacion-supresion",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "2.2" },
+        { norm: "ds-016-2024-jus", art: "31.2" },
+        { norm: "ds-016-2024-jus", art: "46" },
+        { norm: "ds-016-2024-jus", art: "46.1.c" },
+        { norm: "ds-016-2024-jus", art: "46.2" },
+        { norm: "ds-016-2024-jus", art: "46.3" },
+        { norm: "ds-016-2024-jus", art: "50.1.5" },
+        { norm: "ds-016-2024-jus", art: "83" },
+      ],
       text: ({ profile }) => {
         const sectorMeasures = profile.security.length
           ? `\n\n### Medidas propias de tu actividad (${profile.title})\n\n${bullets(profile.security)}`
@@ -121,6 +175,7 @@ Este Documento de Seguridad es de cumplimiento obligatorio para todo el personal
     {
       id: "seguridad.firma.constancia",
       cites: [],
+      nonLegal: "Firma y constancia de aprobación",
       text: ({ company, date }) => `---
 
 **Constancia de aprobación interna:**

@@ -71,6 +71,7 @@ ${
   {
     id: "terminos.plataforma-5.encabezado",
     cites: [],
+    nonLegal: "Encabezado de sección",
     when: plataforma,
     text: () => `## 5. Precios, impuestos y suscripciones`,
   },

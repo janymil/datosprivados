@@ -64,7 +64,19 @@ export const encargoSpec: DocumentSpec = {
   clauses: [
     {
       id: "encargo.a.clausula-modelo",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "28" },
+        { norm: "ds-016-2024-jus", art: "29" },
+        { norm: "ds-016-2024-jus", art: "29.2" },
+        { norm: "ds-016-2024-jus", art: "30" },
+        { norm: "ds-016-2024-jus", art: "30.4" },
+        { norm: "ds-016-2024-jus", art: "31" },
+        { norm: "ds-016-2024-jus", art: "31.2" },
+        { norm: "ds-016-2024-jus", art: "32" },
+        { norm: "ds-016-2024-jus", art: "33" },
+        { norm: "ds-016-2024-jus", art: "34" },
+        { norm: "ds-016-2024-jus", art: "36" },
+      ],
       text: (ctx) => {
         const { company } = ctx;
         const name = company.name;
@@ -102,13 +114,17 @@ Se firma con cada proveedor que trate datos personales por cuenta de ${name}: ${
     {
       id: "encargo.b.encabezado",
       cites: [],
+      nonLegal: "Encabezado de sección",
       text: () => `## B. Anexo I — Relación de encargados
 
 Una fila por proveedor. Si un proveedor cambia de país o de subencargados, se actualiza la fila y se avisa a los titulares si afecta la información publicada.`,
     },
     {
       id: "encargo.b-anexo.proveedores",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "20" },
+        { norm: "ds-016-2024-jus", art: "21.2" },
+      ],
       when: (ctx) => contractProviders(ctx).length > 0,
       text: (ctx) => annexRows(ctx),
     },
@@ -126,7 +142,17 @@ Una fila por proveedor. Si un proveedor cambia de país o de subencargados, se a
     },
     {
       id: "encargo.c.transferencia-internacional",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "14" },
+        { norm: "ds-016-2024-jus", art: "18" },
+        { norm: "ds-016-2024-jus", art: "19" },
+        { norm: "ds-016-2024-jus", art: "20" },
+        { norm: "ds-016-2024-jus", art: "20.1" },
+        { norm: "ds-016-2024-jus", art: "20.2" },
+        { norm: "ds-016-2024-jus", art: "21" },
+        { norm: "ds-016-2024-jus", art: "21.1" },
+        { norm: "ds-016-2024-jus", art: "21.2" },
+      ],
       text: ({ company, banks, providers }) => {
         const name = company.name;
         const transfers = banks.filter((bank) => bank.transfers === "si");
@@ -151,7 +177,12 @@ Aplica a ${foreignProviders(providers).length ? foreignProviders(providers).map(
     },
     {
       id: "encargo.d.checklist-firmas",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "6.1.3" },
+        { norm: "ds-016-2024-jus", art: "6.1.7" },
+        { norm: "ds-016-2024-jus", art: "32" },
+        { norm: "ds-016-2024-jus", art: "33" },
+      ],
       text: (ctx) => `## D. Checklist de firmas
 
 ${

@@ -24,7 +24,10 @@ export const clausulasSpec: DocumentSpec = {
   clauses: [
     {
       id: "clausulas.a.confidencialidad",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "17" },
+        { norm: "ley-29733", art: "17" },
+      ],
       text: (ctx) => {
         const { name, shortId, address, contact } = v(ctx);
         return `## A. Compromiso de Confidencialidad y Deber de Secreto para Trabajadores (Art. 17 Ley N.° 29733)
@@ -50,7 +53,12 @@ export const clausulasSpec: DocumentSpec = {
     },
     {
       id: "clausulas.b.encargo-proveedores",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "31" },
+        { norm: "ds-016-2024-jus", art: "31.2" },
+        { norm: "ds-016-2024-jus", art: "32" },
+        { norm: "ds-016-2024-jus", art: "33" },
+      ],
       text: (ctx) => {
         const { name, shortId, contact } = v(ctx);
         return `## B. Cláusula / Adenda de Encargo de Tratamiento para Proveedores Externos (Contador, Agencia, Courier, IT)
@@ -97,7 +105,13 @@ export const clausulasSpec: DocumentSpec = {
     },
     {
       id: "clausulas.d.acta-odp",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "37.1" },
+        { norm: "ds-016-2024-jus", art: "37.4" },
+        { norm: "ds-016-2024-jus", art: "37.5" },
+        { norm: "ds-016-2024-jus", art: "38.2" },
+        { norm: "ds-016-2024-jus", art: "69" },
+      ],
       text: (ctx) => {
         const { company, profile, date } = ctx;
         const { name, shortId, contact, arcoUrl } = v(ctx);

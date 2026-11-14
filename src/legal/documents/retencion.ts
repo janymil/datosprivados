@@ -16,7 +16,9 @@ ${company.name} conserva cada dato personal solo mientras exista una finalidad v
     },
     {
       id: "retencion.2.plazos-bancos",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "46.3" },
+      ],
       text: ({ banks }) => {
         const rows = banks
           .map(
@@ -35,7 +37,14 @@ ${rows || "| [sin bancos declarados] | — | — | — | — |"}`;
     },
     {
       id: "retencion.3.plazos-rubro",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "10" },
+        { norm: "ds-016-2024-jus", art: "26" },
+        { norm: "ds-016-2024-jus", art: "30.4" },
+        { norm: "ds-016-2024-jus", art: "31.2" },
+        { norm: "ds-016-2024-jus", art: "46.3" },
+        { norm: "ds-020-2017-jus", art: "24" },
+      ],
       text: ({ profile }) => `## 3. Plazos por tipo de dato para tu rubro (${profile.title})
 
 ${table(
@@ -52,7 +61,12 @@ ${table(
     },
     {
       id: "retencion.4.bloqueo-eliminacion",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "82.3" },
+        { norm: "ds-016-2024-jus", art: "83" },
+        { norm: "ds-016-2024-jus", art: "84" },
+        { norm: "ds-016-2024-jus", art: "85" },
+      ],
       text: () => `## 4. Bloqueo y eliminación anticipada
 
 Cuando el titular pide la supresión o cancelación, la sola presentación de la solicitud implica el **cese del tratamiento mediante el bloqueo** de los datos mientras se evalúa su eliminación (art. 82.3). Se eliminan sus datos salvo los que deban conservarse por razones históricas, estadísticas o científicas, o por la relación contractual o una obligación legal (art. 84); cuando es posible, se usan medios de disociación o anonimización para seguir tratándolos (art. 85). En ese caso se le informa qué se conserva y por qué, y se documenta ante él la supresión indicando a quién se transfirieron los datos (art. 83).
@@ -69,6 +83,7 @@ Cada purga deja constancia de: fecha, banco o tabla afectada, criterio aplicado,
     {
       id: "retencion.6.responsable-revision",
       cites: [],
+      nonLegal: "Firma y constancia de aprobación",
       text: ({ company, date }) => `## 6. Responsable y revisión
 
 - Responsable de ejecutar y registrar las purgas: ${company.dpo_name || "[responsable de privacidad]"} (${company.dpo_email || company.email}).

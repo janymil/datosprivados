@@ -1,4 +1,8 @@
 import { vi } from "vitest";
+import { CLAUSE_DEFAULT_NORM, parseCitations } from "@/legal/citations";
+import { legalContext } from "@/legal/context";
+import { allClauses } from "@/legal/registry";
+import type { Citation } from "@/legal/types";
 import type { buildDocument } from "@/lib/document-catalog";
 import type { DocumentKind } from "@/lib/db";
 import { FIXED_APP_URL, FIXED_NOW, legalFixtures } from "./fixtures";
@@ -58,6 +62,32 @@ export function changedByKind(expected: Record<string, string>, current: Record<
   }
   return out;
 }
+
+const byNormThenArt = (a: Citation, b: Citation) =>
+  a.norm.localeCompare(b.norm) || a.art.localeCompare(b.art, "es", { numeric: true });
+
+/**
+ * Citas que cada cláusula produce de verdad: unión, sobre todas las fixtures donde
+ * la cláusula aplica, de lo que `parseCitations` lee en su texto. Clave: id de cláusula.
+ * Las cláusulas que nunca aplican en ninguna fixture no aparecen.
+ */
+export function clauseCitationsOverFixtures(): Map<string, Citation[]> {
+  return withFrozenWorld(() => {
+    const found = new Map<string, Map<string, Citation>>();
+    for (const f of legalFixtures()) {
+      const ctx = legalContext(f.company, f.banks, f.providers);
+      for (const clause of allClauses()) {
+        if (clause.when && !clause.when(ctx)) continue;
+        const seen = found.get(clause.id) ?? new Map<string, Citation>();
+        for (const c of parseCitations(clause.text(ctx), clause.defaultNorm ?? CLAUSE_DEFAULT_NORM)) seen.set(`${c.norm}:${c.art}`, c);
+        found.set(clause.id, seen);
+      }
+    }
+    return new Map([...found].map(([id, cites]) => [id, [...cites.values()].sort(byNormThenArt)]));
+  });
+}
+
+export const sortCitations = (cites: Citation[]) => [...cites].sort(byNormThenArt);
 
 /** Renderiza cada tipo para cada fixture. Clave: `${fixture.id}|${kind}`. */
 export function renderAll(build: typeof buildDocument): Map<string, string> {

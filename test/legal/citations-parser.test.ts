@@ -47,7 +47,8 @@ describe("parseCitations (formas reales de los documentos)", () => {
   });
 
   it("una norma que no está en la biblioteca queda marcada como desconocida", () => {
-    expect(refs("Art. 24 del DS N.° 020-2017-JUS")).toEqual(["desconocida:DS N.° 020-2017-JUS:24"]);
+    expect(refs("Art. 24 del DS N.° 099-2099-JUS")).toEqual(["desconocida:DS N.° 099-2099-JUS:24"]);
+    expect(refs("Art. 24 del DS N.° 020-2017-JUS")).toEqual(["ds-020-2017-jus:24"]);
   });
 
   it("los artículos del Título Preliminar en romanos", () => {

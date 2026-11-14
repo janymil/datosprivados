@@ -49,7 +49,15 @@ Para cualquier consulta, solicitud o reclamo vinculado a la protección de datos
     },
     {
       id: "politica.2.bancos-finalidades",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "5.2" },
+        { norm: "ds-016-2024-jus", art: "46.3" },
+        { norm: "ley-29733", art: "5" },
+        { norm: "ley-29733", art: "13.5" },
+        { norm: "ley-29733", art: "14" },
+        { norm: "ley-29733", art: "14.5" },
+        { norm: "ley-29733", art: "18" },
+      ],
       text: ({ banks }) => {
         const purposes = banks
           .map(
@@ -77,7 +85,14 @@ Por el contrario, la entrega de datos personales para finalidades de **prospecci
     },
     {
       id: "politica.4.base-legal",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "5.2" },
+        { norm: "ds-016-2024-jus", art: "7" },
+        { norm: "ley-29733", art: "5" },
+        { norm: "ley-29733", art: "13.5" },
+        { norm: "ley-29733", art: "14" },
+        { norm: "ley-29733", art: "14.5" },
+      ],
       text: () => `## 4. Base legal del tratamiento (Art. 5 y 14 de la Ley N.° 29733)
 
 Tratamos tus datos personales amparados en:
@@ -104,7 +119,11 @@ Tienen acceso a los datos nuestro personal autorizado bajo deber de confidencial
     },
     {
       id: "politica.6-transferencia.si",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "18" },
+        { norm: "ds-016-2024-jus", art: "20" },
+        { norm: "ds-016-2024-jus", art: "21.2" },
+      ],
       when: hasTransfers,
       text: (ctx) => {
         const { company, banks, providers } = ctx;
@@ -126,7 +145,19 @@ Tienen acceso a los datos nuestro personal autorizado bajo deber de confidencial
     },
     {
       id: "politica.7.derechos-arco",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "2.8" },
+        { norm: "ds-016-2024-jus", art: "10.2" },
+        { norm: "ds-016-2024-jus", art: "26.5" },
+        { norm: "ds-016-2024-jus", art: "67.3" },
+        { norm: "ds-016-2024-jus", art: "69" },
+        { norm: "ds-016-2024-jus", art: "70" },
+        { norm: "ds-016-2024-jus", art: "71" },
+        { norm: "ds-016-2024-jus", art: "73" },
+        { norm: "ds-016-2024-jus", art: "76" },
+        { norm: "ds-016-2024-jus", art: "86" },
+        { norm: "ds-016-2024-jus", art: "87" },
+      ],
       text: ({ company }) => `## 7. Ejercicio de Derechos ARCO, portabilidad y revocación (DS N.° 016-2024-JUS)
 
 Como titular de tus datos personales, tienes derecho a ejercer de forma **totalmente gratuita** tus derechos de:
@@ -156,25 +187,39 @@ Si tu solicitud no es atendida, se atiende parcialmente o es denegada, la respue
     {
       id: "politica.8.encabezado",
       cites: [],
+      nonLegal: "Encabezado de sección",
       text: () => `## 8. Decisiones automatizadas y elaboración de perfiles`,
     },
     {
       id: "politica.8-automatizado.si",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "6.1.8" },
+        { norm: "ds-016-2024-jus", art: "87" },
+      ],
       when: ({ profile, banks }) => usesAutomation(profile, banks),
       text: ({ company }) =>
         `${company.name} utiliza tratamientos automatizados (por ejemplo, categorización, extracción de texto, reconocimiento de voz, evaluación de perfiles o inteligencia artificial) como apoyo a su servicio. Te informamos que existen y las consecuencias que pueden tener para ti (art. 6.1.8 del DS N.° 016-2024-JUS). No adoptamos decisiones que te produzcan efectos jurídicos o te afecten de modo significativo basadas **únicamente** en ese tratamiento: siempre puedes pedir la intervención de una persona, corregir el resultado o ejercer tu derecho al tratamiento objetivo (art. 87). Antes de enviar contenido a un proveedor de IA, retiramos o enmascaramos los identificadores cuando es posible, y el proveedor no puede usar tus datos para entrenar sus modelos.`,
     },
     {
       id: "politica.8-automatizado.no",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "87" },
+      ],
       when: ({ profile, banks }) => !usesAutomation(profile, banks),
       text: ({ company }) =>
         `${company.name} no adopta decisiones basadas únicamente en tratamientos automatizados (incluyendo algoritmos o inteligencia artificial) que produzcan efectos jurídicos negativos o te afecten significativamente de modo similar sin intervención humana. Si esto cambiara, te lo informaremos antes y podrás ejercer tu derecho al tratamiento objetivo (art. 87 del DS N.° 016-2024-JUS).`,
     },
     {
       id: "politica.9.seguridad-incidentes",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "34" },
+        { norm: "ds-016-2024-jus", art: "46" },
+        { norm: "ds-016-2024-jus", art: "47" },
+        { norm: "ds-016-2024-jus", art: "48" },
+        { norm: "ds-016-2024-jus", art: "49" },
+        { norm: "ds-016-2024-jus", art: "50" },
+        { norm: "ds-016-2024-jus", art: "51" },
+      ],
       text: () => `## 9. Medidas de seguridad y notificación de incidentes
 
 Contamos con un **Documento de Seguridad** interno y aplicamos medidas técnicas, organizativas y legales acordes con el DS N.° 016-2024-JUS: control de accesos por perfil con revisión de privilegios al menos semestral, registro de las interacciones con los datos conservado por mínimo dos años, contraseñas robustas, copias de respaldo semanales con verificación de integridad, cifrado en tránsito y acuerdos de confidencialidad (arts. 46 a 51). Si se produce un incidente de seguridad que exponga grandes volúmenes de datos, pueda afectar a un gran número de personas, involucre datos sensibles o cause un perjuicio evidente a tus derechos, lo notificaremos a la ANPD dentro de las **48 horas** de haber tomado conocimiento y, si te afecta, te lo comunicaremos en el mismo plazo en lenguaje claro junto con las medidas adoptadas (art. 34 del DS N.° 016-2024-JUS).`,
@@ -182,11 +227,14 @@ Contamos con un **Documento de Seguridad** interno y aplicamos medidas técnicas
     {
       id: "politica.10.encabezado",
       cites: [],
+      nonLegal: "Encabezado de sección",
       text: () => `## 10. Datos sensibles, menores y normas de nuestra actividad`,
     },
     {
       id: "politica.10-sensibles.si",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "8" },
+      ],
       when: (ctx) => sensitiveBanksOf(ctx).length > 0 || ctx.profile.sensitive,
       text: (ctx) => {
         const sensitiveBanks = sensitiveBanksOf(ctx);
@@ -195,14 +243,19 @@ Contamos con un **Documento de Seguridad** interno y aplicamos medidas técnicas
     },
     {
       id: "politica.10-sensibles.no",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "2.6" },
+      ],
       when: (ctx) => !(sensitiveBanksOf(ctx).length > 0 || ctx.profile.sensitive),
       text: () =>
         `**Datos sensibles.** No necesitamos datos sensibles (salud, datos biométricos, afiliación sindical u otros del art. 2.6 del DS N.° 016-2024-JUS) para prestarte nuestro servicio principal. Si en algún caso fuera necesario, te pediremos tu autorización por escrito antes de recogerlos.`,
     },
     {
       id: "politica.10-menores.si",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "22" },
+        { norm: "ds-016-2024-jus", art: "23" },
+      ],
       when: ({ profile }) => profile.minors,
       text: () =>
         `**Menores de edad.** Si eres menor de 14 años, el tratamiento de tus datos requiere el consentimiento de tus padres o tutores; si tienes entre 14 y 17 años, puedes consentir según tu capacidad, y te informaremos en lenguaje comprensible (art. 22 del DS N.° 016-2024-JUS). No recogemos datos de tu grupo familiar más allá de la identidad y dirección de tus padres o tutores cuando se necesita su consentimiento (art. 23).`,
@@ -216,13 +269,46 @@ Contamos con un **Documento de Seguridad** interno y aplicamos medidas técnicas
     },
     {
       id: "politica.10.normas",
-      cites: [],
+      cites: [
+        { norm: "codigo-civil", art: "15" },
+        { norm: "ds-016-2024-jus", art: "2.4" },
+        { norm: "ds-016-2024-jus", art: "2.6" },
+        { norm: "ds-016-2024-jus", art: "6.1.7" },
+        { norm: "ds-016-2024-jus", art: "6.1.8" },
+        { norm: "ds-016-2024-jus", art: "7" },
+        { norm: "ds-016-2024-jus", art: "8" },
+        { norm: "ds-016-2024-jus", art: "18" },
+        { norm: "ds-016-2024-jus", art: "19" },
+        { norm: "ds-016-2024-jus", art: "20" },
+        { norm: "ds-016-2024-jus", art: "21" },
+        { norm: "ds-016-2024-jus", art: "22" },
+        { norm: "ds-016-2024-jus", art: "23" },
+        { norm: "ds-016-2024-jus", art: "25" },
+        { norm: "ds-016-2024-jus", art: "26" },
+        { norm: "ds-016-2024-jus", art: "26.5" },
+        { norm: "ds-016-2024-jus", art: "28" },
+        { norm: "ds-016-2024-jus", art: "29" },
+        { norm: "ds-016-2024-jus", art: "29.2" },
+        { norm: "ds-016-2024-jus", art: "30" },
+        { norm: "ds-016-2024-jus", art: "30.4" },
+        { norm: "ds-016-2024-jus", art: "31" },
+        { norm: "ds-016-2024-jus", art: "32" },
+        { norm: "ds-016-2024-jus", art: "33" },
+        { norm: "ds-016-2024-jus", art: "37" },
+        { norm: "ds-016-2024-jus", art: "40" },
+        { norm: "ds-016-2024-jus", art: "46" },
+        { norm: "ds-016-2024-jus", art: "87" },
+        { norm: "ley-29733", art: "14" },
+        { norm: "ley-29733", art: "17" },
+      ],
       text: ({ profile }) => `**Normas que además aplican a nuestra actividad:**
 ${bullets(profile.norms)}`,
     },
     {
       id: "politica.11.cookies-vigencia",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "2.4" },
+      ],
       text: ({ company, banks, date }) => {
         const registeredChannels = Array.from(new Set(banks.map((b) => b.channel).filter(Boolean)));
         return `## 11. Cookies, vigencia y modificaciones

@@ -9,14 +9,49 @@ export const arcoSpec: DocumentSpec = {
   clauses: [
     {
       id: "arco.1.objeto-responsable",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "61" },
+        { norm: "ds-016-2024-jus", art: "62" },
+        { norm: "ds-016-2024-jus", art: "63" },
+        { norm: "ds-016-2024-jus", art: "64" },
+        { norm: "ds-016-2024-jus", art: "65" },
+        { norm: "ds-016-2024-jus", art: "66" },
+        { norm: "ds-016-2024-jus", art: "67" },
+        { norm: "ds-016-2024-jus", art: "68" },
+        { norm: "ds-016-2024-jus", art: "69" },
+        { norm: "ds-016-2024-jus", art: "70" },
+        { norm: "ds-016-2024-jus", art: "71" },
+        { norm: "ds-016-2024-jus", art: "72" },
+        { norm: "ds-016-2024-jus", art: "73" },
+        { norm: "ds-016-2024-jus", art: "74" },
+        { norm: "ds-016-2024-jus", art: "75" },
+        { norm: "ds-016-2024-jus", art: "76" },
+        { norm: "ds-016-2024-jus", art: "77" },
+        { norm: "ds-016-2024-jus", art: "78" },
+        { norm: "ds-016-2024-jus", art: "79" },
+        { norm: "ds-016-2024-jus", art: "80" },
+        { norm: "ds-016-2024-jus", art: "81" },
+        { norm: "ds-016-2024-jus", art: "82" },
+        { norm: "ds-016-2024-jus", art: "83" },
+        { norm: "ds-016-2024-jus", art: "84" },
+        { norm: "ds-016-2024-jus", art: "85" },
+        { norm: "ds-016-2024-jus", art: "86" },
+        { norm: "ds-016-2024-jus", art: "87" },
+        { norm: "ds-016-2024-jus", art: "88" },
+      ],
       text: ({ company }) => `## 1. Objeto y responsable
 
 Este procedimiento explica cómo ${company.name} recibe, responde y documenta las solicitudes de derechos de las personas titulares de datos personales (información, acceso, rectificación, cancelación, oposición, tratamiento objetivo, portabilidad y revocación del consentimiento), conforme a la Ley N.° 29733 y a los arts. 61 a 88 del DS N.° 016-2024-JUS. Responsable de ejecutarlo: **${company.dpo_name || "[responsable de privacidad]"}** (${company.dpo_email || company.email}).`,
     },
     {
       id: "arco.2.canales",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "62" },
+        { norm: "ds-016-2024-jus", art: "65.1" },
+        { norm: "ds-016-2024-jus", art: "67" },
+        { norm: "ds-016-2024-jus", art: "67.1" },
+        { norm: "ds-016-2024-jus", art: "67.3" },
+      ],
       text: ({ company }) => `## 2. Canales (gratuitos, art. 67)
 
 - Formulario digital: ${appUrl()}/solicitud/${company.slug}
@@ -28,7 +63,11 @@ El ejercicio de los derechos es **gratuito** y el procedimiento debe ser sencill
     },
     {
       id: "arco.3.plazos",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "2.8" },
+        { norm: "ds-016-2024-jus", art: "69" },
+        { norm: "ds-016-2024-jus", art: "69.3" },
+      ],
       text: () => `## 3. Plazos máximos (en días hábiles, art. 2.8 y 69)
 
 ${table(
@@ -44,7 +83,20 @@ ${table(
     },
     {
       id: "arco.4.flujo",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "63" },
+        { norm: "ds-016-2024-jus", art: "64" },
+        { norm: "ds-016-2024-jus", art: "66.1" },
+        { norm: "ds-016-2024-jus", art: "66.2" },
+        { norm: "ds-016-2024-jus", art: "68.1" },
+        { norm: "ds-016-2024-jus", art: "68.2" },
+        { norm: "ds-016-2024-jus", art: "68.3" },
+        { norm: "ds-016-2024-jus", art: "68.4" },
+        { norm: "ds-016-2024-jus", art: "70" },
+        { norm: "ds-016-2024-jus", art: "71" },
+        { norm: "ds-016-2024-jus", art: "88.2" },
+        { norm: "ds-016-2024-jus", art: "88.3" },
+      ],
       text: () => `## 4. Flujo paso a paso
 
 1. **Recepción (día 0).** Toda solicitud se registra con fecha y hora y se entrega constancia de recepción (art. 66.1). En DatosPrivados: módulo *Solicitudes ARCO*; el ticket calcula el vencimiento.
@@ -60,7 +112,21 @@ Si el titular no recibe respuesta en el plazo, puede considerar denegada su soli
     },
     {
       id: "arco.5.contenido-respuesta",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "74" },
+        { norm: "ds-016-2024-jus", art: "75.1" },
+        { norm: "ds-016-2024-jus", art: "76" },
+        { norm: "ds-016-2024-jus", art: "77" },
+        { norm: "ds-016-2024-jus", art: "78" },
+        { norm: "ds-016-2024-jus", art: "82.3" },
+        { norm: "ds-016-2024-jus", art: "83" },
+        { norm: "ds-016-2024-jus", art: "84" },
+        { norm: "ds-016-2024-jus", art: "85" },
+        { norm: "ds-016-2024-jus", art: "86" },
+        { norm: "ds-016-2024-jus", art: "86.5" },
+        { norm: "ds-016-2024-jus", art: "87" },
+        { norm: "ley-29733", art: "18" },
+      ],
       text: () => `## 5. Contenido de cada respuesta
 
 - **Información:** todo lo del art. 18 de la Ley (art. 74).
@@ -73,7 +139,10 @@ Si el titular no recibe respuesta en el plazo, puede considerar denegada su soli
     },
     {
       id: "arco.6.respuesta-negativa",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "73" },
+        { norm: "ley-29733", art: "24" },
+      ],
       text: () => `## 6. Respuesta negativa (total o parcial)
 
 Debe estar justificada e indicar que el titular puede acudir a la Dirección de Protección de Datos Personales en vía de reclamación o al Poder Judicial mediante hábeas data (art. 73). Texto modelo:
@@ -82,7 +151,11 @@ Debe estar justificada e indicar que el titular puede acudir a la Dirección de 
     },
     {
       id: "arco.7.encargados",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "26.6" },
+        { norm: "ds-016-2024-jus", art: "66.4" },
+        { norm: "ds-016-2024-jus", art: "66.5" },
+      ],
       text: () => `## 7. Solicitudes que llegan a un proveedor (encargado)
 
 - Si el contrato obliga al encargado a atender solicitudes, las responde dentro de estos plazos.
@@ -98,6 +171,7 @@ Por cada solicitud se conserva: número, fecha y hora de recepción, canal, dere
     {
       id: "arco.9.aprobacion",
       cites: [],
+      nonLegal: "Firma y constancia de aprobación",
       text: ({ company, date }) => `## 9. Aprobación
 
 Aprobado por la administración de ${company.name} el ${date}. Revisión: anual y cuando cambien los canales o la normativa.`,
@@ -105,7 +179,6 @@ Aprobado por la administración de ${company.name} el ${date}. Revisión: anual 
     {
       id: "arco.nota.borrador",
       cites: [],
-      nonLegal: "Nota de borrador",
       text: () => `---
 
 *Borrador generado con DatosPrivados conforme al DS N.° 016-2024-JUS. Las plantillas de respuesta están en el detalle de cada solicitud.*`,

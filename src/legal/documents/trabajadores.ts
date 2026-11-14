@@ -17,7 +17,11 @@ export const trabajadoresSpec: DocumentSpec = {
   clauses: [
     {
       id: "trabajadores.a.aviso-personal",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "6" },
+        { norm: "ley-29733", art: "14.5" },
+        { norm: "ley-29733", art: "18" },
+      ],
       text: (ctx) => {
         const { name, shortId, contact, arcoUrl, address } = v(ctx);
         return `## A. Aviso de privacidad para trabajadores, practicantes y colaboradores
@@ -41,7 +45,9 @@ export const trabajadoresSpec: DocumentSpec = {
     },
     {
       id: "trabajadores.b.sensibles-personal",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "8" },
+      ],
       text: (ctx) => `## B. Autorización para datos sensibles del personal (salud y biometría)
 
 *Art. 8 del DS N.° 016-2024-JUS: por escrito. Úsala para el examen médico ocupacional, el control biométrico de asistencia y cualquier otro dato sensible que **no** sea indispensable para cumplir una obligación legal. Lo que la ley te obliga a registrar (por ejemplo, una baja médica para la planilla) se informa en el Aviso; no se condiciona el contrato a un consentimiento que no es necesario.*
@@ -56,7 +62,9 @@ export const trabajadoresSpec: DocumentSpec = {
     },
     {
       id: "trabajadores.c.postulantes",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "87" },
+      ],
       // Termina en "\n" + nota de RR. HH. (o nada): así queda la línea en blanco extra del texto original.
       text: (ctx) => {
         const { name, contact, arcoUrl } = v(ctx);
@@ -82,7 +90,9 @@ ${ctx.profile.family === "rrhh" ? ">\n> Usamos herramientas automáticas para or
     },
     {
       id: "trabajadores.e.correo-equipos",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "46.4" },
+      ],
       text: (ctx) => {
         const { name, contact } = v(ctx);
         return `## E. Uso de correo, mensajería y equipos (art. 46.4)
@@ -95,7 +105,9 @@ ${ctx.profile.family === "rrhh" ? ">\n> Usamos herramientas automáticas para or
     },
     {
       id: "trabajadores.f.capacitacion",
-      cites: [],
+      cites: [
+        { norm: "ds-016-2024-jus", art: "46.2" },
+      ],
       text: () => `## F. Constancia de capacitación (art. 46.2)
 
 > Capacitación en protección de datos personales: fecha ____/____/20___ · Duración ____ · Temas: deber de confidencialidad, uso de claves, incidentes en 48 horas, derechos ARCO, uso de WhatsApp y correo.
@@ -104,6 +116,7 @@ ${ctx.profile.family === "rrhh" ? ">\n> Usamos herramientas automáticas para or
     {
       id: "trabajadores.nota.aprobacion",
       cites: [],
+      nonLegal: "Firma y constancia de aprobación",
       text: ({ date }) => `---
 
 *Aprobado el ${date}. Complementa el «Compromiso de Confidencialidad» y el «Documento de Seguridad». Revísalo con un abogado laboral si usas control biométrico o monitoreo.*`,
