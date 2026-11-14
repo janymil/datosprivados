@@ -11,6 +11,12 @@ import { expect, test, type Page } from "@playwright/test";
  * solo con teclado, que siguen pendientes de una persona.
  */
 
+// Las animaciones de entrada (`.rise`) parten de opacidad 0: en un runner lento axe
+// puede medir el contraste a mitad del fundido y reportar un falso «color-contrast».
+// Con movimiento reducido el CSS las desactiva y se mide el estado final, que es el
+// que cuenta para WCAG (globals.css, prefers-reduced-motion).
+test.use({ reducedMotion: "reduce" });
+
 const PAGES = [
   "/",
   "/login",
