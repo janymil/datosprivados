@@ -15,7 +15,8 @@ import { formatDate } from "@/lib/format";
 import { ArrowRightIcon, CheckIcon } from "@/components/icons";
 import { getPendingTransfer, isTransferConfigured, transferBankDetails } from "@/lib/transfers";
 import { formatSol } from "@/lib/invoicing";
-import { startSubscriptionAction, activateDevAction, requestTransferAction } from "./actions";
+import { CREDIT_DAYS, creditEligibility, getOpenCredit } from "@/lib/credit";
+import { startSubscriptionAction, activateDevAction, requestTransferAction, requestCreditAction } from "./actions";
 
 export const metadata = { title: "Suscripción" };
 
@@ -44,6 +45,33 @@ export default async function PagoPage({
   const active = isCompanyActive(company);
   const change = params.change === "1";
 
+  // Factura a crédito sin pagar: aquí se ve cómo pagarla (el aviso de cuenta vencida enlaza esta página).
+  const openCredit = getOpenCredit(company.id);
+  if (openCredit && !change) {
+    return (
+      <div>
+        <p className="label-mono">Suscripción</p>
+        <h1 className="mt-3 max-w-[22ch] font-display text-[2.5rem] leading-[1.05] tracking-[-0.03em]">Factura a crédito pendiente.</h1>
+        <div className="mt-6 max-w-[62ch] space-y-3 border-l-3 border-ochre bg-ochre/[0.08] px-4 py-4 text-[15px] leading-relaxed">
+          <p>
+            Plan {planName(openCredit.plan)} anual: <strong>{formatSol(openCredit.amount)}</strong> (IGV incluido).{" "}
+            {openCredit.due_at
+              ? `Vence el ${formatDate(openCredit.due_at)}.`
+              : `Te enviaremos la factura por correo; tendrás ${CREDIT_DAYS} días desde su emisión para pagarla.`}
+          </p>
+          <p>Paga por transferencia a:</p>
+          <p className="whitespace-pre-line font-medium">{transferBankDetails()}</p>
+          <p>
+            Indica esta referencia: <strong>{openCredit.external_reference}</strong>. Activaremos el acceso completo en cuanto confirmemos el pago.
+          </p>
+        </div>
+        <Link href="/app" className="btn btn-ghost mt-6">
+          Volver al panel
+        </Link>
+      </div>
+    );
+  }
+
   // Una cuenta activa vuelve aquí para cambiar de plan o, a menos de 60 días del vencimiento, para renovar.
   const renewing = active && !change && canRenewNow(company);
   if (active && !change && !renewing) {
@@ -56,6 +84,7 @@ export default async function PagoPage({
   const devBypass = canBypassPayment();
   const error = params.error;
   const transferAvailable = isTransferConfigured();
+  const creditAvailable = creditEligibility(company).ok;
   const pendingTransfer = params.transfer ? getPendingTransfer(company.id) : undefined;
 
   return (
@@ -96,7 +125,7 @@ export default async function PagoPage({
             ? "MercadoPago no está configurado en este entorno. En producción se activa con las credenciales del servidor."
             : error === "cancel"
               ? "No pudimos cancelar la suscripción anterior. No creamos una nueva para evitar un doble cobro."
-              : error === "transfer"
+              : error === "transfer" || error === "credit"
                 ? (params.detail ?? "No pudimos registrar la transferencia.")
               : error === "mp"
                 ? "No pudimos abrir la suscripción de MercadoPago. Intenta de nuevo en un momento."
@@ -219,6 +248,16 @@ export default async function PagoPage({
             <button type="submit" formAction={requestTransferAction} className="btn btn-ghost mt-3 w-full">
               Prefiero pagar por transferencia con factura
             </button>
+          )}
+          {creditAvailable && (
+            <>
+              <button type="submit" formAction={requestCreditAction} className="btn btn-ghost mt-3 w-full">
+                Pagar con factura a {CREDIT_DAYS} días (empresas)
+              </button>
+              <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                Acceso inmediato. Te enviamos la factura por correo; tienes {CREDIT_DAYS} días desde su emisión para transferir.
+              </p>
+            </>
           )}
         </div>
       </form>
