@@ -45,6 +45,20 @@ export function firstDiff(expected: string, actual: string): string {
   return "line ?\n- (difieren solo en saltos finales)";
 }
 
+/**
+ * Compara huellas guardadas con las actuales y agrupa por tipo los fixtures que
+ * cambiaron o faltan. Claves `${fixture.id}|${kind}`. Las claves nuevas no cuentan.
+ */
+export function changedByKind(expected: Record<string, string>, current: Record<string, string>): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const [key, hash] of Object.entries(expected)) {
+    if (current[key] === hash) continue;
+    const [id, kind] = key.split("|");
+    (out[kind] ??= []).push(key in current ? id : `${id} (falta)`);
+  }
+  return out;
+}
+
 /** Renderiza cada tipo para cada fixture. Clave: `${fixture.id}|${kind}`. */
 export function renderAll(build: typeof buildDocument): Map<string, string> {
   return withFrozenWorld(() => {

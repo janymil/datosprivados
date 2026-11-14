@@ -1,6 +1,6 @@
 import { getBankPreset, type BankPresetId } from "@/lib/bank-presets";
 import type { Company, DataBank, Provider } from "@/lib/db";
-import { SALES_BANDS, sectorFamilyOf } from "@/lib/sector-legal";
+import { sectorFamilyOf } from "@/lib/sector-legal";
 import { SECTORS } from "@/lib/sectors";
 import { pairwise } from "./pairwise";
 
@@ -15,15 +15,23 @@ export const FIXED_APP_URL = "https://datosprivados.pe";
 
 export type LegalFixture = { id: string; company: Company; banks: DataBank[]; providers: Provider[] };
 
+/**
+ * Valores fijos (no derivados de catálogos vivos), para que agregar una banda de
+ * ventas o un rubro no reordene todas las filas y cambie todas las huellas.
+ */
 export const COMPANY_DIMENSIONS = {
   entity: ["peruana", "extranjera"],
   name: ["Comercial Andina S.A.C.", "Pérez & Hijos | «Ñandú» *Express* E.I.R.L."],
   web: ["", "https://ejemplo.pe"],
   complaints: ["", "   ", "https://ejemplo.pe/reclamos"],
   dpo: ["none", "filled"],
-  salesBand: ["", ...SALES_BANDS.map((band) => band.id)],
-  banks: ["sector", "mixed", "none"],
-  providers: ["none", "peru", "foreign"],
+  salesBand: ["", "micro", "pequena", "mediana", "grande"],
+  address: ["Av. Principal 100, Lima", ""],
+  ruc: ["20601234567", ""],
+  /** Solo afecta a la sociedad extranjera: país y representante completos o vacíos. */
+  rep: ["filled", "empty"],
+  banks: ["sector", "mixed", "registered", "none"],
+  providers: ["none", "peru", "foreign", "custom", "single-foreign"],
 } as const;
 
 type Row = ReturnType<typeof pairwise<typeof COMPANY_DIMENSIONS>>[number];
@@ -66,9 +74,11 @@ function banksFor(fixtureId: string, presets: BankPresetId[], mode: Row["banks"]
       transfers: preset.transfers,
       channel: preset.channel,
       status: mode === "mixed" && index === 0 ? "cancelado" : "registrado",
+      sipdp_code: mode === "registered" ? `RNPDP-PJP-${String(index + 1).padStart(4, "0")}` : null,
+      registered_at: mode === "registered" ? "2026-10-01" : null,
     });
   });
-  if (mode === "sector") return fromPresets;
+  if (mode === "sector" || mode === "registered") return fromPresets;
   return [
     ...fromPresets,
     bank(fixtureId, fromPresets.length, {
@@ -100,6 +110,29 @@ function provider(fixtureId: string, index: number, fields: Partial<Provider> & 
 
 function providersFor(fixtureId: string, mode: Row["providers"]): Provider[] {
   if (mode === "none") return [];
+  if (mode === "custom")
+    // Herramienta propia en el Perú, sin datos declarados y sin contrato que aplique.
+    return [
+      provider(fixtureId, 0, {
+        category: "pagos",
+        name: "Pasarela propia",
+        country: "Perú",
+        is_custom: 1,
+        dpa_status: "no_aplica",
+      }),
+    ];
+  if (mode === "single-foreign")
+    return [
+      provider(fixtureId, 0, {
+        category: "hosting",
+        name: "Servidor en la nube",
+        country: "Estados Unidos",
+        purpose: "Alojamiento de la web",
+        data: "Datos de clientes",
+        dpa_status: "firmado",
+        transfer_status: "comunicado",
+      }),
+    ];
   const peru = provider(fixtureId, 0, {
     category: "servicios",
     name: "Estudio contable externo",
@@ -135,12 +168,12 @@ function company(fixtureId: string, sectorLabel: string, row: Row): Company {
   return {
     id: fixtureId,
     name: row.name,
-    ruc: "20601234567",
+    ruc: row.ruc,
     sector: sectorLabel,
     slug: fixtureId.replace(/_/g, "-"),
     email: "contacto@ejemplo.pe",
     phone: "+51 987 654 321",
-    address: "Av. Principal 100, Lima",
+    address: row.address,
     plan: "pro",
     billing_term: "yearly",
     billing_status: "active",
@@ -161,9 +194,9 @@ function company(fixtureId: string, sectorLabel: string, row: Row): Company {
     dpo_name: row.dpo === "filled" ? "Ana Torres" : "",
     dpo_email: row.dpo === "filled" ? "privacidad@ejemplo.pe" : "",
     entity_type: row.entity,
-    country: row.entity === "peruana" ? "Perú" : "Chile",
-    representative_name: row.entity === "peruana" ? "" : "Luis Rojas",
-    representative_address: row.entity === "peruana" ? "" : "Jr. Lima 200, Lima",
+    country: row.entity === "peruana" ? "Perú" : row.rep === "filled" ? "Chile" : "",
+    representative_name: row.entity === "extranjera" && row.rep === "filled" ? "Luis Rojas" : "",
+    representative_address: row.entity === "extranjera" && row.rep === "filled" ? "Jr. Lima 200, Lima" : "",
     onboarded_at: FIXED_NOW,
     website: row.web,
     complaints_url: row.complaints,
@@ -206,6 +239,9 @@ const RICH_ROW: Row = {
   complaints: "https://ejemplo.pe/reclamos",
   dpo: "filled",
   salesBand: "pequena",
+  address: "Av. Principal 100, Lima",
+  ruc: "20601234567",
+  rep: "filled",
   banks: "mixed",
   providers: "foreign",
 };

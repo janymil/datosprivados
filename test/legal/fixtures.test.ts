@@ -45,4 +45,30 @@ describe("legalFixtures", () => {
     expect(all.some((f) => f.providers.some((p) => p.country === "No sé"))).toBe(true);
     console.log(`legalFixtures: ${all.length}`);
   });
+
+  it("alcanza los marcadores de datos faltantes y las ramas de proveedores y bancos (revisión final)", () => {
+    expect(all.some((f) => f.company.address === "")).toBe(true);
+    expect(all.some((f) => f.company.ruc === "")).toBe(true);
+    expect(
+      all.some(
+        (f) =>
+          f.company.entity_type === "extranjera" &&
+          f.company.country === "" &&
+          f.company.representative_name === "" &&
+          f.company.representative_address === ""
+      )
+    ).toBe(true);
+    expect(all.some((f) => f.banks.some((b) => b.status === "registrado" && b.sipdp_code))).toBe(true);
+    expect(
+      all.some((f) =>
+        f.providers.some((p) => p.is_custom === 1 && p.purpose === "" && p.data === "" && p.cookies === "" && p.dpa_status === "no_aplica")
+      )
+    ).toBe(true);
+    expect(
+      all.some(
+        (f) =>
+          f.providers.length === 1 && f.providers[0].country !== "Perú" && f.providers[0].transfer_status === "comunicado"
+      )
+    ).toBe(true);
+  });
 });
