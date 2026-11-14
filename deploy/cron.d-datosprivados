@@ -18,9 +18,8 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 * * * * *       root /usr/local/bin/datosprivados-cron send-outbox
 */30 * * * *    root /usr/local/bin/datosprivados-cron incident-deadline-reminders
 # Auto-monitorizacion de tareas, respaldos, correos y disco -> ALERT_EMAIL.
-# Se activa cuando el build desplegado incluye la tarea `ops-alert` (el preview del
-# 2026-11-03 corria un build anterior y respondia 404): quitar el "#" tras desplegar.
-# */15 * * * *  root /usr/local/bin/datosprivados-cron ops-alert
+# Sin ALERT_EMAIL en el entorno registra las alertas pero no manda correo.
+*/15 * * * *    root /usr/local/bin/datosprivados-cron ops-alert
 0 * * * *       root /usr/local/bin/datosprivados-backup
 # Cambios legales aprobados en /operador/legal: la tarea sigue el flujo de GitHub y pide el
 # despliegue; el script de root lo hace (solo actua con GITHUB_DISPATCH_TOKEN; docs/RUNBOOK.md).
@@ -40,5 +39,5 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 0 * * * *       root /usr/local/bin/datosprivados-cron holidays-check            --at 06:00 --dow 1
 # Resumen semanal opcional: solo actua con WEEKLY_DIGEST=1 en el entorno del servicio.
 # 0 * * * *     root /usr/local/bin/datosprivados-cron weekly-digest             --at 10:00 --dow 1
-# demo-reset: se activa cuando el build desplegado incluye la tarea (igual que ops-alert).
-# 0 * * * *     root /usr/local/bin/datosprivados-cron demo-reset                --at 02:00 --dow 7
+# demo-reset: reafirma la demo publica (solo lectura, sin correos, cobros ni IA).
+0 * * * *       root /usr/local/bin/datosprivados-cron demo-reset                --at 02:00 --dow 7
