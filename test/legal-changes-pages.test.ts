@@ -61,6 +61,13 @@ describe("panel /operador/legal", () => {
     expect(html).toContain(change.head_sha.slice(0, 7));
   });
 
+  it("los botones de decisión van antes de la diferencia (no hay que bajar por miles de líneas)", async () => {
+    const change = newChange();
+    const html = renderToStaticMarkup(await LegalChangePage({ params: Promise.resolve({ id: change.id }), searchParams: Promise.resolve({}) }));
+    expect(html.indexOf("Aprobar y publicar")).toBeGreaterThan(-1);
+    expect(html.indexOf("Aprobar y publicar")).toBeLessThan(html.indexOf("Diferencia exacta"));
+  });
+
   it("un cambio rehecho sobre la versión actual del código lo dice en su historial", async () => {
     const change = newChange();
     refreshLegalChange(change.id, { head_sha: "d".repeat(40), diff: "diff --git a/x b/x\n" });

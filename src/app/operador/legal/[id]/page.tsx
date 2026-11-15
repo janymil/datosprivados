@@ -99,45 +99,6 @@ export default async function LegalChangePage({
         )}
       </section>
 
-      <section>
-        <h2 className="font-display text-2xl">Diferencia exacta</h2>
-        <p className="mt-1 text-sm text-ink-soft">
-          Rama <span className="font-mono">{change.branch}</span> en el commit{" "}
-          <span className="font-mono">{change.head_sha.slice(0, 7)}</span>. Si la rama cambia después de aprobar, GitHub
-          no la publica.
-        </p>
-        <div className="mt-4">
-          <DiffView diff={change.diff} />
-        </div>
-      </section>
-
-      <section className="card p-6">
-        <h2 className="font-display text-2xl">Historial</h2>
-        <ul className="mt-3 space-y-1 text-sm">
-          <li>Propuesto: {formatDateTime(change.created_at)}</li>
-          {change.decided_at && (
-            <li>
-              Decidido: {formatDateTime(change.decided_at)} por {change.decided_by}
-              {change.reason ? ` — «${change.reason}»` : ""}
-            </li>
-          )}
-          {change.refreshed_at && (
-            <li>Rehecho sobre la versión actual del código: {formatDateTime(change.refreshed_at)} (otro cambio se publicó antes; revisa la diferencia y apruébalo de nuevo)</li>
-          )}
-          {change.dispatched_at && <li>Enviado a GitHub: {formatDateTime(change.dispatched_at)}</li>}
-          {change.merged_sha && (
-            <li>
-              Fusionado:{" "}
-              <a className="font-mono underline" href={`https://github.com/${repo}/commit/${change.merged_sha}`} rel="noreferrer" target="_blank">
-                {change.merged_sha.slice(0, 7)}
-              </a>
-            </li>
-          )}
-          {change.deployed_at && <li>Publicado en el sitio: {formatDateTime(change.deployed_at)}</li>}
-          {change.error && <li className="text-crimson">Problema: {change.error}</li>}
-        </ul>
-      </section>
-
       {(canDecide || canRetry || afterLawyer) && (
         <section className="space-y-6">
           <form action={approveLegalChangeAction} className="card p-6">
@@ -180,6 +141,45 @@ export default async function LegalChangePage({
             </div>
         </section>
       )}
+      <section>
+        <h2 className="font-display text-2xl">Diferencia exacta</h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          Rama <span className="font-mono">{change.branch}</span> en el commit{" "}
+          <span className="font-mono">{change.head_sha.slice(0, 7)}</span>. Si la rama cambia después de aprobar, GitHub
+          no la publica.
+        </p>
+        <div className="mt-4">
+          <DiffView diff={change.diff} fileUrl={(file) => `https://github.com/${repo}/blob/${change.head_sha}/${file}`} />
+        </div>
+      </section>
+
+      <section className="card p-6">
+        <h2 className="font-display text-2xl">Historial</h2>
+        <ul className="mt-3 space-y-1 text-sm">
+          <li>Propuesto: {formatDateTime(change.created_at)}</li>
+          {change.decided_at && (
+            <li>
+              Decidido: {formatDateTime(change.decided_at)} por {change.decided_by}
+              {change.reason ? ` — «${change.reason}»` : ""}
+            </li>
+          )}
+          {change.refreshed_at && (
+            <li>Rehecho sobre la versión actual del código: {formatDateTime(change.refreshed_at)} (otro cambio se publicó antes; revisa la diferencia y apruébalo de nuevo)</li>
+          )}
+          {change.dispatched_at && <li>Enviado a GitHub: {formatDateTime(change.dispatched_at)}</li>}
+          {change.merged_sha && (
+            <li>
+              Fusionado:{" "}
+              <a className="font-mono underline" href={`https://github.com/${repo}/commit/${change.merged_sha}`} rel="noreferrer" target="_blank">
+                {change.merged_sha.slice(0, 7)}
+              </a>
+            </li>
+          )}
+          {change.deployed_at && <li>Publicado en el sitio: {formatDateTime(change.deployed_at)}</li>}
+          {change.error && <li className="text-crimson">Problema: {change.error}</li>}
+        </ul>
+      </section>
+
     </main>
   );
 }
