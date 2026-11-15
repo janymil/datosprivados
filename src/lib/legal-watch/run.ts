@@ -2,6 +2,7 @@ import "server-only";
 
 import { limaToday } from "../format";
 import { callLlm } from "../llm";
+import { logEvent } from "../log";
 import { enqueueEmail } from "../mail";
 import { fetchAnpd } from "./anpd";
 import { fetchElPeruanoDay } from "./elperuano";
@@ -34,16 +35,26 @@ const politeMs = () => Number(process.env.LEGAL_WATCH_POLITE_MS ?? 1000);
 
 export type WatchRunResult = { fetched: number; nuevos: number; candidatos: number; relevantes: number; pendientes: number };
 
-/** Fechas de Lima a leer en El Peruano: desde el día siguiente al último éxito hasta hoy (máx. 7). */
+/** Normas de la ANPD más antiguas que esto, al verlas por primera vez, son línea base (sin IA ni aviso). */
+const BASELINE_DAYS = 30;
+
+/**
+ * Fechas de Lima a leer en El Peruano: desde el día del último éxito, incluido, hasta hoy
+ * (máx. 7). Se relee ese día porque las ediciones extraordinarias salen también por la
+ * tarde, después de la corrida de las 12:00; la restricción UNIQUE evita duplicados.
+ */
 export function datesToFetch(lastOkAt: string | null, now: Date): string[] {
   const today = limaToday(now);
   if (!lastOkAt) return [today];
   const out: string[] = [];
-  let day = Date.parse(limaToday(new Date(lastOkAt))) + DAY;
+  let day = Date.parse(limaToday(new Date(lastOkAt)));
   const end = Date.parse(today);
   while (day <= end) {
     out.push(new Date(day).toISOString().slice(0, 10));
     day += DAY;
+  }
+  if (out.length > MAX_BACKFILL_DAYS) {
+    logEvent("warn", "legal_watch_backfill_truncated", { from: out[0], skipped: out.length - MAX_BACKFILL_DAYS });
   }
   return out.length ? out.slice(-MAX_BACKFILL_DAYS) : [today];
 }
@@ -86,7 +97,14 @@ export async function runLegalWatch(deps: Deps = {}): Promise<WatchRunResult> {
   }
 
   // 3. Filtro sin IA de lo nuevo.
+  //    Lo que ya era viejo al aparecer (primera lectura de la ANPD, lista reordenada) es
+  //    línea base: no se triaja ni se avisa.
+  const baselineBefore = limaToday(new Date(now.getTime() - BASELINE_DAYS * DAY));
   for (const item of listWatchItems({ status: ["nuevo"] })) {
+    if (item.source === "anpd" && item.published_on && item.published_on < baselineBefore) {
+      setWatchStatus(item.id, "descartado_filtro", { reason: `Línea base: publicada antes de los últimos ${BASELINE_DAYS} días` });
+      continue;
+    }
     setWatchStatus(item.id, prefilter(item) ? "pendiente" : "descartado_filtro");
   }
 
@@ -114,22 +132,25 @@ export async function runLegalWatch(deps: Deps = {}): Promise<WatchRunResult> {
 
   // 5. Aviso al fundador: una vez por norma relevante.
   for (const item of listWatchItems({ status: ["relevante"] }).filter((i) => !i.notified_at)) {
-    notifyOperators(item);
-    setWatchStatus(item.id, "relevante", { notified_at: now.toISOString() });
+    // Sin destinatarios no se marca: se avisa cuando OPERATOR_EMAILS esté configurado.
+    if (notifyOperators(item) > 0) setWatchStatus(item.id, "relevante", { notified_at: now.toISOString() });
   }
 
   return { fetched, nuevos, candidatos, relevantes, pendientes: listWatchItems({ status: ["pendiente"] }).length };
 }
 
-function notifyOperators(item: WatchItem) {
+/** Encola el aviso a cada operador; devuelve a cuántos se dirigió. */
+function notifyOperators(item: WatchItem): number {
+  let recipients = 0;
   const impact = item.affected ? (JSON.parse(item.affected) as { documentKinds: string[]; customers: number }) : { documentKinds: [], customers: 0 };
   for (const email of (process.env.OPERATOR_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean)) {
+    recipients += 1;
     enqueueEmail({
       to: email,
       template: "legal_watch_found",
       payload: {
-        title: item.title,
-        issuer: item.issuer,
+        title: item.title || "(norma sin título)",
+        issuer: item.issuer || "(emisor no indicado)",
         reason: item.reason ?? "",
         documents: impact.documentKinds.join(", ") || "ninguno identificado",
         customers: impact.customers,
@@ -139,4 +160,5 @@ function notifyOperators(item: WatchItem) {
       dedupeKey: `legal-watch:${item.id}:${email.toLowerCase()}`,
     });
   }
+  return recipients;
 }

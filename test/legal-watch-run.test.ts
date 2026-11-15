@@ -25,7 +25,7 @@ const DAY_ROWS = (day: string) => [
 ];
 
 /** fetch falso: El Peruano responde según la fecha pedida; la ANPD, con una lista vacía válida. */
-function fakeFetch(opts: { elperuano?: "ok" | "down" | "changed"; requested?: string[] } = {}) {
+function fakeFetch(opts: { elperuano?: "ok" | "down" | "changed"; requested?: string[]; anpdDate?: string; noIssuer?: boolean } = {}) {
   return async (url: string, init?: RequestInit) => {
     if (url.includes("elperuano")) {
       if (opts.elperuano === "down") return new Response("down", { status: 503 });
@@ -34,9 +34,10 @@ function fakeFetch(opts: { elperuano?: "ok" | "down" | "changed"; requested?: st
       const [d, m, y] = String(body.get("cddesde")).split("/");
       const day = `${y}-${m}-${d}`;
       opts.requested?.push(day);
-      return new Response(elPeruanoPage(day, DAY_ROWS(day)), { status: 200 });
+      const html = elPeruanoPage(day, DAY_ROWS(day));
+      return new Response(opts.noIssuer ? html.replace(/<h4>[^<]*<\/h4>/g, "<h4></h4>") : html, { status: 200 });
     }
-    return new Response('<a href="/institucion/anpd/normas-legales/111-x">Resolución Directoral N.° 5-2027-JUS/DGTAIPD</a> 2 de enero de 2027', { status: 200 });
+    return new Response(`<a href="/institucion/anpd/normas-legales/111-x">Resolución Directoral N.° 5-2027-JUS/DGTAIPD</a> ${opts.anpdDate ?? "2 de enero de 2027"}`, { status: 200 });
   };
 }
 /** IA falsa: JUS modifica el Reglamento; el resto no aplica. */
@@ -76,16 +77,57 @@ describe("tarea legal-watch", () => {
     expect(mails()).toHaveLength(4);
   });
 
-  it("días sin correr: la siguiente pide cada fecha desde el último éxito (máx. 7)", async () => {
+  it("días sin correr: pide cada fecha desde el día del último éxito, incluido (ediciones extraordinarias de la noche), máx. 7", async () => {
     recordSourceOk("elperuano", 10, new Date("2027-01-01T17:00:00Z"), true);
     const requested: string[] = [];
     await run(new Date("2027-01-05T17:00:00Z"), { requested });
-    expect(requested).toEqual(["2027-01-02", "2027-01-03", "2027-01-04", "2027-01-05"]);
+    expect(requested).toEqual(["2027-01-01", "2027-01-02", "2027-01-03", "2027-01-04", "2027-01-05"]);
+    // Al día siguiente vuelve a leer el día anterior: lo publicado por la tarde aparece.
+    const next: string[] = [];
+    await run(new Date("2027-01-06T17:00:00Z"), { requested: next });
+    expect(next).toEqual(["2027-01-05", "2027-01-06"]);
     recordSourceOk("elperuano", 10, new Date("2026-12-01T17:00:00Z"), true);
     const many: string[] = [];
     await run(new Date("2027-01-05T17:00:00Z"), { requested: many });
     expect(many).toHaveLength(7);
     expect(many.at(-1)).toBe("2027-01-05");
+  });
+
+  it("una página distinta no avanza el último éxito: al arreglarse, se vuelven a pedir esos días", async () => {
+    recordSourceOk("elperuano", 10, new Date("2027-01-01T17:00:00Z"), true);
+    await run(new Date("2027-01-03T17:00:00Z"), { elperuano: "changed" });
+    const requested: string[] = [];
+    await run(new Date("2027-01-04T17:00:00Z"), { requested });
+    expect(requested[0]).toBe("2027-01-01");
+  });
+
+  it("ANPD: una norma de hace más de 30 días es línea base: sin IA ni correo", async () => {
+    let calls = 0;
+    const counting = (async (args: never) => {
+      calls += 1;
+      return (fakeCall as unknown as (a: never) => Promise<string>)(args);
+    }) as never;
+    await runLegalWatch({ now: new Date("2027-01-10T17:00:00Z"), fetchImpl: fakeFetch({ anpdDate: "3 de julio de 2011" }) as never, call: counting, sleep: async () => undefined });
+    const anpd = listWatchItems({}).find((i) => i.source === "anpd")!;
+    expect(anpd.status).toBe("descartado_filtro");
+    expect(calls).toBe(2); // solo los 2 candidatos de El Peruano (JUS y MINSA)
+    expect(mails()).toHaveLength(2); // solo el DS de El Peruano, a los dos operadores
+  });
+
+  it("sin OPERATOR_EMAILS no se marca avisada: avisa cuando se configura", async () => {
+    delete process.env.OPERATOR_EMAILS;
+    await run(new Date("2027-01-10T17:00:00Z"));
+    expect(mails()).toHaveLength(0);
+    process.env.OPERATOR_EMAILS = "fundador@ejemplo.pe";
+    await run(new Date("2027-01-10T18:00:00Z"));
+    expect(mails()).toHaveLength(2);
+  });
+
+  it("una norma sin emisor se avisa igual (el correo no queda sin datos obligatorios)", async () => {
+    await run(new Date("2027-01-10T17:00:00Z"), { noIssuer: true });
+    const payloads = (getDb().prepare("SELECT payload FROM email_outbox WHERE template = 'legal_watch_found'").all() as Array<{ payload: string }>).map((r) => JSON.parse(r.payload));
+    expect(payloads.length).toBeGreaterThan(0);
+    for (const p of payloads) expect(p.issuer).not.toBe("");
   });
 
   it("IA caída: quedan pendientes y la tarea termina bien", async () => {

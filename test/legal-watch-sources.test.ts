@@ -32,6 +32,15 @@ describe("monitor de normas: fuentes", () => {
     expect(parseElPeruano('<div id="NormasEPPortal"></div>').structureOk).toBe(true);
   });
 
+  it("El Peruano: un artículo con otra clase u otro atributo se lee igual", () => {
+    const html = '<div id="NormasEPPortal"><article class="edicionesoficiales_articulos destacado" data-id="9"><h4>SALUD</h4><h5><a href="https://busquedas.elperuano.pe/dispositivo/NL/9-1">RESOLUCIÓN N° 1-2027</a></h5><p><b>Fecha: 02/01/2027</b></p><p>Resumen</p></article></div>';
+    expect(parseElPeruano(html).items).toHaveLength(1);
+  });
+
+  it("El Peruano: artículos que el parser no reconoce son un cambio de estructura, no un día vacío", () => {
+    expect(parseElPeruano('<div id="NormasEPPortal"><article class="norma-nueva"><h4>SALUD</h4></article></div>').structureOk).toBe(false);
+  });
+
   it("fetchElPeruanoDay envía cddesde y cdhasta dd/mm/yyyy", async () => {
     const fetchImpl = vi.fn(async () => new Response(fixture("elperuano-dia.html"), { status: 200 }));
     const result = await fetchElPeruanoDay("2026-11-12", fetchImpl as never);

@@ -11,7 +11,7 @@ import type { NewWatchItem } from "./store";
 
 const BASE = "https://diariooficial.elperuano.pe";
 const MARKER = "NormasEPPortal";
-const ARTICLE = /<article class="edicionesoficiales_articulos">([\s\S]*?)<\/article>/g;
+const ARTICLE = /<article\b[^>]*\bclass="[^"]*\bedicionesoficiales_articulos\b[^"]*"[^>]*>([\s\S]*?)<\/article>/g;
 
 type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -34,7 +34,9 @@ export function parseElPeruano(html: string): { items: NewWatchItem[]; structure
     });
   }
   // Una página válida sin normas (domingo) conserva el contenedor; sin él, cambió la página.
-  return { items, structureOk: items.length > 0 || html.includes(MARKER) };
+  // Un día sin normas es válido (la página trae el marcador y ningún artículo); artículos
+  // que no se reconocen significan que la página cambió.
+  return { items, structureOk: items.length > 0 || (html.includes(MARKER) && !/<article\b/i.test(html)) };
 }
 
 /** Normas publicadas un día (AAAA-MM-DD), con el mismo filtro de fecha que usa la página. */

@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic";
 /**
  * POST /api/legal/reaudit — resumen de la re-auditoría trimestral (plan 6, diseño §9).
  * Interno: lo llama deploy/datosprivados-reaudit.sh con el bearer de CRON_SECRET. Avisa por
- * correo a cada operador, una vez por fecha.
+ * correo a cada operador, una vez por fecha y resultado (un relanzamiento que sale bien tras
+ * un fallo también se avisa).
  */
 export async function POST(request: Request) {
   if (!authorizedByCronSecret(request)) return new Response("Unauthorized", { status: 401 });
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
 
   let sent = 0;
   for (const email of (process.env.OPERATOR_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean)) {
-    if (enqueueEmail({ to: email, template: "legal_reaudit", payload, dedupeKey: `legal-reaudit:${date}:${email.toLowerCase()}` })) sent += 1;
+    if (enqueueEmail({ to: email, template: "legal_reaudit", payload, dedupeKey: `legal-reaudit:${date}:${ok ? "ok" : "fallo"}:${email.toLowerCase()}` })) sent += 1;
   }
   return Response.json({ sent });
 }

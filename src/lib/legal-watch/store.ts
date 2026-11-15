@@ -79,10 +79,12 @@ export function recordSourceOk(source: WatchSource, count: number, now: Date, st
     .prepare(
       `INSERT INTO legal_watch_sources (source, last_ok_at, last_count, structure_changed, failing_since, last_error, last_error_at)
        VALUES (?, ?, ?, ?, NULL, NULL, NULL)
-       ON CONFLICT(source) DO UPDATE SET last_ok_at = excluded.last_ok_at, last_count = excluded.last_count,
-         structure_changed = excluded.structure_changed, failing_since = NULL`
+       ON CONFLICT(source) DO UPDATE SET
+         last_ok_at = CASE WHEN excluded.structure_changed = 1 THEN legal_watch_sources.last_ok_at ELSE excluded.last_ok_at END,
+         last_count = excluded.last_count, structure_changed = excluded.structure_changed, failing_since = NULL`
     )
-    .run(source, now.toISOString(), count, structureOk ? 0 : 1);
+    // Con la página cambiada no se da el día por leído: al arreglar el parser se vuelven a pedir.
+    .run(source, structureOk ? now.toISOString() : null, count, structureOk ? 0 : 1);
 }
 
 export function recordSourceError(source: WatchSource, error: string, now: Date) {

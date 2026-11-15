@@ -38,18 +38,29 @@ describe("POST /api/legal/reaudit", () => {
     expect(JSON.parse(mails()[0].payload)).toMatchObject({ error: "pnpm install falló" });
   });
 
+  it("un éxito tras un fallo del mismo día también se avisa (relanzado a mano)", async () => {
+    await POST(request({ ok: false, date: "2027-04-05", error: "sin IA" }));
+    await POST(request({ ok: true, date: "2027-04-05", errors: 0, review: 3, aiFailures: 0 }));
+    expect(mails()).toHaveLength(4);
+  });
+
   it("rechaza una fecha mal formada", async () => {
     expect((await POST(request({ ok: true, date: "ayer" }))).status).toBe(400);
   });
 });
 
 /** Corre el script con un servidor local que recibe el POST; devuelve los cuerpos recibidos. */
-async function runScript(env: Record<string, string>) {
+async function runScript(env: Record<string, string>, opts: { secretLine?: string; prepare?: (state: string) => void } = {}) {
   const bodies: string[] = [];
   const server = http.createServer((req, res) => {
     let data = "";
     req.on("data", (c) => (data += c));
     req.on("end", () => {
+      if (req.headers.authorization !== `Bearer ${SECRET}`) {
+        res.statusCode = 401;
+        res.end("Unauthorized");
+        return;
+      }
       bodies.push(data);
       res.end("{}");
     });
@@ -58,10 +69,11 @@ async function runScript(env: Record<string, string>) {
   const port = (server.address() as { port: number }).port;
   const state = fs.mkdtempSync(path.join(os.tmpdir(), "reaudit-"));
   const envDir = fs.mkdtempSync(path.join(os.tmpdir(), "reaudit-env-"));
-  fs.writeFileSync(path.join(envDir, ".env"), `CRON_SECRET=${SECRET}\n`);
+  fs.writeFileSync(path.join(envDir, ".env"), opts.secretLine ?? `CRON_SECRET="${SECRET}"\r\n`);
+  opts.prepare?.(state);
   const code = await new Promise<number>((resolve) => {
     const child = spawn("bash", [script], {
-      env: { NODE_ENV: "test", PATH: process.env.PATH ?? "", REAUDIT_STATE_DIR: state, REAUDIT_ENV_DIR: envDir, REAUDIT_API_URL: `http://127.0.0.1:${port}/api/legal/reaudit`, ...env },
+      env: { NODE_ENV: "test", PATH: process.env.PATH ?? "", REAUDIT_STATE_DIR: state, REAUDIT_ENV_DIR: envDir, REAUDIT_API_URL: `http://127.0.0.1:${port}/api/legal/reaudit`, REAUDIT_RETRIES: "0", DATOSPRIVADOS_ENV: "/nonexistent", ...env },
       stdio: "ignore",
     });
     child.on("exit", (c) => resolve(c ?? 1));
@@ -82,6 +94,43 @@ describe("deploy/datosprivados-reaudit.sh", () => {
     const { code, bodies } = await runScript({ REAUDIT_TODAY: "2027-01-04", REAUDIT_CMD: "echo rompió >&2; false" });
     expect(code).not.toBe(0);
     expect(JSON.parse(bodies[0])).toMatchObject({ ok: false, date: "2027-01-04" });
+  });
+
+  it("un informe viejo que ya estaba en la copia no cuenta como resultado", async () => {
+    const { code, bodies } = await runScript(
+      { REAUDIT_TODAY: "2027-01-04", REAUDIT_CMD: "true" },
+      {
+        prepare: (state) => {
+          const file = path.join(state, "repo/legal/audit/2027-01-04.json");
+          fs.mkdirSync(path.dirname(file), { recursive: true });
+          fs.writeFileSync(file, '{"meta":{},"findings":[]}');
+          fs.utimesSync(file, new Date("2020-01-01"), new Date("2020-01-01"));
+        },
+      }
+    );
+    expect(code).not.toBe(0);
+    expect(JSON.parse(bodies[0])).toMatchObject({ ok: false });
+  });
+
+  it("si la aplicación rechaza el aviso, el script falla (no dice «enviada»)", async () => {
+    const report = '{"meta":{},"findings":[]}';
+    const { code, bodies } = await runScript(
+      { REAUDIT_TODAY: "2027-01-04", REAUDIT_CMD: `mkdir -p legal/audit && echo '${report}' > legal/audit/x.json` },
+      { secretLine: "CRON_SECRET=otro-secreto-de-mas-de-16\n" }
+    );
+    expect(bodies).toEqual([]);
+    expect(code).not.toBe(0);
+  });
+
+  it("REAUDIT_FORCE=1 corre fuera del primer lunes (relanzar a mano)", async () => {
+    const { bodies } = await runScript({ REAUDIT_TODAY: "2027-01-13", REAUDIT_FORCE: "1", REAUDIT_CMD: "false" });
+    expect(JSON.parse(bodies[0])).toMatchObject({ ok: false, date: "2027-01-13" });
+  });
+
+  it("el cron corre a una hora de Berlín que en Lima es el mismo día (servidor en Europe/Berlin)", () => {
+    const line = fs.readFileSync(path.join(process.cwd(), "deploy/cron.d-datosprivados"), "utf8").split("\n").find((l) => l.includes("datosprivados-reaudit"))!;
+    const hour = Number(line.trim().split(/\s+/)[1]);
+    expect(hour).toBeGreaterThanOrEqual(8); // Berlín es Lima + 6 (invierno) o + 7 (verano)
   });
 
   it("con el informe del día, envía los conteos", async () => {
