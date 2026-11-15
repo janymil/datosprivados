@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { splitArticles } from "@/legal/library/split";
+import { applyTextFixes, splitArticles } from "@/legal/library/split";
 
 const SAMPLE = [
   "DECRETO SUPREMO",
@@ -174,6 +174,70 @@ describe("splitArticles", () => {
     const out = splitArticles(text, { start: /^LEY$/m });
     expect(out.map((a) => a.num)).toEqual(["59", "60", "61"]);
     expect(out[1].text).toBe("Es nula la renuncia anticipada, conforme a lo señalado en el Artículo 59.");
+  });
+
+  describe("directiva numerada por puntos (sections)", () => {
+    const text = [
+      "DIRECTIVA N° 01-2020-JUS/DGTAIPD",
+      "I. OBJETIVO",
+      "Establecer las disposiciones.",
+      "V. DEFINICIONES Y SIGLAS",
+      "5.9 Días: Días hábiles.",
+      "5.10 Dron:",
+      "Aeronave no tripulada.",
+      "5.16 Perfil:",
+      "Conjunto de permisos.",
+      "5.16.1 Perfil administrador:",
+      "Accede a todo.",
+      "VI. DISPOSICIONES GENERALES",
+      "6.12 El informativo debe contener:",
+      "6.12.4 El plazo durante el cual se conservarán los datos personales.",
+      "Plazo de conservación o almacenamiento de la información grabada",
+      "6.13 Las imágenes y/o voces grabadas se almacenan por un plazo de treinta (30) días",
+      "y hasta un plazo máximo de sesenta (60), salvo disposición distinta en normas",
+      "sectoriales.",
+      "6.14 El registro de las imágenes debe ser informado a la Policía Nacional del",
+      "Perú o al Ministerio Público, según corresponda.",
+      "ANEXO 1",
+      "9. SCLPD",
+    ].join("\n");
+    const out = splitArticles(text, { start: /^I\. OBJETIVO$/m, end: /^ANEXO 1$/m, sections: true });
+    const byNum = Object.fromEntries(out.map((a) => [a.num, a]));
+
+    it("cada punto de dos niveles es una entrada; los de tres niveles quedan dentro de su punto", () => {
+      expect(out.map((a) => a.num)).toEqual(["5.9", "5.10", "5.16", "6.12", "6.13", "6.14"]);
+      expect(byNum["5.16"].text).toBe("Perfil: Conjunto de permisos. 5.16.1 Perfil administrador: Accede a todo.");
+    });
+
+    it("el texto del punto empieza en su línea de encabezado (las definiciones se citan textualmente)", () => {
+      expect(byNum["5.9"].text).toBe("Días: Días hábiles.");
+      expect(byNum["6.13"].text).toBe(
+        "Las imágenes y/o voces grabadas se almacenan por un plazo de treinta (30) días y hasta un plazo máximo de sesenta (60), salvo disposición distinta en normas sectoriales."
+      );
+    });
+
+    it("el subtítulo previo es el título del punto y no queda en el texto del anterior", () => {
+      expect(byNum["6.13"].title).toBe("Plazo de conservación o almacenamiento de la información grabada");
+      expect(byNum["6.12"].text).toBe("El informativo debe contener: 6.12.4 El plazo durante el cual se conservarán los datos personales.");
+      expect(byNum["5.9"].title).toBe("");
+    });
+
+    it("corta en el fin (anexos) y no abre puntos con los encabezados romanos", () => {
+      expect(out.some((a) => a.num.startsWith("9"))).toBe(false);
+      expect(out.some((a) => a.text.includes("OBJETIVO") || a.text.includes("DISPOSICIONES GENERALES"))).toBe(false);
+    });
+  });
+
+  describe("correcciones de OCR (textFixes)", () => {
+    it("aplica cada corrección una vez", () => {
+      const raw = "A\n710 El empleador\nB";
+      expect(applyTextFixes(raw, [{ from: "\n710 El empleador", to: "\n7.10 El empleador", page: 16, why: "número del margen" }])).toBe("A\n7.10 El empleador\nB");
+    });
+
+    it("falla si una corrección no aparece o aparece más de una vez (el PDF cambió)", () => {
+      expect(() => applyTextFixes("A", [{ from: "X", to: "Y", page: 1, why: "w" }])).toThrow(/aparece 0 veces/);
+      expect(() => applyTextFixes("X X", [{ from: "X", to: "Y", page: 1, why: "w" }])).toThrow(/aparece 2 veces/);
+    });
   });
 
   it("rechaza un número de artículo repetido", () => {
