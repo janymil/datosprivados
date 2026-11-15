@@ -94,7 +94,7 @@ jobs:
           git -c user.name=datosprivados-legal -c user.email=legal@datosprivados.invalid checkout -q -B probado origin/master
           git -c user.name=datosprivados-legal -c user.email=legal@datosprivados.invalid merge --no-ff -q "$CHANGE_SHA" -m "prueba de la fusión"
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           package_json_file: change/package.json
       # Sin caché: con dos checkouts (rules/ y change/) el post-paso de la caché de pnpm
