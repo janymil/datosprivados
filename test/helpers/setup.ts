@@ -11,6 +11,8 @@ const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", ".tmp"
 fs.mkdirSync(dir, { recursive: true });
 process.env.DATOSPRIVADOS_DB = path.join(dir, `${crypto.randomUUID()}.db`);
 process.env.COOKIE_SECURE = "0";
+// Sin la pausa de cortesía del monitor de normas entre pedidos a El Peruano y gob.pe.
+process.env.LEGAL_WATCH_POLITE_MS = "0";
 
 // Mocks por defecto para que las Server Actions se llamen como funciones normales.
 vi.mock("next/headers", async () => (await import("./next")).nextHeadersMock());

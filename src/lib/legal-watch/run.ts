@@ -29,7 +29,8 @@ type Deps = { now?: Date; fetchImpl?: FetchLike; call?: typeof callLlm; sleep?: 
 const DAY = 24 * 60 * 60 * 1000;
 const MAX_BACKFILL_DAYS = 7;
 const MAX_AI_CALLS = 30;
-const POLITE_MS = 1000;
+/** Pausa entre pedidos a una fuente (cortesía con los servidores del Estado). */
+const politeMs = () => Number(process.env.LEGAL_WATCH_POLITE_MS ?? 1000);
 
 export type WatchRunResult = { fetched: number; nuevos: number; candidatos: number; relevantes: number; pendientes: number };
 
@@ -61,7 +62,7 @@ export async function runLegalWatch(deps: Deps = {}): Promise<WatchRunResult> {
     let count = 0;
     let structureOk = true;
     for (const [i, day] of datesToFetch(lastOk, now).entries()) {
-      if (i > 0) await sleep(POLITE_MS);
+      if (i > 0) await sleep(politeMs());
       const page = await fetchElPeruanoDay(day, fetchImpl);
       structureOk &&= page.structureOk;
       count += page.items.length;
@@ -75,7 +76,7 @@ export async function runLegalWatch(deps: Deps = {}): Promise<WatchRunResult> {
 
   // 2. ANPD (primera página).
   try {
-    await sleep(POLITE_MS);
+    await sleep(politeMs());
     const page = await fetchAnpd(fetchImpl);
     fetched += page.items.length;
     nuevos += upsertWatchItems(page.items);
