@@ -216,6 +216,19 @@ function checkModuleString(before: ts.Expression, after: ts.Expression, lib: Lib
   }
 }
 
+/** Las citas de un texto (original o borrador): `cites` de una cláusula o hecho, o las escritas en un texto de módulo. */
+export function citationsOf(span: Span, source: string, lib: Library = legalLibrary()): Array<{ norm: string; art: string }> {
+  const node = single(source);
+  if (!node) return [];
+  if (span.kind === "module-string") {
+    if (!(ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) || ts.isTemplateExpression(node))) return [];
+    const plain = ts.isTemplateExpression(node) ? node.getText().slice(1, -1) : node.text;
+    return parseCitations(plain, CLAUSE_DEFAULT_NORM, lib).map((c) => ({ norm: c.norm, art: c.art }));
+  }
+  if (!ts.isObjectLiteralExpression(node)) return [];
+  return checkCites(props(node).get("cites"), lib, [], fileConsts(span.file));
+}
+
 export function checkReplacement(span: Span, replacement: string, lib: Library = legalLibrary()): string[] {
   const problems: string[] = [];
   const before = single(span.source);

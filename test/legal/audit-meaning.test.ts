@@ -24,7 +24,7 @@ const run = (f: ReturnType<typeof fake>, c = cache()) => checkMeaning(input, { c
 
 describe("chequeo de significado (dos pasadas)", () => {
   it("dos supported: sin hallazgo", async () => {
-    expect(await run(fake(json("supported"), json("supported")))).toEqual({ finding: null, aiFailed: false });
+    expect(await run(fake(json("supported"), json("supported")))).toMatchObject({ finding: null, aiFailed: false, verdicts: [{ pass: "a", verdict: "supported" }, { pass: "b", verdict: "supported" }] });
   });
 
   it("supported + partial: revisar con los dos veredictos", async () => {
@@ -112,7 +112,7 @@ describe("chequeo de significado (dos pasadas)", () => {
     await run(fake(json("supported"), json("supported")), c);
     c.save();
     const again = fake();
-    expect(await run(again, new VerdictCache(c.file))).toEqual({ finding: null, aiFailed: false });
+    expect(await run(again, new VerdictCache(c.file))).toMatchObject({ finding: null, aiFailed: false });
     expect(again.calls()).toBe(0);
   });
 });
