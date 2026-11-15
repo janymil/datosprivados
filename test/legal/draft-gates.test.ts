@@ -98,6 +98,21 @@ describe("compuertas de un borrador", () => {
     expect(checkReplacement(span, short).join(" ")).toMatch(/frase/);
   });
 
+  it("un hecho no puede cambiar de norma: la frase debe salir de una norma que ya citaba (caso real reclamo.respuesta)", () => {
+    const span = locateTarget("reclamo.respuesta")!;
+    const quote =
+      "Tratándose del ejercicio de los otros derechos como los de rectificación, cancelación u oposición, el plazo máximo de respuesta del titular del banco de datos personales o responsable o encargado del tratamiento cuando corresponda, es de diez (10) días contados desde el día siguiente de la presentación de la solicitud.";
+    const moved = span.source
+      .replace(/value: \d+,/, "value: 10,")
+      .replace(/unit: "[^"]+",/, 'unit: "días",')
+      .replace(/cites: \[[^\]]*\],/, 'cites: [{ norm: "ds-016-2024-jus", art: "69" }],')
+      .replace(/quote: null,/, `quote: "${quote}",`);
+    expect(checkReplacement(span, moved).join(" ")).toMatch(/norma/);
+    // Tampoco sirve conservar la cita original y agregar otra norma de donde sacar la frase.
+    const added = moved.replace('cites: [{ norm: "ds-016-2024-jus", art: "69" }],', 'cites: [{ norm: "ds-011-2011-pcm", art: "6" }, { norm: "ds-016-2024-jus", art: "69" }],');
+    expect(checkReplacement(span, added).join(" ")).toMatch(/norma/);
+  });
+
   it("un texto de módulo: sin código nuevo y con citas que existen", () => {
     const span = locateTarget("sector-legal:FAMILIES.condominio.norms[0]")!;
     expect(checkReplacement(span, '"Ley N.° 27157: la junta trata datos (art. 13 de la Ley N.° 29733)."')).toEqual([]);
