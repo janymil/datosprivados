@@ -97,11 +97,11 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           package_json_file: change/package.json
+      # Sin caché: con dos checkouts (rules/ y change/) el post-paso de la caché de pnpm
+      # no encuentra la ruta, marca el job como fallido y la fusión se salta (run 43655818192).
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-          cache-dependency-path: change/pnpm-lock.yaml
       - working-directory: change
         run: pnpm install --frozen-lockfile
       - name: Escaneo de secretos
