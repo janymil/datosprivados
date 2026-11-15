@@ -61,6 +61,7 @@ export default async function LegalChangePage({
         <h1 className="mt-2 font-display text-3xl tracking-[-0.02em]">{change.title}</h1>
         <p className="mt-2 font-mono text-xs uppercase tracking-[0.08em] text-ink-soft">
           {change.kind === "norma" ? "cambio de norma" : "auditoría"} · {change.id} · {STATUS_LABEL[change.status]}
+          {change.summary.startsWith("**Redactado por IA.**") && <span className="text-crimson"> · Redactado por IA</span>}
         </p>
       </header>
 

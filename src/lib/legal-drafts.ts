@@ -1,0 +1,200 @@
+import "server-only";
+
+import { recordAiUsage } from "./ai-guard";
+import { getDb, newId, nowIso } from "./db";
+import { enqueueEmail } from "./mail";
+
+/**
+ * Cola de redacción automática de correcciones (motor legal, plan 7; diseño §8 pasos 3 y 5).
+ * La alimentan la re-auditoría, el monitor de normas y el botón del operador; la consume el
+ * script de root `datosprivados-draft`, que redacta en su propia copia del repositorio.
+ */
+
+export type DraftOrigin = "auditoria" | "norma" | "operador";
+export type DraftStatus = "pendiente" | "redactando" | "propuesto" | "sin_solucion" | "resuelto";
+export const DRAFT_ORIGINS: DraftOrigin[] = ["auditoria", "norma", "operador"];
+
+export type DraftRequest = { id: string; origin: DraftOrigin; ref: string; targets: string[]; context: unknown; attempts: number };
+
+export type DraftRow = {
+  id: string;
+  origin: DraftOrigin;
+  ref: string;
+  targets: string;
+  context: string;
+  status: DraftStatus;
+  attempts: number;
+  change_id: string | null;
+  reasons: string | null;
+  claimed_at: string | null;
+  not_before: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Un intento colgado (script caído a mitad) se libera pasado este tiempo. */
+const STUCK_MS = 2 * 60 * 60 * 1000;
+/** «esperar» (IA, red o GitHub caídos): no se vuelve a intentar antes de esto. */
+const WAIT_MS = 60 * 60 * 1000;
+export const MAX_ATTEMPTS = 3;
+/** Estados de un cambio legal que todavía puede tocar sus textos (Decisión 5). */
+const OPEN_CHANGE = ["nuevo", "aprobado", "fallo", "abogado"];
+
+const toRequest = (row: DraftRow): DraftRequest => ({
+  id: row.id,
+  origin: row.origin,
+  ref: row.ref,
+  targets: JSON.parse(row.targets) as string[],
+  context: JSON.parse(row.context),
+  attempts: row.attempts,
+});
+
+export function enqueueDraft(r: { origin: DraftOrigin; ref: string; targets: string[]; context: unknown }): boolean {
+  const now = nowIso();
+  const result = getDb()
+    .prepare(
+      `INSERT INTO legal_draft_requests (id, origin, ref, targets, context, status, attempts, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 'pendiente', 0, ?, ?) ON CONFLICT(origin, ref) DO NOTHING`
+    )
+    .run(newId(), r.origin, r.ref, JSON.stringify(r.targets), JSON.stringify(r.context ?? null), now, now);
+  return Number(result.changes) > 0;
+}
+
+export function getDraft(id: string): DraftRow | null {
+  return (getDb().prepare("SELECT * FROM legal_draft_requests WHERE id = ?").get(id) as DraftRow | undefined) ?? null;
+}
+
+export function listDrafts(filter: { status?: DraftStatus[] } = {}): DraftRow[] {
+  const where = filter.status?.length ? `WHERE status IN (${filter.status.map(() => "?").join(",")})` : "";
+  return getDb()
+    .prepare(`SELECT * FROM legal_draft_requests ${where} ORDER BY created_at DESC`)
+    .all(...(filter.status ?? [])) as DraftRow[];
+}
+
+/** Textos (y normas) que tocan los cambios legales todavía abiertos. */
+export function sourcesInOpenChanges(): Set<string> {
+  const rows = getDb()
+    .prepare(`SELECT affected FROM legal_changes WHERE status IN (${OPEN_CHANGE.map(() => "?").join(",")})`)
+    .all(...OPEN_CHANGE) as Array<{ affected: string }>;
+  const out = new Set<string>();
+  for (const row of rows) {
+    for (const a of JSON.parse(row.affected) as Array<{ source: string }>) out.add(a.source);
+  }
+  return out;
+}
+
+/**
+ * Toma la solicitud pendiente más antigua que pueda redactarse ya: sus textos no están en un
+ * cambio abierto, no espera a otro cambio (`context.waitFor`) y no está en pausa (`not_before`).
+ * Antes libera las que llevan más de 2 horas en «redactando» (o las cierra si ya agotaron los intentos).
+ */
+export function claimNextDraft(now: Date): DraftRequest | null {
+  const db = getDb();
+  const stamp = now.toISOString();
+  const stuck = db
+    .prepare("SELECT * FROM legal_draft_requests WHERE status = 'redactando' AND claimed_at < ?")
+    .all(new Date(now.getTime() - STUCK_MS).toISOString()) as DraftRow[];
+  for (const row of stuck) {
+    if (row.attempts >= MAX_ATTEMPTS) {
+      db.prepare("UPDATE legal_draft_requests SET status = 'sin_solucion', reasons = ?, updated_at = ? WHERE id = ?").run(
+        JSON.stringify(["el redactor se detuvo sin terminar en cada intento"]),
+        stamp,
+        row.id
+      );
+      notifyFailed(getDraft(row.id)!);
+    } else db.prepare("UPDATE legal_draft_requests SET status = 'pendiente', updated_at = ? WHERE id = ?").run(stamp, row.id);
+  }
+  const busy = sourcesInOpenChanges();
+  const pending = db
+    .prepare("SELECT * FROM legal_draft_requests WHERE status = 'pendiente' AND (not_before IS NULL OR not_before <= ?) ORDER BY created_at, id")
+    .all(stamp) as DraftRow[];
+  const next = pending.find((row) => {
+    const waitFor = (JSON.parse(row.context) as { waitFor?: unknown } | null)?.waitFor;
+    if (typeof waitFor === "string" && busy.has(waitFor)) return false;
+    return !(JSON.parse(row.targets) as string[]).some((t) => busy.has(t));
+  });
+  if (!next) return null;
+  db.prepare("UPDATE legal_draft_requests SET status = 'redactando', attempts = attempts + 1, claimed_at = ?, not_before = NULL, updated_at = ? WHERE id = ?").run(
+    stamp,
+    stamp,
+    next.id
+  );
+  return toRequest(getDraft(next.id)!);
+}
+
+export type DraftResult = {
+  /** «esperar»: IA, red o GitHub caídos; vuelve a la cola sin contar el intento. «reintentar»: cuenta. */
+  status: "propuesto" | "sin_solucion" | "reintentar" | "resuelto" | "esperar";
+  changeId?: string;
+  reasons?: string[];
+  usage?: { inputTokens: number; outputTokens: number };
+};
+
+/** Resultado de una redacción. Solo vale para una solicitud que se está redactando (un resultado tardío se ignora). */
+export function finishDraft(id: string, r: DraftResult, now: Date = new Date()): DraftRow | null {
+  const row = getDraft(id);
+  if (!row) return null;
+  if (r.usage && (r.usage.inputTokens > 0 || r.usage.outputTokens > 0)) {
+    recordAiUsage({
+      companyId: null,
+      feature: "legal-draft",
+      model: process.env.OPENAI_MODEL ?? process.env.ANTHROPIC_MODEL ?? "desconocido",
+      inputTokens: Math.max(0, Math.round(r.usage.inputTokens)),
+      outputTokens: Math.max(0, Math.round(r.usage.outputTokens)),
+      latencyMs: 0,
+      ok: true,
+    });
+  }
+  if (row.status !== "redactando") return row;
+  const reasons = r.reasons?.length ? JSON.stringify(r.reasons.slice(0, 50)) : row.reasons;
+  const db = getDb();
+  if (r.status === "esperar") {
+    db.prepare("UPDATE legal_draft_requests SET status = 'pendiente', attempts = MAX(attempts - 1, 0), not_before = ?, reasons = ?, updated_at = ? WHERE id = ?").run(
+      new Date(now.getTime() + WAIT_MS).toISOString(),
+      reasons,
+      now.toISOString(),
+      id
+    );
+    return getDraft(id);
+  }
+  const status: DraftStatus = r.status === "reintentar" ? (row.attempts >= MAX_ATTEMPTS ? "sin_solucion" : "pendiente") : r.status;
+  db.prepare("UPDATE legal_draft_requests SET status = ?, change_id = ?, reasons = ?, updated_at = ? WHERE id = ?").run(
+    status,
+    r.changeId ?? row.change_id,
+    reasons,
+    now.toISOString(),
+    id
+  );
+  const after = getDraft(id)!;
+  if (status === "sin_solucion") notifyFailed(after);
+  return after;
+}
+
+/** Una corrección que no se pudo redactar: un correo a cada operador por cada intento fallido. */
+function notifyFailed(row: DraftRow) {
+  const targets = (JSON.parse(row.targets) as string[]).join(", ") || "norma nueva";
+  const reasons = (JSON.parse(row.reasons ?? "[]") as string[]).join(" · ").slice(0, 1500) || "sin detalle";
+  for (const email of (process.env.OPERATOR_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean)) {
+    enqueueEmail({
+      to: email,
+      template: "legal_draft_failed",
+      payload: { targets, reasons, path: "/operador/legal" },
+      dedupeKey: `legal-draft:${row.id}:${row.claimed_at ?? ""}:${email.toLowerCase()}`,
+    });
+  }
+}
+
+/** «Redactar de nuevo»: la solicitud vuelve a la cola con los intentos en cero. */
+export function resetDraft(id: string): boolean {
+  const result = getDb()
+    .prepare(
+      "UPDATE legal_draft_requests SET status = 'pendiente', attempts = 0, reasons = NULL, claimed_at = NULL, not_before = NULL, updated_at = ? WHERE id = ? AND status IN ('sin_solucion', 'resuelto')"
+    )
+    .run(nowIso(), id);
+  return Number(result.changes) > 0;
+}
+
+/** Pedido del fundador para un texto; cada pedido es una solicitud nueva. */
+export function requestDraft(target: string, now: Date): boolean {
+  return enqueueDraft({ origin: "operador", ref: `${target}@${now.toISOString()}`, targets: [target], context: { pedido: "operador" } });
+}

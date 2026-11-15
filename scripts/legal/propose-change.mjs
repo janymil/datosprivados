@@ -25,9 +25,23 @@ const fail = (message) => {
 };
 
 const { values } = parseArgs({
-  options: { title: { type: "string" }, "summary-file": { type: "string" }, findings: { type: "string", default: "" } },
+  options: {
+    title: { type: "string" },
+    "summary-file": { type: "string" },
+    findings: { type: "string", default: "" },
+    // Plan 7 (redacción automática): tipo de cambio, fuente oficial y textos afectados («clause:arco.3,norm:ds-001-2027-jus»).
+    kind: { type: "string", default: "auditoria" },
+    "source-url": { type: "string", default: "" },
+    affected: { type: "string", default: "" },
+  },
 });
 if (!values.title || !values["summary-file"]) fail("faltan --title y --summary-file");
+if (values.kind !== "auditoria" && values.kind !== "norma") fail("--kind debe ser auditoria o norma");
+const affected = values.affected
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .map((s) => ({ kind: s.slice(0, s.indexOf(":")), source: s.slice(s.indexOf(":") + 1) }));
 const summary = fs.readFileSync(values["summary-file"], "utf8").trim();
 if (!summary) fail("el resumen está vacío");
 const secret = process.env.CRON_SECRET;
@@ -85,7 +99,9 @@ try {
   response = await fetch(url, {
     method: "POST",
     headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" },
-    body: JSON.stringify(proposalPayload({ id, title: values.title, summary, branch, headSha, diff, findings })),
+    body: JSON.stringify(
+      proposalPayload({ id, title: values.title, summary, branch, headSha, diff, findings, kind: values.kind, sourceUrl: values["source-url"] || null, affected })
+    ),
   });
 } catch (error) {
   fail(`no se pudo registrar (${error instanceof Error ? error.message : error}). Volver a correr es seguro: reutiliza ${id}.`);

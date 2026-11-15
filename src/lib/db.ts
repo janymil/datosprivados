@@ -494,7 +494,7 @@ function initSchema(db: DatabaseSync) {
  * cacheada en `globalThis` (en `next dev` la conexión sobrevive a los recargos
  * en caliente y `initSchema` no vuelve a correr).
  */
-const SCHEMA_VERSION = 19;
+const SCHEMA_VERSION = 20;
 
 function migrate(db: DatabaseSync) {
   const companyColumns = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
@@ -958,6 +958,27 @@ function migrate(db: DatabaseSync) {
       failing_since TEXT,
       structure_changed INTEGER NOT NULL DEFAULT 0
     );
+  `);
+
+  // v20: cola de redacción automática de correcciones (motor legal, plan 7; src/lib/legal-drafts.ts).
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS legal_draft_requests (
+      id TEXT PRIMARY KEY,
+      origin TEXT NOT NULL CHECK (origin IN ('auditoria', 'norma', 'operador')),
+      ref TEXT NOT NULL,
+      targets TEXT NOT NULL DEFAULT '[]',
+      context TEXT NOT NULL DEFAULT 'null',
+      status TEXT NOT NULL DEFAULT 'pendiente',
+      attempts INTEGER NOT NULL DEFAULT 0,
+      change_id TEXT,
+      reasons TEXT,
+      claimed_at TEXT,
+      not_before TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      UNIQUE (origin, ref)
+    );
+    CREATE INDEX IF NOT EXISTS idx_legal_draft_status ON legal_draft_requests(status, created_at);
   `);
 
   seedHolidays(db);

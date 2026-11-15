@@ -42,7 +42,8 @@ export type MailTemplate =
   | "legal_change_new"
   | "legal_change_failed"
   | "legal_watch_found"
-  | "legal_reaudit";
+  | "legal_reaudit"
+  | "legal_draft_failed";
 
 export type MailPayload = Record<string, string | number>;
 
@@ -83,6 +84,7 @@ const ESSENTIAL: Record<MailTemplate, boolean> = {
   legal_change_failed: true,
   legal_watch_found: true,
   legal_reaudit: true,
+  legal_draft_failed: true,
 };
 
 export function isEssential(template: MailTemplate): boolean {
@@ -515,6 +517,20 @@ export function renderMail(template: MailTemplate, payload: MailPayload): Render
             `Documentos afectados: ${s(payload, "documents")}. Clientes con esos documentos: ${s(payload, "customers")}.`,
             `Texto oficial: ${s(payload, "url")}`,
             "Revísala en el panel. Si hay que corregir los documentos, se prepara un cambio para tu aprobación.",
+          ],
+          action: { label: "Ver en el panel", url: s(payload, "path") },
+        },
+        ""
+      );
+    case "legal_draft_failed":
+      need("targets", "reasons", "path");
+      return layout(
+        {
+          subject: `No se pudo redactar una corrección: ${s(payload, "targets")}`,
+          paragraphs: [
+            `El motor legal intentó redactar la corrección de «${s(payload, "targets")}» y no llegó a un texto que pase todas las comprobaciones.`,
+            `Motivo: ${s(payload, "reasons")}`,
+            "No se cambió nada. Puedes pedir que lo intente de nuevo desde el panel o corregirlo a mano.",
           ],
           action: { label: "Ver en el panel", url: s(payload, "path") },
         },

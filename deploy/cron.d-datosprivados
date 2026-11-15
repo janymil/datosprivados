@@ -29,6 +29,9 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # 12:30 del servidor (Europe/Berlin) = 05:30 / 06:30 Lima del mismo día; el script comprueba
 # él mismo, en hora de Lima, que sea el primer lunes.
 30 12 1-7 1,4,7,10 *  root /usr/local/bin/datosprivados-reaudit
+# Redacción automática de correcciones (plan 7): toma hasta 2 solicitudes de la cola, las redacta
+# en su propia copia de master y las registra para la aprobación del fundador en /operador/legal.
+*/30 * * * *    root /usr/local/bin/datosprivados-draft
 
 # --- diarias: cada hora; el wrapper ejecuta solo en la hora indicada (Lima) ---
 0 * * * *       root /usr/local/bin/datosprivados-cron purge-old-data          --at 03:00

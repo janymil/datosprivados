@@ -1,4 +1,7 @@
 import { authorizedByCronSecret } from "@/lib/cron-auth";
+import type { AuditFinding } from "@/legal/audit/types";
+import { draftRequestsFromReport } from "@/legal/draft/draftable";
+import { enqueueDraft } from "@/lib/legal-drafts";
 import { enqueueEmail } from "@/lib/mail";
 
 export const runtime = "nodejs";
@@ -6,7 +9,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * POST /api/legal/reaudit — resumen de la re-auditoría trimestral (plan 6, diseño §9).
- * Interno: lo llama deploy/datosprivados-reaudit.sh con el bearer de CRON_SECRET. Avisa por
+ * Interno: lo llama deploy/datosprivados-reaudit.sh con el bearer de CRON_SECRET. Encola para
+ * redactar los hallazgos «error» del informe (plan 7). Avisa por
  * correo a cada operador, una vez por fecha y resultado (un relanzamiento que sale bien tras
  * un fallo también se avisa).
  */
@@ -31,5 +35,9 @@ export async function POST(request: Request) {
   for (const email of (process.env.OPERATOR_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean)) {
     if (enqueueEmail({ to: email, template: "legal_reaudit", payload, dedupeKey: `legal-reaudit:${date}:${ok ? "ok" : "fallo"}:${email.toLowerCase()}` })) sent += 1;
   }
-  return Response.json({ sent });
+  // Los hallazgos «error» se encolan para redactar la corrección (plan 7).
+  const findings = Array.isArray(data.findings) ? (data.findings.slice(0, 2000) as AuditFinding[]) : [];
+  let queued = 0;
+  for (const r of draftRequestsFromReport({ findings })) if (enqueueDraft(r)) queued += 1;
+  return Response.json({ sent, queued });
 }

@@ -5,6 +5,7 @@ import { formatDate } from "@/lib/format";
 import { listLegalChanges } from "@/lib/legal-changes";
 import { requireOperator } from "@/lib/operator";
 import { STATUS_LABEL } from "./labels";
+import { DraftsSection } from "./drafts-section";
 import { WatchSection } from "./watch-section";
 
 export const metadata = { title: "Cambios legales", robots: { index: false } };
@@ -17,9 +18,15 @@ const TABS: Array<{ key: string; label: string; status: LegalChangeStatus[] }> =
 ];
 
 /** Cambios legales propuestos: el fundador decide cada uno (diseño §8 y §10a). */
-export default async function LegalChangesPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+const NOTICE: Record<string, string> = { redaccion: "Listo: la corrección quedó en la cola de redacción." };
+const PROBLEM: Record<string, string> = {
+  texto: "No encontramos ese texto en el código: usa el id de la cláusula o del hecho, o la ruta del texto que da la auditoría.",
+  solicitud: "Esa solicitud ya no se puede volver a redactar.",
+};
+
+export default async function LegalChangesPage({ searchParams }: { searchParams: Promise<{ tab?: string; ok?: string; error?: string }> }) {
   await requireOperator();
-  const { tab } = await searchParams;
+  const { tab, ok, error } = await searchParams;
   const current = TABS.find((t) => t.key === tab) ?? TABS[0];
   const counts = Object.fromEntries(TABS.map((t) => [t.key, listLegalChanges({ status: t.status }).length]));
   const changes = listLegalChanges({ status: current.status });
@@ -36,7 +43,12 @@ export default async function LegalChangesPage({ searchParams }: { searchParams:
         </p>
       </header>
 
+      {ok && NOTICE[ok] && <p className="border-l-3 border-sage bg-sage/[0.08] px-4 py-3 text-sm">{NOTICE[ok]}</p>}
+      {error && PROBLEM[error] && <p className="border-l-3 border-crimson bg-crimson/[0.06] px-4 py-3 text-sm">{PROBLEM[error]}</p>}
+
       <WatchSection />
+
+      <DraftsSection />
 
       <nav aria-label="Estado" className="flex gap-5 text-sm">
         {TABS.map((t) => (

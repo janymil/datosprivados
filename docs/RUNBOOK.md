@@ -672,3 +672,36 @@ REAUDIT_FORCE=1 /usr/local/bin/datosprivados-reaudit
 ```
 
 El informe queda en `/var/lib/datosprivados/reaudit/repo/legal/audit/<fecha>.{md,json}`.
+
+## Redacción automática de correcciones
+
+El motor legal redacta solo las correcciones (plan 7; diseño §8, pasos 3 y 5). La cola
+(`legal_draft_requests`) la llenan:
+
+- la re-auditoría trimestral: cada hallazgo «error» (los «revisar» los decide el fundador);
+- el monitor de normas: cada norma marcada relevante (se carga en la biblioteca y se redactan los
+  textos que citan lo que modifica);
+- el fundador, con «Redactar corrección» en `/operador/legal`.
+
+`/usr/local/bin/datosprivados-draft` (copia de `deploy/datosprivados-draft.sh`, root, cada 30 min,
+máx. 2 solicitudes por corrida) redacta en `/var/lib/datosprivados/drafts/repo` (copia limpia de
+master; nunca toca `/var/www/datosprivados`). Un borrador solo llega a `/operador/legal` si pasó las
+compuertas (solo cambia texto legal y citas), las dos revisiones de significado y toda la suite.
+Si no, la solicitud queda «sin solución» con el motivo y el fundador recibe un correo. Log:
+`/var/lib/datosprivados/drafts/draft.log` y `journalctl -t datosprivados-draft`.
+
+Instalar o actualizar:
+
+```bash
+install -m 755 deploy/datosprivados-draft.sh /usr/local/bin/datosprivados-draft
+```
+
+Encolar los hallazgos de un informe ya existente (una vez):
+
+```bash
+CRON_SECRET="$(sed -n 's/^CRON_SECRET=//p' /var/www/datosprivados/.env | tr -d '"\r')" node --experimental-strip-types scripts/legal/enqueue-report.mjs legal/audit/2026-11-14.json
+```
+
+Correr una vez a mano: `/usr/local/bin/datosprivados-draft`. Con la IA apagada o el tope del mes
+agotado (`AI_MONTHLY_BUDGET_USD`), la cola espera.
+

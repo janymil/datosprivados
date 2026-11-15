@@ -118,7 +118,7 @@ async function runPass(pass: "a" | "b", input: MeaningInput, deps: Deps): Promis
   return verdict;
 }
 
-export async function checkMeaning(input: MeaningInput, deps: Deps): Promise<{ finding: AuditFinding | null; aiFailed: boolean }> {
+export async function checkMeaning(input: MeaningInput, deps: Deps): Promise<{ finding: AuditFinding | null; aiFailed: boolean; verdicts: AiVerdict[] }> {
   const [a, b] = await Promise.all([runPass("a", input, deps), runPass("b", input, deps)]);
   const make = (severity: AuditFinding["severity"], detail: string, verdicts: AiVerdict[]): AuditFinding => ({
     id: findingId("significado", input.source, input.text),
@@ -130,15 +130,15 @@ export async function checkMeaning(input: MeaningInput, deps: Deps): Promise<{ f
     verdicts,
   });
 
-  if (!a || !b) return { finding: make("revisar", "la IA no respondió", [a, b].filter((v): v is AiVerdict => v !== null)), aiFailed: true };
+  if (!a || !b) return { finding: make("revisar", "la IA no respondió", [a, b].filter((v): v is AiVerdict => v !== null)), aiFailed: true, verdicts: [a, b].filter((v): v is AiVerdict => v !== null) };
 
   if ([a, b].some((v) => v.quote && !quoteFound(v.quote, input.articles))) {
-    return { finding: make("revisar", "la cita de la IA no está en el artículo", [a, b]), aiFailed: false };
+    return { finding: make("revisar", "la cita de la IA no está en el artículo", [a, b]), aiFailed: false, verdicts: [a, b].filter((v): v is AiVerdict => v !== null) };
   }
-  if (a.verdict === "supported" && b.verdict === "supported") return { finding: null, aiFailed: false };
+  if (a.verdict === "supported" && b.verdict === "supported") return { finding: null, aiFailed: false, verdicts: [a, b].filter((v): v is AiVerdict => v !== null) };
   if (a.verdict === "not_supported" && b.verdict === "not_supported") {
-    return { finding: make("error", "las dos pasadas dicen que el artículo no respalda la cláusula", [a, b]), aiFailed: false };
+    return { finding: make("error", "las dos pasadas dicen que el artículo no respalda la cláusula", [a, b]), aiFailed: false, verdicts: [a, b].filter((v): v is AiVerdict => v !== null) };
   }
   const detail = a.verdict === b.verdict ? "las dos pasadas ven respaldo parcial" : "las pasadas no coinciden";
-  return { finding: make("revisar", detail, [a, b]), aiFailed: false };
+  return { finding: make("revisar", detail, [a, b]), aiFailed: false, verdicts: [a, b].filter((v): v is AiVerdict => v !== null) };
 }

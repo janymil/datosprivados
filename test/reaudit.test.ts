@@ -16,7 +16,7 @@ const mails = () => getDb().prepare("SELECT to_email, payload FROM email_outbox 
 beforeEach(() => {
   process.env.CRON_SECRET = SECRET;
   process.env.OPERATOR_EMAILS = "fundador@ejemplo.pe, socio@ejemplo.pe";
-  getDb().exec("DELETE FROM email_outbox");
+  getDb().exec("DELETE FROM email_outbox; DELETE FROM legal_draft_requests");
 });
 afterEach(() => {
   delete process.env.CRON_SECRET;
@@ -42,6 +42,18 @@ describe("POST /api/legal/reaudit", () => {
     await POST(request({ ok: false, date: "2027-04-05", error: "sin IA" }));
     await POST(request({ ok: true, date: "2027-04-05", errors: 0, review: 3, aiFailures: 0 }));
     expect(mails()).toHaveLength(4);
+  });
+
+  it("los hallazgos «error» del informe se encolan para redactar, una vez", async () => {
+    const findings = [
+      { id: "aaaaaaaaaaaa", check: "significado", rule: "meaning", source: "aviso.nota.regla-practica", detail: "x", severity: "error" },
+      { id: "bbbbbbbbbbbb", check: "obligacion-sin-cita", rule: "obligation-uncited", source: "politica.x", detail: "y", severity: "revisar" },
+    ];
+    const body = { ok: true, date: "2027-01-04", errors: 1, review: 1, aiFailures: 0, findings };
+    expect(await (await POST(request(body))).json()).toMatchObject({ queued: 1 });
+    expect(await (await POST(request(body))).json()).toMatchObject({ queued: 0 });
+    const rows = getDb().prepare("SELECT origin, ref, targets FROM legal_draft_requests").all();
+    expect(rows).toEqual([{ origin: "auditoria", ref: "aaaaaaaaaaaa", targets: '["aviso.nota.regla-practica"]' }]);
   });
 
   it("rechaza una fecha mal formada", async () => {
@@ -133,11 +145,21 @@ describe("deploy/datosprivados-reaudit.sh", () => {
     expect(hour).toBeGreaterThanOrEqual(8); // Berlín es Lima + 6 (invierno) o + 7 (verano)
   });
 
+  it("revisión I1: un informe grande (más de 128 KB) se entrega igual", async () => {
+    const findings = Array.from({ length: 400 }, (_, i) => ({ id: `f${i}`, severity: "error", rule: "meaning", source: `x.${i}`, detail: "d".repeat(500) }));
+    const big = { meta: { aiFailures: 0 }, findings };
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "big-"));
+    fs.writeFileSync(path.join(dir, "big.json"), JSON.stringify(big));
+    const { code, bodies } = await runScript({ REAUDIT_TODAY: "2027-01-04", REAUDIT_CMD: `mkdir -p legal/audit && cp ${dir}/big.json legal/audit/2027-01-04.json` });
+    expect(code).toBe(0);
+    expect(JSON.parse(bodies[0]).findings).toHaveLength(400);
+  });
+
   it("con el informe del día, envía los conteos", async () => {
     const report = { meta: { aiFailures: 2 }, findings: [{ severity: "error" }, { severity: "error" }, { severity: "revisar" }] };
     const cmd = `mkdir -p legal/audit && echo '${JSON.stringify(report)}' > legal/audit/2027-01-04.json`;
     const { code, bodies } = await runScript({ REAUDIT_TODAY: "2027-01-04", REAUDIT_CMD: cmd });
     expect(code).toBe(0);
-    expect(JSON.parse(bodies[0])).toEqual({ ok: true, date: "2027-01-04", errors: 2, review: 1, aiFailures: 2 });
+    expect(JSON.parse(bodies[0])).toEqual({ ok: true, date: "2027-01-04", errors: 2, review: 1, aiFailures: 2, findings: report.findings.filter((f) => f.severity === "error") });
   });
 });

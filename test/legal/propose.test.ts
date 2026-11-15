@@ -55,4 +55,23 @@ describe("propose-change", () => {
       affected: [{ kind: "clause", source: "arco.3.plazos" }],
     });
   });
+  it("un cambio de norma lleva su tipo, su fuente y los textos afectados además de los hallazgos", () => {
+    const body = proposalPayload({
+      id: "lc-20270110-abc123",
+      title: "Norma nueva",
+      summary: "s",
+      branch: "legal/auto-req1",
+      headSha: "c".repeat(40),
+      diff: "diff",
+      findings: [],
+      kind: "norma",
+      sourceUrl: "https://busquedas.elperuano.pe/dispositivo/NL/1-1",
+      affected: [{ kind: "clause", source: "arco.3.plazos" }, { kind: "norm", source: "ds-001-2027-jus" }],
+    });
+    expect(body).toMatchObject({
+      kind: "norma",
+      source_url: "https://busquedas.elperuano.pe/dispositivo/NL/1-1",
+      affected: [{ kind: "clause", source: "arco.3.plazos" }, { kind: "norm", source: "ds-001-2027-jus" }],
+    });
+  });
 });
