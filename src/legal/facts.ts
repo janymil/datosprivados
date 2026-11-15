@@ -196,21 +196,21 @@ const list: LegalFact[] = [
     note: "Falta el decreto supremo que fija la UIT 2026 en la biblioteca.",
     validFrom: "2026-01-01",
   },
+  // Videovigilancia (Directiva 01-2020-JUS/DGTAIPD). Su punto 5.9 define «Días: Días hábiles.»:
+  // los plazos de la Directiva son en días hábiles.
   {
     id: "cctv.conservacion",
     value: "30-60",
-    unit: "días calendario",
-    cites: [{ norm: "directiva-01-2020-jus-dgtaipd", art: "7" }],
-    quote: null,
-    note: "Falta la Directiva 01-2020-JUS/DGTAIPD; el número de artículo es provisional.",
+    unit: "días hábiles",
+    cites: [{ norm: "directiva-01-2020-jus-dgtaipd", art: "6.13" }, { norm: "directiva-01-2020-jus-dgtaipd", art: "5.9" }],
+    quote: "se almacenan por un plazo de treinta (30) días y hasta un plazo máximo de sesenta (60)",
   },
   {
     id: "cctv.conservacion.educacion",
     value: 30,
-    unit: "días calendario",
-    cites: [{ norm: "directiva-01-2020-jus-dgtaipd", art: "7" }],
-    quote: null,
-    note: "Falta la Directiva 01-2020-JUS/DGTAIPD; el número de artículo es provisional.",
+    unit: "días hábiles",
+    cites: [{ norm: "directiva-01-2020-jus-dgtaipd", art: "7.8" }, { norm: "directiva-01-2020-jus-dgtaipd", art: "5.9" }],
+    quote: "Las imágenes se conservarán por un plazo máximo de treinta (30) días desde su captación",
   },
   {
     id: "reclamo.respuesta",

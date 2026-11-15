@@ -15,14 +15,14 @@ Este protocolo es el complemento operativo del Documento de Seguridad de **Pére
 
 1. Cuaderno de visitas: el visitante no ve los datos de los anteriores; borra los registros pasado el plazo.
 2. Morosos: comunica la deuda de forma individual; no la publiques en áreas comunes.
-3. Cámaras de áreas comunes: cartel visible y conservación de 30 a 60 días.
+3. Cámaras de áreas comunes: cartel visible y conservación de 30 a 60 días hábiles.
 
 ## 4. Normas que debes tener presentes
 
 - Ley N.° 27157 y su Reglamento (DS N.° 008-2000-MTC): la junta de propietarios y su administración tratan datos de propietarios, residentes y visitantes.
 - Registro de visitantes: pide solo nombre y documento; no fotocopies el DNI y borra el cuaderno cuando venza su plazo.
 - No publiques listas de morosos en áreas comunes con nombre y monto: revela la situación económica de las personas.
-- Cámaras de áreas comunes: cartel visible y conservación de 30 a 60 días (Directiva 01-2020-JUS/DGTAIPD).
+- Cámaras de áreas comunes: cartel visible y conservación de 30 a 60 días hábiles (Directiva 01-2020-JUS/DGTAIPD, punto 6.13).
 
 ## 5. Cuánto tiempo guardas cada cosa
 
@@ -30,7 +30,7 @@ Este protocolo es el complemento operativo del Documento de Seguridad de **Pére
 | --- | --- | --- |
 | Registro de visitantes | 30 a 90 días | Minimización |
 | Actas de junta y cobros de cuotas | 5 años desde su fecha | Prescripción y obligaciones contables |
-| Video de cámaras | 30 a 60 días calendario | Directiva 01-2020-JUS/DGTAIPD |
+| Video de cámaras | 30 a 60 días hábiles | Directiva 01-2020-JUS/DGTAIPD, punto 6.13 |
 
 ## 6. Riesgos típicos del rubro y cómo evitarlos
 

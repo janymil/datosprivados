@@ -122,7 +122,7 @@ export const BANK_PRESETS: BankPreset[] = [
     legal_basis: "interes_legitimo",
     channel: "Presencial",
     retention:
-      "Entre 30 y 60 días calendario (Directiva de Videovigilancia de la ANPD); luego las grabaciones se eliminan, salvo requerimiento de autoridad.",
+      "Entre 30 y 60 días hábiles (Directiva de Videovigilancia de la ANPD, puntos 6.13 y 5.9); luego las grabaciones se eliminan, salvo requerimiento de autoridad.",
     transfers: "no",
     recipients: "Empresa de seguridad o monitoreo (y Policía Nacional / Fiscalía solo ante requerimiento legal).",
   },

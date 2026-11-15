@@ -53,7 +53,7 @@
 > - **Responsable del Banco de Datos («Videovigilancia»):** **Pérez & Hijos | «Ñandú» *Express* E.I.R.L.** — RUC 20601234567
 > - **Domicilio:** Av. Principal 100, Lima
 > - **Finalidad:** Garantizar la seguridad de las personas, bienes e instalaciones de este establecimiento.
-> - **Plazo de conservación:** Las imágenes se conservan treinta (30) días calendario como máximo (Directiva 01-2020-JUS/DGTAIPD para instituciones educativas), tras lo cual son eliminadas, salvo requerimiento de autoridad competente.
+> - **Plazo de conservación:** Las imágenes se conservan treinta (30) días hábiles como máximo desde su captación (punto 7.8 de la Directiva 01-2020-JUS/DGTAIPD, para instituciones educativas; los días de la Directiva son hábiles, punto 5.9), tras lo cual son eliminadas, salvo requerimiento de autoridad competente.
 > - **Ejercicio gratuito de Derechos ARCO (Acceso, Rectificación, Cancelación y Oposición):** Puede presentar su solicitud en nuestro formulario digital **https://datosprivados.pe/solicitud/colegio--rep**, escribiendo al correo **privacidad@ejemplo.pe** o de forma presencial en este local.
 > - **Política de Privacidad completa:** https://datosprivados.pe/p/colegio--rep
 
@@ -84,7 +84,7 @@
 > - **Responsable:** Pérez & Hijos | «Ñandú» *Express* E.I.R.L. — RUC 20601234567 — Av. Principal 100, Lima.
 > - **Finalidad:** seguridad de personas, bienes e instalaciones. No se usan las imágenes para evaluar el desempeño laboral ni para publicidad.
 > - **Zonas:** accesos, caja, almacén y áreas comunes. **No** hay cámaras en baños, vestuarios ni zonas de descanso.
-> - **Conservación:** treinta (30) días calendario como máximo (Directiva 01-2020-JUS/DGTAIPD para instituciones educativas). Ante un incidente (accidente, robo, infracción) se conserva el fragmento pertinente solo el tiempo necesario para la denuncia o el procedimiento.
+> - **Conservación:** treinta (30) días hábiles como máximo desde su captación (punto 7.8 de la Directiva 01-2020-JUS/DGTAIPD, para instituciones educativas; los días de la Directiva son hábiles, punto 5.9). Ante un incidente (accidente, robo, infracción) se conserva el fragmento pertinente solo el tiempo necesario para la denuncia o el procedimiento.
 > - **Destinatarios:** personal autorizado, empresa de seguridad o monitoreo (si existe) y, ante requerimiento escrito, Policía Nacional, Ministerio Público o Poder Judicial.
 > - **Derechos:** acceso, rectificación, cancelación y oposición, gratis, en https://datosprivados.pe/solicitud/colegio--rep o privacidad@ejemplo.pe. Si pides acceso a imágenes en que aparecen otras personas, se entregan resguardando su identidad.
 

@@ -45,10 +45,15 @@ export function loadLibrary(dir: string = DEFAULT_LIBRARY_DIR): Library {
     norms,
     articlesOf: (normId) => articles[normId] ?? [],
     findArticle(normId, ref) {
-      const [num, ...rest] = ref.split(".");
-      const article = (articles[normId] ?? []).find((candidate) => candidate.num === num);
-      if (!article) return null;
-      return rest.length ? { article, item: rest.join(".") } : { article };
+      // El prefijo numerado más largo que exista: «6.13» es el punto 6.13 de una directiva;
+      // «69.1», el inciso 1 del art. 69; «6.11.1», el inciso 1 del punto 6.11.
+      const parts = ref.split(".");
+      for (let n = parts.length; n >= 1; n--) {
+        const num = parts.slice(0, n).join(".");
+        const article = (articles[normId] ?? []).find((candidate) => candidate.num === num);
+        if (article) return n < parts.length ? { article, item: parts.slice(n).join(".") } : { article };
+      }
+      return null;
     },
     normByAlias(alias) {
       const id = aliases.get(normalizeAlias(alias));

@@ -9,14 +9,14 @@ Estos plazos son los declarados en tu inventario y deben coincidir con tu Polít
 | Banco de datos | Plazo declarado | Soporte | Acción al vencer | Evidencia |
 | --- | --- | --- | --- | --- |
 | «Clientes y compradores» | Durante la relación comercial y hasta 5 años adicionales por obligación tributaria (SUNAT). | WhatsApp | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
-| «Videovigilancia y seguridad del local» | Entre 30 y 60 días calendario (Directiva de Videovigilancia de la ANPD); luego las grabaciones se eliminan, salvo requerimiento de autoridad. | Presencial | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
+| «Videovigilancia y seguridad del local» | Entre 30 y 60 días hábiles (Directiva de Videovigilancia de la ANPD, puntos 6.13 y 5.9); luego las grabaciones se eliminan, salvo requerimiento de autoridad. | Presencial | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 | «Grabaciones de voz analizadas con IA» | 6 meses | Central telefónica | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 
 ## 3. Plazos por tipo de dato para tu rubro (Seguridad y vigilancia privada)
 
 | Tipo de dato | Plazo sugerido | Fundamento |
 | --- | --- | --- |
-| Imágenes de videovigilancia | 30 a 60 días calendario; ampliación solo ante un incidente o requerimiento | Directiva 01-2020-JUS/DGTAIPD |
+| Imágenes de videovigilancia | 30 a 60 días hábiles; ampliación solo ante un incidente o requerimiento | Directiva 01-2020-JUS/DGTAIPD, punto 6.13 |
 | Libros de ocurrencias | Según el contrato con el cliente; máximo 2 años desde el último servicio | Art. 31.2 del DS N.° 016-2024-JUS |
 | Planillas y legajos de trabajadores | Durante el vínculo y 5 años desde el cese | Obligaciones laborales y tributarias |
 | Registros de acceso e interacción con datos (Documento de Seguridad) | Mínimo 2 años | Art. 46.3 del DS N.° 016-2024-JUS |

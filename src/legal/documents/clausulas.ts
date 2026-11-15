@@ -14,8 +14,8 @@ const v = ({ company, profile }: LegalContext) => ({
   policyUrl: `${appUrl()}/p/${company.slug}`,
   cctvRetention:
     profile.family === "educacion_menores"
-      ? "treinta (30) días calendario como máximo (Directiva 01-2020-JUS/DGTAIPD para instituciones educativas)"
-      : "entre treinta (30) y sesenta (60) días calendario (Directiva 01-2020-JUS/DGTAIPD)",
+      ? "treinta (30) días hábiles como máximo desde su captación (punto 7.8 de la Directiva 01-2020-JUS/DGTAIPD, para instituciones educativas; los días de la Directiva son hábiles, punto 5.9)"
+      : "entre treinta (30) y sesenta (60) días hábiles (puntos 6.13 y 5.9 de la Directiva 01-2020-JUS/DGTAIPD)",
 });
 
 export const clausulasSpec: DocumentSpec = {

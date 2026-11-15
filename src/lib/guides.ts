@@ -437,9 +437,9 @@ export const GUIDES: Guide[] = [
     title: "Cámaras de seguridad y Ley 29733: cartel, plazos y registro",
     h1: "Cámaras de seguridad en tu empresa: qué exige la ley",
     description:
-      "Cartel de videovigilancia tamaño A4, conservación de 30 a 60 días, inscripción del banco y zonas prohibidas: lo que exige la Directiva de la ANPD a las empresas.",
+      "Cartel de videovigilancia tamaño A4, conservación de 30 a 60 días hábiles, inscripción del banco y zonas prohibidas: lo que exige la Directiva de la ANPD a las empresas.",
     answer:
-      "Las grabaciones de tus cámaras son un banco de datos: debes **inscribirlo** en el SIPDP, colocar un **cartel visible** en los accesos a las zonas vigiladas y conservar las grabaciones **entre 30 y 60 días**, salvo que una autoridad las pida. No se graban baños, vestidores ni conversaciones.",
+      "Las grabaciones de tus cámaras son un banco de datos: debes **inscribirlo** en el SIPDP, colocar un **cartel visible** en los accesos a las zonas vigiladas y conservar las grabaciones **entre 30 y 60 días hábiles**, salvo que una autoridad las pida. No se graban baños, vestidores ni conversaciones.",
     updated: UPDATED,
     sections: [
       {
@@ -455,7 +455,7 @@ export const GUIDES: Guide[] = [
       {
         heading: "Reglas de uso",
         bullets: [
-          "Conserva las grabaciones entre 30 y 60 días y luego elimínalas, salvo pedido de una autoridad.",
+          "Conserva las grabaciones entre 30 y 60 días hábiles y luego elimínalas, salvo pedido de una autoridad.",
           "No grabes zonas privadas (baños, vestidores) ni audio de conversaciones.",
           "Limita quién puede ver y exportar las grabaciones, y registra cada exportación.",
           "Si el proveedor de seguridad monitorea las cámaras, firma con él una cláusula de encargo.",
@@ -565,7 +565,7 @@ export const GUIDES: Guide[] = [
             ["Comprobantes y registros de ventas", "5 años desde la operación"],
             ["Planillas y legajos de trabajadores", "Durante el vínculo y 5 años desde el cese"],
             ["Hojas del Libro de Reclamaciones", "Mínimo 2 años desde el reclamo"],
-            ["Grabaciones de cámaras de seguridad", "Entre 30 y 60 días"],
+            ["Grabaciones de cámaras de seguridad", "Entre 30 y 60 días hábiles"],
           ],
         },
       },
