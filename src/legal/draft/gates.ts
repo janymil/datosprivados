@@ -249,7 +249,8 @@ function checkFact(before: ts.ObjectLiteralExpression, after: ts.ObjectLiteralEx
   const quote = a.map.get("quote");
   if (!unit || !isText(unit) || !FACT_UNITS.has(unit.text)) problems.push("unidad no válida");
   if (!value || !(isText(value) || ts.isNumericLiteral(value))) problems.push("el valor debe ser un número o un texto literal");
-  const cites = checkCites(a.map.get("cites"), lib, problems, consts, citeKeys(b.map.get("cites"), lib, consts));
+  const original = citeKeys(b.map.get("cites"), lib, consts);
+  const cites = checkCites(a.map.get("cites"), lib, problems, consts, original);
   if (!cites.length) {
     problems.push("el hecho necesita al menos una cita");
     return;
@@ -258,9 +259,23 @@ function checkFact(before: ts.ObjectLiteralExpression, after: ts.ObjectLiteralEx
     problems.push("el hecho necesita la frase textual de la norma");
     return;
   }
+  // Un hecho no cambia de tema: la frase sale de una norma que el hecho ya citaba. Si esa norma aún no
+  // tiene texto oficial en la biblioteca, no se puede verificar (no se busca otra norma que «sirva»).
+  const originalNorms = new Set([...original].map((k) => k.slice(0, k.indexOf(":"))));
+  const usable = cites.filter((c) => originalNorms.has(c.norm) && lib.norms[c.norm]?.status !== "no-verificada");
+  if (originalNorms.size && !usable.length) {
+    const names = [...originalNorms].join(", ");
+    problems.push(
+      [...originalNorms].every((n) => !lib.norms[n] || lib.norms[n].status === "no-verificada")
+        ? `la frase debe salir de la norma que el hecho ya cita (${names}), y esa norma aún no tiene texto oficial en la biblioteca`
+        : `un hecho no puede cambiar de norma: la frase debe salir de ${names}`
+    );
+    return;
+  }
   // Textual, como la prueba de hechos (no la tolerancia a paráfrasis de los veredictos de la IA).
-  const texts = cites.map((c) => lib.findArticle(c.norm, c.art)?.article.text ?? "");
-  if (!texts.some((text) => squash(text).includes(squash(quote.text)))) problems.push(`la frase no está, textual, en los artículos citados: «${quote.text}»`);
+  const texts = (originalNorms.size ? usable : cites).map((c) => lib.findArticle(c.norm, c.art)?.article.text ?? "");
+  if (!texts.some((text) => squash(text).includes(squash(quote.text))))
+    problems.push(`la frase no está, textual, en los artículos citados de la norma del hecho: «${quote.text}»`);
   if (unit && isText(unit) && unit.text !== "fecha") {
     const q = quote.text.toLowerCase();
     if (quote.text.length < MIN_QUOTE || !(UNIT_WORDS[unit.text] ?? []).some((w) => q.includes(w)))
