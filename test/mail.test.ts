@@ -38,6 +38,7 @@ const SAMPLE: Record<MailTemplate, MailPayload> = {
   ops_alert: { subject: "Alerta", message: "Algo pasó" },
   legal_change_new: { title: "Corregir art. 2.6", kind: "auditoria", affected: 3, path: "/operador/legal/lc-20261114-abcdef" },
   legal_change_failed: { title: "Corregir art. 2.6", reason: "El flujo de GitHub terminó en «failure»", path: "/operador/legal/lc-20261114-abcdef" },
+  legal_watch_found: { title: "DECRETO SUPREMO N° 001-2027-JUS", issuer: "JUSTICIA Y DERECHOS HUMANOS", reason: "Modifica el Reglamento", documents: "arco, politica", customers: 12, url: "https://busquedas.elperuano.pe/dispositivo/NL/1-1", path: "/operador/legal" },
 };
 
 const outbox = () =>
@@ -53,7 +54,7 @@ describe("plantillas", () => {
   it("hay un ejemplo por cada plantilla (que no se quede una sin probar)", () => {
     const templates = Object.keys(SAMPLE) as MailTemplate[];
     for (const template of templates) expect(() => renderMail(template, SAMPLE[template])).not.toThrow();
-    expect(templates).toHaveLength(31);
+    expect(templates).toHaveLength(32);
   });
 
   it.each(Object.keys(SAMPLE) as MailTemplate[])("%s: asunto, texto y HTML sin fugas de variables", (template) => {

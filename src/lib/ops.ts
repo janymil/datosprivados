@@ -7,6 +7,7 @@ import { mailProvider, stuckOutboxCount } from "./mail";
 import { jobsHealth } from "./jobs";
 import { dailyAlertThresholdUsd, dailySpendUsd } from "./ai-guard";
 import { isLlmConfigured } from "./llm";
+import { sourceHealth } from "./legal-watch/store";
 
 /**
  * Comprobaciones de salud (P6-OBS). `dbCheck` y `readiness` alimentan los endpoints
@@ -129,6 +130,16 @@ export function operationalAlerts(now = new Date(), env: Record<string, string |
 
   const jobs = jobsHealth(now);
   for (const job of jobs.jobs) if (job.overdue) alerts.push({ code: "job_missed", message: `La tarea ${job.job} no corre a tiempo.` });
+  // Monitor de normas: una fuente caída 3 días o con la página cambiada no puede pasar en silencio.
+  for (const source of sourceHealth(now)) {
+    const name = source.source === "elperuano" ? "El Peruano" : "ANPD (gob.pe)";
+    if (source.failingDays >= 3) {
+      alerts.push({ code: "legal_watch_failing", message: `El monitor de normas no puede leer ${name} hace ${source.failingDays} días (${source.lastError ?? "error"}).` });
+    }
+    if (source.structureChanged) {
+      alerts.push({ code: "legal_watch_structure", message: `La página de ${name} cambió de estructura: el monitor de normas no la reconoce.` });
+    }
+  }
   const stuck = stuckOutboxCount(60, now);
   if (stuck > 0) alerts.push({ code: "outbox_backlog", message: `${stuck} correos sin salir hace más de una hora.` });
 

@@ -40,7 +40,8 @@ export type MailTemplate =
   | "account_deleted"
   | "ops_alert"
   | "legal_change_new"
-  | "legal_change_failed";
+  | "legal_change_failed"
+  | "legal_watch_found";
 
 export type MailPayload = Record<string, string | number>;
 
@@ -79,6 +80,7 @@ const ESSENTIAL: Record<MailTemplate, boolean> = {
   ops_alert: true,
   legal_change_new: true,
   legal_change_failed: true,
+  legal_watch_found: true,
 };
 
 export function isEssential(template: MailTemplate): boolean {
@@ -497,6 +499,22 @@ export function renderMail(template: MailTemplate, payload: MailPayload): Render
             `Motivo: ${s(payload, "reason")}`,
           ],
           action: { label: "Ver el cambio", url: s(payload, "path") },
+        },
+        ""
+      );
+    case "legal_watch_found":
+      need("title", "issuer", "reason", "documents", "customers", "url", "path");
+      return layout(
+        {
+          subject: `Norma nueva que afecta a los documentos: ${s(payload, "title")}`,
+          paragraphs: [
+            `El monitor de normas encontró «${s(payload, "title")}» (${s(payload, "issuer")}).`,
+            `Por qué importa: ${s(payload, "reason")}`,
+            `Documentos afectados: ${s(payload, "documents")}. Clientes con esos documentos: ${s(payload, "customers")}.`,
+            `Texto oficial: ${s(payload, "url")}`,
+            "Revísala en el panel. Si hay que corregir los documentos, se prepara un cambio para tu aprobación.",
+          ],
+          action: { label: "Ver en el panel", url: s(payload, "path") },
         },
         ""
       );

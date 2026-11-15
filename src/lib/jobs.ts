@@ -14,6 +14,7 @@ import { notifyCompany } from "./notify";
 import { planName, renewalPrice } from "./plans";
 import { syncLegalChanges } from "./legal-change-sync";
 import { sendCreditReminders } from "./credit-reminders";
+import { runLegalWatch } from "./legal-watch/run";
 
 /**
  * Tareas programadas. Cada una es idempotente (repetirla no duplica correos ni
@@ -455,6 +456,11 @@ const JOBS = {
   "credit-reminders"({ now }: JobContext): JobResult {
     return { enviados: sendCreditReminders(now) };
   },
+
+  /** Monitor de normas (plan 6): El Peruano y ANPD, filtro, triaje con IA y aviso al fundador. */
+  async "legal-watch"({ now }: JobContext): Promise<JobResult> {
+    return { ...(await runLegalWatch({ now })) };
+  },
 } satisfies Record<string, (context: JobContext) => JobResult | Promise<JobResult>>;
 
 export type JobName = keyof typeof JOBS;
@@ -481,6 +487,7 @@ export const JOB_MAX_AGE_HOURS: Record<JobName, number> = {
   "holidays-check": 8 * 24,
   "legal-change-sync": 1,
   "credit-reminders": 26,
+  "legal-watch": 26,
 };
 
 /**
