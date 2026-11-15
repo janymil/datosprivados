@@ -99,6 +99,6 @@ fi
 post "$(node -e '
   const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
   const errors = r.findings.filter((f) => f.severity === "error").length;
-  process.stdout.write(JSON.stringify({ ok: true, date: process.argv[2], errors, review: r.findings.length - errors, aiFailures: r.meta.aiFailures ?? 0 }));
+  process.stdout.write(JSON.stringify({ ok: true, date: process.argv[2], errors, review: r.findings.length - errors, aiFailures: r.meta.aiFailures ?? 0, findings: r.findings }));
 ' "$REPORT" "$TODAY")" || exit 2
 say info "re-auditoría del $TODAY enviada ($REPORT)"

@@ -2,6 +2,7 @@ import "server-only";
 
 import { limaToday } from "../format";
 import { callLlm } from "../llm";
+import { enqueueDraft } from "../legal-drafts";
 import { logEvent } from "../log";
 import { enqueueEmail } from "../mail";
 import { fetchAnpd } from "./anpd";
@@ -128,6 +129,23 @@ export async function runLegalWatch(deps: Deps = {}): Promise<WatchRunResult> {
       affected: JSON.stringify(impact),
     });
     relevantes += 1;
+    // Plan 7: el script de redacción carga la norma en la biblioteca y redacta la corrección.
+    enqueueDraft({
+      origin: "norma",
+      ref: item.id,
+      targets: [],
+      context: {
+        url: item.url,
+        pdf_url: item.pdf_url,
+        title: item.title,
+        issuer: item.issuer,
+        published_on: item.published_on,
+        relevance: verdict.relevance,
+        norms: verdict.norms,
+        articles: verdict.articles,
+        reason: verdict.reason,
+      },
+    });
   }
 
   // 5. Aviso al fundador: una vez por norma relevante.

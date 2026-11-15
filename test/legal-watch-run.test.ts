@@ -51,7 +51,7 @@ const mails = () => getDb().prepare("SELECT to_email FROM email_outbox WHERE tem
 
 beforeEach(() => {
   process.env.OPERATOR_EMAILS = "fundador@ejemplo.pe, socio@ejemplo.pe";
-  getDb().exec("DELETE FROM legal_watch_items; DELETE FROM legal_watch_sources; DELETE FROM email_outbox");
+  getDb().exec("DELETE FROM legal_watch_items; DELETE FROM legal_watch_sources; DELETE FROM email_outbox; DELETE FROM legal_draft_requests");
 });
 afterEach(() => {
   process.env = { ...original };
@@ -67,6 +67,15 @@ describe("tarea legal-watch", () => {
     expect(relevant.map((r) => r.source).sort()).toEqual(["anpd", "elperuano"]);
     expect(JSON.parse(relevant[0].affected!).documentKinds).toContain("arco");
     expect(mails()).toHaveLength(4);
+  });
+
+  it("cada norma relevante se encola para redactar la corrección; las irrelevantes no", async () => {
+    await run(new Date("2027-01-10T17:00:00Z"));
+    await run(new Date("2027-01-10T18:00:00Z"));
+    const rows = getDb().prepare("SELECT origin, targets, context FROM legal_draft_requests ORDER BY ref").all() as Array<{ origin: string; targets: string; context: string }>;
+    expect(rows).toHaveLength(2);
+    expect(rows.every((r) => r.origin === "norma" && r.targets === "[]")).toBe(true);
+    expect(JSON.parse(rows[0].context)).toMatchObject({ norms: ["ds-016-2024-jus"], articles: ["69"] });
   });
 
   it("dos corridas no duplican ítems ni correos", async () => {
