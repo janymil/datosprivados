@@ -5,6 +5,7 @@ import { formatDate } from "@/lib/format";
 import { listLegalChanges } from "@/lib/legal-changes";
 import { requireOperator } from "@/lib/operator";
 import { STATUS_LABEL } from "./labels";
+import { WatchSection } from "./watch-section";
 
 export const metadata = { title: "Cambios legales", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -34,6 +35,8 @@ export default async function LegalChangesPage({ searchParams }: { searchParams:
           pruebas y lo publica solo si pasan.
         </p>
       </header>
+
+      <WatchSection />
 
       <nav aria-label="Estado" className="flex gap-5 text-sm">
         {TABS.map((t) => (

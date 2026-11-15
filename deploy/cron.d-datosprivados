@@ -25,6 +25,10 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # despliegue; el script de root lo hace (solo actua con GITHUB_DISPATCH_TOKEN; docs/RUNBOOK.md).
 */10 * * * *    root /usr/local/bin/datosprivados-cron legal-change-sync
 */5 * * * *     root /usr/local/bin/datosprivados-autodeploy
+# Re-auditoría trimestral: primer lunes (hora de Lima) de enero, abril, julio y octubre.
+# 12:30 del servidor (Europe/Berlin) = 05:30 / 06:30 Lima del mismo día; el script comprueba
+# él mismo, en hora de Lima, que sea el primer lunes.
+30 12 1-7 1,4,7,10 *  root /usr/local/bin/datosprivados-reaudit
 
 # --- diarias: cada hora; el wrapper ejecuta solo en la hora indicada (Lima) ---
 0 * * * *       root /usr/local/bin/datosprivados-cron purge-old-data          --at 03:00
@@ -39,6 +43,8 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 0 * * * *       root /usr/local/bin/datosprivados-cron holidays-check            --at 06:00 --dow 1
 # Facturas a crédito: recordatorios de pago y aviso de solo lectura (src/lib/credit-reminders.ts).
 0 * * * *       root /usr/local/bin/datosprivados-cron credit-reminders          --at 11:00
+# Monitor de normas: El Peruano y ANPD; avisa al fundador de cada norma relevante (src/lib/legal-watch/).
+0 * * * *       root /usr/local/bin/datosprivados-cron legal-watch               --at 12:00
 # Resumen semanal opcional: solo actua con WEEKLY_DIGEST=1 en el entorno del servicio.
 # 0 * * * *     root /usr/local/bin/datosprivados-cron weekly-digest             --at 10:00 --dow 1
 # demo-reset: reafirma la demo publica (solo lectura, sin correos, cobros ni IA).

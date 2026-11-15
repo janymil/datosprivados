@@ -30,6 +30,11 @@ const outbox = (template?: string) =>
 beforeEach(() => {
   const db = getDb();
   db.exec("DELETE FROM email_outbox; DELETE FROM job_runs; DELETE FROM arco_requests; DELETE FROM incidents");
+  // legal-watch lee El Peruano y gob.pe: las pruebas nunca salen a internet.
+  vi.stubGlobal("fetch", async () => new Response("sin red en pruebas", { status: 503 }));
+});
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe("recordatorios de plazos ARCO", () => {

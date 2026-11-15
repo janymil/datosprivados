@@ -421,6 +421,7 @@ considera de un proceso muerto.
 | `document-staleness-notice` | semanal | Un aviso por empresa con documentos desactualizados (opcional para la empresa). |
 | `expire-sessions` | diario | Sesiones, tokens y límites de intentos vencidos. |
 | `holidays-check` | semanal | Asegura feriados de este año y el siguiente; informa los años aún sin decreto confirmado. |
+| `legal-watch` | diaria, 12:00 | Monitor de normas: lee El Peruano (días pendientes, máx. 7) y la ANPD en gob.pe; filtra, triaja con IA (máx. 30 por corrida) y avisa a `OPERATOR_EMAILS` de cada norma relevante. Fuente caída 3 días o página distinta → alerta operativa. Sin IA configurada, las normas quedan «pendiente». |
 | `credit-reminders` | diaria, 11:00 | Recordatorios de las facturas a crédito (−3, 0 y +3 días del vencimiento) y aviso al pasar a solo lectura (+7). |
 | `weekly-digest` | semanal (opcional) | Resumen por empresa con lo que quedó pendiente (ARCO sin responder, incidentes abiertos, documentos desactualizados, bancos sin inscribir). **Apagado por defecto**: solo hace algo con `WEEKLY_DIGEST=1`, y mientras esté apagado no se le exige a `/api/health`. Una cuenta al día no recibe correo. |
 
@@ -645,3 +646,29 @@ confundirlos:
 - Pase a producción: `docs/CUTOVER.md`. Plantilla de nginx: `deploy/nginx-production.conf`.
 
 - Revisiones recurrentes (semanal, mensual, anual): `docs/POST-LAUNCH.md`; `pnpm ops:weekly`, `pnpm ops:restore-drill`.
+
+## Re-auditoría trimestral
+
+`/usr/local/bin/datosprivados-reaudit` (copia de `deploy/datosprivados-reaudit.sh`) corre como root el
+primer lunes de enero, abril, julio y octubre (cron a las 12:30 del servidor, Europe/Berlin = 05:30/06:30 Lima). Clona `master` en
+`/var/lib/datosprivados/reaudit/repo` (nunca toca `/var/www/datosprivados` ni hace push), corre
+`pnpm legal:audit` con `LEGAL_AUDIT_ENV_DIR=/var/www/datosprivados` (máx. 2 horas) y manda los conteos
+a `POST /api/legal/reaudit`, que avisa por correo (`legal_reaudit`) a `OPERATOR_EMAILS`. Si algo falla,
+el correo dice el motivo; el log está en `/var/lib/datosprivados/reaudit/reaudit.log`. Si la aplicación
+no acepta el aviso (caída, secreto distinto), el script reintenta 5 veces y termina con error en
+`journalctl -t datosprivados-reaudit`.
+
+Instalar o actualizar:
+
+```bash
+install -m 755 deploy/datosprivados-reaudit.sh /usr/local/bin/datosprivados-reaudit
+```
+
+Lanzarla a mano (fuera del primer lunes), por ejemplo tras un cambio grande de la biblioteca o
+para repetir una que falló:
+
+```bash
+REAUDIT_FORCE=1 /usr/local/bin/datosprivados-reaudit
+```
+
+El informe queda en `/var/lib/datosprivados/reaudit/repo/legal/audit/<fecha>.{md,json}`.

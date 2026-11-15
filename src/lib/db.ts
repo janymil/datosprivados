@@ -494,7 +494,7 @@ function initSchema(db: DatabaseSync) {
  * cacheada en `globalThis` (en `next dev` la conexión sobrevive a los recargos
  * en caliente y `initSchema` no vuelve a correr).
  */
-const SCHEMA_VERSION = 18;
+const SCHEMA_VERSION = 19;
 
 function migrate(db: DatabaseSync) {
   const companyColumns = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
@@ -925,6 +925,39 @@ function migrate(db: DatabaseSync) {
       UNIQUE (branch, head_sha)
     );
     CREATE INDEX IF NOT EXISTS idx_legal_changes_status ON legal_changes(status, created_at);
+  `);
+
+  // v19: monitor de normas (motor legal, plan 6; src/lib/legal-watch/).
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS legal_watch_items (
+      id TEXT PRIMARY KEY,
+      source TEXT NOT NULL,
+      external_id TEXT NOT NULL,
+      url TEXT NOT NULL,
+      pdf_url TEXT,
+      issuer TEXT NOT NULL DEFAULT '',
+      title TEXT NOT NULL,
+      summary TEXT NOT NULL DEFAULT '',
+      published_on TEXT,
+      status TEXT NOT NULL DEFAULT 'nuevo',
+      relevance TEXT,
+      reason TEXT,
+      norms TEXT,
+      affected TEXT,
+      notified_at TEXT,
+      created_at TEXT NOT NULL,
+      UNIQUE (source, external_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_legal_watch_status ON legal_watch_items(status, created_at);
+    CREATE TABLE IF NOT EXISTS legal_watch_sources (
+      source TEXT PRIMARY KEY,
+      last_ok_at TEXT,
+      last_count INTEGER,
+      last_error TEXT,
+      last_error_at TEXT,
+      failing_since TEXT,
+      structure_changed INTEGER NOT NULL DEFAULT 0
+    );
   `);
 
   seedHolidays(db);

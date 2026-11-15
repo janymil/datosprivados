@@ -40,7 +40,9 @@ export type MailTemplate =
   | "account_deleted"
   | "ops_alert"
   | "legal_change_new"
-  | "legal_change_failed";
+  | "legal_change_failed"
+  | "legal_watch_found"
+  | "legal_reaudit";
 
 export type MailPayload = Record<string, string | number>;
 
@@ -79,6 +81,8 @@ const ESSENTIAL: Record<MailTemplate, boolean> = {
   ops_alert: true,
   legal_change_new: true,
   legal_change_failed: true,
+  legal_watch_found: true,
+  legal_reaudit: true,
 };
 
 export function isEssential(template: MailTemplate): boolean {
@@ -500,6 +504,46 @@ export function renderMail(template: MailTemplate, payload: MailPayload): Render
         },
         ""
       );
+    case "legal_watch_found":
+      need("title", "issuer", "reason", "documents", "customers", "url", "path");
+      return layout(
+        {
+          subject: `Norma nueva que afecta a los documentos: ${s(payload, "title")}`,
+          paragraphs: [
+            `El monitor de normas encontró «${s(payload, "title")}» (${s(payload, "issuer")}).`,
+            `Por qué importa: ${s(payload, "reason")}`,
+            `Documentos afectados: ${s(payload, "documents")}. Clientes con esos documentos: ${s(payload, "customers")}.`,
+            `Texto oficial: ${s(payload, "url")}`,
+            "Revísala en el panel. Si hay que corregir los documentos, se prepara un cambio para tu aprobación.",
+          ],
+          action: { label: "Ver en el panel", url: s(payload, "path") },
+        },
+        ""
+      );
+    case "legal_reaudit": {
+      need("date", "ok", "path");
+      const ok = s(payload, "ok") === "sí";
+      return layout(
+        {
+          subject: ok
+            ? `Re-auditoría trimestral del ${s(payload, "date")}: ${s(payload, "errors")} errores, ${s(payload, "review")} por revisar`
+            : `La re-auditoría trimestral del ${s(payload, "date")} no terminó`,
+          paragraphs: ok
+            ? [
+                `La re-auditoría trimestral de los documentos (biblioteca de normas, cláusulas y textos legales) terminó el ${s(payload, "date")}.`,
+                `Errores: ${s(payload, "errors")}. Por revisar: ${s(payload, "review")}. Llamadas a la IA fallidas: ${s(payload, "aiFailures")}.`,
+                "El informe completo está en legal/audit/ de la copia de la auditoría en el servidor. Los errores se corrigen con un cambio legal que apruebas en el panel.",
+              ]
+            : [
+                `La re-auditoría trimestral del ${s(payload, "date")} no terminó.`,
+                `Motivo: ${String(payload.error ?? "") || "desconocido"}`,
+                "Se puede volver a lanzar a mano en el servidor (docs/RUNBOOK.md, «Re-auditoría trimestral»).",
+              ],
+          action: { label: "Ver el panel legal", url: s(payload, "path") },
+        },
+        ""
+      );
+    }
     case "ops_alert":
       need("subject", "message");
       return layout({ subject: s(payload, "subject"), paragraphs: [s(payload, "message")] }, "");
