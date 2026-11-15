@@ -136,5 +136,56 @@
         "Código de Protección y Defensa del Consumidor"
       ]
     }
+  },
+  "directiva-01-2020-jus-dgtaipd": {
+    "url": "https://cdn.www.gob.pe/uploads/document/file/1910249/Directiva-N%C2%B0-01-2020-DGTAIPD-1.pdf",
+    "start": "^I\\. OBJETIVO$",
+    "startOccurrence": 1,
+    "end": "^ANEXO 1$",
+    "sections": true,
+    "textFixes": [
+      {
+        "from": "M. G _ LEZ L 6.4 Principio de proporcionalidad:",
+        "to": "6.4 Principio de proporcionalidad:",
+        "page": 6,
+        "why": "el sello de firma del margen quedó pegado al encabezado del punto 6.4"
+      },
+      {
+        "from": "\n6.33\n",
+        "to": "\n",
+        "page": 13,
+        "why": "el número 6.33 del margen quedó al inicio de la página, lejos de su texto"
+      },
+      {
+        "from": "\nLos derechos de cancelación y oposición se ejercen",
+        "to": "\n6.32 Los derechos de cancelación y oposición se ejercen",
+        "page": 13,
+        "why": "el OCR perdió el número 6.32 del margen (tapado por un sello)"
+      },
+      {
+        "from": "\nNo es posible el ejercicio del derecho de rectificación",
+        "to": "\n6.33 No es posible el ejercicio del derecho de rectificación",
+        "page": 13,
+        "why": "el OCR perdió el número 6.33 del margen (tapado por un sello)"
+      },
+      {
+        "from": "\n710 El empleador se encuentra obligado",
+        "to": "\n7.10 El empleador se encuentra obligado",
+        "page": 16,
+        "why": "el OCR leyó «7.10» como «710»"
+      }
+    ],
+    "norm": {
+      "title": "Directiva N.° 01-2020-JUS/DGTAIPD, Tratamiento de datos personales mediante sistemas de videovigilancia (aprobada por R.D. N.° 02-2020-JUS/DGTAIPD; escaneo con OCR publicado por la ANPD en gob.pe)",
+      "type": "directiva",
+      "number": "01-2020-JUS/DGTAIPD",
+      "publishedAt": "2020-01-16",
+      "status": "vigente",
+      "consolidated": true,
+      "amendedBy": [],
+      "aliases": [
+        "Directiva 01-2020-JUS/DGTAIPD"
+      ]
+    }
   }
 }

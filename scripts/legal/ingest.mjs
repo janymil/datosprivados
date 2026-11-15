@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Descarga una norma oficial, la separa por artículo y la escribe en legal/library/<id>/.
+ * Descarga una norma oficial, la separa por artículo (o por punto numerado, `sections`, en las
+ * directivas) y la escribe en legal/library/<id>/.
  *
  *   node --experimental-strip-types scripts/legal/ingest.mjs <id>
  *
@@ -11,7 +12,7 @@ import { execFileSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { splitArticles } from "../../src/legal/library/split.ts";
+import { applyTextFixes, splitArticles } from "../../src/legal/library/split.ts";
 
 const id = process.argv[2];
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
@@ -31,7 +32,8 @@ const txt = path.join(store, "source.txt");
 // -raw: orden de lectura del contenido; sin él, los encabezados de las columnas justificadas se parten (DS 016-2024-JUS arts. 18 y 33).
 // `extract: "default"` (sin -raw) para PDFs justificados donde -raw pega palabras (ediciones de Indecopi).
 execFileSync("pdftotext", [...(source.extract === "default" ? [] : ["-raw"]), "-enc", "UTF-8", pdf, txt]);
-const raw = fs.readFileSync(txt, "utf8").normalize("NFKC");
+// Escaneos con OCR: correcciones puntuales, cada una verificada contra la imagen de su página.
+const raw = applyTextFixes(fs.readFileSync(txt, "utf8").normalize("NFKC"), source.textFixes);
 
 // La norma empieza en la N-ésima aparición del marcador (antes puede haber un índice o el decreto aprobatorio).
 const startRe = new RegExp(source.start, "gm");
@@ -45,6 +47,7 @@ const articles = splitArticles(raw.slice(match.index), {
   end: source.end ? new RegExp(source.end, "m") : undefined,
   amended: Boolean(source.amended),
   sumilla: Boolean(source.sumilla),
+  sections: Boolean(source.sections),
 });
 
 const dir = path.join(root, "legal/library", id);

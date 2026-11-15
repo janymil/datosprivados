@@ -23,6 +23,12 @@ export type SplitOptions = {
    * empieza en la misma línea de «Artículo 15.-». La sumilla es el título.
    */
   sumilla?: boolean;
+  /**
+   * Directivas numeradas por puntos («5.9 Días: Días hábiles.», «6.13 Las imágenes…»): cada
+   * punto de dos niveles es una entrada con `num` "6.13"; los de tres niveles («6.11.1»)
+   * quedan dentro de su punto. El subtítulo de la línea anterior es el título.
+   */
+  sections?: boolean;
 };
 
 /** Una sumilla: línea corta sin punto final que precede a un encabezado de artículo. */
@@ -61,6 +67,23 @@ const SIGNATURE = /^(POR TANTO|Comun[íi]quese|Dado en la Casa de Gobierno|Reg[�
 
 const sha = (text: string) => crypto.createHash("sha256").update(text).digest("hex");
 
+/** Corrección de un error de OCR, verificada contra la imagen de la página del PDF oficial. */
+export type TextFix = { from: string; to: string; page: number; why: string };
+
+/**
+ * Aplica las correcciones de OCR de `scripts/legal/sources.json` (`textFixes`). Cada una
+ * debe aparecer exactamente una vez: si el PDF oficial cambia, la ingesta se detiene.
+ */
+export function applyTextFixes(raw: string, fixes: TextFix[] = []): string {
+  let text = raw;
+  for (const fix of fixes) {
+    const count = text.split(fix.from).length - 1;
+    if (count !== 1) throw new Error(`corrección de OCR (pág. ${fix.page}) «${fix.from.trim()}»: aparece ${count} veces, se esperaba 1`);
+    text = text.replace(fix.from, fix.to);
+  }
+  return text;
+}
+
 export function splitArticles(raw: string, opts: SplitOptions): Article[] {
   let text = raw.normalize("NFKC").replace(/\r\n?/g, "\n");
   // Palabra cortada al final de línea: «informa-\nción» → «información».
@@ -78,6 +101,8 @@ export function splitArticles(raw: string, opts: SplitOptions): Article[] {
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => !isPageNoise(line));
+  if (opts.sections) return uniqueNums(splitSections(lines));
+
   const out: Article[] = [];
   let current: { num: string; title: string; body: string[] } | null = null;
   let provisionKind: string | null = null;
@@ -154,12 +179,50 @@ export function splitArticles(raw: string, opts: SplitOptions): Article[] {
   flush();
 
   if (opts.amended) return keepLatestVersions(out);
+  return uniqueNums(out);
+}
 
+function uniqueNums(out: Article[]): Article[] {
   const seen = new Set<string>();
   for (const article of out) {
     if (seen.has(article.num)) throw new Error(`artículo ${article.num} repetido: ¿hay otra norma dentro del rango?`);
     seen.add(article.num);
   }
+  return out;
+}
+
+/** «6.13 Las imágenes…»: punto de exactamente dos niveles (no «6.11.1»). */
+const SECTION = /^(\d{1,2}\.\d{1,2})(?![.\d])\s+(.*)$/;
+
+/** Directiva numerada por puntos (opción `sections`). */
+function splitSections(lines: string[]): Article[] {
+  const out: Article[] = [];
+  let current: { num: string; title: string; body: string[] } | null = null;
+  const flush = () => {
+    if (!current) return;
+    const body = current.body.join(" ").replace(/\s+/g, " ").trim();
+    out.push({ num: current.num, title: current.title, text: body, sha256: sha(`${current.title}\n${body}`) });
+    current = null;
+  };
+  for (const line of lines) {
+    const heading = SECTION.exec(line);
+    if (heading) {
+      // Subtítulo: la última línea del punto anterior, corta y sin puntuación final, tras una frase terminada.
+      let title = "";
+      const body: string[] = current ? (current as { body: string[] }).body : [];
+      const last = body.at(-1);
+      const beforeLast = body.at(-2);
+      if (last !== undefined && isSumilla(last) && !SECTION.test(last) && (beforeLast === undefined || /[.:;]$/.test(beforeLast))) {
+        title = body.pop()!;
+      }
+      flush();
+      current = { num: heading[1], title, body: [heading[2].trim()] };
+      continue;
+    }
+    if (!current || line === "" || STRUCTURE.test(line) || isUpperLine(line)) continue;
+    current.body.push(line);
+  }
+  flush();
   return out;
 }
 
