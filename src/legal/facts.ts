@@ -214,11 +214,11 @@ const list: LegalFact[] = [
   },
   {
     id: "reclamo.respuesta",
-    value: 30,
-    unit: "días calendario",
-    cites: [{ norm: "ds-011-2011-pcm", art: "6" }],
-    quote: null,
-    note: "Falta el DS 011-2011-PCM y sus modificaciones. Verificar: las páginas legales de DatosPrivados dicen 15 días hábiles y los documentos de clientes, 30 días calendario.",
+    value: 10,
+    unit: "días",
+    cites: [{ norm: "ds-016-2024-jus", art: "69" }],
+    quote: "Tratándose del ejercicio de los otros derechos como los de rectificación, cancelación u oposición, el plazo máximo de respuesta del titular del banco de datos personales o responsable o encargado del tratamiento cuando corresponda, es de diez (10) días contados desde el día siguiente de la presentación de la solicitud.",
+    note: "Para rectificación, cancelación u oposición; el plazo se cuenta desde el día siguiente de la presentación de la solicitud.",
   },
 ];
 
