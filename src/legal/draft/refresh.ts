@@ -37,7 +37,16 @@ export async function refreshChange(change: { id: string; branch: string; head_s
   const fetched = git(["fetch", "-q", "origin", "master", `+refs/heads/${change.branch}:refs/remotes/${remote}`]);
   if (fetched.code !== 0) return { status: "fallo", reasons: [`git fetch: ${fetched.out.trim().slice(0, 300)}`] };
   const current = git(["rev-parse", remote]).out.trim();
-  if (current !== change.head_sha) return { status: "fallo", reasons: [`la rama ${change.branch} no está en el commit registrado (${change.head_sha.slice(0, 7)} ≠ ${current.slice(0, 7)})`] };
+  if (current !== change.head_sha) {
+    // Una corrida anterior la rehízo y la subió, pero la app no aceptó el registro: solo se registra.
+    const subject = git(["log", "-1", "--format=%s", remote]).out.trim();
+    const ours = subject.startsWith(`legal: ${change.id} rehecho sobre master `);
+    if (ours && git(["merge-base", "--is-ancestor", "origin/master", remote]).code === 0) {
+      const diff = git(["diff", "--no-color", "--no-ext-diff", "-M", `origin/master...${remote}`]).out;
+      return register(deps, change.id, current, diff);
+    }
+    return { status: "fallo", reasons: [`la rama ${change.branch} no está en el commit registrado (${change.head_sha.slice(0, 7)} ≠ ${current.slice(0, 7)}) y no la movió el redactor`] };
+  }
   if (git(["merge-base", "--is-ancestor", "origin/master", remote]).code === 0) return { status: "al-dia", reasons: [] };
 
   const base = git(["merge-base", "origin/master", remote]).out.trim();
@@ -109,8 +118,17 @@ export async function refreshChange(change: { id: string; branch: string; head_s
   }
   const head = git(["rev-parse", "HEAD"]).out.trim();
   const diff = git(["diff", "--no-color", "--no-ext-diff", "-M", "origin/master...HEAD"]).out;
-  const registered = await deps.reregister(change.id, head, diff);
   cleanup();
-  if (!registered.ok) return { status: "fallo", reasons: [`la rama se rehízo pero la app no aceptó el registro: ${registered.out.slice(0, 300)}`] };
-  return { status: "rehecho", reasons: [] };
+  return register(deps, change.id, head, diff);
+}
+
+/** Registro en la app; si falla (red, app ocupada), la rama rehecha queda y la corrida siguiente lo reintenta. */
+async function register(deps: RefreshDeps, id: string, head: string, diff: string): Promise<RefreshResult> {
+  try {
+    const registered = await deps.reregister(id, head, diff);
+    if (registered.ok) return { status: "rehecho", reasons: [] };
+    return { status: "fallo", reasons: [`la rama se rehízo pero la app no aceptó el registro (se reintenta en la próxima corrida): ${registered.out.slice(0, 300)}`] };
+  } catch (error) {
+    return { status: "fallo", reasons: [`la rama se rehízo pero el registro falló (se reintenta en la próxima corrida): ${error instanceof Error ? error.message : String(error)}`] };
+  }
 }
