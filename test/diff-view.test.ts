@@ -1,4 +1,7 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { DiffView } from "@/components/diff-view";
 import { isGeneratedFile, parseUnifiedDiff, reviewOrder } from "@/lib/unified-diff";
 
 const DIFF = `diff --git a/src/legal/documents/politica.ts b/src/legal/documents/politica.ts
@@ -73,3 +76,41 @@ describe("orden para revisar un cambio legal", () => {
     expect(reviewOrder(files).map((f) => f.file)).toEqual(["src/legal/documents/politica.ts", "legal/changes/lc-1.md", "test/legal/baseline-hashes.json"]);
   });
 });
+
+describe("DiffView con cambios grandes", () => {
+  const big = (file: string, n: number) =>
+    `diff --git a/${file} b/${file}\nnew file mode 100644\n--- /dev/null\n+++ b/${file}\n@@ -0,0 +1,${n} @@\n` +
+    Array.from({ length: n }, (_, i) => `+línea ${i + 1} de ${file}`).join("\n") +
+    "\n";
+  const diff = `${DIFF}${big("legal/library/codigo-civil/articles.json", 3000)}${big("src/legal/documents/enorme.ts", 900)}`;
+  const html = renderToStaticMarkup(createElement(DiffView, { diff, fileUrl: (f: string) => `https://github.com/x/y/blob/abc/${f}` }));
+
+  it("un archivo de más de 300 líneas no se imprime: dice su tamaño y enlaza a GitHub", () => {
+    expect(html).not.toContain("línea 1500 de legal/library/codigo-civil/articles.json");
+    expect(html).not.toContain("línea 500 de src/legal/documents/enorme.ts");
+    expect(html).toContain("Archivo grande");
+    expect(html).toContain("https://github.com/x/y/blob/abc/src/legal/documents/enorme.ts");
+  });
+
+  it("los textos oficiales de la biblioteca van plegados en su propio grupo; lo escrito a mano se ve entero", () => {
+    expect(html).toContain("Textos oficiales agregados a la biblioteca");
+    expect(html).toContain("(art. III.6 del DS N.° 016-2024-JUS)");
+  });
+
+  it("la página pesa poco aunque el cambio sea enorme", () => {
+    expect(html.length).toBeLessThan(60_000);
+  });
+  it("lo regenerado y la biblioteca se listan (nombre, tamaño, enlace) sin imprimir sus líneas", () => {
+    const snap = `diff --git a/test/legal/__snapshots__/x.md b/test/legal/__snapshots__/x.md
+--- a/test/legal/__snapshots__/x.md
++++ b/test/legal/__snapshots__/x.md
+@@ -1 +1 @@
+-texto viejo de instantánea
++texto nuevo de instantánea
+`;
+    const out = renderToStaticMarkup(createElement(DiffView, { diff: `${DIFF}${snap}`, fileUrl: (f: string) => `https://g/${f}` }));
+    expect(out).toContain("test/legal/__snapshots__/x.md");
+    expect(out).not.toContain("texto nuevo de instantánea");
+  });
+});
+
