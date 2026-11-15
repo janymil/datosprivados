@@ -46,7 +46,8 @@ function fakeAi(reply: Reply) {
   }) as never;
   return { call, calls };
 }
-const deps = (call: never) => ({
+const deps = (call: never, textCites?: (span: Span, replacement: string) => Promise<Array<{ norm: string; art: string }>>) => ({
+  ...(textCites ? { textCites } : {}),
   call,
   cache: new VerdictCache(path.join(fs.mkdtempSync(path.join(os.tmpdir(), "vc-")), "cache.json")),
   model: "gpt-6-luna",
@@ -78,6 +79,19 @@ describe("redacción con IA", () => {
   it("sin respuesta de la IA: no hay borrador, se reintenta más tarde y no lanza", async () => {
     const out = await composeDraft(input, deps((async () => null) as never));
     expect(out).toEqual({ ok: false, retry: true, reasons: ["IA sin respuesta"] });
+  });
+
+  it("las citas declaradas deben ser exactamente las que el texto menciona; el segundo intento recibe la diferencia", async () => {
+    const WRONG = GOOD.replace('[{ norm: "ley-29733", art: "18" }]', '[{ norm: "ley-29733", art: "18" }, { norm: "ds-016-2024-jus", art: "7" }]');
+    const ai = fakeAi({ write: [WRONG, GOOD] });
+    const seen: string[] = [];
+    const spy = (async (args: { system: string; messages: Array<{ content: string }> }) => {
+      if (args.system === WRITE_SYSTEM) seen.push(args.messages[0].content);
+      return (ai.call as unknown as (a: unknown) => Promise<string | null>)(args);
+    }) as never;
+    const out = await composeDraft(input, deps(spy, async () => [{ norm: "ley-29733", art: "18" }]));
+    expect(out).toMatchObject({ ok: true, replacement: GOOD });
+    expect(seen[1]).toMatch(/ds-016-2024-jus:7/);
   });
 
   it("una cita elegida que no existe no llega a la IA que redacta", async () => {

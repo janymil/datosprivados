@@ -12,11 +12,18 @@ import { childEnv } from "@/legal/draft/steps";
  * módulos de vitest no ve el archivo cambiado dentro del mismo proceso. El archivo vuelve siempre
  * a como estaba.
  */
+export type Rendered = { texts: string[]; cites: Array<{ norm: string; art: string }> };
+
 export async function renderTarget(span: Span, replacement: string, root: string = process.cwd()): Promise<string[]> {
+  return (await renderDetailed(span, replacement, root)).texts;
+}
+
+/** Las variantes del texto y las citas que produce en todas las combinaciones (una sola generación). */
+export async function renderDetailed(span: Span, replacement: string, root: string = process.cwd()): Promise<Rendered> {
   if (span.kind !== "clause") {
     const sf = ts.createSourceFile("x.ts", `const v = ${replacement};`, ts.ScriptTarget.Latest, true);
     const init = (sf.statements[0] as ts.VariableStatement).declarationList.declarations[0].initializer!;
-    return [ts.isStringLiteralLike(init) ? init.text : replacement];
+    return { texts: [ts.isStringLiteralLike(init) ? init.text : replacement], cites: [] };
   }
   const file = path.join(root, span.file);
   const original = fs.readFileSync(file, "utf8");
@@ -33,9 +40,9 @@ export async function renderTarget(span: Span, replacement: string, root: string
       timeout: 300_000,
     });
     if (!fs.existsSync(out)) throw new Error(`no se pudo generar el texto: ${`${r.stdout}${r.stderr}`.trim().split("\n").slice(-5).join(" ")}`);
-    const result = JSON.parse(fs.readFileSync(out, "utf8")) as { texts?: string[]; error?: string };
+    const result = JSON.parse(fs.readFileSync(out, "utf8")) as { texts?: string[]; cites?: Rendered["cites"]; error?: string };
     if (result.error) throw new Error(result.error);
-    return result.texts ?? [];
+    return { texts: result.texts ?? [], cites: result.cites ?? [] };
   } finally {
     fs.writeFileSync(file, original);
     fs.rmSync(dir, { recursive: true, force: true });

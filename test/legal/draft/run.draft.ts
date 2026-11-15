@@ -1,12 +1,13 @@
 import fs from "node:fs";
 import { it } from "vitest";
 import { VerdictCache } from "@/legal/audit/verdict-cache";
+import type { Span } from "@/legal/draft/locate";
 import { runDraft } from "@/legal/draft/run";
 import { realSteps } from "@/legal/draft/steps";
 import { getDb } from "@/lib/db";
 import { limaToday } from "@/lib/format";
 import { callLlm } from "@/lib/llm";
-import { renderTarget } from "./render";
+import { renderDetailed, type Rendered } from "./render";
 
 /**
  * Redactor (motor legal, plan 7). Lo lanza deploy/datosprivados-draft.sh en su copia del
@@ -14,6 +15,13 @@ import { renderTarget } from "./render";
  * DRAFT_RESULT_FILE. Corre dentro de vitest por los alias `@/` y la base temporal (como la auditoría).
  */
 const root = process.cwd();
+/** Una sola generación por borrador: textos y citas salen juntos. */
+const renders = new Map<string, Promise<Rendered>>();
+const rendered = (span: Span, replacement: string) => {
+  const key = `${span.file}:${span.start}:${replacement}`;
+  if (!renders.has(key)) renders.set(key, renderDetailed(span, replacement, root));
+  return renders.get(key)!;
+};
 
 it.skipIf(!process.env.DRAFT_REQUEST_FILE)("redactar una solicitud de la cola", async () => {
   const request = JSON.parse(fs.readFileSync(process.env.DRAFT_REQUEST_FILE!, "utf8"));
@@ -25,7 +33,8 @@ it.skipIf(!process.env.DRAFT_REQUEST_FILE)("redactar una solicitud de la cola", 
     result = await runDraft(request, {
       root,
       ai: { call: callLlm, cache: new VerdictCache(), model: process.env.OPENAI_MODEL ?? "" },
-      render: (span, replacement) => renderTarget(span, replacement, root),
+      render: async (span, replacement) => (await rendered(span, replacement)).texts,
+      textCites: async (span, replacement) => (await rendered(span, replacement)).cites,
       ...realSteps(root, { url: process.env.LEGAL_API_URL ?? "http://127.0.0.1:3000", secret: process.env.CRON_SECRET ?? "" }),
       today: limaToday(new Date()),
     });

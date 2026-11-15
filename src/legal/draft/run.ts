@@ -40,6 +40,8 @@ export type RunDeps = {
   ai: { call: typeof callLlm; cache: VerdictCache; model: string };
   /** Cómo ven los clientes el texto con `replacement` (variantes sobre las fixtures). */
   render: (span: Span, replacement: string) => Promise<string[]>;
+  /** Citas que produce el texto de una cláusula en todas las combinaciones. */
+  textCites?: (span: Span, replacement: string) => Promise<Array<{ norm: string; art: string }>>;
   git: (args: string[]) => { code: number; out: string };
   /** Instantáneas, huellas y fallas conocidas regeneradas. */
   regenerate: () => { ok: boolean; out: string };
@@ -65,7 +67,15 @@ export const MAX_TARGETS = 10;
 const FRESHNESS = "src/lib/document-freshness.ts";
 const BASELINE = "test/legal/baseline-hashes.json";
 
-const tail = (s: string, n = 20) => s.trim().split("\n").slice(-n).join("\n");
+const ANSI = /\u001b\[[0-9;]*m/g;
+const tail = (s: string, n = 20) => s.replace(ANSI, "").trim().split("\n").slice(-n).join("\n");
+
+/** Motivo legible de un fallo de pruebas: sin colores, primero qué prueba falló y por qué. */
+export function failureSummary(out: string): string {
+  const lines = out.replace(ANSI, "").split("\n").map((l) => l.trim()).filter(Boolean);
+  const key = lines.filter((l) => /^(FAIL |AssertionError|TypeError|Error:|.*error TS\d+)/.test(l));
+  return (key.length ? key.slice(0, 12) : lines.slice(-20)).join("\n");
+}
 
 /** Grupo de un texto: el tipo de documento de una cláusula, «hechos» o el módulo. */
 export function targetGroup(target: string): string {
@@ -241,7 +251,7 @@ async function draft(request: DraftRequestLike, deps: RunDeps): Promise<RunResul
       resolved += 1;
       continue;
     }
-    const result = await composeDraft({ span, renderedVariants: before, context }, { ...deps.ai, render: deps.render, lib });
+    const result = await composeDraft({ span, renderedVariants: before, context }, { ...deps.ai, render: deps.render, textCites: deps.textCites, lib });
     if (!result.ok) {
       if (result.retry) return fail("esperar", result.reasons);
       skipped.push(`${target}: ${result.reasons.join("; ")}`);
@@ -262,18 +272,18 @@ async function draft(request: DraftRequestLike, deps: RunDeps): Promise<RunResul
   // 4. Instantáneas, versiones de plantilla y comprobaciones completas.
   const baselineBefore = readJson(path.join(deps.root, BASELINE));
   const regen = deps.regenerate();
-  if (!regen.ok) return fail("sin_solucion", [`no se pudieron regenerar las instantáneas:\n${tail(regen.out)}`]);
+  if (!regen.ok) return fail("sin_solucion", [`el borrador no pasa las pruebas legales:\n${failureSummary(regen.out)}`]);
   const kinds = changedKinds(baselineBefore, readJson(path.join(deps.root, BASELINE)));
   if (kinds.length) {
     const freshness = path.join(deps.root, FRESHNESS);
     fs.writeFileSync(freshness, bumpTemplateVersions(fs.readFileSync(freshness, "utf8"), kinds));
     const again = deps.regenerate();
-    if (!again.ok) return fail("sin_solucion", [`no se pudieron regenerar las instantáneas:\n${tail(again.out)}`]);
+    if (!again.ok) return fail("sin_solucion", [`el borrador no pasa las pruebas legales:\n${failureSummary(again.out)}`]);
   }
   const rules = deps.validate();
   if (rules.length) return fail("sin_solucion", [`el borrador no cumple las reglas de un cambio legal: ${rules.join("; ")}`]);
   const checks = deps.checks();
-  if (!checks.ok) return fail("sin_solucion", [`las comprobaciones fallaron con el borrador:\n${tail(checks.out)}`]);
+  if (!checks.ok) return fail("sin_solucion", [`las comprobaciones fallaron con el borrador:\n${failureSummary(checks.out)}`]);
 
   // 5. Commit y registro para la aprobación del fundador.
   const title =

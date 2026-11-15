@@ -39,6 +39,8 @@ type Deps = {
   model: string;
   /** Cómo se ve el texto nuevo para los clientes (variantes sobre las fixtures); lo da el orquestador. */
   render: (span: Span, replacement: string) => Promise<string[]>;
+  /** Citas que produce el texto de una cláusula en todas las combinaciones (como test/legal/citations.test.ts). */
+  textCites?: (span: Span, replacement: string) => Promise<Array<{ norm: string; art: string }>>;
   lib?: Library;
 };
 export type ComposeResult =
@@ -120,6 +122,29 @@ export async function composeDraft(input: { span: Span; renderedVariants: string
 
     // 4. Significado del texto nuevo (los hechos ya se verificaron con su frase textual).
     if (input.span.kind === "fact") return { ok: true, replacement, rationale, verdicts: [] };
+
+    // Una cláusula declara exactamente las citas que su texto produce (regla de test/legal/citations.test.ts).
+    if (input.span.kind === "clause" && deps.textCites) {
+      const key = (c: { norm: string; art: string }) => `${c.norm}:${c.art}`;
+      let produced: string[];
+      try {
+        produced = [...new Set((await deps.textCites(input.span, replacement)).map(key))].sort();
+      } catch (error) {
+        feedback = lastReasons = [`el texto nuevo no se pudo generar: ${error instanceof Error ? error.message : String(error)}`];
+        continue;
+      }
+      const declared = [...new Set(citationsOf(input.span, replacement, lib).map(key))].sort();
+      const extra = declared.filter((c) => !produced.includes(c));
+      const missing = produced.filter((c) => !declared.includes(c));
+      if (extra.length || missing.length) {
+        feedback = lastReasons = [
+          `las citas declaradas en «cites» deben ser exactamente las que el texto menciona. El texto menciona: ${produced.join(", ") || "ninguna"}.` +
+            (extra.length ? ` Sobran en «cites»: ${extra.join(", ")}.` : "") +
+            (missing.length ? ` Faltan en «cites»: ${missing.join(", ")}.` : ""),
+        ];
+        continue;
+      }
+    }
     let variants: string[];
     try {
       variants = (await deps.render(input.span, replacement)).slice(0, MAX_VARIANTS);

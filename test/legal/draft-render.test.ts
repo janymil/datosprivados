@@ -2,7 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { locateTarget } from "@/legal/draft/locate";
-import { renderTarget } from "./draft/render";
+import { clauseCitationsOverFixtures } from "./render-all";
+import { renderDetailed, renderTarget } from "./draft/render";
 
 describe("cómo ven los clientes un borrador", () => {
   it("una cláusula modificada se ve con el texto nuevo y el archivo queda como estaba", async () => {
@@ -27,5 +28,10 @@ describe("cómo ven los clientes un borrador", () => {
     const before = fs.readFileSync(file, "utf8");
     await expect(renderTarget(span, span.source.replace('id: "aviso.nota.regla-practica"', 'id: "otro.id"'))).rejects.toThrow(/ya no existe/);
     expect(fs.readFileSync(file, "utf8")).toBe(before);
+  }, 120_000);
+  it("da también las citas que el texto produce en todas las combinaciones (como la prueba de citas)", async () => {
+    const span = locateTarget("aviso.nota.regla-practica")!;
+    const out = await renderDetailed(span, span.source);
+    expect(out.cites).toEqual(clauseCitationsOverFixtures().get("aviso.nota.regla-practica")!.map((c) => ({ norm: c.norm, art: c.art })));
   }, 120_000);
 });

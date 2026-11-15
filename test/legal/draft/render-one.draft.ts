@@ -3,7 +3,7 @@ import { it } from "vitest";
 import { legalContext } from "@/legal/context";
 import { allClauses } from "@/legal/registry";
 import { legalFixtures } from "../fixtures";
-import { withFrozenWorld } from "../render-all";
+import { clauseCitationsOverFixtures, withFrozenWorld } from "../render-all";
 
 /**
  * Genera una cláusula sobre las fixtures de la auditoría (las 2 variantes más largas) y escribe
@@ -29,5 +29,6 @@ it.skipIf(!process.env.RENDER_CLAUSE_ID)("generar una cláusula", () => {
     }
     return set;
   });
-  fs.writeFileSync(out, JSON.stringify({ texts: [...texts].sort((a, b) => b.length - a.length || a.localeCompare(b)).slice(0, MAX_VARIANTS) }));
+  const cites = (clauseCitationsOverFixtures().get(id) ?? []).map((c) => ({ norm: c.norm, art: c.art }));
+  fs.writeFileSync(out, JSON.stringify({ texts: [...texts].sort((a, b) => b.length - a.length || a.localeCompare(b)).slice(0, MAX_VARIANTS), cites }));
 });
