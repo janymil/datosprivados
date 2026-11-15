@@ -71,6 +71,15 @@ describe("cola de redacción", () => {
     expect(JSON.parse(row.reasons)).toEqual(["la IA no respondió"]);
   });
 
+  it("«resuelto» cierra la solicitud: otro cambio ya corrigió el hallazgo", async () => {
+    enqueueDraft(draft("a1"));
+    const claimed = claimNextDraft(new Date())!;
+    const ctx = { params: Promise.resolve({ id: claimed.id }) };
+    const res = await postResult(req(`/api/legal/drafts/${claimed.id}/result`, { method: "POST", body: JSON.stringify({ status: "resuelto", reasons: ["ya corregido"] }) }), ctx);
+    expect(await res.json()).toEqual({ status: "resuelto" });
+    expect(claimNextDraft(new Date())).toBeNull();
+  });
+
   it("el resultado registra el gasto de IA como «legal-draft»", () => {
     enqueueDraft(draft("a1"));
     const claimed = claimNextDraft(new Date())!;

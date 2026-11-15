@@ -52,10 +52,10 @@ Detalle de cada hallazgo: el informe más reciente en \`legal/audit/\` (buscar e
 
 export type ProposalPayload = {
   id: string;
-  kind: "auditoria";
+  kind: "auditoria" | "norma";
   title: string;
   summary: string;
-  source_url: null;
+  source_url: string | null;
   branch: string;
   head_sha: string;
   diff: string;
@@ -71,17 +71,27 @@ export function proposalPayload(p: {
   headSha: string;
   diff: string;
   findings: Array<{ id: string; source: string }>;
+  /** Plan 7: cambio de norma (con su fuente oficial) y textos afectados declarados por el redactor. */
+  kind?: "auditoria" | "norma";
+  sourceUrl?: string | null;
+  affected?: Array<{ kind: string; source: string }>;
 }): ProposalPayload {
-  const sources = [...new Set(p.findings.map((f) => f.source))];
+  const seen = new Set<string>();
+  const affected: Array<{ kind: string; source: string }> = [];
+  for (const a of [...p.findings.map((f) => ({ kind: "clause", source: f.source })), ...(p.affected ?? [])]) {
+    if (seen.has(a.source)) continue;
+    seen.add(a.source);
+    affected.push(a);
+  }
   return {
     id: p.id,
-    kind: "auditoria",
+    kind: p.kind ?? "auditoria",
     title: p.title,
     summary: p.summary,
-    source_url: null,
+    source_url: p.sourceUrl ?? null,
     branch: p.branch,
     head_sha: p.headSha,
     diff: p.diff,
-    affected: sources.map((source) => ({ kind: "clause", source })),
+    affected,
   };
 }

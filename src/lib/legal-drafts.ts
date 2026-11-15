@@ -10,7 +10,7 @@ import { getDb, newId, nowIso } from "./db";
  */
 
 export type DraftOrigin = "auditoria" | "norma" | "operador";
-export type DraftStatus = "pendiente" | "redactando" | "propuesto" | "sin_solucion";
+export type DraftStatus = "pendiente" | "redactando" | "propuesto" | "sin_solucion" | "resuelto";
 export const DRAFT_ORIGINS: DraftOrigin[] = ["auditoria", "norma", "operador"];
 
 export type DraftRequest = { id: string; origin: DraftOrigin; ref: string; targets: string[]; context: unknown; attempts: number };
@@ -99,7 +99,7 @@ export function claimNextDraft(now: Date): DraftRequest | null {
 }
 
 export type DraftResult = {
-  status: "propuesto" | "sin_solucion" | "reintentar";
+  status: "propuesto" | "sin_solucion" | "reintentar" | "resuelto";
   changeId?: string;
   reasons?: string[];
   usage?: { inputTokens: number; outputTokens: number };
