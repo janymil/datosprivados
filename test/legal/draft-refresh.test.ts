@@ -116,6 +116,7 @@ describe("rehacer un cambio legal sobre la versión actual del código", () => {
     const { deps, remote, head, registered } = setup({ conflict: true });
     const out = await refreshChange({ id: ID, branch: BRANCH, head_sha: head }, deps);
     expect(out).toMatchObject({ status: "conflicto", reasons: [expect.stringContaining("src/legal/x.ts")] });
+    expect(out.reasons.join(" ")).not.toMatch(/Falling back|cleanly/);
     expect(git(remote, ["rev-parse", BRANCH]).out.trim()).toBe(head);
     expect(registered).toEqual([]);
   });
@@ -164,5 +165,35 @@ describe("rehacer un cambio legal sobre la versión actual del código", () => {
     expect(out.status).toBe("fallo");
     expect(out.reasons.join(" ")).toMatch(/commit registrado/);
     expect(registered).toEqual([]);
+  });
+  it("una rama rehecha por el redactor y sin registrar, con master movido otra vez: se rehace de nuevo y se registra (caso real b35b00)", async () => {
+    const { deps, remote, head, registered } = setup();
+    let fail = true;
+    const flaky: RefreshDeps = {
+      ...deps,
+      reregister: async (id, h, diff) => {
+        if (fail) throw new Error("fetch failed: write EPIPE");
+        registered.push({ id, head: h, diff });
+        return { ok: true, out: "" };
+      },
+    };
+    await refreshChange({ id: ID, branch: BRANCH, head_sha: head }, flaky);
+    const rebuilt = git(remote, ["rev-parse", BRANCH]).out.trim();
+    // Otro cambio se publica: master avanza de nuevo.
+    const other = fs.mkdtempSync(path.join(os.tmpdir(), "otro-"));
+    git(other, ["clone", "-q", remote, "c"]);
+    const c = path.join(other, "c");
+    write(c, "src/legal/z.ts", "export const z = 1;\n");
+    commitAll(c, "otro cambio más");
+    git(c, ["push", "-q", "origin", "master"]);
+    fail = false;
+    const out = await refreshChange({ id: ID, branch: BRANCH, head_sha: head }, flaky);
+    expect(out.status).toBe("rehecho");
+    const now = git(remote, ["rev-parse", BRANCH]).out.trim();
+    expect(now).not.toBe(rebuilt);
+    expect(git(remote, ["merge-base", "--is-ancestor", "master", BRANCH]).code).toBe(0);
+    expect(remoteFile(remote, BRANCH, "src/legal/x.ts")).toBe("export const x = 'b';\n");
+    expect(remoteFile(remote, BRANCH, "src/legal/z.ts")).toBe("export const z = 1;\n");
+    expect(registered).toEqual([expect.objectContaining({ id: ID, head: now })]);
   });
 });

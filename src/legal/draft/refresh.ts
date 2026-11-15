@@ -37,17 +37,17 @@ export async function refreshChange(change: { id: string; branch: string; head_s
   const fetched = git(["fetch", "-q", "origin", "master", `+refs/heads/${change.branch}:refs/remotes/${remote}`]);
   if (fetched.code !== 0) return { status: "fallo", reasons: [`git fetch: ${fetched.out.trim().slice(0, 300)}`] };
   const current = git(["rev-parse", remote]).out.trim();
+  const fresh = git(["merge-base", "--is-ancestor", "origin/master", remote]).code === 0;
+  // La rama solo se reemplaza si está donde se registró, o donde la dejó el propio redactor
+  // (una corrida anterior la rehízo y la subió pero la app no aceptó el registro).
+  let lease = change.head_sha;
   if (current !== change.head_sha) {
-    // Una corrida anterior la rehízo y la subió, pero la app no aceptó el registro: solo se registra.
     const subject = git(["log", "-1", "--format=%s", remote]).out.trim();
-    const ours = subject.startsWith(`legal: ${change.id} rehecho sobre master `);
-    if (ours && git(["merge-base", "--is-ancestor", "origin/master", remote]).code === 0) {
-      const diff = git(["diff", "--no-color", "--no-ext-diff", "-M", `origin/master...${remote}`]).out;
-      return register(deps, change.id, current, diff);
-    }
-    return { status: "fallo", reasons: [`la rama ${change.branch} no está en el commit registrado (${change.head_sha.slice(0, 7)} ≠ ${current.slice(0, 7)}) y no la movió el redactor`] };
-  }
-  if (git(["merge-base", "--is-ancestor", "origin/master", remote]).code === 0) return { status: "al-dia", reasons: [] };
+    if (!subject.startsWith(`legal: ${change.id} rehecho sobre master `))
+      return { status: "fallo", reasons: [`la rama ${change.branch} no está en el commit registrado (${change.head_sha.slice(0, 7)} ≠ ${current.slice(0, 7)}) y no la movió el redactor`] };
+    if (fresh) return register(deps, change.id, current, git(["diff", "--no-color", "--no-ext-diff", "-M", `origin/master...${remote}`]).out);
+    lease = current;
+  } else if (fresh) return { status: "al-dia", reasons: [] };
 
   const base = git(["merge-base", "origin/master", remote]).out.trim();
   const own = git(["diff", "--name-only", base, remote])
@@ -68,7 +68,10 @@ export async function refreshChange(change: { id: string; branch: string; head_s
       const applied = git(["apply", "--3way", "--index", patch]);
       if (applied.code !== 0) {
         cleanup();
-        return { status: "conflicto", reasons: [`sus cambios chocan con otro cambio ya publicado; hay que rehacerlo a mano:\n${applied.out.trim().slice(0, 1500)}`] };
+        // Solo lo que dice dónde choca (git avisa además de cada archivo que sí se aplicó).
+        const lines = applied.out.split("\n").map((l) => l.trim()).filter(Boolean);
+        const key = lines.filter((l) => /with conflicts|^error:|^U |does not apply|patch failed/i.test(l));
+        return { status: "conflicto", reasons: [`sus cambios chocan con otro cambio ya publicado; hay que rehacerlo a mano:\n${(key.length ? key : lines.slice(-10)).join("\n").slice(0, 1500)}`] };
       }
     } finally {
       fs.rmSync(path.dirname(patch), { recursive: true, force: true });
@@ -111,7 +114,7 @@ export async function refreshChange(change: { id: string; branch: string; head_s
     cleanup();
     return { status: "fallo", reasons: [`git commit: ${commit.out.trim().slice(0, 300)}`] };
   }
-  const pushed = git(["push", "-q", `--force-with-lease=refs/heads/${change.branch}:${change.head_sha}`, "origin", `HEAD:refs/heads/${change.branch}`]);
+  const pushed = git(["push", "-q", `--force-with-lease=refs/heads/${change.branch}:${lease}`, "origin", `HEAD:refs/heads/${change.branch}`]);
   if (pushed.code !== 0) {
     cleanup();
     return { status: "fallo", reasons: [`git push: ${pushed.out.trim().slice(0, 300)}`] };
