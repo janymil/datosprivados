@@ -19,10 +19,21 @@ import { applySpan, locateTarget, type Span } from "./locate";
  * por `deps`, así se prueba sin red ni repositorio.
  */
 
-export type DraftRequestLike = { id: string; origin: "auditoria" | "norma" | "operador"; ref: string; targets: string[]; context: unknown };
+export type DraftRequestLike = {
+  id: string;
+  origin: "auditoria" | "norma" | "operador";
+  ref: string;
+  targets: string[];
+  context: unknown;
+  /** Intento actual (la rama lleva el número: un reintento nunca choca con la anterior). */
+  attempts?: number;
+  /** Textos que ya están en un cambio abierto (lo manda GET /api/legal/drafts/next). */
+  busy?: string[];
+};
+/** «esperar»: IA, red o GitHub caídos; vuelve a la cola sin gastar un intento. */
 export type RunResult =
   | { status: "propuesto"; changeId: string }
-  | { status: "sin_solucion" | "reintentar" | "resuelto"; reasons: string[] };
+  | { status: "sin_solucion" | "reintentar" | "resuelto" | "esperar"; reasons: string[] };
 
 export type RunDeps = {
   root: string;
@@ -34,6 +45,8 @@ export type RunDeps = {
   regenerate: () => { ok: boolean; out: string };
   /** typecheck + lint + toda la suite. */
   checks: () => { ok: boolean; out: string };
+  /** Reglas de la rama legal (las de legal-change.yml) sobre lo regenerado; vacío = cumple. */
+  validate: () => string[];
   propose: (p: ProposeInput) => { ok: true; changeId: string } | { ok: false; rejected: boolean; out: string };
   download: (url: string) => Promise<{ text: string; sha256: string } | null>;
   enqueue: (r: { origin: DraftRequestLike["origin"]; ref: string; targets: string[]; context: unknown }) => Promise<void>;
@@ -132,32 +145,33 @@ function summaryOf(p: { origin: string; context: Record<string, unknown>; done: 
 const kindOfSpan = (span: Span) => (span.kind === "module-string" ? "module" : span.kind);
 
 export async function runDraft(request: DraftRequestLike, deps: RunDeps): Promise<RunResult> {
-  const branch = `legal/auto-${request.id.replace(/[^a-z0-9]/gi, "").toLowerCase().slice(0, 12)}`;
+  const branch = `legal/auto-${request.id.replace(/[^a-z0-9]/gi, "").toLowerCase().slice(0, 12)}-${request.attempts ?? 1}`;
   const context = (request.context ?? {}) as Record<string, unknown>;
   const freshLib = () => loadLibrary(path.join(deps.root, "legal/library"));
   const cleanup = () => {
     deps.git(["checkout", "-q", "-f", "origin/master"]);
     deps.git(["branch", "-q", "-D", branch]);
   };
-  const fail = (status: "sin_solucion" | "reintentar" | "resuelto", reasons: string[]): RunResult => {
+  const fail = (status: "sin_solucion" | "reintentar" | "resuelto" | "esperar", reasons: string[]): RunResult => {
     cleanup();
     return { status, reasons };
   };
 
   const co = deps.git(["checkout", "-q", "-B", branch, "origin/master"]);
-  if (co.code !== 0) return { status: "reintentar", reasons: [`git: ${tail(co.out, 5)}`] };
+  if (co.code !== 0) return { status: "esperar", reasons: [`git: ${tail(co.out, 5)}`] };
 
   // 1. Norma nueva: cargarla en la biblioteca (paso 3) y buscar los textos que citan lo que modifica.
   let targets = request.targets;
   let normId: string | undefined;
-  if (request.origin === "norma") {
+  // Una solicitud hija (con textos) no vuelve a cargar la norma: redacta solo sus textos (revisión C2).
+  if (request.origin === "norma" && !request.targets.length) {
     const pdfUrl = String(context.pdf_url ?? "");
     if (!pdfUrl) return fail("sin_solucion", ["la norma no tiene PDF oficial en El Peruano"]);
     const pdf = await deps.download(pdfUrl);
-    if (!pdf) return fail("reintentar", [`no se pudo descargar ${pdfUrl}`]);
+    if (!pdf) return fail("esperar", [`no se pudo descargar ${pdfUrl}`]);
     const item = { title: String(context.title ?? ""), issuer: String(context.issuer ?? ""), published_on: (context.published_on as string) ?? null, url: String(context.url ?? ""), pdf_url: pdfUrl };
     const proposed = await proposeSource(pdf.text, item, deps.ai);
-    if ("reasons" in proposed) return fail(proposed.retry ? "reintentar" : "sin_solucion", proposed.reasons);
+    if ("reasons" in proposed) return fail(proposed.retry ? "esperar" : "sin_solucion", proposed.reasons);
     const lib = freshLib();
     if (lib.norms[proposed.entry.id]) return fail("sin_solucion", [`la norma ${proposed.entry.id} ya está en la biblioteca`]);
     const ingested = ingestProposed(proposed.entry, pdf.text);
@@ -166,7 +180,7 @@ export async function runDraft(request: DraftRequestLike, deps: RunDeps): Promis
     normId = proposed.entry.id;
     const norms = Array.isArray(context.norms) ? context.norms.map(String) : [];
     const articles = Array.isArray(context.articles) ? context.articles.map(String) : [];
-    if (context.relevance === "amends") for (const n of norms) markAmended(deps.root, n, normId);
+    if (context.relevance === "amends") for (const n of norms) if (lib.norms[n]) markAmended(deps.root, n, normId);
     const index = legalTextIndex(deps.root);
     const found = new Set<string>();
     for (const n of norms)
@@ -176,7 +190,15 @@ export async function runDraft(request: DraftRequestLike, deps: RunDeps): Promis
     targets = [...found];
   }
 
-  // 2. Un grupo por cambio, como máximo MAX_TARGETS textos; el resto vuelve a la cola.
+  // 2. Lo que ya está en un cambio abierto espera en otra solicitud (revisión I4).
+  const busy = new Set(request.busy ?? []);
+  const waiting = targets.filter((t) => busy.has(t));
+  targets = targets.filter((t) => !busy.has(t));
+  const childContext = request.origin === "norma" && normId ? { ...context, waitFor: normId } : context;
+  if (waiting.length) await deps.enqueue({ origin: request.origin, ref: `${request.ref}#ocupado`, targets: waiting, context: childContext });
+  if (!targets.length && !normId) return fail("resuelto", [`ya están en un cambio abierto; volverán a la cola cuando se cierre: ${waiting.join(", ")}`]);
+
+  // 3. Un grupo por cambio, como máximo MAX_TARGETS textos; el resto vuelve a la cola.
   const groups = new Map<string, string[]>();
   for (const t of targets) groups.set(targetGroup(t), [...(groups.get(targetGroup(t)) ?? []), t]);
   const [first, ...others] = [...groups.entries()];
@@ -184,7 +206,7 @@ export async function runDraft(request: DraftRequestLike, deps: RunDeps): Promis
   const rest = [...(first ? first[1].slice(MAX_TARGETS) : []), ...others.flatMap(([, ts]) => ts)];
   if (rest.length) {
     for (const [i, chunk] of chunks(rest, MAX_TARGETS).entries())
-      await deps.enqueue({ origin: request.origin, ref: `${request.ref}#${i + 2}`, targets: chunk, context: request.origin === "norma" ? { ...context, ingested: normId } : context });
+      await deps.enqueue({ origin: request.origin, ref: `${request.ref}#${i + 2}`, targets: chunk, context: childContext });
   }
 
   // 3. Redactar cada texto (paso 5).
@@ -206,7 +228,7 @@ export async function runDraft(request: DraftRequestLike, deps: RunDeps): Promis
     }
     const result = await composeDraft({ span, renderedVariants: before, context }, { ...deps.ai, render: deps.render, lib });
     if (!result.ok) {
-      if (result.retry) return fail("reintentar", result.reasons);
+      if (result.retry) return fail("esperar", result.reasons);
       skipped.push(`${target}: ${result.reasons.join("; ")}`);
       continue;
     }
@@ -232,6 +254,8 @@ export async function runDraft(request: DraftRequestLike, deps: RunDeps): Promis
     const again = deps.regenerate();
     if (!again.ok) return fail("sin_solucion", [`no se pudieron regenerar las instantáneas:\n${tail(again.out)}`]);
   }
+  const rules = deps.validate();
+  if (rules.length) return fail("sin_solucion", [`el borrador no cumple las reglas de un cambio legal: ${rules.join("; ")}`]);
   const checks = deps.checks();
   if (!checks.ok) return fail("sin_solucion", [`las comprobaciones fallaron con el borrador:\n${tail(checks.out)}`]);
 

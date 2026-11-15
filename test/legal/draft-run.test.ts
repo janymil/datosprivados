@@ -27,7 +27,7 @@ function setup(over: Partial<RunDeps> & { aiDown?: boolean } = {}) {
   put("src/lib/document-freshness.ts", fs.readFileSync(path.join(process.cwd(), "src/lib/document-freshness.ts"), "utf8"));
   put("test/legal/baseline-hashes.json", JSON.stringify({ "a__1|aviso": "x", "a__1|politica": "p" }));
   fs.symlinkSync(path.join(process.cwd(), "legal"), path.join(root, "legal"));
-  const log = { git: [] as string[][], proposed: [] as ProposeInput[], enqueued: [] as unknown[], ai: 0 };
+  const log = { git: [] as string[][], proposed: [] as ProposeInput[], enqueued: [] as unknown[], ai: 0, downloads: 0, checks: 0 };
   const call = (async ({ system }: { system: string }) => {
     log.ai += 1;
     if (over.aiDown) return null;
@@ -49,19 +49,26 @@ function setup(over: Partial<RunDeps> & { aiDown?: boolean } = {}) {
       fs.writeFileSync(path.join(root, "test/legal/baseline-hashes.json"), JSON.stringify({ "a__1|aviso": "y", "a__1|politica": "p" }));
       return { ok: true, out: "" };
     },
-    checks: () => ({ ok: true, out: "" }),
+    checks: () => {
+      log.checks += 1;
+      return { ok: true, out: "" };
+    },
+    validate: () => [],
     propose: (p) => {
       log.proposed.push(p);
       return { ok: true, changeId: "lc-20270110-abcdef" };
     },
-    download: async () => null,
+    download: async () => {
+      log.downloads += 1;
+      return null;
+    },
     enqueue: async (r) => void log.enqueued.push(r),
     today: "2027-01-10",
     ...over,
   };
   return { root, deps, log };
 }
-const request = (over: Record<string, unknown> = {}) => ({ id: "req-1", origin: "auditoria" as const, ref: FINDING.id, targets: [TARGET], context: { findings: [FINDING] }, ...over });
+const request = (over: Record<string, unknown> = {}) => ({ id: "req-1", origin: "auditoria" as const, ref: FINDING.id, targets: [TARGET], context: { findings: [FINDING] }, attempts: 1, ...over });
 
 describe("el redactor: de la solicitud al cambio registrado", () => {
   it("una corrección de auditoría queda aplicada, con versión subida, y se registra marcada como IA", async () => {
@@ -70,7 +77,7 @@ describe("el redactor: de la solicitud al cambio registrado", () => {
     expect(fs.readFileSync(path.join(root, real.file), "utf8")).toContain("Informa antes de recoger el dato");
     const before = /aviso: (\d+),/.exec(fs.readFileSync(path.join(process.cwd(), "src/lib/document-freshness.ts"), "utf8"))![1];
     expect(fs.readFileSync(path.join(root, "src/lib/document-freshness.ts"), "utf8")).toContain(`aviso: ${Number(before) + 1},`);
-    expect(log.git[0]).toEqual(["checkout", "-q", "-B", "legal/auto-req1", "origin/master"]);
+    expect(log.git[0]).toEqual(["checkout", "-q", "-B", "legal/auto-req1-1", "origin/master"]);
     expect(log.git.some((a) => a[0] === "commit")).toBe(true);
     expect(log.proposed[0]).toMatchObject({ kind: "auditoria", sourceUrl: null, affected: [{ kind: "clause", source: TARGET }] });
     expect(log.proposed[0].summary).toMatch(/Redactado por IA/);
@@ -83,7 +90,7 @@ describe("el redactor: de la solicitud al cambio registrado", () => {
     const out = await runDraft(request(), deps);
     expect(out).toMatchObject({ status: "sin_solucion", reasons: [expect.stringContaining("FAIL test/x.test.ts")] });
     expect(log.proposed).toEqual([]);
-    expect(log.git.at(-1)).toEqual(["branch", "-q", "-D", "legal/auto-req1"]);
+    expect(log.git.at(-1)).toEqual(["branch", "-q", "-D", "legal/auto-req1-1"]);
   });
 
   it("push rechazado (master se movió): se reintenta", async () => {
@@ -91,9 +98,9 @@ describe("el redactor: de la solicitud al cambio registrado", () => {
     expect((await runDraft(request(), deps)).status).toBe("reintentar");
   });
 
-  it("IA caída: se reintenta más tarde, no queda sin solución", async () => {
+  it("IA caída: «esperar» (vuelve a la cola sin gastar intento), no queda sin solución", async () => {
     const { deps, log } = setup({ aiDown: true });
-    expect((await runDraft(request(), deps)).status).toBe("reintentar");
+    expect((await runDraft(request(), deps)).status).toBe("esperar");
     expect(log.proposed).toEqual([]);
   });
 
@@ -102,6 +109,38 @@ describe("el redactor: de la solicitud al cambio registrado", () => {
     const stale = { ...FINDING, id: findingId("significado", TARGET, "OTRO TEXTO") };
     expect((await runDraft(request({ ref: stale.id, context: { findings: [stale] } }), deps)).status).toBe("resuelto");
     expect(log.ai).toBe(0);
+  });
+
+  it("revisión I6: cada intento usa su propia rama (un reintento nunca choca con la del intento anterior)", async () => {
+    const { deps, log } = setup();
+    await runDraft(request({ attempts: 2 }), deps);
+    expect(log.git[0]).toEqual(["checkout", "-q", "-B", "legal/auto-req1-2", "origin/master"]);
+  });
+
+  it("revisión C2: una solicitud hija de una norma redacta solo sus textos, sin volver a cargar la norma", async () => {
+    const { deps, log } = setup();
+    const out = await runDraft(
+      request({ origin: "norma", ref: "item#2", targets: [TARGET], context: { pdf_url: "https://x/1.pdf", waitFor: "ds-001-2027-jus", norms: ["ds-016-2024-jus"], articles: ["7"] } }),
+      deps
+    );
+    expect(log.downloads).toBe(0);
+    expect(out.status).toBe("propuesto");
+    expect(log.proposed[0].affected).toEqual([{ kind: "clause", source: TARGET }]);
+  });
+
+  it("revisión I4: un texto que ya está en un cambio abierto no se redacta; vuelve a la cola a esperar", async () => {
+    const { deps, log } = setup();
+    const out = await runDraft(request({ targets: [TARGET], busy: [TARGET] }), deps);
+    expect(out.status).toBe("resuelto");
+    expect(log.ai).toBe(0);
+    expect(log.enqueued).toEqual([{ origin: "auditoria", ref: `${FINDING.id}#ocupado`, targets: [TARGET], context: { findings: [FINDING] } }]);
+  });
+
+  it("si la rama no cumple las reglas tras regenerar, no se corren las comprobaciones largas", async () => {
+    const { deps, log } = setup({ validate: () => ["legal/known-failures/citations.json agrega 1 falla(s) conocida(s)"] });
+    const out = await runDraft(request(), deps);
+    expect(out).toMatchObject({ status: "sin_solucion", reasons: [expect.stringContaining("falla(s) conocida(s)")] });
+    expect(log.checks).toBe(0);
   });
 
   it("textos de otro tipo de documento vuelven a la cola como otra solicitud", async () => {

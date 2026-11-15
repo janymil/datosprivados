@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import ts from "typescript";
 import { applySpan, type Span } from "@/legal/draft/locate";
+import { childEnv } from "@/legal/draft/steps";
 
 /**
  * Cómo ven los clientes un texto con `replacement` (redactor, plan 7). Una cláusula se escribe un
@@ -20,12 +21,13 @@ export async function renderTarget(span: Span, replacement: string, root: string
   const file = path.join(root, span.file);
   const original = fs.readFileSync(file, "utf8");
   const id = /id:\s*"([^"]+)"/.exec(span.source)?.[1] ?? "";
-  const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "render-")), "out.json");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "render-"));
+  const out = path.join(dir, "out.json");
   try {
     if (replacement !== span.source) fs.writeFileSync(file, applySpan(span, replacement, original));
     const r = spawnSync("npx", ["vitest", "run", "--config", "vitest.draft.config.ts", "test/legal/draft/render-one.draft.ts"], {
       cwd: root,
-      env: { ...process.env, RENDER_CLAUSE_ID: id, RENDER_OUT: out, DRAFT_REQUEST_FILE: "" },
+      env: childEnv({ RENDER_CLAUSE_ID: id, RENDER_OUT: out }),
       encoding: "utf8",
       maxBuffer: 64 * 1024 * 1024,
       timeout: 300_000,
@@ -36,5 +38,6 @@ export async function renderTarget(span: Span, replacement: string, root: string
     return result.texts ?? [];
   } finally {
     fs.writeFileSync(file, original);
+    fs.rmSync(dir, { recursive: true, force: true });
   }
 }
