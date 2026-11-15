@@ -25,6 +25,9 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # despliegue; el script de root lo hace (solo actua con GITHUB_DISPATCH_TOKEN; docs/RUNBOOK.md).
 */10 * * * *    root /usr/local/bin/datosprivados-cron legal-change-sync
 */5 * * * *     root /usr/local/bin/datosprivados-autodeploy
+# Re-auditoría trimestral: primer lunes de enero, abril, julio y octubre, 06:30 Lima.
+# Cron une día del mes y día de la semana con O: el script comprueba él mismo que sea lunes.
+30 6 1-7 1,4,7,10 *  root /usr/local/bin/datosprivados-reaudit
 
 # --- diarias: cada hora; el wrapper ejecuta solo en la hora indicada (Lima) ---
 0 * * * *       root /usr/local/bin/datosprivados-cron purge-old-data          --at 03:00

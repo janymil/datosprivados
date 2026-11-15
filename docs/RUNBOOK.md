@@ -646,3 +646,26 @@ confundirlos:
 - Pase a producción: `docs/CUTOVER.md`. Plantilla de nginx: `deploy/nginx-production.conf`.
 
 - Revisiones recurrentes (semanal, mensual, anual): `docs/POST-LAUNCH.md`; `pnpm ops:weekly`, `pnpm ops:restore-drill`.
+
+## Re-auditoría trimestral
+
+`/usr/local/bin/datosprivados-reaudit` (copia de `deploy/datosprivados-reaudit.sh`) corre como root el
+primer lunes de enero, abril, julio y octubre a las 06:30 (Lima). Clona `master` en
+`/var/lib/datosprivados/reaudit/repo` (nunca toca `/var/www/datosprivados` ni hace push), corre
+`pnpm legal:audit` con `LEGAL_AUDIT_ENV_DIR=/var/www/datosprivados` (máx. 2 horas) y manda los conteos
+a `POST /api/legal/reaudit`, que avisa por correo (`legal_reaudit`) a `OPERATOR_EMAILS`. Si algo falla,
+el correo dice el motivo; el log está en `/var/lib/datosprivados/reaudit/reaudit.log`.
+
+Instalar o actualizar:
+
+```bash
+install -m 755 deploy/datosprivados-reaudit.sh /usr/local/bin/datosprivados-reaudit
+```
+
+Lanzarla a mano (fuera del primer lunes), por ejemplo tras un cambio grande de la biblioteca:
+
+```bash
+REAUDIT_TODAY=2027-01-04 /usr/local/bin/datosprivados-reaudit
+```
+
+(cualquier primer lunes de un trimestre sirve como fecha; el informe queda en `legal/audit/<fecha>.json`).
