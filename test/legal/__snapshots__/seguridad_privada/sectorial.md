@@ -22,13 +22,13 @@ Este protocolo es el complemento operativo del Documento de Seguridad de **Pére
 - Servicios de seguridad privada: D. Leg. N.° 1213 y su reglamento. Si monitoreas cámaras o controlas accesos de otro negocio, eres su encargado del tratamiento (arts. 31 a 33 del DS N.° 016-2024-JUS).
 - Libros de ocurrencias y registros de ingreso contienen datos de terceros: restringe su consulta y no los copies.
 - Entrega de imágenes: solo a la autoridad que las pida por escrito (Policía, Fiscalía o juez) o al titular que ejerza su derecho de acceso.
-- Cámaras y monitoreo: cartel visible y conservación de 30 a 60 días calendario (Directiva 01-2020-JUS/DGTAIPD).
+- Cámaras y monitoreo: cartel visible y conservación de 30 a 60 días hábiles (Directiva 01-2020-JUS/DGTAIPD, punto 6.13).
 
 ## 5. Cuánto tiempo guardas cada cosa
 
 | Tipo de dato | Plazo sugerido | Fundamento |
 | --- | --- | --- |
-| Imágenes de videovigilancia | 30 a 60 días calendario; ampliación solo ante un incidente o requerimiento | Directiva 01-2020-JUS/DGTAIPD |
+| Imágenes de videovigilancia | 30 a 60 días hábiles; ampliación solo ante un incidente o requerimiento | Directiva 01-2020-JUS/DGTAIPD, punto 6.13 |
 | Libros de ocurrencias | Según el contrato con el cliente; máximo 2 años desde el último servicio | Art. 31.2 del DS N.° 016-2024-JUS |
 | Planillas y legajos de trabajadores | Durante el vínculo y 5 años desde el cese | Obligaciones laborales y tributarias |
 

@@ -10,7 +10,7 @@ Estos plazos son los declarados en tu inventario y deben coincidir con tu Polít
 | --- | --- | --- | --- | --- |
 | «Clientes y compradores» | Durante la relación comercial y hasta 5 años adicionales por obligación tributaria (SUNAT). | WhatsApp | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 | «Visitantes y control de acceso» | Entre 30 y 90 días; luego se destruyen las hojas o se borran los registros. | Presencial | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
-| «Videovigilancia y seguridad del local» | Entre 30 y 60 días calendario (Directiva de Videovigilancia de la ANPD); luego las grabaciones se eliminan, salvo requerimiento de autoridad. | Presencial | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
+| «Videovigilancia y seguridad del local» | Entre 30 y 60 días hábiles (Directiva de Videovigilancia de la ANPD, puntos 6.13 y 5.9); luego las grabaciones se eliminan, salvo requerimiento de autoridad. | Presencial | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 | «Proveedores y prestadores de servicios» | 5 años desde el último pago o fin del contrato (normativa tributaria SUNAT). | Correo electrónico | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 | «Grabaciones de voz analizadas con IA» | 6 meses | Central telefónica | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 
@@ -20,7 +20,7 @@ Estos plazos son los declarados en tu inventario y deben coincidir con tu Polít
 | --- | --- | --- |
 | Registro de visitantes | 30 a 90 días | Minimización |
 | Actas de junta y cobros de cuotas | 5 años desde su fecha | Prescripción y obligaciones contables |
-| Video de cámaras | 30 a 60 días calendario | Directiva 01-2020-JUS/DGTAIPD |
+| Video de cámaras | 30 a 60 días hábiles | Directiva 01-2020-JUS/DGTAIPD, punto 6.13 |
 | Registros de acceso e interacción con datos (Documento de Seguridad) | Mínimo 2 años | Art. 46.3 del DS N.° 016-2024-JUS |
 | Datos tratados como encargado de otra empresa | Máximo 2 años desde el último encargo | Art. 31.2 del DS N.° 016-2024-JUS |
 | Copias de respaldo | Rotativas (por ejemplo 30 días) | Recuperación ante desastres |

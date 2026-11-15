@@ -10,7 +10,7 @@ Estos plazos son los declarados en tu inventario y deben coincidir con tu Polít
 | --- | --- | --- | --- | --- |
 | «Clientes y compradores» | Durante la relación comercial y hasta 5 años adicionales por obligación tributaria (SUNAT). | WhatsApp | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 | «Libro de Reclamaciones» | Mínimo 2 años desde la fecha del reclamo, conforme al Reglamento del Libro de Reclamaciones. | Presencial | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
-| «Videovigilancia y seguridad del local» | Entre 30 y 60 días calendario (Directiva de Videovigilancia de la ANPD); luego las grabaciones se eliminan, salvo requerimiento de autoridad. | Presencial | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
+| «Videovigilancia y seguridad del local» | Entre 30 y 60 días hábiles (Directiva de Videovigilancia de la ANPD, puntos 6.13 y 5.9); luego las grabaciones se eliminan, salvo requerimiento de autoridad. | Presencial | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 | «Prospectos y suscriptores de promociones» | Hasta que la persona solicite darse de baja o revoque su consentimiento. | WhatsApp | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 | «Grabaciones de voz analizadas con IA» | 6 meses | Central telefónica | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 

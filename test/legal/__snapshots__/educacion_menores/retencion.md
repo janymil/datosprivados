@@ -10,7 +10,7 @@ Estos plazos son los declarados en tu inventario y deben coincidir con tu Polít
 | --- | --- | --- | --- | --- |
 | «Alumnos y apoderados» | Mientras dure la matrícula; las actas y certificados se conservan según la normativa del sector educación. | Presencial | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 | «Libro de Reclamaciones» | Mínimo 2 años desde la fecha del reclamo, conforme al Reglamento del Libro de Reclamaciones. | Presencial | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
-| «Videovigilancia y seguridad del local» | Entre 30 y 60 días calendario (Directiva de Videovigilancia de la ANPD); luego las grabaciones se eliminan, salvo requerimiento de autoridad. | Presencial | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
+| «Videovigilancia y seguridad del local» | Entre 30 y 60 días hábiles (Directiva de Videovigilancia de la ANPD, puntos 6.13 y 5.9); luego las grabaciones se eliminan, salvo requerimiento de autoridad. | Presencial | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 | «Proveedores y prestadores de servicios» | 5 años desde el último pago o fin del contrato (normativa tributaria SUNAT). | Correo electrónico | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 | «Grabaciones de voz analizadas con IA» | 6 meses | Central telefónica | Eliminación o anonimización al vencer el plazo | [pendiente de registrar] |
 
@@ -22,7 +22,7 @@ Estos plazos son los declarados en tu inventario y deben coincidir con tu Polít
 | Fichas de salud y alergias del alumno | Mientras dure la matrícula | Finalidad |
 | Pensiones y comprobantes | 5 años desde la operación | Prescripción tributaria más margen |
 | Hojas del Libro de Reclamaciones | Mínimo 2 años desde el reclamo | Reglamento del Libro de Reclamaciones (DS N.° 011-2011-PCM) |
-| Video de cámaras | Máximo 30 días | Directiva 01-2020-JUS/DGTAIPD (instituciones educativas) |
+| Video de cámaras | Máximo 30 días hábiles | Directiva 01-2020-JUS/DGTAIPD, punto 7.8 (instituciones educativas) |
 | Registros de acceso e interacción con datos (Documento de Seguridad) | Mínimo 2 años | Art. 46.3 del DS N.° 016-2024-JUS |
 | Datos tratados como encargado de otra empresa | Máximo 2 años desde el último encargo | Art. 31.2 del DS N.° 016-2024-JUS |
 | Copias de respaldo | Rotativas (por ejemplo 30 días) | Recuperación ante desastres |

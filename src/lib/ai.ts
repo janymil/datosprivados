@@ -492,7 +492,7 @@ async function generateBankFieldsByRules(input: {
       legal_basis: "interes_legitimo",
       channel: "Presencial",
       retention:
-        "Entre 30 y 60 días calendario conforme a la Directiva de Videovigilancia de la ANPD; luego se eliminan de forma segura, salvo requerimiento de autoridad.",
+        "Entre 30 y 60 días hábiles conforme a la Directiva de Videovigilancia de la ANPD (puntos 6.13 y 5.9); luego se eliminan de forma segura, salvo requerimiento de autoridad.",
       transfers: usesCloud ? "si" : "no",
       recipients:
         "Administración del local, proveedor de seguridad y Policía Nacional del Perú / Ministerio Público únicamente ante requerimiento legal.",

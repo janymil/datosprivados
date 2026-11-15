@@ -21,6 +21,18 @@ describe("biblioteca de normas", () => {
     expect(lib.findArticle("demo", "99")).toBeNull();
   });
 
+  it("findArticle con puntos numerados (directivas): «6.13» es el punto 6.13; «6.11.1», el inciso 1 del 6.11", () => {
+    const real = loadLibrary();
+    const dir = "directiva-01-2020-jus-dgtaipd";
+    expect(real.findArticle(dir, "6.13")?.article.num).toBe("6.13");
+    expect(real.findArticle(dir, "6.13")?.item).toBeUndefined();
+    expect(real.findArticle(dir, "6.11.1")?.article.num).toBe("6.11");
+    expect(real.findArticle(dir, "6.11.1")?.item).toBe("1");
+    // Las normas por artículo siguen igual.
+    expect(real.findArticle("ds-016-2024-jus", "69.1")?.article.num).toBe("69");
+    expect(real.findArticle("ds-016-2024-jus", "69.1")?.item).toBe("1");
+  });
+
   it("una norma no verificada no tiene artículos", () => {
     expect(lib.norms.stub.status).toBe("no-verificada");
     expect(lib.articlesOf("stub")).toEqual([]);

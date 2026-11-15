@@ -135,7 +135,7 @@ const BASE: SectorLegalProfile = {
     { risk: "Pérdida o robo de equipos con listas de clientes", probability: "Media", impact: "Medio", level: "Medio" },
     { risk: "Envío de publicidad sin consentimiento", probability: "Media", impact: "Medio", level: "Medio" },
   ],
-  cctvDays: "30 a 60 días calendario",
+  cctvDays: "30 a 60 días hábiles",
 };
 
 function profile(family: LegalFamily, title: string, overrides: Partial<SectorLegalProfile>): SectorLegalProfile {
@@ -362,7 +362,7 @@ export const FAMILIES: Record<LegalFamily, SectorLegalProfile> = {
       CONSUMER_NORM,
       "Los menores de 14 años necesitan el consentimiento de sus padres o tutores; de 14 a 17 pueden consentir según su capacidad con información en lenguaje comprensible (art. 22 del DS N.° 016-2024-JUS). No se pide a los menores datos del grupo familiar más allá de la identidad y dirección de sus padres (art. 23).",
       "Ley N.° 28044 (Ley General de Educación) y Ley N.° 29719 (convivencia sin violencia): registro de incidencias de violencia escolar, que contiene datos de menores y debe ser reservado.",
-      "Cámaras en colegios: conservación de 30 días como máximo según la Directiva 01-2020-JUS/DGTAIPD; no en baños ni vestuarios.",
+      "Cámaras en colegios: conservación de 30 días hábiles como máximo según la Directiva 01-2020-JUS/DGTAIPD (punto 7.8); no en baños ni vestuarios.",
       "Fotos y videos de actividades: autorización de los padres para publicarlos (Código Civil, art. 15).",
       "Plataformas de aula virtual y aplicaciones educativas del exterior son transferencias internacionales (arts. 18 a 21).",
     ],
@@ -371,7 +371,7 @@ export const FAMILIES: Record<LegalFamily, SectorLegalProfile> = {
       { data: "Fichas de salud y alergias del alumno", term: "Mientras dure la matrícula", basis: "Finalidad" },
       { data: "Pensiones y comprobantes", term: "5 años desde la operación", basis: "Prescripción tributaria más margen" },
       COMPLAINT_ROW,
-      { data: "Video de cámaras", term: "Máximo 30 días", basis: "Directiva 01-2020-JUS/DGTAIPD (instituciones educativas)" },
+      { data: "Video de cámaras", term: "Máximo 30 días hábiles", basis: "Directiva 01-2020-JUS/DGTAIPD, punto 7.8 (instituciones educativas)" },
     ],
     consent: {
       purpose:
@@ -521,12 +521,12 @@ export const FAMILIES: Record<LegalFamily, SectorLegalProfile> = {
       "Ley N.° 27157 y su Reglamento (DS N.° 008-2000-MTC): la junta de propietarios y su administración tratan datos de propietarios, residentes y visitantes.",
       "Registro de visitantes: pide solo nombre y documento; no fotocopies el DNI y borra el cuaderno cuando venza su plazo.",
       "No publiques listas de morosos en áreas comunes con nombre y monto: revela la situación económica de las personas.",
-      "Cámaras de áreas comunes: cartel visible y conservación de 30 a 60 días (Directiva 01-2020-JUS/DGTAIPD).",
+      "Cámaras de áreas comunes: cartel visible y conservación de 30 a 60 días hábiles (Directiva 01-2020-JUS/DGTAIPD, punto 6.13).",
     ],
     retention: [
       { data: "Registro de visitantes", term: "30 a 90 días", basis: "Minimización" },
       { data: "Actas de junta y cobros de cuotas", term: "5 años desde su fecha", basis: "Prescripción y obligaciones contables" },
-      { data: "Video de cámaras", term: "30 a 60 días calendario", basis: "Directiva 01-2020-JUS/DGTAIPD" },
+      { data: "Video de cámaras", term: "30 a 60 días hábiles", basis: "Directiva 01-2020-JUS/DGTAIPD, punto 6.13" },
     ],
     risks: [
       { risk: "Cuaderno de visitas visible para cualquiera en portería", probability: "Alta", impact: "Medio", level: "Alto" },
@@ -656,10 +656,10 @@ export const FAMILIES: Record<LegalFamily, SectorLegalProfile> = {
       "Servicios de seguridad privada: D. Leg. N.° 1213 y su reglamento. Si monitoreas cámaras o controlas accesos de otro negocio, eres su encargado del tratamiento (arts. 31 a 33 del DS N.° 016-2024-JUS).",
       "Libros de ocurrencias y registros de ingreso contienen datos de terceros: restringe su consulta y no los copies.",
       "Entrega de imágenes: solo a la autoridad que las pida por escrito (Policía, Fiscalía o juez) o al titular que ejerza su derecho de acceso.",
-      "Cámaras y monitoreo: cartel visible y conservación de 30 a 60 días calendario (Directiva 01-2020-JUS/DGTAIPD).",
+      "Cámaras y monitoreo: cartel visible y conservación de 30 a 60 días hábiles (Directiva 01-2020-JUS/DGTAIPD, punto 6.13).",
     ],
     retention: [
-      { data: "Imágenes de videovigilancia", term: "30 a 60 días calendario; ampliación solo ante un incidente o requerimiento", basis: "Directiva 01-2020-JUS/DGTAIPD" },
+      { data: "Imágenes de videovigilancia", term: "30 a 60 días hábiles; ampliación solo ante un incidente o requerimiento", basis: "Directiva 01-2020-JUS/DGTAIPD, punto 6.13" },
       { data: "Libros de ocurrencias", term: "Según el contrato con el cliente; máximo 2 años desde el último servicio", basis: "Art. 31.2 del DS N.° 016-2024-JUS" },
       STAFF_ROW,
     ],
@@ -1023,7 +1023,7 @@ const PROTOCOLS: Partial<Record<LegalFamily, string[]>> = {
   condominio: [
     "Cuaderno de visitas: el visitante no ve los datos de los anteriores; borra los registros pasado el plazo.",
     "Morosos: comunica la deuda de forma individual; no la publiques en áreas comunes.",
-    "Cámaras de áreas comunes: cartel visible y conservación de 30 a 60 días.",
+    "Cámaras de áreas comunes: cartel visible y conservación de 30 a 60 días hábiles.",
   ],
   finanzas: [
     "Conoce a tu cliente: identifica, valida el origen de fondos y guarda el registro de operaciones 10 años.",

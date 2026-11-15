@@ -1,14 +1,16 @@
 {
   "id": "directiva-01-2020-jus-dgtaipd",
-  "title": "Directiva N.° 01-2020-JUS/DGTAIPD, tratamiento de datos personales mediante sistemas de videovigilancia",
+  "title": "Directiva N.° 01-2020-JUS/DGTAIPD, Tratamiento de datos personales mediante sistemas de videovigilancia (aprobada por R.D. N.° 02-2020-JUS/DGTAIPD; escaneo con OCR publicado por la ANPD en gob.pe)",
   "type": "directiva",
   "number": "01-2020-JUS/DGTAIPD",
-  "publishedAt": null,
-  "officialUrl": null,
-  "sourceSha256": null,
-  "retrievedAt": null,
-  "status": "no-verificada",
-  "consolidated": false,
+  "publishedAt": "2020-01-16",
+  "officialUrl": "https://cdn.www.gob.pe/uploads/document/file/1910249/Directiva-N%C2%B0-01-2020-DGTAIPD-1.pdf",
+  "sourceSha256": "cc96cef225c8ed073b8a4bd91bfe12841c6823b727757d743642289f60c654a0",
+  "retrievedAt": "2026-11-15",
+  "status": "vigente",
+  "consolidated": true,
   "amendedBy": [],
-  "aliases": []
+  "aliases": [
+    "Directiva 01-2020-JUS/DGTAIPD"
+  ]
 }

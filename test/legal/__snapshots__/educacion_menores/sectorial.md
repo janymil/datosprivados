@@ -24,7 +24,7 @@ Este protocolo es el complemento operativo del Documento de Seguridad de **Pére
 - Código de Protección y Defensa del Consumidor (Ley N.° 29571): deber de información, Libro de Reclamaciones y prohibición de métodos comerciales agresivos.
 - Los menores de 14 años necesitan el consentimiento de sus padres o tutores; de 14 a 17 pueden consentir según su capacidad con información en lenguaje comprensible (art. 22 del DS N.° 016-2024-JUS). No se pide a los menores datos del grupo familiar más allá de la identidad y dirección de sus padres (art. 23).
 - Ley N.° 28044 (Ley General de Educación) y Ley N.° 29719 (convivencia sin violencia): registro de incidencias de violencia escolar, que contiene datos de menores y debe ser reservado.
-- Cámaras en colegios: conservación de 30 días como máximo según la Directiva 01-2020-JUS/DGTAIPD; no en baños ni vestuarios.
+- Cámaras en colegios: conservación de 30 días hábiles como máximo según la Directiva 01-2020-JUS/DGTAIPD (punto 7.8); no en baños ni vestuarios.
 - Fotos y videos de actividades: autorización de los padres para publicarlos (Código Civil, art. 15).
 - Plataformas de aula virtual y aplicaciones educativas del exterior son transferencias internacionales (arts. 18 a 21).
 
@@ -36,7 +36,7 @@ Este protocolo es el complemento operativo del Documento de Seguridad de **Pére
 | Fichas de salud y alergias del alumno | Mientras dure la matrícula | Finalidad |
 | Pensiones y comprobantes | 5 años desde la operación | Prescripción tributaria más margen |
 | Hojas del Libro de Reclamaciones | Mínimo 2 años desde el reclamo | Reglamento del Libro de Reclamaciones (DS N.° 011-2011-PCM) |
-| Video de cámaras | Máximo 30 días | Directiva 01-2020-JUS/DGTAIPD (instituciones educativas) |
+| Video de cámaras | Máximo 30 días hábiles | Directiva 01-2020-JUS/DGTAIPD, punto 7.8 (instituciones educativas) |
 
 ## 6. Riesgos típicos del rubro y cómo evitarlos
 

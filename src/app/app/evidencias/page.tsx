@@ -40,7 +40,7 @@ const TYPES: Array<{ id: EvidenceType; label: string; why: string; placeholder: 
     id: "purga",
     label: "Purgas de datos",
     why: "Cada eliminación demuestra el principio de minimización y el cumplimiento de tus plazos.",
-    placeholder: "Ej. Eliminé grabaciones de cámaras anteriores a 60 días y 38 CV de más de 6 meses",
+    placeholder: "Ej. Eliminé grabaciones de cámaras anteriores a 60 días hábiles y 38 CV de más de 6 meses",
   },
 ];
 
