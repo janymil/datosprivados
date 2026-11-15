@@ -290,7 +290,7 @@ async function draft(request: DraftRequestLike, deps: RunDeps): Promise<RunResul
     request.origin === "norma"
       ? `Norma nueva ${normId}: ${done.length ? `${done.length} texto(s) actualizados` : "agregada a la biblioteca"} (IA)`
       : `Corrección de ${done.map((d) => d.target).join(", ")} (IA)`;
-  deps.git(["add", "-A", "legal", "src", "test/legal", "scripts/legal/sources.json"]);
+  deps.git(["add", "-A", ...["legal", "src", "test/legal", "scripts/legal/sources.json"].filter((p) => fs.existsSync(path.join(deps.root, p)))]);
   const commit = deps.git(["commit", "-q", "-m", `legal(auto): ${title}\n\nSolicitud de redacción ${request.id}.`]);
   if (commit.code !== 0) return fail("sin_solucion", [`git commit: ${tail(commit.out, 5)}`]);
   const summary = summaryOf({ origin: request.origin, context, done, skipped, norm: normId });

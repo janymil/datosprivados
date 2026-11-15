@@ -46,6 +46,7 @@ async function runScript(next: Array<{ status: number; body?: unknown }>, env: R
         DATOSPRIVADOS_ENV: "/nonexistent",
         DRAFT_API_URL: `http://127.0.0.1:${port}`,
         DRAFT_RETRIES: "0",
+        DRAFT_REFRESH_CMD: "true",
         ...env,
       },
       stdio: "ignore",
@@ -57,6 +58,13 @@ async function runScript(next: Array<{ status: number; body?: unknown }>, env: R
 }
 
 describe("deploy/datosprivados-draft.sh", () => {
+  it("antes de redactar rehace los cambios pendientes, aunque la IA esté apagada (409)", async () => {
+    const { code, state } = await runScript([{ status: 409 }], { DRAFT_CMD: "touch ran", DRAFT_REFRESH_CMD: "touch refreshed" });
+    expect(code).toBe(0);
+    expect(fs.existsSync(path.join(state, "repo/refreshed"))).toBe(true);
+    expect(fs.existsSync(path.join(state, "repo/ran"))).toBe(false);
+  });
+
   it("sin trabajo (204) o con la IA apagada (409): sale sin redactar", async () => {
     for (const status of [204, 409]) {
       const { code, results, state } = await runScript([{ status }], { DRAFT_CMD: "touch ran" });

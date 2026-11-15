@@ -53,6 +53,8 @@ const PUBLIC_FILES: Record<string, string> = {
   "api/legal/changes/route.ts": "interna: bearer CRON_SECRET (authorizedByCronSecret)",
   "api/legal/reaudit/route.ts": "interna: bearer CRON_SECRET (authorizedByCronSecret)",
   "api/legal/drafts/route.ts": "interna: bearer CRON_SECRET (authorizedByCronSecret)",
+  "api/legal/changes/pending/route.ts": "interna: bearer CRON_SECRET (authorizedByCronSecret)",
+  "api/legal/changes/[id]/refresh/route.ts": "interna: bearer CRON_SECRET (authorizedByCronSecret)",
   "api/legal/drafts/next/route.ts": "interna: bearer CRON_SECRET (authorizedByCronSecret)",
   "api/legal/drafts/[id]/result/route.ts": "interna: bearer CRON_SECRET (authorizedByCronSecret)",
   "api/mail/webhook/route.ts": "webhook firmado del proveedor de correo",
