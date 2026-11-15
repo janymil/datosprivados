@@ -7,7 +7,7 @@ import { findingId } from "@/legal/audit/types";
 import { VerdictCache } from "@/legal/audit/verdict-cache";
 import { PICK_SYSTEM, WRITE_SYSTEM } from "@/legal/draft/compose";
 import { applySpan, locateTarget } from "@/legal/draft/locate";
-import { bumpTemplateVersions, changedKinds, runDraft, type ProposeInput, type RunDeps } from "@/legal/draft/run";
+import { bumpTemplateVersions, changedKinds, failureSummary, runDraft, type ProposeInput, type RunDeps } from "@/legal/draft/run";
 
 const TARGET = "aviso.nota.regla-practica";
 const real = locateTarget(TARGET)!;
@@ -161,6 +161,14 @@ describe("el redactor: de la solicitud al cambio registrado", () => {
 });
 
 describe("piezas del redactor", () => {
+  it("failureSummary: sin colores de terminal y con las pruebas que fallaron primero", () => {
+    const out = "\u001b[31m+ algo\u001b[39m\nmucho ruido\n FAIL  test/legal/citations.test.ts > citas > cada cláusula\nAssertionError: corre FILL_CITES=1\n\u001b[2m otra línea\u001b[22m";
+    const s = failureSummary(out);
+    expect(s).not.toMatch(/\u001b/);
+    expect(s.split("\n")[0]).toBe("FAIL  test/legal/citations.test.ts > citas > cada cláusula");
+    expect(s).toContain("AssertionError: corre FILL_CITES=1");
+  });
+
   it("changedKinds y bumpTemplateVersions", () => {
     expect(changedKinds({ "a|aviso": "1", "a|politica": "2" }, { "a|aviso": "1", "a|politica": "3", "b|cookies": "4" })).toEqual(["cookies", "politica"]);
     expect(bumpTemplateVersions("  aviso: 2,\n  politica: 4,\n", ["politica"])).toBe("  aviso: 2,\n  politica: 5,\n");

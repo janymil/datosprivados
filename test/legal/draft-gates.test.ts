@@ -71,6 +71,11 @@ describe("compuertas de un borrador", () => {
     expect(checkReplacement(clause(withCode), withCode.replace('includes("cctv")', 'includes("todo")')).join(" ")).toMatch(/código/);
   });
 
+  it("una cita repetida se rechaza", () => {
+    const dup = ORIGINAL.replace('[{ norm: "ds-016-2024-jus", art: "7" }]', '[{ norm: "ds-016-2024-jus", art: "7" }, { norm: "ds-016-2024-jus", art: "7" }]');
+    expect(checkReplacement(clause(ORIGINAL), dup).join(" ")).toMatch(/repetida/);
+  });
+
   it("una cita a un artículo que no existe se rechaza", () => {
     const next = ORIGINAL.replace('art: "7"', 'art: "999"');
     expect(checkReplacement(clause(ORIGINAL), next).join(" ")).toMatch(/999/);

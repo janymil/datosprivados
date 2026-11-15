@@ -170,6 +170,7 @@ function checkCites(
     return [];
   }
   const out: Array<{ norm: string; art: string }> = [];
+  const seen = new Set<string>();
   for (const el of node.elements) {
     if (!ts.isObjectLiteralExpression(el)) {
       problems.push(`cita no válida: ${el.getText().slice(0, 80)}`);
@@ -185,6 +186,8 @@ function checkCites(
       problems.push(`cita no válida (norm y art deben ser texto; claim, un texto literal): ${el.getText().slice(0, 80)}`);
       continue;
     }
+    if (seen.has(`${norm}:${art}`)) problems.push(`cita repetida: ${norm}, art. ${art}`);
+    seen.add(`${norm}:${art}`);
     out.push({ norm, art });
     if (!kept.has(`${norm}:${art}`)) checkCitation(norm, art, lib, problems);
   }
