@@ -12,7 +12,7 @@ import { execFileSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { applyTextFixes, splitArticles } from "../../src/legal/library/split.ts";
+import { articlesFromText, normRecord } from "../../src/legal/library/ingest.ts";
 
 const id = process.argv[2];
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
@@ -32,36 +32,12 @@ const txt = path.join(store, "source.txt");
 // -raw: orden de lectura del contenido; sin él, los encabezados de las columnas justificadas se parten (DS 016-2024-JUS arts. 18 y 33).
 // `extract: "default"` (sin -raw) para PDFs justificados donde -raw pega palabras (ediciones de Indecopi).
 execFileSync("pdftotext", [...(source.extract === "default" ? [] : ["-raw"]), "-enc", "UTF-8", pdf, txt]);
-// Escaneos con OCR: correcciones puntuales, cada una verificada contra la imagen de su página.
-const raw = applyTextFixes(fs.readFileSync(txt, "utf8").normalize("NFKC"), source.textFixes);
-
-// La norma empieza en la N-ésima aparición del marcador (antes puede haber un índice o el decreto aprobatorio).
-const startRe = new RegExp(source.start, "gm");
-let match;
-for (let n = 0; n < source.startOccurrence; n++) {
-  match = startRe.exec(raw);
-  if (!match) throw new Error(`${id}: no aparece la ocurrencia ${n + 1} de ${source.start}`);
-}
-const articles = splitArticles(raw.slice(match.index), {
-  start: new RegExp(source.start, "m"),
-  end: source.end ? new RegExp(source.end, "m") : undefined,
-  amended: Boolean(source.amended),
-  sumilla: Boolean(source.sumilla),
-  sections: Boolean(source.sections),
-});
+const raw = fs.readFileSync(txt, "utf8").normalize("NFKC");
+const articles = articlesFromText(raw, source, id);
 
 const dir = path.join(root, "legal/library", id);
 fs.mkdirSync(dir, { recursive: true });
-const norm = {
-  id,
-  ...source.norm,
-  officialUrl: source.url,
-  sourceSha256,
-  retrievedAt: new Date().toISOString().slice(0, 10),
-};
-const ordered = Object.fromEntries(
-  ["id", "title", "type", "number", "publishedAt", "officialUrl", "sourceSha256", "retrievedAt", "status", "consolidated", "amendedBy", "aliases"].map((k) => [k, norm[k]])
-);
+const ordered = normRecord(id, source, sourceSha256, new Date().toISOString().slice(0, 10));
 fs.writeFileSync(path.join(dir, "norm.json"), `${JSON.stringify(ordered, null, 2)}\n`);
 fs.writeFileSync(path.join(dir, "articles.json"), `${JSON.stringify(articles, null, 1)}\n`);
 console.log(`${id}: ${articles.length} artículos · sha256 ${sourceSha256.slice(0, 12)} · ${dir}`);

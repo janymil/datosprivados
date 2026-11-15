@@ -13,7 +13,8 @@ export type ChangeInput = {
   readBase: (path: string) => string | null;
 };
 
-const ALLOWED = [/^src\/legal\//, /^src\/lib\//, /^legal\//, /^test\/legal\//, /^src\/app\//, /^src\/components\//, /^docs\//];
+// `scripts/legal/sources.json`: de dónde sale cada norma de la biblioteca (una norma nueva la agrega, plan 7).
+const ALLOWED = [/^src\/legal\//, /^src\/lib\//, /^legal\//, /^test\/legal\//, /^src\/app\//, /^src\/components\//, /^docs\//, /^scripts\/legal\/sources\.json$/];
 const DOCUMENT_TEXT = [/^test\/legal\/__snapshots__\/(?!modules\/)/, /^test\/legal\/baseline-hashes\.json$/];
 const FRESHNESS = "src/lib/document-freshness.ts";
 /** Las reglas cambian por un PR normal, nunca dentro de un cambio legal. */

@@ -56,6 +56,11 @@ describe("validateChange", () => {
     ]);
   });
 
+  it("permite la lista de fuentes de la biblioteca (una norma nueva) y nada más de scripts/", () => {
+    expect(check({ ...log, "scripts/legal/sources.json": "{}" })).toEqual([]);
+    expect(check({ ...log, "scripts/legal/ingest.mjs": "x" })).toEqual(["archivo fuera del área permitida: scripts/legal/ingest.mjs"]);
+  });
+
   it("rechaza archivos fuera del área legal", () => {
     expect(check({ ...log, ".github/workflows/ci.yml": "x", "package.json": "{}" })).toEqual([
       "archivo fuera del área permitida: .github/workflows/ci.yml",
