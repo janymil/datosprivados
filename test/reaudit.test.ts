@@ -61,7 +61,7 @@ async function runScript(env: Record<string, string>) {
   fs.writeFileSync(path.join(envDir, ".env"), `CRON_SECRET=${SECRET}\n`);
   const code = await new Promise<number>((resolve) => {
     const child = spawn("bash", [script], {
-      env: { PATH: process.env.PATH ?? "", REAUDIT_STATE_DIR: state, REAUDIT_ENV_DIR: envDir, REAUDIT_API_URL: `http://127.0.0.1:${port}/api/legal/reaudit`, ...env },
+      env: { NODE_ENV: "test", PATH: process.env.PATH ?? "", REAUDIT_STATE_DIR: state, REAUDIT_ENV_DIR: envDir, REAUDIT_API_URL: `http://127.0.0.1:${port}/api/legal/reaudit`, ...env },
       stdio: "ignore",
     });
     child.on("exit", (c) => resolve(c ?? 1));
