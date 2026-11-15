@@ -51,6 +51,13 @@ describe("flujo de cambio legal aprobado", () => {
     expect(merge).toContain("git push origin master");
   });
 
+  it("verify no usa la caché de setup-node: con dos checkouts su post-paso falla y bloquea la fusión", () => {
+    // Run 43655818192 (lc-20261114-676a96): todo en verde salvo «Post Run actions/setup-node»
+    // («Path(s) specified in the action for caching do(es) not exist») → la fusión se saltó.
+    expect(job("verify")).not.toMatch(/^\s+cache:/m);
+    expect(job("verify")).not.toContain("cache-dependency-path");
+  });
+
   it("el run lleva el intento en su título y no comparte cola con otros cambios", () => {
     expect(text).toContain("run-name: legal ${{ github.event.client_payload.id }} ${{ github.event.client_payload.attempt }}");
     expect(text).toContain("group: legal-change-${{ github.event.client_payload.id }}");
