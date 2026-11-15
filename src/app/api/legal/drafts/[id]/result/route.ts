@@ -4,7 +4,7 @@ import { finishDraft } from "@/lib/legal-drafts";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const STATUSES = ["propuesto", "sin_solucion", "reintentar", "resuelto"] as const;
+const STATUSES = ["propuesto", "sin_solucion", "reintentar", "resuelto", "esperar"] as const;
 
 /** POST /api/legal/drafts/:id/result — resultado de una redacción (plan 7). Interno: bearer CRON_SECRET. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {

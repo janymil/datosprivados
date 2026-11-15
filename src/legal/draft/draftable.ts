@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import type { AuditFinding } from "../audit/types";
 
 /**
@@ -22,9 +23,13 @@ export function draftRequestsFromReport(report: { findings: AuditFinding[] }): D
   }
   return [...bySource.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([source, findings]) => ({
+    .map(([source, findings]) => {
+      const ids = findings.map((f) => f.id).sort().join(",");
+      return { source, findings, ref: ids.length > 200 ? `sha256:${crypto.createHash("sha256").update(ids).digest("hex")}` : ids };
+    })
+    .map(({ source, findings, ref }) => ({
       origin: "auditoria",
-      ref: findings.map((f) => f.id).sort().join(","),
+      ref,
       targets: [source],
       context: { findings },
     }));

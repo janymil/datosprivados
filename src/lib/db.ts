@@ -973,6 +973,7 @@ function migrate(db: DatabaseSync) {
       change_id TEXT,
       reasons TEXT,
       claimed_at TEXT,
+      not_before TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       UNIQUE (origin, ref)

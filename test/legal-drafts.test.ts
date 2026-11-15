@@ -80,6 +80,52 @@ describe("cola de redacción", () => {
     expect(claimNextDraft(new Date())).toBeNull();
   });
 
+  it("revisión C2: una solicitud que espera otro cambio (waitFor) no se toma mientras ese cambio esté abierto", () => {
+    enqueueDraft({ origin: "norma", ref: "n1#2", targets: ["politica.x"], context: { waitFor: "ds-001-2027-jus" } });
+    const change = registerLegalChange({
+      kind: "norma",
+      title: "Norma nueva",
+      summary: "x",
+      source_url: null,
+      branch: "legal/auto-n1",
+      head_sha: "c".repeat(40),
+      diff: "diff",
+      affected: [{ kind: "norm", source: "ds-001-2027-jus" }],
+    });
+    expect(claimNextDraft(new Date())).toBeNull();
+    getDb().prepare("UPDATE legal_changes SET status = 'aplicado' WHERE id = ?").run(change.id);
+    expect(claimNextDraft(new Date())?.ref).toBe("n1#2");
+  });
+
+  it("revisión I5: «esperar» (IA o red caídas) vuelve a la cola sin gastar un intento y no antes de una hora", () => {
+    enqueueDraft(draft("a1"));
+    const t0 = new Date("2027-01-10T10:00:00Z");
+    const claimed = claimNextDraft(t0)!;
+    finishDraft(claimed.id, { status: "esperar", reasons: ["IA sin respuesta"] }, t0);
+    expect(getDraft(claimed.id)).toMatchObject({ status: "pendiente", attempts: 0 });
+    expect(claimNextDraft(new Date(t0.getTime() + 30 * 60_000))).toBeNull();
+    expect(claimNextDraft(new Date(t0.getTime() + 61 * 60_000))?.attempts).toBe(1);
+  });
+
+  it("un resultado tardío para una solicitud que ya no se está redactando se ignora", () => {
+    enqueueDraft(draft("a1"));
+    const claimed = claimNextDraft(new Date())!;
+    finishDraft(claimed.id, { status: "propuesto", changeId: "lc-20270110-abcdef" });
+    finishDraft(claimed.id, { status: "sin_solucion", reasons: ["tarde"] });
+    expect(getDraft(claimed.id)).toMatchObject({ status: "propuesto", change_id: "lc-20270110-abcdef" });
+  });
+
+  it("una solicitud cuyo proceso muere una y otra vez termina sin solución tras 3 intentos", () => {
+    enqueueDraft(draft("a1"));
+    let t = new Date("2027-01-10T10:00:00Z").getTime();
+    for (let i = 0; i < 3; i++) {
+      expect(claimNextDraft(new Date(t))).not.toBeNull();
+      t += 3 * HOUR;
+    }
+    expect(claimNextDraft(new Date(t))).toBeNull();
+    expect((getDb().prepare("SELECT status FROM legal_draft_requests").get() as { status: string }).status).toBe("sin_solucion");
+  });
+
   it("el resultado registra el gasto de IA como «legal-draft»", () => {
     enqueueDraft(draft("a1"));
     const claimed = claimNextDraft(new Date())!;
@@ -96,9 +142,19 @@ describe("API interna de redacción", () => {
     expect((await nextDraft(req("/api/legal/drafts/next", {}, "Bearer otro"))).status).toBe(401);
     expect((await nextDraft(req("/api/legal/drafts/next"))).status).toBe(204);
     enqueueDraft(draft("a1"));
+    registerLegalChange({
+      kind: "auditoria",
+      title: "Abierto",
+      summary: "x",
+      source_url: null,
+      branch: "legal/abierto",
+      head_sha: "e".repeat(40),
+      diff: "diff",
+      affected: [{ kind: "clause", source: "politica.abierta" }],
+    });
     const res = await nextDraft(req("/api/legal/drafts/next"));
     expect(res.status).toBe(200);
-    expect(await res.json()).toMatchObject({ origin: "auditoria", ref: "a1", targets: ["clause.a1"], context: { findings: ["a1"] } });
+    expect(await res.json()).toMatchObject({ origin: "auditoria", ref: "a1", targets: ["clause.a1"], context: { findings: ["a1"] }, busy: ["politica.abierta"] });
   });
 
   it("GET next: 409 con el presupuesto de IA agotado o la IA apagada; la solicitud no se toca", async () => {

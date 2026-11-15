@@ -1,4 +1,5 @@
 import { authorizedByCronSecret } from "@/lib/cron-auth";
+import crypto from "node:crypto";
 import { DRAFT_ORIGINS, enqueueDraft, type DraftOrigin } from "@/lib/legal-drafts";
 
 export const runtime = "nodejs";
@@ -14,7 +15,9 @@ export async function POST(request: Request) {
     return Response.json({ error: "JSON inválido" }, { status: 400 });
   }
   const origin = String(data.origin ?? "") as DraftOrigin;
-  const ref = String(data.ref ?? "").slice(0, 400);
+  const rawRef = String(data.ref ?? "");
+  // Una referencia larga se resume, nunca se corta: dos distintas no deben chocar.
+  const ref = rawRef.length > 400 ? `sha256:${crypto.createHash("sha256").update(rawRef).digest("hex")}` : rawRef;
   const targets = Array.isArray(data.targets) ? data.targets.map(String).slice(0, 50) : null;
   if (!DRAFT_ORIGINS.includes(origin) || !ref || !targets) return Response.json({ error: "origin, ref y targets son obligatorios" }, { status: 400 });
   return Response.json({ queued: enqueueDraft({ origin, ref, targets, context: data.context ?? null }) });

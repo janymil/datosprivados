@@ -34,4 +34,10 @@ describe("qué hallazgos se redactan solos", () => {
     expect(one).toEqual({ origin: "auditoria", ref: "aaaaaaaaaaaa,bbbbbbbbbbbb", targets: ["aviso.nota.regla-practica"], context: { findings: [a, b] } });
     expect(draftRequestsFromReport({ findings: [b, a] })[0].ref).toBe(one.ref);
   });
+  it("muchos hallazgos de un texto: la referencia se resume (hash), nunca se corta", () => {
+    const many = Array.from({ length: 60 }, (_, i) => finding({ id: `${String(i).padStart(12, "0")}` }));
+    const [one] = draftRequestsFromReport({ findings: many });
+    expect(one.ref).toMatch(/^sha256:[0-9a-f]{64}$/);
+    expect(draftRequestsFromReport({ findings: [...many].reverse() })[0].ref).toBe(one.ref);
+  });
 });

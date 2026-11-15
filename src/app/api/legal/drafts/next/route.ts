@@ -1,6 +1,6 @@
 import { authorizedByCronSecret } from "@/lib/cron-auth";
 import { aiKillSwitch, budgetExceeded } from "@/lib/ai-guard";
-import { claimNextDraft } from "@/lib/legal-drafts";
+import { claimNextDraft, sourcesInOpenChanges } from "@/lib/legal-drafts";
 import { isLlmConfigured } from "@/lib/llm";
 
 export const runtime = "nodejs";
@@ -18,5 +18,6 @@ export async function GET(request: Request) {
   if (aiKillSwitch() || !isLlmConfigured()) return Response.json({ reason: "ai-off" }, { status: 409 });
   const next = claimNextDraft(now);
   if (!next) return new Response(null, { status: 204 });
-  return Response.json(next);
+  // Lo que ya tocan cambios abiertos: el redactor no lo vuelve a redactar (revisión I4).
+  return Response.json({ ...next, busy: [...sourcesInOpenChanges()].sort() });
 }
