@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { valueStatedInQuote } from "@/legal/fact-check";
 import { fact, FACTS } from "@/legal/facts";
 import { legalLibrary } from "@/legal/library";
 import { type KnownFailure, ratchet } from "./checks";
@@ -25,41 +26,6 @@ function checkFacts(): KnownFailure[] {
     }
   }
   return out;
-}
-
-/** Formas en que la norma escribe un número: «diez (10)», «(08)», «48 horas», «semestral»… */
-const NUMBER_WORDS: Record<string, string[]> = {
-  "0.5": ["cero coma cinco"],
-  "1": ["una sola vez", "(1)"],
-  "2": ["dos (2)"],
-  "3": ["tres (3)"],
-  "5": ["cinco (5)", "cinco unidades"],
-  "6": ["semestral", "seis (6)"],
-  "7": ["siete (7)"],
-  "8": ["ocho (08)", "ocho (8)"],
-  "10": ["diez (10)"],
-  "15": ["15 días", "quince (15)"],
-  "20": ["veinte (20)"],
-  "48": ["48 horas"],
-  "50": ["cincuenta unidades"],
-  "100": ["cien unidades"],
-};
-
-/** El valor del hecho está dicho en su propia frase (o, para fechas del ODP, se deduce de ella). */
-export function valueStatedInQuote(f: { value: number | string; unit: string; quote: string | null; cites: Array<{ norm: string }> }): boolean {
-  if (f.quote === null) return true;
-  const q = squash(f.quote);
-  const says = (n: string) => (NUMBER_WORDS[n] ?? [`(${n})`]).some((form) => q.includes(squash(form)));
-  if (f.unit === "fecha") {
-    const years = /(\d+)años?después/.exec(q);
-    const published = lib.norms[f.cites[0].norm]?.publishedAt;
-    if (!years || !published) return false;
-    const date = new Date(`${published}T00:00:00Z`);
-    date.setUTCFullYear(date.getUTCFullYear() + Number(years[1]));
-    return date.toISOString().slice(0, 10) === f.value;
-  }
-  if (typeof f.value === "string") return f.value.split("-").every(says);
-  return says(String(f.value));
 }
 
 describe("hechos legales", () => {
