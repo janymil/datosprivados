@@ -43,7 +43,7 @@ jobs:
           # suite pruebe de verdad ese modo.
           CSP_ENFORCE: "1"
       - name: Guardar la compilación para E2E
-        if: github.event_name == schedule || github.event_name == workflow_dispatch
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: next-build
@@ -54,7 +54,7 @@ jobs:
   e2e:
     name: E2E (Playwright)
     needs: checks
-    if: github.event_name == schedule || github.event_name == workflow_dispatch
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
