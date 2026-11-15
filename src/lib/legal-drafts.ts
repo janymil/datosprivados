@@ -2,6 +2,7 @@ import "server-only";
 
 import { recordAiUsage } from "./ai-guard";
 import { getDb, newId, nowIso } from "./db";
+import { enqueueEmail } from "./mail";
 
 /**
  * Cola de redacción automática de correcciones (motor legal, plan 7; diseño §8 pasos 3 y 5).
@@ -112,6 +113,7 @@ export function finishDraft(id: string, r: DraftResult): DraftRow | null {
   getDb()
     .prepare("UPDATE legal_draft_requests SET status = ?, change_id = ?, reasons = ?, updated_at = ? WHERE id = ?")
     .run(status, r.changeId ?? row.change_id, r.reasons?.length ? JSON.stringify(r.reasons.slice(0, 50)) : row.reasons, nowIso(), id);
+  if (status === "sin_solucion") notifyFailed(getDraft(id)!);
   if (r.usage && (r.usage.inputTokens > 0 || r.usage.outputTokens > 0)) {
     recordAiUsage({
       companyId: null,
@@ -124,4 +126,31 @@ export function finishDraft(id: string, r: DraftResult): DraftRow | null {
     });
   }
   return getDraft(id);
+}
+
+/** Una corrección que no se pudo redactar: un correo a cada operador, una sola vez por solicitud. */
+function notifyFailed(row: DraftRow) {
+  const targets = (JSON.parse(row.targets) as string[]).join(", ") || "norma nueva";
+  const reasons = (JSON.parse(row.reasons ?? "[]") as string[]).join(" · ").slice(0, 1500) || "sin detalle";
+  for (const email of (process.env.OPERATOR_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean)) {
+    enqueueEmail({
+      to: email,
+      template: "legal_draft_failed",
+      payload: { targets, reasons, path: "/operador/legal" },
+      dedupeKey: `legal-draft:${row.id}:${email.toLowerCase()}`,
+    });
+  }
+}
+
+/** «Redactar de nuevo»: la solicitud vuelve a la cola con los intentos en cero. */
+export function resetDraft(id: string): boolean {
+  const result = getDb()
+    .prepare("UPDATE legal_draft_requests SET status = 'pendiente', attempts = 0, reasons = NULL, claimed_at = NULL, updated_at = ? WHERE id = ? AND status IN ('sin_solucion', 'resuelto')")
+    .run(nowIso(), id);
+  return Number(result.changes) > 0;
+}
+
+/** Pedido del fundador para un texto; cada pedido es una solicitud nueva. */
+export function requestDraft(target: string, now: Date): boolean {
+  return enqueueDraft({ origin: "operador", ref: `${target}@${now.toISOString()}`, targets: [target], context: { pedido: "operador" } });
 }
