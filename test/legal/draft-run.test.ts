@@ -6,7 +6,7 @@ import { PASS_A_SYSTEM, PASS_B_SYSTEM } from "@/legal/audit/meaning";
 import { findingId } from "@/legal/audit/types";
 import { VerdictCache } from "@/legal/audit/verdict-cache";
 import { PICK_SYSTEM, WRITE_SYSTEM } from "@/legal/draft/compose";
-import { locateTarget } from "@/legal/draft/locate";
+import { applySpan, locateTarget } from "@/legal/draft/locate";
 import { bumpTemplateVersions, changedKinds, runDraft, type ProposeInput, type RunDeps } from "@/legal/draft/run";
 
 const TARGET = "aviso.nota.regla-practica";
@@ -40,7 +40,11 @@ function setup(over: Partial<RunDeps> & { aiDown?: boolean } = {}) {
   const deps: RunDeps = {
     root,
     ai: { call, cache: new VerdictCache(path.join(root, "cache.json")), model: "gpt-6-luna" },
-    render: async (_span, replacement) => [replacement === real.source ? "ANTES" : "AHORA"],
+    // Como el render real: escribe el borrador en el archivo (applySpan exige el texto original en su sitio).
+    render: async (span, replacement) => {
+      applySpan(span, replacement, fs.readFileSync(path.join(root, span.file), "utf8"));
+      return [replacement === real.source ? "ANTES" : "AHORA"];
+    },
     git: (args) => {
       log.git.push(args);
       return { code: 0, out: "" };
@@ -109,6 +113,12 @@ describe("el redactor: de la solicitud al cambio registrado", () => {
     const stale = { ...FINDING, id: findingId("significado", TARGET, "OTRO TEXTO") };
     expect((await runDraft(request({ ref: stale.id, context: { findings: [stale] } }), deps)).status).toBe("resuelto");
     expect(log.ai).toBe(0);
+  });
+
+  it("un error inesperado deja la copia limpia (rama borrada) y se propaga", async () => {
+    const { deps, log } = setup({ checks: () => { throw new Error("explotó"); } });
+    await expect(runDraft(request(), deps)).rejects.toThrow("explotó");
+    expect(log.git.at(-1)).toEqual(["branch", "-q", "-D", "legal/auto-req1-1"]);
   });
 
   it("revisión I6: cada intento usa su propia rama (un reintento nunca choca con la del intento anterior)", async () => {

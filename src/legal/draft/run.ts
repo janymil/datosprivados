@@ -145,7 +145,22 @@ function summaryOf(p: { origin: string; context: Record<string, unknown>; done: 
 const kindOfSpan = (span: Span) => (span.kind === "module-string" ? "module" : span.kind);
 
 export async function runDraft(request: DraftRequestLike, deps: RunDeps): Promise<RunResult> {
-  const branch = `legal/auto-${request.id.replace(/[^a-z0-9]/gi, "").toLowerCase().slice(0, 12)}-${request.attempts ?? 1}`;
+  const branch = branchName(request);
+  try {
+    return await draft(request, deps);
+  } catch (error) {
+    // Un error inesperado no deja la rama ni archivos a medio escribir en la copia.
+    deps.git(["checkout", "-q", "-f", "origin/master"]);
+    deps.git(["branch", "-q", "-D", branch]);
+    throw error;
+  }
+}
+
+const branchName = (request: DraftRequestLike) =>
+  `legal/auto-${request.id.replace(/[^a-z0-9]/gi, "").toLowerCase().slice(0, 12)}-${request.attempts ?? 1}`;
+
+async function draft(request: DraftRequestLike, deps: RunDeps): Promise<RunResult> {
+  const branch = branchName(request);
   const context = (request.context ?? {}) as Record<string, unknown>;
   const freshLib = () => loadLibrary(path.join(deps.root, "legal/library"));
   const cleanup = () => {
@@ -232,9 +247,10 @@ export async function runDraft(request: DraftRequestLike, deps: RunDeps): Promis
       skipped.push(`${target}: ${result.reasons.join("; ")}`);
       continue;
     }
+    // Cómo se ve, antes de escribirlo: el render necesita el texto original en su sitio.
+    const after = await deps.render(span, result.replacement);
     const file = path.join(deps.root, span.file);
     fs.writeFileSync(file, applySpan(span, result.replacement, fs.readFileSync(file, "utf8")));
-    const after = await deps.render(span, result.replacement);
     done.push({ target, before: before[0] ?? span.source, after: after[0] ?? result.replacement, rationale: result.rationale, verdicts: result.verdicts });
   }
 
