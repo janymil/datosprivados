@@ -11,12 +11,13 @@ import { renderDetailed, renderTarget } from "./draft/render";
  * del repositorio, nunca sobre los archivos reales (las demás pruebas los leen en paralelo).
  */
 let root = "";
+// Solo lo que el render usa: en la copia del servidor test/ tiene gigas de resultados generados.
 beforeAll(() => {
   root = fs.mkdtempSync(path.join(os.tmpdir(), "render-repo-"));
-  for (const dir of ["src", "test", "legal"]) fs.cpSync(path.join(process.cwd(), dir), path.join(root, dir), { recursive: true });
+  for (const dir of ["src", "test/legal", "test/helpers", "legal/library"]) fs.cpSync(path.join(process.cwd(), dir), path.join(root, dir), { recursive: true });
   for (const file of ["vitest.draft.config.ts", "package.json", "tsconfig.json"]) fs.copyFileSync(path.join(process.cwd(), file), path.join(root, file));
   fs.symlinkSync(path.join(process.cwd(), "node_modules"), path.join(root, "node_modules"));
-});
+}, 120_000);
 
 describe("cómo ven los clientes un borrador", () => {
   it("una cláusula modificada se ve con el texto nuevo y el archivo queda como estaba", async () => {
