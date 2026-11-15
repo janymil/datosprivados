@@ -14,7 +14,7 @@ The quarterly re-audit is a root cron script, `deploy/datosprivados-reaudit.sh`,
 
 **Tech Stack:** Next.js 16, TypeScript, `node:sqlite`, vitest, `src/lib/llm.ts` (model from configuration: `gpt-6-luna`), bash + cron.
 
-**Spec:** `docs/superpowers/specs/2026-11-13-motor-legal-design.md` §8 (law monitor) and §9 (quarterly re-audit). **Scope cut agreed with the founder (14.11.2026):** the monitor detects, triages and measures impact, but it does **not** download texts into the library, draft clause text or create branches. A relevant norm becomes a correction through a development session with `scripts/legal/ingest.mjs` + `propose-change.mjs` (plan 5), approved in `/operador/legal`. Automatic drafting is a later plan, once the monitor has proven reliable.
+**Spec:** `docs/superpowers/specs/2026-11-13-motor-legal-design.md` §8 (law monitor) and §9 (quarterly re-audit). **Scope cut (14.11.2026). Correction of 15.11.2026: Claude made this cut without the founder's agreement and did not report it to him; steps 3 and 5 are restored in plan 7 (`2026-11-15-motor-legal-7-redaccion.md`):** the monitor detects, triages and measures impact, but it does **not** download texts into the library, draft clause text or create branches. A relevant norm becomes a correction through a development session with `scripts/legal/ingest.mjs` + `propose-change.mjs` (plan 5), approved in `/operador/legal`. Automatic drafting is a later plan, once the monitor has proven reliable.
 
 ## Global Constraints
 
