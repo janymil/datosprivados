@@ -79,6 +79,11 @@ describe("/operador/legal: correcciones en redacción", () => {
     expect(await redirectOf(() => requestDraftAction(form({ target: "no.existe" })))).toContain("error=texto");
   });
 
+  it("la acción del operador no carga el compilador de TypeScript (no importa el localizador)", async () => {
+    const fs = await import("node:fs");
+    expect(fs.readFileSync("src/app/operador/legal/draft-actions.ts", "utf8")).not.toMatch(/draft\/locate|from "typescript"/);
+  });
+
   it("un cambio redactado por la IA lo dice en su página", async () => {
     const change = registerLegalChange({
       kind: "auditoria",

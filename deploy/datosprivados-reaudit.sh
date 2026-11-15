@@ -54,9 +54,12 @@ for file in "${ENV_FILES[@]}"; do
   [[ -n "$SECRET" ]] && break
 done
 
+# El cuerpo va en un archivo: con los hallazgos supera el límite de un argumento (128 KB).
+BODY="$STATE/body.json"
 post() {
+  [[ "$1" == "@next" ]] && mv "$BODY.next" "$BODY" || printf '%s' "$1" >"$BODY"
   if ! curl -fsS -m 30 --retry "$RETRIES" --retry-delay 10 --retry-all-errors -o /dev/null \
-    -X POST -H "authorization: Bearer $SECRET" -H "content-type: application/json" --data "$1" "$API" 2>>"$LOG"; then
+    -X POST -H "authorization: Bearer $SECRET" -H "content-type: application/json" --data @"$BODY" "$API" 2>>"$LOG"; then
     say err "no se pudo entregar el resultado del $TODAY a $API (ver $LOG)"
     return 1
   fi
@@ -96,9 +99,10 @@ if [[ -z "$REPORT" ]]; then
   exit 1
 fi
 
-post "$(node -e '
+# Solo los hallazgos «error» van a la cola de redacción (los «revisar» los decide el fundador).
+node -e '
   const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-  const errors = r.findings.filter((f) => f.severity === "error").length;
-  process.stdout.write(JSON.stringify({ ok: true, date: process.argv[2], errors, review: r.findings.length - errors, aiFailures: r.meta.aiFailures ?? 0, findings: r.findings }));
-' "$REPORT" "$TODAY")" || exit 2
+  const findings = r.findings.filter((f) => f.severity === "error");
+  process.stdout.write(JSON.stringify({ ok: true, date: process.argv[2], errors: findings.length, review: r.findings.length - findings.length, aiFailures: r.meta.aiFailures ?? 0, findings }));
+' "$REPORT" "$TODAY" >"$BODY.next" && post @next || exit 2
 say info "re-auditoría del $TODAY enviada ($REPORT)"

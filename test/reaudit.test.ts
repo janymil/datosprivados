@@ -145,11 +145,21 @@ describe("deploy/datosprivados-reaudit.sh", () => {
     expect(hour).toBeGreaterThanOrEqual(8); // Berlín es Lima + 6 (invierno) o + 7 (verano)
   });
 
+  it("revisión I1: un informe grande (más de 128 KB) se entrega igual", async () => {
+    const findings = Array.from({ length: 400 }, (_, i) => ({ id: `f${i}`, severity: "error", rule: "meaning", source: `x.${i}`, detail: "d".repeat(500) }));
+    const big = { meta: { aiFailures: 0 }, findings };
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "big-"));
+    fs.writeFileSync(path.join(dir, "big.json"), JSON.stringify(big));
+    const { code, bodies } = await runScript({ REAUDIT_TODAY: "2027-01-04", REAUDIT_CMD: `mkdir -p legal/audit && cp ${dir}/big.json legal/audit/2027-01-04.json` });
+    expect(code).toBe(0);
+    expect(JSON.parse(bodies[0]).findings).toHaveLength(400);
+  });
+
   it("con el informe del día, envía los conteos", async () => {
     const report = { meta: { aiFailures: 2 }, findings: [{ severity: "error" }, { severity: "error" }, { severity: "revisar" }] };
     const cmd = `mkdir -p legal/audit && echo '${JSON.stringify(report)}' > legal/audit/2027-01-04.json`;
     const { code, bodies } = await runScript({ REAUDIT_TODAY: "2027-01-04", REAUDIT_CMD: cmd });
     expect(code).toBe(0);
-    expect(JSON.parse(bodies[0])).toEqual({ ok: true, date: "2027-01-04", errors: 2, review: 1, aiFailures: 2, findings: report.findings });
+    expect(JSON.parse(bodies[0])).toEqual({ ok: true, date: "2027-01-04", errors: 2, review: 1, aiFailures: 2, findings: report.findings.filter((f) => f.severity === "error") });
   });
 });

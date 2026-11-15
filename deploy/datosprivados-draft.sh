@@ -60,15 +60,15 @@ for ((n = 0; n < MAX; n++)); do
     [[ -d "$REPO" && ! -d "$REPO/.git" && -z "${DRAFT_CMD:-}" ]] && rm -rf "$REPO"
     mkdir -p "$REPO"
     if [[ -n "${DRAFT_CMD:-}" ]]; then
-      (cd "$REPO" && DRAFT_REQUEST_FILE="$REQUEST" DRAFT_RESULT_FILE="$RESULT" bash -c "$DRAFT_CMD")
+      (cd "$REPO" && DRAFT_REQUEST_FILE="$REQUEST" DRAFT_RESULT_FILE="$RESULT" bash -c "$DRAFT_CMD") 9>&-
     else
       { [[ -d "$REPO/.git" ]] || git clone -q "$REPO_URL" "$REPO"; } &&
         git -C "$REPO" fetch -q origin master &&
         git -C "$REPO" checkout -q -f origin/master &&
-        git -C "$REPO" clean -q -fdx -e node_modules -e .cache &&
+        git -C "$REPO" clean -q -fdx -e node_modules -e .cache 9>&- &&
         (cd "$REPO" && pnpm install --frozen-lockfile &&
           DRAFT_REQUEST_FILE="$REQUEST" DRAFT_RESULT_FILE="$RESULT" DRAFT_ENV_DIR="$ENV_DIR" CRON_SECRET="$SECRET" LEGAL_API_URL="$API" \
-            timeout 3600 npx vitest run --config vitest.draft.config.ts)
+            timeout --kill-after=60 3600 npx vitest run --config vitest.draft.config.ts) 9>&-
     fi
   } >>"$LOG" 2>&1
 
