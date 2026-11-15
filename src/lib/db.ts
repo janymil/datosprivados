@@ -251,6 +251,8 @@ export type LegalChange = {
   merged_sha: string | null;
   deployed_at: string | null;
   error: string | null;
+  /** Rehecho sobre la versión actual del código (otro cambio se fusionó antes): hay que aprobarlo de nuevo. */
+  refreshed_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -494,7 +496,7 @@ function initSchema(db: DatabaseSync) {
  * cacheada en `globalThis` (en `next dev` la conexión sobrevive a los recargos
  * en caliente y `initSchema` no vuelve a correr).
  */
-const SCHEMA_VERSION = 20;
+const SCHEMA_VERSION = 21;
 
 function migrate(db: DatabaseSync) {
   const companyColumns = db.prepare("PRAGMA table_info(companies)").all() as { name: string }[];
@@ -980,6 +982,10 @@ function migrate(db: DatabaseSync) {
     );
     CREATE INDEX IF NOT EXISTS idx_legal_draft_status ON legal_draft_requests(status, created_at);
   `);
+
+  // v21: un cambio legal pendiente se rehace sobre master cuando otro se fusiona antes.
+  const changeColumns = db.prepare("PRAGMA table_info(legal_changes)").all() as { name: string }[];
+  if (!changeColumns.some((column) => column.name === "refreshed_at")) db.exec("ALTER TABLE legal_changes ADD COLUMN refreshed_at TEXT");
 
   seedHolidays(db);
 }

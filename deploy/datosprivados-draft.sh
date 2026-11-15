@@ -42,6 +42,30 @@ for file in "${ENV_FILES[@]}"; do
   [[ -n "$SECRET" ]] && break
 done
 
+prepare_repo() {
+  # Una copia a medias (clon interrumpido) se descarta.
+  [[ -d "$REPO" && ! -d "$REPO/.git" ]] && rm -rf "$REPO"
+  { [[ -d "$REPO/.git" ]] || git clone -q "$REPO_URL" "$REPO"; } &&
+    git -C "$REPO" fetch -q origin master &&
+    git -C "$REPO" checkout -q -f origin/master &&
+    git -C "$REPO" clean -q -fdx -e node_modules -e .cache 9>&- &&
+    (cd "$REPO" && pnpm install --frozen-lockfile) 9>&-
+}
+
+# Primero: los cambios pendientes hechos sobre un master viejo se rehacen (no usa la IA, así que
+# corre aunque la IA esté apagada o sin presupuesto).
+echo "[draft] $(date -Is) rehacer cambios pendientes" >>"$LOG"
+{
+  mkdir -p "$REPO"
+  if [[ -n "${DRAFT_REFRESH_CMD:-}" ]]; then
+    (cd "$REPO" && bash -c "$DRAFT_REFRESH_CMD") 9>&-
+  else
+    prepare_repo &&
+      (cd "$REPO" && DRAFT_REFRESH=1 DRAFT_ENV_DIR="$ENV_DIR" CRON_SECRET="$SECRET" LEGAL_API_URL="$API" \
+        timeout --kill-after=60 3600 npx vitest run --config vitest.draft.config.ts test/legal/draft/refresh.draft.ts) 9>&-
+  fi
+} >>"$LOG" 2>&1 || say warning "rehacer cambios pendientes terminó con error (ver $LOG)"
+
 for ((n = 0; n < MAX; n++)); do
   REQUEST="$STATE/request.json"
   RESULT="$STATE/result.json"
@@ -56,19 +80,13 @@ for ((n = 0; n < MAX; n++)); do
   echo "[draft] $(date -Is) solicitud $ID" >>"$LOG"
 
   {
-    # Una copia a medias (clon interrumpido) se descarta.
-    [[ -d "$REPO" && ! -d "$REPO/.git" && -z "${DRAFT_CMD:-}" ]] && rm -rf "$REPO"
     mkdir -p "$REPO"
     if [[ -n "${DRAFT_CMD:-}" ]]; then
       (cd "$REPO" && DRAFT_REQUEST_FILE="$REQUEST" DRAFT_RESULT_FILE="$RESULT" bash -c "$DRAFT_CMD") 9>&-
     else
-      { [[ -d "$REPO/.git" ]] || git clone -q "$REPO_URL" "$REPO"; } &&
-        git -C "$REPO" fetch -q origin master &&
-        git -C "$REPO" checkout -q -f origin/master &&
-        git -C "$REPO" clean -q -fdx -e node_modules -e .cache 9>&- &&
-        (cd "$REPO" && pnpm install --frozen-lockfile &&
-          DRAFT_REQUEST_FILE="$REQUEST" DRAFT_RESULT_FILE="$RESULT" DRAFT_ENV_DIR="$ENV_DIR" CRON_SECRET="$SECRET" LEGAL_API_URL="$API" \
-            timeout --kill-after=60 3600 npx vitest run --config vitest.draft.config.ts) 9>&-
+      prepare_repo &&
+        (cd "$REPO" && DRAFT_REQUEST_FILE="$REQUEST" DRAFT_RESULT_FILE="$RESULT" DRAFT_ENV_DIR="$ENV_DIR" CRON_SECRET="$SECRET" LEGAL_API_URL="$API" \
+          timeout --kill-after=60 3600 npx vitest run --config vitest.draft.config.ts test/legal/draft/run.draft.ts) 9>&-
     fi
   } >>"$LOG" 2>&1
 

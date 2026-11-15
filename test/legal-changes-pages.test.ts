@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import LegalChangePage from "@/app/operador/legal/[id]/page";
 import LegalChangesPage from "@/app/operador/legal/page";
 import { createSession } from "@/lib/auth";
-import { decideLegalChange, registerLegalChange } from "@/lib/legal-changes";
+import { decideLegalChange, refreshLegalChange, registerLegalChange } from "@/lib/legal-changes";
 import { makeActiveCompany } from "./helpers/db";
 import { jar } from "./helpers/next";
 
@@ -59,6 +59,13 @@ describe("panel /operador/legal", () => {
     expect(html).toContain("Aprobar y publicar");
     expect(html).toContain("Enviar al abogado");
     expect(html).toContain(change.head_sha.slice(0, 7));
+  });
+
+  it("un cambio rehecho sobre la versión actual del código lo dice en su historial", async () => {
+    const change = newChange();
+    refreshLegalChange(change.id, { head_sha: "d".repeat(40), diff: "diff --git a/x b/x\n" });
+    const html = renderToStaticMarkup(await LegalChangePage({ params: Promise.resolve({ id: change.id }), searchParams: Promise.resolve({}) }));
+    expect(html).toContain("Rehecho sobre la versión actual del código");
   });
 
   it("tras el abogado se puede aprobar o rechazar, pero no volver a enviarlo", async () => {

@@ -121,3 +121,29 @@ export function markLegalChange(
     .prepare(`UPDATE legal_changes SET ${sets}, updated_at = ? WHERE id = ?`)
     .run(...keys.map((k) => patch[k] ?? null), nowIso(), id);
 }
+
+/** Estados en los que un cambio todavía puede rehacerse sobre master (nadie lo está fusionando). */
+export const REFRESHABLE: LegalChangeStatus[] = ["nuevo", "fallo", "abogado"];
+
+/**
+ * El redactor rehízo el cambio sobre la versión actual del código: misma rama e id, commit y
+ * diff nuevos. Vuelve a «nuevo» y la decisión anterior se borra: se aprueba lo que se ve.
+ */
+export function refreshLegalChange(
+  id: string,
+  next: { head_sha: string; diff: string }
+): { ok: true } | { ok: false; error: "no-existe" | "estado" | "datos" } {
+  const change = getLegalChange(id);
+  if (!change) return { ok: false, error: "no-existe" };
+  if (!/^[0-9a-f]{40}$/.test(next.head_sha) || !next.diff.trim()) return { ok: false, error: "datos" };
+  const now = nowIso();
+  const marks = REFRESHABLE.map(() => "?").join(", ");
+  const result = getDb()
+    .prepare(
+      `UPDATE legal_changes SET head_sha = ?, diff = ?, status = 'nuevo', error = NULL, decided_by = NULL, decided_at = NULL,
+         dispatched_at = NULL, refreshed_at = ?, updated_at = ? WHERE id = ? AND status IN (${marks})`
+    )
+    .run(next.head_sha, next.diff, now, now, id, ...REFRESHABLE);
+  return Number(result.changes) ? { ok: true } : { ok: false, error: "estado" };
+}
+

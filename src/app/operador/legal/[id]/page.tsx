@@ -121,6 +121,9 @@ export default async function LegalChangePage({
               {change.reason ? ` — «${change.reason}»` : ""}
             </li>
           )}
+          {change.refreshed_at && (
+            <li>Rehecho sobre la versión actual del código: {formatDateTime(change.refreshed_at)} (otro cambio se publicó antes; revisa la diferencia y apruébalo de nuevo)</li>
+          )}
           {change.dispatched_at && <li>Enviado a GitHub: {formatDateTime(change.dispatched_at)}</li>}
           {change.merged_sha && (
             <li>
