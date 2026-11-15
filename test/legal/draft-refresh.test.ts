@@ -127,4 +127,42 @@ describe("rehacer un cambio legal sobre la versión actual del código", () => {
     expect(git(remote, ["rev-parse", BRANCH]).out.trim()).toBe(head);
     expect(registered).toEqual([]);
   });
+  it("si la app no aceptó el registro, la rama rehecha queda y la corrida siguiente solo la registra", async () => {
+    const { deps, remote, head, registered } = setup();
+    let fail = true;
+    const flaky: RefreshDeps = {
+      ...deps,
+      reregister: async (id, h, diff) => {
+        if (fail) throw new Error("fetch failed: write EPIPE");
+        registered.push({ id, head: h, diff });
+        return { ok: true, out: "" };
+      },
+    };
+    const first = await refreshChange({ id: ID, branch: BRANCH, head_sha: head }, flaky);
+    expect(first.status).toBe("fallo");
+    expect(first.reasons.join(" ")).toMatch(/EPIPE/);
+    const rebuilt = git(remote, ["rev-parse", BRANCH]).out.trim();
+    expect(rebuilt).not.toBe(head);
+    fail = false;
+    // La app sigue con el commit viejo: la corrida siguiente no rehace de nuevo, solo registra.
+    const second = await refreshChange({ id: ID, branch: BRANCH, head_sha: head }, flaky);
+    expect(second.status).toBe("rehecho");
+    expect(registered).toEqual([expect.objectContaining({ id: ID, head: rebuilt })]);
+    expect(git(remote, ["rev-parse", BRANCH]).out.trim()).toBe(rebuilt);
+  });
+
+  it("una rama movida por otra persona (no por el redactor) no se registra ni se toca", async () => {
+    const { deps, remote, head, registered } = setup();
+    const other = fs.mkdtempSync(path.join(os.tmpdir(), "otra-"));
+    git(other, ["clone", "-q", remote, "c"]);
+    const c = path.join(other, "c");
+    git(c, ["checkout", "-q", BRANCH]);
+    write(c, "src/legal/x.ts", "export const x = 'z';\n");
+    commitAll(c, "edición a mano");
+    git(c, ["push", "-q", "origin", BRANCH]);
+    const out = await refreshChange({ id: ID, branch: BRANCH, head_sha: head }, deps);
+    expect(out.status).toBe("fallo");
+    expect(out.reasons.join(" ")).toMatch(/commit registrado/);
+    expect(registered).toEqual([]);
+  });
 });
