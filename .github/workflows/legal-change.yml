@@ -99,7 +99,7 @@ jobs:
           package_json_file: change/package.json
       # Sin caché: con dos checkouts (rules/ y change/) el post-paso de la caché de pnpm
       # no encuentra la ruta, marca el job como fallido y la fusión se salta (run 43655818192).
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - working-directory: change
