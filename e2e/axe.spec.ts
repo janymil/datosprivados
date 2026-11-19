@@ -39,6 +39,7 @@ const PAGES = [
   "/guias/plazos-ds-016-2024-jus",
   "/sectores/tiendas-online-y-ecommerce",
   "/contadores",
+  "/nosotros",
 ];
 
 // Pantallas del panel. Se entra con la cuenta demo (GET /demo inicia sesión y vuelve

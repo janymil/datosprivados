@@ -1,4 +1,4 @@
-import { PLATFORM_CONTACT_EMAIL, PLATFORM_ENTITY } from "@/lib/platform-entity";
+import { PLATFORM_CONTACT_EMAIL } from "@/lib/platform-entity";
 import Link from "next/link";
 import type { ComponentType } from "react";
 import {
@@ -19,7 +19,7 @@ import { GUIDES } from "@/lib/guides";
 import { TOOLS } from "@/lib/tools";
 import { renewalPrice } from "@/lib/plans";
 import { JsonLd } from "@/components/json-ld";
-import { absoluteUrl, pageMetadata } from "@/lib/seo";
+import { absoluteUrl, pageMetadata, platformOrganizationLd } from "@/lib/seo";
 
 export const metadata = {
   ...pageMetadata({
@@ -550,24 +550,7 @@ function GuidesBand() {
 const ORGANIZATION_LD = {
   "@context": "https://schema.org",
   "@graph": [
-    {
-      "@type": "Organization",
-      name: "DatosPrivados",
-      url: absoluteUrl("/"),
-      legalName: PLATFORM_ENTITY.legalName,
-      taxID: PLATFORM_ENTITY.ruc,
-      email: PLATFORM_CONTACT_EMAIL,
-      telephone: PLATFORM_ENTITY.phoneHref.replace("tel:", ""),
-      address: {
-        "@type": "PostalAddress",
-        streetAddress: "Av. Javier Prado Este 560",
-        addressLocality: "San Isidro",
-        addressRegion: "Lima",
-        postalCode: "15040",
-        addressCountry: "PE",
-      },
-      areaServed: "PE",
-    },
+    platformOrganizationLd(),
     {
       "@type": "SoftwareApplication",
       name: "DatosPrivados",

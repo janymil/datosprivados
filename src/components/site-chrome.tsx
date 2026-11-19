@@ -100,6 +100,7 @@ export function SiteFooter() {
             <p className="label-mono">Contacto</p>
             <ul className="mt-4 space-y-2.5 text-[15px] text-ink-soft">
               <li><a href={`mailto:${PLATFORM_CONTACT_EMAIL}`} className="hover:text-ink">{PLATFORM_CONTACT_EMAIL}</a></li>
+              <li><Link href="/nosotros" className="hover:text-ink">Nosotros</Link></li>
               <li><Link href="/login" className="hover:text-ink">Ingresar a mi cuenta</Link></li>
               <li><Link href="/registro" className="hover:text-ink">Crear una cuenta</Link></li>
               <li><Link href="/terminos" className="hover:text-ink">Términos y condiciones</Link></li>
@@ -122,7 +123,11 @@ export function SiteFooter() {
 
         <div className="mt-10 flex flex-col gap-4 border-t border-line pt-6 text-sm leading-relaxed text-ink-soft md:flex-row md:items-start md:justify-between">
           <p className="max-w-[76ch]">
-            © 2026 {PLATFORM_ENTITY.legalName} · RUC {PLATFORM_ENTITY.ruc} · {PLATFORM_ENTITY.address} ·{" "}
+            © 2026 ·{" "}
+            <Link href="/nosotros" className="hover:text-ink">
+              Un producto de {PLATFORM_ENTITY.legalName} · RUC {PLATFORM_ENTITY.ruc}
+            </Link>{" "}
+            · {PLATFORM_ENTITY.address} ·{" "}
             <a href={PLATFORM_ENTITY.phoneHref} className="hover:text-ink">
               {PLATFORM_ENTITY.phone}
             </a>

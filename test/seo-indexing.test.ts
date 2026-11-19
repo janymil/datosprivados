@@ -87,7 +87,7 @@ describe("contenido público indexable", () => {
     for (const page of [
       "/", "/guias", "/sectores", "/glosario", "/plantillas", "/diagnostico", "/herramientas",
       "/herramientas/calculadora-multas-ley-29733", "/plantillas/politica-de-privacidad",
-      "/plantillas/checklist-inscripcion-sipdp", "/contadores",
+      "/plantillas/checklist-inscripcion-sipdp", "/contadores", "/nosotros",
     ]) expect(urls).toContain(page);
   });
 

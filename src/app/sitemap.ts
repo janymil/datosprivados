@@ -28,5 +28,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/plantillas/checklist-inscripcion-sipdp`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/glosario`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${base}/contadores`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${base}/nosotros`, changeFrequency: "yearly", priority: 0.5 },
   ];
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { siteUrl } from "./site";
+import { COMPANY_HUB_ORG_ID, PLATFORM_CONTACT_EMAIL, PLATFORM_ENTITY } from "./platform-entity";
 
 /**
  * Metadatos de las páginas públicas de contenido (guías, sectores, glosario…).
@@ -31,6 +32,33 @@ export function jsonLd(data: unknown): string {
 
 export function absoluteUrl(path: string): string {
   return `${siteUrl()}${path}`;
+}
+
+/**
+ * La organización DatosPrivados, con su operador. Un solo `@id` para la portada y /nosotros, y
+ * `parentOrganization` apuntando al `@id` de la empresa en montaweb.pe/empresa.
+ */
+export function platformOrganizationLd() {
+  return {
+    "@type": "Organization",
+    "@id": absoluteUrl("/#organization"),
+    name: "DatosPrivados",
+    url: absoluteUrl("/"),
+    legalName: PLATFORM_ENTITY.legalName,
+    taxID: PLATFORM_ENTITY.ruc,
+    email: PLATFORM_CONTACT_EMAIL,
+    telephone: PLATFORM_ENTITY.phoneHref.replace("tel:", ""),
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: PLATFORM_ENTITY.streetAddress,
+      addressLocality: PLATFORM_ENTITY.locality,
+      addressRegion: PLATFORM_ENTITY.region,
+      postalCode: PLATFORM_ENTITY.postalCode,
+      addressCountry: "PE",
+    },
+    areaServed: "PE",
+    parentOrganization: { "@id": COMPANY_HUB_ORG_ID, name: PLATFORM_ENTITY.shortName },
+  };
 }
 
 export function breadcrumbLd(items: Array<{ name: string; path: string }>) {

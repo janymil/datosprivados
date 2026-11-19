@@ -68,7 +68,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             </a>
           </nav>
           <p className="mt-1">
-            {PLATFORM_ENTITY.legalName} · RUC {PLATFORM_ENTITY.ruc}
+            <Link href="/nosotros" className="hover:text-ink">
+              Un producto de {PLATFORM_ENTITY.legalName} · RUC {PLATFORM_ENTITY.ruc}
+            </Link>
           </p>
         </footer>
       </main>

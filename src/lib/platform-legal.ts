@@ -9,7 +9,7 @@ import { PLATFORM_COMPLAINTS_URL, PLATFORM_CONTACT_EMAIL, PLATFORM_ENTITY } from
  * borrador y no se indexan. Al cambiar el texto, sube `LEGAL_VERSION`: el registro de
  * aceptaciones guarda la versión que vio cada persona.
  */
-export const LEGAL_VERSION = "2026-11-13-borrador-4";
+export const LEGAL_VERSION = "2026-11-19-borrador-5";
 export const LEGAL_REVIEWED = false;
 
 export type LegalDocument = "terms" | "privacy" | "cookies";
@@ -165,6 +165,12 @@ export const LEGAL_CONTENT: Record<LegalDocument, LegalSection[]> = {
     },
   ],
   cookies: [
+    {
+      heading: "Quién usa estas cookies",
+      paragraphs: [
+        `Este sitio lo opera ${IDENTITY}. Cómo tratamos tus datos se explica en la Política de privacidad (https://datosprivados.pe/privacidad); para consultas, escríbenos a ${PLATFORM_CONTACT_EMAIL}.`,
+      ],
+    },
     {
       heading: "Cookies que usamos",
       paragraphs: [
