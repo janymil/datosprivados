@@ -48,7 +48,8 @@ describe("/nosotros", () => {
 });
 
 describe("pie de las páginas públicas", () => {
-  const html = renderToStaticMarkup(SiteFooter());
+  // React separa los textos interpolados con <!-- -->; se quitan para leer el enlace entero.
+  const html = renderToStaticMarkup(SiteFooter()).replaceAll("<!-- -->", "");
 
   it("dice de quién es el producto y enlaza a /nosotros", () => {
     expect(html).toMatch(/<a href="\/nosotros"[^>]*>Un producto de SEMANTIKA TECH E\.I\.R\.L\. · RUC 20616806981<\/a>/);
