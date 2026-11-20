@@ -189,7 +189,7 @@ const CCTV = `### Cámaras de seguridad
 const SENSITIVE = `### Datos sensibles
 
 - Son: salud, biometría (huella, rostro), ingresos económicos, origen racial, opiniones políticas, religión, afiliación sindical y vida sexual (art. 2.5 de la Ley 29733).
-- Para tratarlos necesitas consentimiento **por escrito** (art. 13.6). Hay un formato listo en **Documentos → Textos de consentimiento**.
+- Para tratarlos necesitas consentimiento **por escrito** (art. 13.6 de la Ley N.° 29733). Hay un formato listo en **Documentos → Textos de consentimiento**.
 - Los datos de **menores de 14 años** requieren el consentimiento de sus padres o tutores.
 - Exigen medidas de seguridad reforzadas; si se filtran, el incidente debe notificarse a la ANPD.`;
 

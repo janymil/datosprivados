@@ -542,7 +542,7 @@ export const TOPICS: HelpTopic[] = [
       { t: "h", text: "Promociones por WhatsApp, correo y redes" },
       { t: "list", items: ["Necesitas un **«sí» claro y separado** antes de enviar publicidad; tener el número no basta.", "Usa los **textos de consentimiento** (casillas por finalidad, opt-in de WhatsApp, doble opt-in de correo).", "Cada baja o «no quiero recibir más» se atiende ya: es un derecho de oposición.", "Anota cómo obtuviste cada permiso en **Evidencias → Consentimientos**."] },
       { t: "h", text: "Datos sensibles (salud, biometría, ingresos…)" },
-      { t: "list", items: ["Requieren consentimiento **por escrito** (art. 13.6): hay un formato en Textos de consentimiento.", "Exigen medidas de seguridad reforzadas.", "Una filtración de datos sensibles cumple un criterio del art. 34.1: reloj de 48 horas."] },
+      { t: "list", items: ["Requieren consentimiento **por escrito** (art. 13.6 de la Ley N.° 29733): hay un formato en Textos de consentimiento.", "Exigen medidas de seguridad reforzadas.", "Una filtración de datos sensibles cumple un criterio del art. 34.1: reloj de 48 horas."] },
       { t: "h", text: "Menores de edad" },
       { t: "list", items: ["Menores de 14 años: consentimiento de sus padres o tutores.", "De 14 a 17: pueden consentir según su capacidad, con información en lenguaje comprensible (art. 22 del Reglamento).", "Las fotos de alumnos para redes necesitan una autorización aparte."] },
       { t: "h", text: "Trabajadores y postulantes" },

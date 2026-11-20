@@ -456,7 +456,7 @@ async function generateBankFieldsByRules(input: {
   }
   if (hasHealthOrBiometrics) {
     warnings.push(
-      "¡Atención legal (Art. 13.6 Ley 29733)! Este banco incluye DATOS SENSIBLES (salud/biometría). La ley exige recabar consentimiento EXPRESO Y POR ESCRITO (físico o firma digital) y aplicar medidas de seguridad reforzadas."
+      "¡Atención legal (art. 13.6 de la Ley N.° 29733)! Este banco incluye DATOS SENSIBLES (salud/biometría). La ley exige recabar consentimiento EXPRESO Y POR ESCRITO (físico o firma digital) y aplicar medidas de seguridad reforzadas."
     );
   }
 

@@ -1,35 +1,5 @@
 [
  {
-  "rule": "cite-item-missing",
-  "clause": "faq:7",
-  "detail": "ds-016-2024-jus:13.6"
- },
- {
-  "rule": "cite-item-missing",
-  "clause": "help:TOPICS[casos-especiales].blocks[5].items[0]",
-  "detail": "ds-016-2024-jus:13.6"
- },
- {
-  "rule": "cite-item-missing",
-  "clause": "help:topicToPlainText:casos-especiales",
-  "detail": "ds-016-2024-jus:13.6"
- },
- {
-  "rule": "cite-item-missing",
-  "clause": "src/lib/ai.ts",
-  "detail": "ds-016-2024-jus:13.6"
- },
- {
-  "rule": "cite-item-missing",
-  "clause": "src/lib/help-content.ts",
-  "detail": "ds-016-2024-jus:13.6"
- },
- {
-  "rule": "cite-item-missing",
-  "clause": "src/lib/legal-faq.ts",
-  "detail": "ds-016-2024-jus:13.6"
- },
- {
   "rule": "cite-misnumbered",
   "clause": "guides:GUIDES[ds-016-2024-jus-reglamento].sections[5].bullets[1]",
   "detail": "ds-016-2024-jus:2.4 → III.4"
