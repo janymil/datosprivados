@@ -20,7 +20,7 @@ describe("/nosotros", () => {
   it("identifica al operador con razón social, RUC y domicilio completo", () => {
     expect(html).toContain("SEMANTIKA TECH E.I.R.L.");
     expect(html).toContain("20616806981");
-    expect(html).toContain("Av. Javier Prado Este 560 Int. 1302, San Isidro, Lima 15040");
+    expect(html).toContain("Av. Javier Prado Este 560 Int. 1302, San Isidro, Lima 15046");
   });
 
   it("enlaza a la empresa, a los textos legales y al Libro de Reclamaciones", () => {
@@ -34,7 +34,7 @@ describe("/nosotros", () => {
   it("publica la organización con su empresa matriz y canonical propio", () => {
     const organization = jsonLdBlocks(html).find((block) => block["@type"] === "Organization");
     expect(organization).toBeDefined();
-    expect(organization.parentOrganization).toEqual({ "@id": COMPANY_HUB_ORG_ID, name: "SEMANTIKA TECH" });
+    expect(organization.parentOrganization).toEqual({ "@id": COMPANY_HUB_ORG_ID, name: "SEMANTIKA TECH", url: COMPANY_HUB_URL });
     expect(organization["@id"]).toMatch(/\/#organization$/);
     expect(organization.taxID).toBe(PLATFORM_ENTITY.ruc);
     expect(organization.address.streetAddress).toBe("Av. Javier Prado Este 560 Int. 1302");

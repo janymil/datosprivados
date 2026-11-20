@@ -10,8 +10,9 @@ export const PLATFORM_ENTITY = {
   streetAddress: "Av. Javier Prado Este 560 Int. 1302",
   locality: "San Isidro",
   region: "Lima",
-  postalCode: "15040",
-  address: "Av. Javier Prado Este 560 Int. 1302, San Isidro, Lima 15040",
+  /** Código postal de la Ficha RUC de la SUNAT (confirmado por Jan el 2026-11-19). */
+  postalCode: "15046",
+  address: "Av. Javier Prado Este 560 Int. 1302, San Isidro, Lima 15046",
   phone: "+51 965 403 196",
   phoneHref: "tel:+51965403196",
 } as const;

@@ -123,7 +123,7 @@ export function SiteFooter() {
 
         <div className="mt-10 flex flex-col gap-4 border-t border-line pt-6 text-sm leading-relaxed text-ink-soft md:flex-row md:items-start md:justify-between">
           <p className="max-w-[76ch]">
-            © 2026 ·{" "}
+            © 2026 DatosPrivados ·{" "}
             <Link href="/nosotros" className="hover:text-ink">
               Un producto de {PLATFORM_ENTITY.legalName} · RUC {PLATFORM_ENTITY.ruc}
             </Link>{" "}

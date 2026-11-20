@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { siteUrl } from "./site";
-import { COMPANY_HUB_ORG_ID, PLATFORM_CONTACT_EMAIL, PLATFORM_ENTITY } from "./platform-entity";
+import { COMPANY_HUB_ORG_ID, COMPANY_HUB_URL, PLATFORM_CONTACT_EMAIL, PLATFORM_ENTITY } from "./platform-entity";
 
 /**
  * Metadatos de las páginas públicas de contenido (guías, sectores, glosario…).
@@ -57,7 +57,7 @@ export function platformOrganizationLd() {
       addressCountry: "PE",
     },
     areaServed: "PE",
-    parentOrganization: { "@id": COMPANY_HUB_ORG_ID, name: PLATFORM_ENTITY.shortName },
+    parentOrganization: { "@id": COMPANY_HUB_ORG_ID, name: PLATFORM_ENTITY.shortName, url: COMPANY_HUB_URL },
   };
 }
 
