@@ -146,7 +146,7 @@ Tienen acceso a los datos nuestro personal autorizado bajo deber de confidencial
     {
       id: "politica.7.derechos-arco",
       cites: [
-        { norm: "ds-016-2024-jus", art: "2.8" },
+        { norm: "ds-016-2024-jus", art: "III.8" },
         { norm: "ds-016-2024-jus", art: "10.2" },
         { norm: "ds-016-2024-jus", art: "26.5" },
         { norm: "ds-016-2024-jus", art: "67.3" },
@@ -174,7 +174,7 @@ Como titular de tus datos personales, tienes derecho a ejercer de forma **totalm
 - **Correo electrónico de privacidad:** ${company.dpo_email || company.email}
 - **Atención presencial / escrita:** en nuestro domicilio legal (${company.address || "indicado en la sección 1"}).
 
-Para tramitar tu solicitud, deberás acreditar tu identidad (indicando nombres completos y DNI/CE, o mediante firma digital válida; si actúas como representante, adjuntando el documento que acredite la representación). Si tu solicitud es insuficiente o errónea, podremos pedirte información adicional dentro de los **7 días** siguientes; tendrás **10 días** para responder y, mientras tanto, el plazo de respuesta se suspende (art. 70). Atenderemos tu solicitud dentro de los **plazos máximos legales en días hábiles** (art. 2.8 del DS N.° 016-2024-JUS) computados desde el día siguiente de su presentación (art. 69):
+Para tramitar tu solicitud, deberás acreditar tu identidad (indicando nombres completos y DNI/CE, o mediante firma digital válida; si actúas como representante, adjuntando el documento que acredite la representación). Si tu solicitud es insuficiente o errónea, podremos pedirte información adicional dentro de los **7 días** siguientes; tendrás **10 días** para responder y, mientras tanto, el plazo de respuesta se suspende (art. 70). Atenderemos tu solicitud dentro de los **plazos máximos legales en días hábiles** (art. III.8 del DS N.° 016-2024-JUS) computados desde el día siguiente de su presentación (art. 69):
 - **Derecho de información:** hasta **8 días hábiles**.
 - **Derechos de rectificación, cancelación y oposición:** hasta **10 días hábiles**.
 - **Revocación del consentimiento y oposición a la publicidad:** adecuaremos el tratamiento en un plazo diligente que no excede de **10 días** (arts. 10.2 y 26.5).
@@ -244,11 +244,11 @@ Contamos con un **Documento de Seguridad** interno y aplicamos medidas técnicas
     {
       id: "politica.10-sensibles.no",
       cites: [
-        { norm: "ds-016-2024-jus", art: "2.6" },
+        { norm: "ds-016-2024-jus", art: "III.6" },
       ],
       when: (ctx) => !(sensitiveBanksOf(ctx).length > 0 || ctx.profile.sensitive),
       text: () =>
-        `**Datos sensibles.** No necesitamos datos sensibles (salud, datos biométricos, afiliación sindical u otros del art. 2.6 del DS N.° 016-2024-JUS) para prestarte nuestro servicio principal. Si en algún caso fuera necesario, te pediremos tu autorización por escrito antes de recogerlos.`,
+        `**Datos sensibles.** No necesitamos datos sensibles (salud, datos biométricos, afiliación sindical u otros del art. III.6 del DS N.° 016-2024-JUS) para prestarte nuestro servicio principal. Si en algún caso fuera necesario, te pediremos tu autorización por escrito antes de recogerlos.`,
     },
     {
       id: "politica.10-menores.si",
@@ -271,8 +271,8 @@ Contamos con un **Documento de Seguridad** interno y aplicamos medidas técnicas
       id: "politica.10.normas",
       cites: [
         { norm: "codigo-civil", art: "15" },
-        { norm: "ds-016-2024-jus", art: "2.4" },
-        { norm: "ds-016-2024-jus", art: "2.6" },
+        { norm: "ds-016-2024-jus", art: "III.4" },
+        { norm: "ds-016-2024-jus", art: "III.6" },
         { norm: "ds-016-2024-jus", art: "6.1.7" },
         { norm: "ds-016-2024-jus", art: "6.1.8" },
         { norm: "ds-016-2024-jus", art: "7" },
@@ -307,13 +307,13 @@ ${bullets(profile.norms)}`,
     {
       id: "politica.11.cookies-vigencia",
       cites: [
-        { norm: "ds-016-2024-jus", art: "2.4" },
+        { norm: "ds-016-2024-jus", art: "III.4" },
       ],
       text: ({ company, banks, date }) => {
         const registeredChannels = Array.from(new Set(banks.map((b) => b.channel).filter(Boolean)));
         return `## 11. Cookies, vigencia y modificaciones
 
-Nuestros canales digitales pueden utilizar cookies técnicas indispensables para su funcionamiento y, únicamente previo consentimiento, cookies analíticas o publicitarias. Los identificadores en línea son datos personales (art. 2.4 del DS N.° 016-2024-JUS).
+Nuestros canales digitales pueden utilizar cookies técnicas indispensables para su funcionamiento y, únicamente previo consentimiento, cookies analíticas o publicitarias. Los identificadores en línea son datos personales (art. III.4 del DS N.° 016-2024-JUS).
 
 Esta Política de Privacidad entra en vigencia el **${date}**. Canales comprendidos: ${registeredChannels.length ? registeredChannels.join(", ") : "Web, WhatsApp y atención presencial"}. Cualquier modificación futura será publicada oportunamente a través de esta misma dirección (${appUrl()}/p/${company.slug}).`;
       },

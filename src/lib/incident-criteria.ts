@@ -29,7 +29,7 @@ export const INCIDENT_CRITERIA: IncidentCriterion[] = [
   {
     id: "datos_sensibles",
     label: "Datos sensibles",
-    hint: "Salud física o mental, datos genéticos o biométricos, afiliación sindical, vida afectiva o familiar, hábitos de la esfera íntima (art. 2.6).",
+    hint: "Salud física o mental, datos genéticos o biométricos, afiliación sindical, vida afectiva o familiar, hábitos de la esfera íntima (art. III.6).",
   },
   {
     id: "gran_volumen",

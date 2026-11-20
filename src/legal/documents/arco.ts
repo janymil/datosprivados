@@ -64,11 +64,11 @@ El ejercicio de los derechos es **gratuito** y el procedimiento debe ser sencill
     {
       id: "arco.3.plazos",
       cites: [
-        { norm: "ds-016-2024-jus", art: "2.8" },
+        { norm: "ds-016-2024-jus", art: "III.8" },
         { norm: "ds-016-2024-jus", art: "69" },
         { norm: "ds-016-2024-jus", art: "69.3" },
       ],
-      text: () => `## 3. Plazos máximos (en días hábiles, art. 2.8 y 69)
+      text: () => `## 3. Plazos máximos (en días hábiles, art. III.8 y 69)
 
 ${table(
   ["Derecho", "Plazo desde el día siguiente a la recepción", "Artículo"],

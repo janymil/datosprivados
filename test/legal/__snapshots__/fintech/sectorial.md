@@ -20,7 +20,7 @@ Este protocolo es el complemento operativo del Documento de Seguridad de **Pére
 
 ## 4. Normas que debes tener presentes
 
-- Los movimientos financieros del usuario no están en la lista del art. 2.6 del DS N.° 016-2024-JUS, pero los ingresos económicos figuran como dato sensible en la Ley N.° 29733 y los estados de cuenta pueden revelar salud (farmacias, clínicas): trátalos con medidas reforzadas y consentimiento por escrito electrónico claro.
+- Los movimientos financieros del usuario no están en la lista del art. III.6 del DS N.° 016-2024-JUS, pero los ingresos económicos figuran como dato sensible en la Ley N.° 29733 y los estados de cuenta pueden revelar salud (farmacias, clínicas): trátalos con medidas reforzadas y consentimiento por escrito electrónico claro.
 - Procesamiento de recibos, estados de cuenta o audio con proveedores de IA del exterior: transferencia internacional (arts. 18 a 21) y encargo con prohibición de entrenamiento con los datos del usuario.
 - Decisiones automatizadas o categorización con IA: informa y permite corrección humana (arts. 6.1.8 y 87). EIPD recomendable (art. 40).
 - No eres entidad financiera si solo organizas los datos del usuario: dilo en los Términos para no inducir a error al consumidor (Ley N.° 29571).

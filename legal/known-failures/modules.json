@@ -30,46 +30,6 @@
   "detail": "ds-016-2024-jus:13.6"
  },
  {
-  "rule": "cite-misnumbered",
-  "clause": "guides:GUIDES[ds-016-2024-jus-reglamento].sections[5].bullets[1]",
-  "detail": "ds-016-2024-jus:2.4 → III.4"
- },
- {
-  "rule": "cite-misnumbered",
-  "clause": "incident-criteria:INCIDENT_CRITERIA[datos_sensibles].hint",
-  "detail": "ds-016-2024-jus:2.6 → III.6"
- },
- {
-  "rule": "cite-misnumbered",
-  "clause": "sector-legal:FAMILIES.fintech.norms[0]",
-  "detail": "ds-016-2024-jus:2.6 → III.6"
- },
- {
-  "rule": "cite-misnumbered",
-  "clause": "sector-legal:FAMILIES.venta_online.norms[3]",
-  "detail": "ds-016-2024-jus:2.4 → III.4"
- },
- {
-  "rule": "cite-misnumbered",
-  "clause": "src/lib/guides.ts",
-  "detail": "ds-016-2024-jus:2.4 → III.4"
- },
- {
-  "rule": "cite-misnumbered",
-  "clause": "src/lib/incident-criteria.ts",
-  "detail": "ds-016-2024-jus:2.6 → III.6"
- },
- {
-  "rule": "cite-misnumbered",
-  "clause": "src/lib/sector-legal.ts",
-  "detail": "ds-016-2024-jus:2.4 → III.4"
- },
- {
-  "rule": "cite-misnumbered",
-  "clause": "src/lib/sector-legal.ts",
-  "detail": "ds-016-2024-jus:2.6 → III.6"
- },
- {
   "rule": "cite-norm-unverified",
   "clause": "sector-legal:FAMILIES.bienestar.norms[5]",
   "detail": "codigo-civil:15"

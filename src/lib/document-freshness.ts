@@ -14,20 +14,20 @@ import { sectorLegalProfile } from "./sector-legal";
  * documentos ya guardados de todos los clientes se marquen para regenerar.
  */
 export const TEMPLATE_VERSIONS: Record<DocumentKind, number> = {
-  politica: 4,
+  politica: 5,
   terminos: 3,
-  cookies: 3,
+  cookies: 4,
   aviso: 2,
   reclamaciones: 3,
-  consentimiento: 2,
-  seguridad: 3,
+  consentimiento: 3,
+  seguridad: 4,
   retencion: 3,
   encargo: 3,
   clausulas: 4,
   eipd: 3,
   trabajadores: 1,
-  arco: 1,
-  sectorial: 2,
+  arco: 2,
+  sectorial: 3,
 };
 
 export type StaleReason = "plantilla" | "empresa" | "rubro" | "bancos" | "herramientas";

@@ -29,9 +29,9 @@
 
 ## D. Autorización para el tratamiento de datos sensibles
 
-*Base legal:* art. 13.6 de la Ley N.° 29733 y art. 8 del DS N.° 016-2024-JUS: el consentimiento para datos sensibles debe darse **por escrito**, con firma manuscrita, digital, electrónica u otra modalidad que garantice la voluntad del titular. La carga de la prueba es tuya (art. 9). Son sensibles, entre otros, los datos genéticos y biométricos, neuronales, de salud física o mental, de afiliación sindical, de la vida afectiva o familiar y los hábitos de la esfera más íntima (art. 2.6).
+*Base legal:* art. 13.6 de la Ley N.° 29733 y art. 8 del DS N.° 016-2024-JUS: el consentimiento para datos sensibles debe darse **por escrito**, con firma manuscrita, digital, electrónica u otra modalidad que garantice la voluntad del titular. La carga de la prueba es tuya (art. 9). Son sensibles, entre otros, los datos genéticos y biométricos, neuronales, de salud física o mental, de afiliación sindical, de la vida afectiva o familiar y los hábitos de la esfera más íntima (art. III.6).
 
-*Úsala solo si recoges datos sensibles (salud, biometría, afiliación sindical, vida afectiva o familiar u otros del art. 2.6 del DS N.° 016-2024-JUS). Si no los recoges, no la uses: pedir datos de más viola el principio de proporcionalidad.*
+*Úsala solo si recoges datos sensibles (salud, biometría, afiliación sindical, vida afectiva o familiar u otros del art. III.6 del DS N.° 016-2024-JUS). Si no los recoges, no la uses: pedir datos de más viola el principio de proporcionalidad.*
 
 > **AUTORIZACIÓN EXPRESA PARA EL TRATAMIENTO DE DATOS SENSIBLES**
 > Yo, ________________________________________, identificado(a) con DNI/CE N.° ______________, declaro haber sido informado(a) de la Política de Privacidad de **Pérez & Hijos | «Ñandú» *Express* E.I.R.L.** (RUC 20601234567) y otorgo mi consentimiento libre, previo, expreso, informado, inequívoco y por escrito para el tratamiento de mis datos personales sensibles consistentes en datos de ingresos, gastos, comercios y, si aparecen en los documentos, referencias a salud, con la única finalidad de procesar mis recibos, estados de cuenta y movimientos para categorizarlos y mostrarme resúmenes.

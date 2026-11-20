@@ -245,7 +245,7 @@ export const GUIDES: Guide[] = [
         heading: "6. Datos sensibles y en línea",
         bullets: [
           "Los datos sensibles (salud, biometría, entre otros) requieren consentimiento por escrito, con firma manuscrita, digital o electrónica (art. 8).",
-          "Las cookies y píxeles publicitarios identifican al navegante (identificador en línea, art. 2.4): necesitan consentimiento previo.",
+          "Las cookies y píxeles publicitarios identifican al navegante (identificador en línea, art. III.4): necesitan consentimiento previo.",
           "Los sistemas con datos personales deben tener usuarios individuales y registro de accesos (art. 46).",
         ],
       },

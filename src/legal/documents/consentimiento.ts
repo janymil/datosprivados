@@ -69,14 +69,14 @@ export const consentimientoSpec: DocumentSpec = {
     {
       id: "consentimiento.d.encabezado",
       cites: [
-        { norm: "ds-016-2024-jus", art: "2.6" },
+        { norm: "ds-016-2024-jus", art: "III.6" },
         { norm: "ds-016-2024-jus", art: "8" },
         { norm: "ds-016-2024-jus", art: "9" },
         { norm: "ley-29733", art: "13.6" },
       ],
       text: ({ profile }) => `## D. Autorización para el tratamiento de datos sensibles${profile.sensitive || profile.biometric ? ` — ${profile.title}` : ""}
 
-*Base legal:* art. 13.6 de la Ley N.° 29733 y art. 8 del DS N.° 016-2024-JUS: el consentimiento para datos sensibles debe darse **por escrito**, con firma manuscrita, digital, electrónica u otra modalidad que garantice la voluntad del titular. La carga de la prueba es tuya (art. 9). Son sensibles, entre otros, los datos genéticos y biométricos, neuronales, de salud física o mental, de afiliación sindical, de la vida afectiva o familiar y los hábitos de la esfera más íntima (art. 2.6).`,
+*Base legal:* art. 13.6 de la Ley N.° 29733 y art. 8 del DS N.° 016-2024-JUS: el consentimiento para datos sensibles debe darse **por escrito**, con firma manuscrita, digital, electrónica u otra modalidad que garantice la voluntad del titular. La carga de la prueba es tuya (art. 9). Son sensibles, entre otros, los datos genéticos y biométricos, neuronales, de salud física o mental, de afiliación sindical, de la vida afectiva o familiar y los hábitos de la esfera más íntima (art. III.6).`,
     },
     {
       id: "consentimiento.d-uso.obligatorio",
@@ -88,11 +88,11 @@ export const consentimientoSpec: DocumentSpec = {
     {
       id: "consentimiento.d-uso.si-aplica",
       cites: [
-        { norm: "ds-016-2024-jus", art: "2.6" },
+        { norm: "ds-016-2024-jus", art: "III.6" },
       ],
       when: ({ profile }) => !(profile.sensitive || profile.biometric),
       text: () =>
-        `*Úsala solo si recoges datos sensibles (salud, biometría, afiliación sindical, vida afectiva o familiar u otros del art. 2.6 del DS N.° 016-2024-JUS). Si no los recoges, no la uses: pedir datos de más viola el principio de proporcionalidad.*`,
+        `*Úsala solo si recoges datos sensibles (salud, biometría, afiliación sindical, vida afectiva o familiar u otros del art. III.6 del DS N.° 016-2024-JUS). Si no los recoges, no la uses: pedir datos de más viola el principio de proporcionalidad.*`,
     },
     {
       id: "consentimiento.d.autorizacion",

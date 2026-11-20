@@ -162,7 +162,7 @@ export const FAMILIES: Record<LegalFamily, SectorLegalProfile> = {
       CONSUMER_NORM,
       ADVERTISING_NORM,
       "Venta a distancia: informa precio final con IGV, identidad del proveedor, plazos de entrega y cambios antes de cobrar; el Libro de Reclamaciones virtual debe ser visible en la web o app.",
-      "Cookies y píxeles de publicidad identifican al navegante (identificador en línea, art. 2.4 del DS N.° 016-2024-JUS): requieren consentimiento previo.",
+      "Cookies y píxeles de publicidad identifican al navegante (identificador en línea, art. III.4 del DS N.° 016-2024-JUS): requieren consentimiento previo.",
     ],
     retention: [
       TAX_ROW,
@@ -599,7 +599,7 @@ export const FAMILIES: Record<LegalFamily, SectorLegalProfile> = {
     processor: true,
     automated: true,
     norms: [
-      "Los movimientos financieros del usuario no están en la lista del art. 2.6 del DS N.° 016-2024-JUS, pero los ingresos económicos figuran como dato sensible en la Ley N.° 29733 y los estados de cuenta pueden revelar salud (farmacias, clínicas): trátalos con medidas reforzadas y consentimiento por escrito electrónico claro.",
+      "Los movimientos financieros del usuario no están en la lista del art. III.6 del DS N.° 016-2024-JUS, pero los ingresos económicos figuran como dato sensible en la Ley N.° 29733 y los estados de cuenta pueden revelar salud (farmacias, clínicas): trátalos con medidas reforzadas y consentimiento por escrito electrónico claro.",
       "Procesamiento de recibos, estados de cuenta o audio con proveedores de IA del exterior: transferencia internacional (arts. 18 a 21) y encargo con prohibición de entrenamiento con los datos del usuario.",
       "Decisiones automatizadas o categorización con IA: informa y permite corrección humana (arts. 6.1.8 y 87). EIPD recomendable (art. 40).",
       "No eres entidad financiera si solo organizas los datos del usuario: dilo en los Términos para no inducir a error al consumidor (Ley N.° 29571).",
@@ -852,7 +852,7 @@ export function documentFit(
         : { level: p.web ? "recomendado" : "opcional", reason: "Úsalo si vendes o cobras por web, redes o app." };
     case "cookies":
       return p.web
-        ? { level: p.terms === "plataforma" ? "esencial" : "recomendado", reason: "Tu web o app usa identificadores en línea (art. 2.4): necesitan información y consentimiento." }
+        ? { level: p.terms === "plataforma" ? "esencial" : "recomendado", reason: "Tu web o app usa identificadores en línea (art. III.4): necesitan información y consentimiento." }
         : { level: "opcional", reason: "Solo si tienes web con analítica, píxeles o publicidad." };
     case "reclamaciones":
       return p.consumer

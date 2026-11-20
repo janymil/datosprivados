@@ -11,7 +11,7 @@ Este procedimiento explica cómo Pérez & Hijos | «Ñandú» *Express* E.I.R.L.
 
 El ejercicio de los derechos es **gratuito** y el procedimiento debe ser sencillo (art. 67.1 y 67.3). No se cobra ni se condiciona a otro trámite. El ejercicio de un derecho no es requisito para ejercer otro (art. 62).
 
-## 3. Plazos máximos (en días hábiles, art. 2.8 y 69)
+## 3. Plazos máximos (en días hábiles, art. III.8 y 69)
 
 | Derecho | Plazo desde el día siguiente a la recepción | Artículo |
 | --- | --- | --- |

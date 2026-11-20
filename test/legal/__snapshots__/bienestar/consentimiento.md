@@ -29,7 +29,7 @@
 
 ## D. Autorización para el tratamiento de datos sensibles — Bienestar, estética y gimnasios
 
-*Base legal:* art. 13.6 de la Ley N.° 29733 y art. 8 del DS N.° 016-2024-JUS: el consentimiento para datos sensibles debe darse **por escrito**, con firma manuscrita, digital, electrónica u otra modalidad que garantice la voluntad del titular. La carga de la prueba es tuya (art. 9). Son sensibles, entre otros, los datos genéticos y biométricos, neuronales, de salud física o mental, de afiliación sindical, de la vida afectiva o familiar y los hábitos de la esfera más íntima (art. 2.6).
+*Base legal:* art. 13.6 de la Ley N.° 29733 y art. 8 del DS N.° 016-2024-JUS: el consentimiento para datos sensibles debe darse **por escrito**, con firma manuscrita, digital, electrónica u otra modalidad que garantice la voluntad del titular. La carga de la prueba es tuya (art. 9). Son sensibles, entre otros, los datos genéticos y biométricos, neuronales, de salud física o mental, de afiliación sindical, de la vida afectiva o familiar y los hábitos de la esfera más íntima (art. III.6).
 
 *Tu rubro (Bienestar, estética y gimnasios) trata datos sensibles de forma habitual: esta autorización es obligatoria antes de la primera atención y debe archivarse firmada.*
 

@@ -147,7 +147,7 @@ Ante cualquier incidente de seguridad (robo o pérdida de equipos, acceso no aut
     {
       id: "seguridad.7.conservacion-supresion",
       cites: [
-        { norm: "ds-016-2024-jus", art: "2.2" },
+        { norm: "ds-016-2024-jus", art: "III.2" },
         { norm: "ds-016-2024-jus", art: "31.2" },
         { norm: "ds-016-2024-jus", art: "46" },
         { norm: "ds-016-2024-jus", art: "46.1.c" },
@@ -162,7 +162,7 @@ Ante cualquier incidente de seguridad (robo o pérdida de equipos, acceso no aut
           : "";
         return `## 7. Conservación, bloqueo y supresión definitiva
 
-Cumplida la finalidad del tratamiento y vencidos los plazos legales de conservación (tributarios, laborales o contractuales), los datos personales son eliminados de las bases activas o destruidos de forma segura (trituración de papel o borrado digital irreversible), dejando constancia en el registro de actividad. Antes de eliminar, los datos que deban conservarse por posibles responsabilidades se **bloquean** (se reservan y dejan de ser visibles para el tratamiento ordinario, art. 2.2). Si un titular pide la supresión, se documenta ante él el cumplimiento y a quién se le transfirieron los datos (art. 83). Los proveedores que actúan como encargados conservan los datos como máximo dos (2) años desde el último encargo (art. 31.2).${sectorMeasures}`;
+Cumplida la finalidad del tratamiento y vencidos los plazos legales de conservación (tributarios, laborales o contractuales), los datos personales son eliminados de las bases activas o destruidos de forma segura (trituración de papel o borrado digital irreversible), dejando constancia en el registro de actividad. Antes de eliminar, los datos que deban conservarse por posibles responsabilidades se **bloquean** (se reservan y dejan de ser visibles para el tratamiento ordinario, art. III.2). Si un titular pide la supresión, se documenta ante él el cumplimiento y a quién se le transfirieron los datos (art. 83). Los proveedores que actúan como encargados conservan los datos como máximo dos (2) años desde el último encargo (art. 31.2).${sectorMeasures}`;
       },
     },
     {

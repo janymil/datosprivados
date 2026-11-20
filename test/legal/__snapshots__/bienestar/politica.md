@@ -64,7 +64,7 @@ Como titular de tus datos personales, tienes derecho a ejercer de forma **totalm
 - **Correo electrónico de privacidad:** privacidad@ejemplo.pe
 - **Atención presencial / escrita:** en nuestro domicilio legal (Av. Principal 100, Lima).
 
-Para tramitar tu solicitud, deberás acreditar tu identidad (indicando nombres completos y DNI/CE, o mediante firma digital válida; si actúas como representante, adjuntando el documento que acredite la representación). Si tu solicitud es insuficiente o errónea, podremos pedirte información adicional dentro de los **7 días** siguientes; tendrás **10 días** para responder y, mientras tanto, el plazo de respuesta se suspende (art. 70). Atenderemos tu solicitud dentro de los **plazos máximos legales en días hábiles** (art. 2.8 del DS N.° 016-2024-JUS) computados desde el día siguiente de su presentación (art. 69):
+Para tramitar tu solicitud, deberás acreditar tu identidad (indicando nombres completos y DNI/CE, o mediante firma digital válida; si actúas como representante, adjuntando el documento que acredite la representación). Si tu solicitud es insuficiente o errónea, podremos pedirte información adicional dentro de los **7 días** siguientes; tendrás **10 días** para responder y, mientras tanto, el plazo de respuesta se suspende (art. 70). Atenderemos tu solicitud dentro de los **plazos máximos legales en días hábiles** (art. III.8 del DS N.° 016-2024-JUS) computados desde el día siguiente de su presentación (art. 69):
 - **Derecho de información:** hasta **8 días hábiles**.
 - **Derechos de rectificación, cancelación y oposición:** hasta **10 días hábiles**.
 - **Revocación del consentimiento y oposición a la publicidad:** adecuaremos el tratamiento en un plazo diligente que no excede de **10 días** (arts. 10.2 y 26.5).
@@ -98,7 +98,7 @@ Contamos con un **Documento de Seguridad** interno y aplicamos medidas técnicas
 
 ## 11. Cookies, vigencia y modificaciones
 
-Nuestros canales digitales pueden utilizar cookies técnicas indispensables para su funcionamiento y, únicamente previo consentimiento, cookies analíticas o publicitarias. Los identificadores en línea son datos personales (art. 2.4 del DS N.° 016-2024-JUS).
+Nuestros canales digitales pueden utilizar cookies técnicas indispensables para su funcionamiento y, únicamente previo consentimiento, cookies analíticas o publicitarias. Los identificadores en línea son datos personales (art. III.4 del DS N.° 016-2024-JUS).
 
 Esta Política de Privacidad entra en vigencia el **13 de noviembre de 2026**. Canales comprendidos: Presencial, Central telefónica. Cualquier modificación futura será publicada oportunamente a través de esta misma dirección (https://datosprivados.pe/p/fisioterapia--rep).
 

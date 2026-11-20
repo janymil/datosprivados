@@ -59,8 +59,8 @@ ${sectorProtocol(profile.family).map((step, index) => `${index + 1}. ${step}`).j
       id: "sectorial.4.normas",
       cites: [
         { norm: "codigo-civil", art: "15" },
-        { norm: "ds-016-2024-jus", art: "2.4" },
-        { norm: "ds-016-2024-jus", art: "2.6" },
+        { norm: "ds-016-2024-jus", art: "III.4" },
+        { norm: "ds-016-2024-jus", art: "III.6" },
         { norm: "ds-016-2024-jus", art: "6.1.7" },
         { norm: "ds-016-2024-jus", art: "6.1.8" },
         { norm: "ds-016-2024-jus", art: "7" },

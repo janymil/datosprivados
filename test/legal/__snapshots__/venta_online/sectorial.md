@@ -23,7 +23,7 @@ Este protocolo es el complemento operativo del Documento de Seguridad de **Pére
 - Código de Protección y Defensa del Consumidor (Ley N.° 29571): deber de información, Libro de Reclamaciones y prohibición de métodos comerciales agresivos.
 - Publicidad por WhatsApp, SMS, llamadas o correo: solo con consentimiento previo obtenido de forma directa (art. 26 del DS N.° 016-2024-JUS) y, para correo comercial, Ley N.° 28493. Quien se niega o revoca debe ser atendido en un máximo de 10 días (art. 26.5).
 - Venta a distancia: informa precio final con IGV, identidad del proveedor, plazos de entrega y cambios antes de cobrar; el Libro de Reclamaciones virtual debe ser visible en la web o app.
-- Cookies y píxeles de publicidad identifican al navegante (identificador en línea, art. 2.4 del DS N.° 016-2024-JUS): requieren consentimiento previo.
+- Cookies y píxeles de publicidad identifican al navegante (identificador en línea, art. III.4 del DS N.° 016-2024-JUS): requieren consentimiento previo.
 
 ## 5. Cuánto tiempo guardas cada cosa
 
